@@ -226,12 +226,14 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
    **This probe is always permitted**, in either mode: it is how the mode gets decided, so B1's
    "Brandon runs the suites" governs routine runs afterward, not this one.
-3. The work is on a branch off `develop` that only this initiative uses — checked **when the
-   session is about to land work, not at pickup**. A session that will commit nothing (an audit, a
-   probe, a read-and-report pass) does not fail this item by sitting on a base branch; it fails it
-   by landing **feature work** from one. Cutting the branch is a step, not a precondition.
-   Release-cut pushes straight to `develop` are B2's documented case and are **not** a failure of
-   this item — the question is review, never the branch name.
+3. The work is on a branch off `develop` that only this initiative uses. **This item governs
+   ritual step 1 — "Feature work branches off `develop`" — and nothing else.** At pickup it is
+   assessed like every other item, but what it asks is *will this session land feature work, and if
+   so onto what branch*: a session that has not cut the branch yet records it **pending**, which is
+   not a failure and does not downgrade the mode. It **fails**, and downgrades, when feature work
+   would land from a base branch. A session that will commit nothing — an audit, a probe, a
+   read-and-report pass — reaches no step 1 and records **n/a**. Steps 4 and 5, where release-cut
+   work and review findings land on `develop` by design, are not this item's business at all.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
      **deliberately no pull-request rule and no required check**. `develop` is the *head* of the

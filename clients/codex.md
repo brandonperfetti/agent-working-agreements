@@ -50,9 +50,10 @@ conversation.
     `curl` failed DNS while the permitted route returned HTTP 200 — preserve the execution boundary
     in the claim, and never report "this machine can't" from inside a restricted call.
   - **`claude plugin validate .` stalls inside the sandbox** and completes through approved
-    execution outside it — reported by the Codex audit of 2026-09-13
-    (`_agent/analysis/2026-09-13-codex-standing-instructions-audit-01a09c32.md`). No raw capture is
-    retained, so this does **not** carry A2's `[measured]` bar. It is part of the CI gate, so a
+    execution outside it `[measured 2026-09-13; raw capture in
+    _agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/ — full-ci-gate.log line
+    793, returncode 143 under SIGTERM in the sandbox; claude-validation-permitted.json returncode 0
+    outside it; gate-interruption.txt]`. It is part of the CI gate, so a
     gate run that reaches it and hangs is the sandbox boundary, not a failing gate. Report the
     gate as green only if you say which steps ran where; a run split across the boundary is not
     one uninterrupted green invocation.

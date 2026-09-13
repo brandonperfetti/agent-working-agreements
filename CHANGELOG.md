@@ -10,16 +10,25 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-13 (#9) — an evidence claim retracted, twice.** Answering a review finding on #3, the
+  Codex sandbox-stall hazard was relabelled from `[measured]` to "no raw capture retained" — a claim
+  made **without looking**. The capture existed the whole time, 70 files under
+  `_agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/` with a `SHA256SUMS.json`.
+  The `[measured]` label is restored and now cites the capture. Found by the two-axis `code-review`
+  the agreements require **before** a push, run only after Brandon asked why it had not been. Asserting
+  the absence of evidence without searching for it is the A2 failure performed while arguing A2.
 - **2026-09-13 (#8) — guard item 3 is checked when work lands, not at pickup.** Two clients read
   the same item two ways on the same day: a Claude Code session scored it "doesn't apply: this
   session commits nothing"; a Codex session on the same kind of read-only pass scored it "not
   satisfied: checkout is on `master`" and downgraded itself to attended partly on that basis. The
   item was written as a flat condition, so both readings were defensible — and the stricter one is
   the harmful one, since a session that downgrades because it has not cut a branch *yet* puts
-  Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item 3 now says
-  when it is checked. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
-  sandbox and completes outside it — **reported** by the 2026-09-13 Codex audit, with no raw capture
-  retained, so it does not carry A2's `[measured]` bar. A named instance of the sandbox-denial
+  Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item 3 now names the ritual step it
+  governs (step 1, feature work branching off `develop`) and records **pending** rather than failed
+  for a session that has not cut its branch yet, so the guard still runs at pickup and still only
+  downgrades on a real failure. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
+  sandbox and completes outside it `[measured]`, its raw capture cited. A named instance of the
+  sandbox-denial
   hazard already in that file, mattering here because that command is part of the CI gate item 2
   requires.
 - **2026-09-13 (#7) — the agreement became a repo, and Part C became four files.** It had
