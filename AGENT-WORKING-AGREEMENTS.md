@@ -314,6 +314,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   with the repo's hooks firing (this replaces mboxes + `git am`). Lane commits carry RULE ZERO's
   trailers; the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
+- **Every commit runs the repo's hooks** — never `--no-verify`, a `core.hooksPath` override, or any
+  other way of switching them off; a guard the agent can lift on its own is not a guard.
 - **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
   records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, then pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
