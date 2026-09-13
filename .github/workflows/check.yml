@@ -5,6 +5,12 @@ on:
   push:
     branches: [develop, master]
 
+# Read-only by default. Without this block GITHUB_TOKEN inherits the repository or
+# organization default, which may be read-write; nothing in this repo's CI needs to
+# write. A future job that does need write declares it for itself.
+permissions:
+  contents: read
+
 jobs:
   index:
     # An explicit name decouples the reported check name from the job id. Without it
