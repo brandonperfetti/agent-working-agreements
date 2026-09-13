@@ -19,6 +19,16 @@ file to its rules; moved into this repo 2026-09-13 when the agreement stopped be
   `sansfaux/` root now holds the clone rather than the loose file. `organize.sh` **stays at the
   `sansfaux/` root** — it derives the fleet root from its own location, so moving it into the repo
   would silently retarget every path it touches.
+- **2026-09-13 (latest) — guard item 3 is checked when work lands, not at pickup.** Two clients read
+  the same item two ways on the same day: a Claude Code session scored it "doesn't apply: this
+  session commits nothing"; a Codex session on the same kind of read-only pass scored it "not
+  satisfied: checkout is on `master`" and downgraded itself to attended partly on that basis. The
+  item was written as a flat condition, so both readings were defensible — and the stricter one is
+  the harmful one, since a session that downgrades because it has not cut a branch *yet* puts
+  Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item 3 now says
+  when it is checked. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
+  sandbox and completes outside it `[measured]` — a named instance of the sandbox-denial hazard
+  already in that file, mattering here because that command is part of the CI gate item 2 requires.
 - **2026-09-13 (latest) — the Codex surface round-trips, on restart.** Following the previous
   entry, Brandon appended a line to `~/.codex/AGENTS.md` in his editor; it appeared in the
   Personalization field only after restarting the ChatGPT desktop app, while removing it in the

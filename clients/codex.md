@@ -49,6 +49,11 @@ conversation.
   - **A sandbox denial looks exactly like a missing capability.** `ps` was denied and a sandboxed
     `curl` failed DNS while the permitted route returned HTTP 200 — preserve the execution boundary
     in the claim, and never report "this machine can't" from inside a restricted call.
+  - **`claude plugin validate .` stalls inside the sandbox** and completes through approved
+    execution outside it `[measured 2026-09-13]` — it is part of the CI gate, so a gate run that
+    reaches it and hangs is the sandbox boundary, not a failing gate. Report the gate as green only
+    if you say which steps ran where; a run split across the boundary is not one uninterrupted
+    green invocation.
   - **Unquoted URL query strings die to zsh globbing** (`no matches found: …?ref=master`) — quote
     the endpoint.
   - **The installed skills plugin lags the repo** — `1.9.0` at `ea05754` while `master` was already
