@@ -25,8 +25,9 @@ jobs:
         run: ./scripts/check-index.sh
       # A step in this job, never a job of its own: a new job reports a new check
       # name, which master's required check (`check`) would not cover.
+      # Runs even when the index check failed, so one failure never hides the other.
+      # Files come from the config's `globs`, which markdownlint-cli2 appends to the
+      # action's own root-only default.
       - name: Markdown lint
+        if: ${{ !cancelled() }}
         uses: DavidAnson/markdownlint-cli2-action@v24
-        with:
-          # The action's default lints the root only; clients/ must be covered too.
-          globs: '**/*.md'

@@ -129,12 +129,12 @@ being retrofitted onto the other.
   `[measured: plain push to develop accepted, force-push rejected, direct push to master rejected]`.
 - **2026-09-12 — B0 item 4 rewritten (the guard's own bar was wrong).** It required "Brandon's
   review"; applied to a single-account repo by the `branch-protection` skill (claude-skills #56),
-  that froze every PR into `develop` and `master`, including the PR shipping the skill `[measured:
-  #66 mergeable_state blocked → clean after re-applying at 0 approvals]`. Approvals are out of the
-  guard; the PR rule, required checks, force-push/deletion blocks and the absence of bypass actors
-  are in. Added the honest limit: at 0 approvals nothing mechanically stops an agent merging its own
-  PR, so "only Brandon merges" is prose here. Surfaced by the #56 session and its independent
-  reviewer; the ticket's acceptance criteria were amended in place the same day.
+  that froze every PR into `develop` and `master`, including the PR shipping the skill
+  ``[measured: #66 `mergeable_state` blocked → clean after re-applying at 0 approvals]``. Approvals
+  are out of the guard; the PR rule, required checks, force-push/deletion blocks and the absence of
+  bypass actors are in. Added the honest limit: at 0 approvals nothing mechanically stops an agent
+  merging its own PR, so "only Brandon merges" is prose here. Surfaced by the #56 session and its
+  independent reviewer; the ticket's acceptance criteria were amended in place the same day.
 - **2026-09-12 — wave-8 amendments (5).** A4 gains the concede-the-vector clause; A7 gains the
   create-then-link retry rule; B1's apply-block gains rider-is-a-delta; C1's overwrite and
   re-staging bullets gain the shrinking-rewrite and `stagedPath` re-commit traps. Proposed by the
