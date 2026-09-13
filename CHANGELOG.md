@@ -10,6 +10,19 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-13 (#11) — the rules stop carrying their own biography.** Brandon: this repo states the
+  agreements, it is not a running log of why they are that way — and several review findings were
+  about prose that existed only to justify a rule. Item 3 went from nine lines (tri-state
+  vocabulary, a ritual-step citation, carve-outs for lane commits and release-cut work) back to
+  three: feature work lands on an initiative branch, scored when a commit would land, and what may
+  be pushed to `develop` is B2's. The Codex gate hazard went from seven lines to three. The
+  `[measured]` claim there no longer cites `_agent/evidence/…`: **a path outside this repo does not
+  resolve in a clone**, so a citation to one is unreadable by the agent the rule is written for —
+  provenance belongs here, in the changelog, not beside the rule. The evidence for that measurement
+  is `_agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/` on Brandon's fleet.
+  Two open review findings (how item 3 applies to lane commits; scoping the sandbox
+  classification) were answered by deletion rather than by more prose: the surface they pointed at
+  no longer exists. Every clause added to a rule is surface for the next finding.
 - **2026-09-13 (#10) — three precision fixes from the release PR's review.** The `develop → master`
   PR (#5) reads the whole diff against the release branch rather than one commit at a time, and
   caught three things #3's incremental passes did not. B0's by-environment line said item 3 is

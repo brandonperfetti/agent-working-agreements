@@ -217,8 +217,7 @@ silently at pickup**; a failed check downgrades that session to attended with a 
 by saying so in the prompt, and that wins over the default. An initiative's MPD §0 *records* the
 mode its waves run in (so a rotation packet carries it); it does not gate it.
 
-**Capability guard — every item that applies must hold; an item scored *n/a* neither holds nor
-fails:**
+**Capability guard (every item that applies must hold):**
 
 1. Native git on a real checkout — git executes hooks (so whatever the repo installs, e.g. husky,
    fires on commit); `rm`, worktrees, and `git branch -d` work. Worktrees share `.git/hooks` with
@@ -227,17 +226,9 @@ fails:**
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
    **This probe is always permitted**, in either mode: it is how the mode gets decided, so B1's
    "Brandon runs the suites" governs routine runs afterward, not this one.
-3. Feature work lands only on a branch off `develop` that no other initiative is using. **This
-   item governs ritual step 1 and nothing else**, and it is scored **at the moment a commit would
-   land**, not by what branch the checkout happens to be on. It **fails** — and downgrades the
-   session — when feature work would be committed onto a base branch, or onto a branch another
-   initiative is using. Until such a commit is in prospect the item is **not yet applicable**: a
-   session that has not cut its branch yet, and a session that will commit nothing at all (an
-   audit, a probe, a read-and-report pass), both score it *n/a* and neither is downgraded by it.
-   Cutting the branch is a step, not a precondition. **Ritual steps 4 and 5 — review findings and
-   release-cut work landing on `develop` by design — are governed by B2, not by this item**, and B2
-   is also where "feature work" and "release-cut work" are defined; this item never decides which
-   a commit is.
+3. Feature work lands on an initiative branch no other initiative is using, never on a base
+   branch. Scored when a commit would land, not by the checkout's current branch: a session that
+   commits none does not fail it. What may be pushed to `develop` is B2's, not this item's.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
      **deliberately no pull-request rule and no required check**. `develop` is the *head* of the
@@ -263,10 +254,8 @@ By environment: **Claude Code → autonomous** (1 passes by construction; 2 is a
 at pickup, never assumed; 3 before **every** feature commit, not only the first; **4 must be
 checked, never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skills carried
 protection or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and
-usually 2); **ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13; 4
-**queryable** there — `gh` is authenticated with the scopes to read protection — which is not the
-same as a repo's branches having been scored against their profiles, so 4 is still checked per
-repo; see `clients/codex.md`); OpenClaw → attended unless it demonstrably passes 1–4. **Where this
+usually 2); **ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13; 4 readable
+there but still checked per repo; see `clients/codex.md`); OpenClaw → attended unless it demonstrably passes 1–4. **Where this
 file is not reachable at all, attended rules apply.** Any client that passes the guard may run
 autonomous — the guard is the contract, not the client name.
 
