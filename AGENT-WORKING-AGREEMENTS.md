@@ -27,7 +27,6 @@ this repo.
 > [`CHANGELOG.md`](CHANGELOG.md) — read it before assuming a rule is original. Git history is the
 > record of *what* changed; the changelog says *why*, and is the one to read.
 
-
 # Part A — Portable discipline (every client, every mode)
 
 ## A1. Where this applies
@@ -37,7 +36,8 @@ lives** — a brand-new repo with no history, a one-off fix, or a multi-wave ini
 Checkouts are migrating under `sansfaux/` as they are rebuilt; location changes nothing. A repo's
 own `AGENTS.md` / `CLAUDE.md` adds project specifics (its CI gate, its exports, its conventions)
 and never overrides Parts A–B. Initiatives (`_agent/initiatives/`) are how *orchestrated* work is
-organised, not a gate on whether these rules apply: with no MPD, you are in **attended mode** (B1). Skills come from the `brandonperfetti-skills` plugin (mirror of `mattpocock/skills` plus
+organised, not a gate on whether these rules apply: with no MPD, you are in **attended mode** (B1).
+Skills come from the `brandonperfetti-skills` plugin (mirror of `mattpocock/skills` plus
 Brandon's own); read the relevant skill *before* that kind of work — `orchestrate`, `deep-grill`,
 `handoff`, `code-review`, `writing-tickets`, `writing-pull-requests`, `coderabbit-response`,
 `what-did-we-learn`, `writing-for-agents`.
@@ -99,10 +99,12 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   that fan out their own sub-agents. Route by role per `agent-workspace/references/subagent-model-routing.md`.
   [learnings: 2026-08-30 §5]
 - **RULE ZERO: the commit-trailer / attribution rule is line one of every dispatch prompt**, and the
-  trailers are grepped on every delivery regardless. [learnings: 2026-09-06 wave-6 §7; 2026-09-04 wave-5 §6]
+  trailers are grepped on every delivery regardless.
+  [learnings: 2026-09-06 wave-6 §7; 2026-09-04 wave-5 §6]
 - **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance —
   riders and review-fix lanes included, no size exemption.** The lane's own report is never the
-  review; the verdict is recorded under the initiative's `reviews/`. [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
+  review; the verdict is recorded under the initiative's `reviews/`.
+  [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.
@@ -132,7 +134,7 @@ The `sansfaux/` root holds project checkouts, the `agent-working-agreements/` cl
 `organize.sh` — nothing else.
 Everything an agent produces goes under `_agent/`:
 
-```
+```text
 _agent/
 ├── initiatives/<project>-<slug>/   one self-contained folder per orchestrated initiative:
 │     MASTER-PRIORITY-DOCUMENT.md   + nested handoffs/ analysis/ reviews/ evidence/ learnings/
@@ -244,20 +246,20 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    downgrade.**
    **What protection cannot enforce here.** Nothing in the repo settings stops an agent pushing
    straight to `develop`, or merging its own PR into `master` once the gate is green `[inference —
-   untested, since testing it means merging into a protected branch]`. **Feature work never lands on a base
-   branch, and only Brandon merges** are therefore rules of this agreement, not repo settings.
+   untested, since testing it means merging into a protected branch]`. **Feature work never lands
+   on a base branch, and only Brandon merges** are therefore rules of this agreement, not repo settings.
    Making either mechanical needs a separate agent identity (machine user or App token) — an
    identity change, open, not decided.
 5. Brandon has not overridden it for this session.
 
-By environment: **Claude Code → autonomous** (1 passes by construction; 2 is a per-repo probe run
-at pickup, never assumed; 3 before **every** feature commit, not only the first; **4 must be
-checked, never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skills carried
-protection or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and
-usually 2); **ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13; 4 readable
-there but still checked per repo; see `clients/codex.md`); OpenClaw → attended unless it demonstrably passes 1–4. **Where this
-file is not reachable at all, attended rules apply.** Any client that passes the guard may run
-autonomous — the guard is the contract, not the client name.
+By environment: **Claude Code → autonomous** (1 passes by construction; 2 is a per-repo probe run at
+pickup, never assumed; 3 before **every** feature commit, not only the first; **4 must be checked,
+never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skills carried protection
+or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and usually 2);
+**ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13; 4 readable there
+but still checked per repo; see `clients/codex.md`); OpenClaw → attended unless it demonstrably
+passes 1–4. **Where this file is not reachable at all, attended rules apply.** Any client that
+passes the guard may run autonomous — the guard is the contract, not the client name.
 
 ## B1. Attended mode
 
@@ -271,8 +273,9 @@ Brandon is the verification step, on purpose.
   **written report** plus either uncommitted code or an mbox / format-patch series in the
   initiative's `mboxes/` (committed only in the lane's own isolated clone, applied by the
   orchestrator with `git am` after review). **Sub-agents never write tickets or touch git; the
-  orchestrator owns tickets, staging, commits (post-approval), and any live/browser verification.** Review compounds; a report can be argued with, a commit
-  has to be reverted; a wrong premise gets faithfully implemented unless a human reads first.
+  orchestrator owns tickets, staging, commits (post-approval), and any live/browser verification.**
+  Review compounds; a report can be argued with, a commit has to be reverted; a wrong premise gets
+  faithfully implemented unless a human reads first.
 - **Brandon runs all builds, test suites, and installs.** Tell him exactly what to run. Type-checks,
   greps, linters, read-only scripts are yours to run. Lanes may run browser-mode test tiers where
   the sandbox allows. [learnings: 2026-09-04 wave-5 §5]
@@ -297,9 +300,9 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 
 - The wave orchestrator cuts **one branch per wave off `develop`** (`<initiative>/wave-<n>`), and
   that is the **only** branch an agent pushes to land **feature** work. **Never `master`, never a
-  force-push, and never feature work pushed onto `develop`.** Protection enforces this only on `master`; `develop` blocks
-  force-pushes and deletions but accepts pushes by design (step 4 of the ritual), so it is a rule
-  you keep, not a wall you hit.
+  force-push, and never feature work pushed onto `develop`.** Protection enforces this only on
+  `master`; `develop` blocks force-pushes and deletions but accepts pushes by design (step 4 of the
+  ritual), so it is a rule you keep, not a wall you hit.
 - **What decides is review, not the branch name.** `develop` accepts pushes by design; the question
   for any commit is whether it will be **reviewed before it reaches `master`**.
   - **Release-cut work pushes straight to `develop`** — the version bump, the CHANGELOG section

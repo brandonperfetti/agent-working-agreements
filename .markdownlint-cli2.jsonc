@@ -1,0 +1,28 @@
+// Lint rules for this repo. Every disabled or retuned rule carries its reason —
+// a rule switched off without one becomes permanent by default.
+{
+  "config": {
+    "default": true,
+
+    // These documents are hand-wrapped near 100 columns so that a diff of a prose
+    // amendment shows the sentence that changed, not a reflowed paragraph. Tables
+    // and code blocks cannot be wrapped without changing what they mean.
+    "MD013": { "line_length": 100, "tables": false, "code_blocks": false },
+
+    // The agreement's top-level structure is `# Part A`, `# Part B`, `# Part C`:
+    // three H1s under the title, deliberately, so each Part outranks its sections.
+    "MD025": false,
+
+    // The agreement uses bare emphasis as running prose ("**not** a failure"),
+    // which MD036 reads as a would-be heading. Headings here are explicit.
+    "MD036": false,
+
+    // Duplicate headings are expected: each clients/*.md repeats the same section
+    // names by design, and siblings are linted together.
+    "MD024": { "siblings_only": true }
+  },
+  "globs": ["**/*.md"],
+  // Lint what git tracks: untracked scratch (gitignored) never reaches CI, so a
+  // local run that saw it would disagree with the check.
+  "gitignore": true
+}
