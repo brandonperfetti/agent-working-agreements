@@ -130,7 +130,7 @@ being retrofitted onto the other.
 - **2026-09-12 — B0 item 4 rewritten (the guard's own bar was wrong).** It required "Brandon's
   review"; applied to a single-account repo by the `branch-protection` skill (claude-skills #56),
   that froze every PR into `develop` and `master`, including the PR shipping the skill
-  ``[measured: #66 `mergeable_state` blocked → clean after re-applying at 0 approvals]``. Approvals
+  `[measured: #66 `mergeable_state` blocked → clean after re-applying at 0 approvals]`. Approvals
   are out of the guard; the PR rule, required checks, force-push/deletion blocks and the absence of
   bypass actors are in. Added the honest limit: at 0 approvals nothing mechanically stops an agent
   merging its own PR, so "only Brandon merges" is prose here. Surfaced by the #56 session and its
