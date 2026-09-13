@@ -30,4 +30,4 @@ jobs:
       # action's own root-only default.
       - name: Markdown lint
         if: ${{ !cancelled() }}
-        uses: DavidAnson/markdownlint-cli2-action@v24
+        uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
