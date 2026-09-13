@@ -1,0 +1,14 @@
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [develop, master]
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Part C index matches clients/
+        run: ./scripts/check-index.sh
