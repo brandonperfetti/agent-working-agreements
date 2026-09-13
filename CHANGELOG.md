@@ -17,16 +17,18 @@ being retrofitted onto the other.
   The `[measured]` label is restored and now cites the capture. Found by the two-axis `code-review`
   the agreements require **before** a push, run only after Brandon asked why it had not been. Asserting
   the absence of evidence without searching for it is the A2 failure performed while arguing A2.
-- **2026-09-13 (#8) — guard item 3 is checked when work lands, not at pickup.** Two clients read
+- **2026-09-13 (#8) — guard item 3 scores at the moment a commit lands, and can be *n/a*.** Two clients read
   the same item two ways on the same day: a Claude Code session scored it "doesn't apply: this
   session commits nothing"; a Codex session on the same kind of read-only pass scored it "not
   satisfied: checkout is on `master`" and downgraded itself to attended partly on that basis. The
   item was written as a flat condition, so both readings were defensible — and the stricter one is
   the harmful one, since a session that downgrades because it has not cut a branch *yet* puts
-  Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item 3 now names the ritual step it
-  governs (step 1, feature work branching off `develop`) and records **pending** rather than failed
-  for a session that has not cut its branch yet, so the guard still runs at pickup and still only
-  downgrades on a real failure. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
+  Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item 3 now names the ritual step it governs
+  (step 1), is scored at the moment a commit would land rather than by the checkout's current
+  branch, and is *n/a* — neither holding nor failing — for a session that has not cut its branch yet
+  or will commit nothing. The guard header and the by-environment line were reconciled to admit that
+  third score. **The branch name `fix/guard-item-3-timing` misdescribes this**: the change is a
+  tri-state, not a move of when the check happens. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
   sandbox and completes outside it `[measured]`, its raw capture cited. A named instance of the
   sandbox-denial
   hazard already in that file, mattering here because that command is part of the CI gate item 2

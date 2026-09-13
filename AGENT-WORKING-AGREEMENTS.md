@@ -217,7 +217,7 @@ silently at pickup**; a failed check downgrades that session to attended with a 
 by saying so in the prompt, and that wins over the default. An initiative's MPD §0 *records* the
 mode its waves run in (so a rotation packet carries it); it does not gate it.
 
-**Capability guard (all must hold):**
+**Capability guard (every item that applies must hold; an item scored *n/a* neither holds nor fails):**
 
 1. Native git on a real checkout — git executes hooks (so whatever the repo installs, e.g. husky,
    fires on commit); `rm`, worktrees, and `git branch -d` work. Worktrees share `.git/hooks` with
@@ -226,14 +226,17 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
    **This probe is always permitted**, in either mode: it is how the mode gets decided, so B1's
    "Brandon runs the suites" governs routine runs afterward, not this one.
-3. The work is on a branch off `develop` that only this initiative uses. **This item governs
-   ritual step 1 — "Feature work branches off `develop`" — and nothing else.** At pickup it is
-   assessed like every other item, but what it asks is *will this session land feature work, and if
-   so onto what branch*: a session that has not cut the branch yet records it **pending**, which is
-   not a failure and does not downgrade the mode. It **fails**, and downgrades, when feature work
-   would land from a base branch. A session that will commit nothing — an audit, a probe, a
-   read-and-report pass — reaches no step 1 and records **n/a**. Steps 4 and 5, where release-cut
-   work and review findings land on `develop` by design, are not this item's business at all.
+3. Feature work lands only on a branch off `develop` that no other initiative is using. **This
+   item governs ritual step 1 and nothing else**, and it is scored **at the moment a commit would
+   land**, not by what branch the checkout happens to be on. It **fails** — and downgrades the
+   session — when feature work would be committed onto a base branch, or onto a branch another
+   initiative is using. Until such a commit is in prospect the item is **not yet applicable**: a
+   session that has not cut its branch yet, and a session that will commit nothing at all (an
+   audit, a probe, a read-and-report pass), both score it *n/a* and neither is downgraded by it.
+   Cutting the branch is a step, not a precondition. **Ritual steps 4 and 5 — review findings and
+   release-cut work landing on `develop` by design — are governed by B2, not by this item**, and B2
+   is also where "feature work" and "release-cut work" are defined; this item never decides which
+   a commit is.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
      **deliberately no pull-request rule and no required check**. `develop` is the *head* of the
@@ -255,7 +258,7 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    identity change, open, not decided.
 5. Brandon has not overridden it for this session.
 
-By environment: **Claude Code → autonomous** (passes 1–3 by construction; **4 must be
+By environment: **Claude Code → autonomous** (passes 1 and 2 by construction, 3 at its first commit; **4 must be
 checked, never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skills carried
 protection or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and usually 2); **ChatGPT desktop Codex with a
 local shell → autonomous** (1 and 4 measured 2026-09-13, see `clients/codex.md`); OpenClaw →
