@@ -1,16 +1,17 @@
 # agent-working-agreements
 
-The cross-project working agreement between Brandon and whatever agent he is working with under
-Sans Faux. **The agreement itself is [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md)** —
+The cross-project working agreement between Brandon and whatever agent he is working with under Sans
+Faux. **The agreement itself is [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md)** —
 start there, not here. This README is for the human maintaining the repo.
 
 ## Layout
 
-```
+```text
 AGENT-WORKING-AGREEMENTS.md   Parts A (portable discipline) + B (modes) + the Part C index
 clients/<client>.md           one appendix per environment — read only your own
 CHANGELOG.md                  why each rule changed, newest first
 scripts/check-index.sh        CI: the index and clients/ must correspond
+.markdownlint-cli2.jsonc      CI: markdown lint rules, each exception with its reason
 ```
 
 **The split rule:** anything every client is judged against stays in the root file, in full.
