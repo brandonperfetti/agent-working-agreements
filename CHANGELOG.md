@@ -18,8 +18,10 @@ being retrofitted onto the other.
   the harmful one, since a session that downgrades because it has not cut a branch *yet* puts
   Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item 3 now says
   when it is checked. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
-  sandbox and completes outside it `[measured]` — a named instance of the sandbox-denial hazard
-  already in that file, mattering here because that command is part of the CI gate item 2 requires.
+  sandbox and completes outside it — **reported** by the 2026-09-13 Codex audit, with no raw capture
+  retained, so it does not carry A2's `[measured]` bar. A named instance of the sandbox-denial
+  hazard already in that file, mattering here because that command is part of the CI gate item 2
+  requires.
 - **2026-09-13 (#7) — the agreement became a repo, and Part C became four files.** It had
   been machine-local and uncommitted, instantiated per runtime from the `agent-workspace` template,
   which meant three clients could silently drift apart and the only history was this log. It is now
