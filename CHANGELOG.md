@@ -10,12 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-09-13 (#12) — B2: every commit runs the repo's hooks (#6).** Guard item 1 checked that
-  hooks *fire*; nothing forbade turning them off. Every commit on #3 was made with
-  `git -c core.hooksPath=/dev/null commit`, a Cowork device-bridge habit that would have skipped a
-  `pre-commit` hook in any repo that had one. Surfaced while scoping #4 to CI only. Same principle
-  as the override rule on claude-skills #73. B1 is not amended: the bridge fails item 1, and
-  whether a bridge commit can run hooks at all is unmeasured.
+- **2026-09-13 (#12) — B2: every commit runs the repo's hooks.** Issue #6. Guard item 1 checked
+  that hooks *fire*; nothing forbade turning them off. Every commit on #3 was made with
+  `git -c core.hooksPath=/dev/null commit` [source: #4's decision comment], a device-bridge habit
+  that would have skipped any `pre-commit` hook [inference: this repo has none, so nothing was].
+  Surfaced while scoping #4 to CI only; same principle as the override rule on claude-skills #73: a
+  guard an agent can lift on its own is not a guard. **Open, not decided:** B1 is not amended, though
+  #3's commits were attended bridge commits. The bridge fails item 1, and whether a bridge commit
+  can run hooks at all is unmeasured; forbidding the override there might forbid committing.
 - **2026-09-13 (#11) — the rules stop carrying their own biography.** Brandon: this repo states the
   agreements, it is not a running log of why they are that way — and several review findings were
   about prose that existed only to justify a rule. Item 3 went from nine lines (tri-state
