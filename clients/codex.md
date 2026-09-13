@@ -54,9 +54,11 @@ conversation.
     `_agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/` — the gate log at line
     793, return code 143 under SIGTERM inside the sandbox, return code 0 through permitted
     execution outside it, and `gate-interruption.txt`. It is part of the CI gate, so a
-    gate run that reaches it and hangs is the sandbox boundary, not a failing gate. Report the
-    gate as green only if you say which steps ran where; a run split across the boundary is not
-    one uninterrupted green invocation.
+    gate run that reaches it and hangs is the sandbox boundary rather than a failing gate — but
+    the step still has to be **run and pass** through the permitted route before the gate counts as
+    green. A5's bar is every command the project names, in order, all succeeding; splitting the run
+    across the sandbox boundary is allowed, reporting a stalled step as green is not. Say which
+    steps ran where.
   - **Unquoted URL query strings die to zsh globbing** (`no matches found: …?ref=master`) — quote
     the endpoint.
   - **The installed skills plugin lags the repo** — `1.9.0` at `ea05754` while `master` was already

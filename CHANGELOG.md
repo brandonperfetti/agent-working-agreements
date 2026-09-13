@@ -10,6 +10,19 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-13 (#10) — three precision fixes from the release PR's review.** The `develop → master`
+  PR (#5) reads the whole diff against the release branch rather than one commit at a time, and
+  caught three things #3's incremental passes did not. B0's by-environment line said item 3 is
+  checked "at its first feature commit", which licenses every later commit to skip the branch and
+  ownership check — it is now checked before **every** feature commit. The same line claimed item 4
+  was "measured" for Codex; `clients/codex.md` records only that it is **queryable** there (`gh`
+  authenticated with the right scopes), which is not a repo's branches having been scored against
+  their profiles — an evidence overclaim, corrected, with 4 still checked per repo. And
+  `clients/codex.md` said a gate could be reported green if you disclosed which steps ran where;
+  A5's bar is every named command succeeding, so the stalled step must be **run and pass** through
+  the permitted route, with split execution allowed and disclosure still required.
+  These pushed straight to `develop` as release-cut work under B2's review-not-branch rule —
+  the first time this repo has exercised it.
 - **2026-09-13 (#9) — an evidence claim retracted, twice.** Answering a review finding on #3, the
   Codex sandbox-stall hazard was relabelled from `[measured]` to "no raw capture retained" — a
   claim made **without looking**. The capture existed the whole time, 70 files under

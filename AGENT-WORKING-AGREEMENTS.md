@@ -260,13 +260,15 @@ fails:**
 5. Brandon has not overridden it for this session.
 
 By environment: **Claude Code → autonomous** (1 passes by construction; 2 is a per-repo probe run
-at pickup, never assumed; 3 at its first feature commit; **4 must be checked, never assumed** —
-on 2026-09-10 neither `develop` nor `master` on claude-skills carried protection or rulesets
-[measured]); **Cowork over the device bridge →
-attended** (fails 1 and usually 2); **ChatGPT desktop Codex with a local shell → autonomous** (1
-and 4 measured 2026-09-13, see `clients/codex.md`); OpenClaw → attended unless it demonstrably
-passes 1–4. **Where this file is not reachable at all, attended rules apply.** Any
-client that passes the guard may run autonomous — the guard is the contract, not the client name.
+at pickup, never assumed; 3 before **every** feature commit, not only the first; **4 must be
+checked, never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skills carried
+protection or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and
+usually 2); **ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13; 4
+**queryable** there — `gh` is authenticated with the scopes to read protection — which is not the
+same as a repo's branches having been scored against their profiles, so 4 is still checked per
+repo; see `clients/codex.md`); OpenClaw → attended unless it demonstrably passes 1–4. **Where this
+file is not reachable at all, attended rules apply.** Any client that passes the guard may run
+autonomous — the guard is the contract, not the client name.
 
 ## B1. Attended mode
 
