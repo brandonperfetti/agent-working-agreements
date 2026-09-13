@@ -28,9 +28,10 @@ being retrofitted onto the other.
   3 now names the ritual step it governs (step 1), is scored at the moment a commit would land
   rather than by the checkout's current branch, and is *n/a* — neither holding nor failing — for a
   session that has not cut its branch yet or will commit nothing. The guard header and the
-  by-environment line were reconciled to admit that third score. **The branch name
-  `fix/guard-item-3-timing` misdescribes this**: the change is a tri-state, not a move of when the
-  check happens. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
+  by-environment line were reconciled to admit that third score. The change is **both** a tri-state
+  score and a move of when the item is evaluated — from the checkout's current branch at pickup to
+  the moment a feature commit would land. The branch name `fix/guard-item-3-timing` names only the
+  second half. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
   sandbox and completes outside it `[measured]`, its raw capture cited. A named instance of the
   sandbox-denial hazard already in that file, mattering here because that command is part of the CI
   gate item 2 requires.
@@ -74,13 +75,13 @@ being retrofitted onto the other.
   pushes that rewrite had just permitted. Found by the #68 reviewer in the shipped template, which
   the #56 session corrected there and correctly declined to touch here. Fifth correction to this
   one rule; the ritual section at the head of Part B exists to stop a sixth.
-- - **2026-09-13 (#2) — the ritual itself is written down, at the head of Part B.** The file
+- **2026-09-13 (#2) — the ritual itself is written down, at the head of Part B.** The file
   carried many rules *about* agents and no description of the release flow they serve, so each time
   the subject came up it was re-derived from principle — three times in two days, each derivation
   re-imposing a constraint the previous correction had lifted (a PR rule on `develop`; then a prose
   ban; then a narrow exception that still forced a PR for a version bump). Brandon named the
   pattern. Any rule touching a push, branch or merge must now name the ritual step it applies to.
-- - **2026-09-13 (#1) — B2's exception widened to all release-cut work, on the right principle.**
+- **2026-09-13 (#1) — B2's exception widened to all release-cut work, on the right principle.**
   Written the day before as "review findings only", it re-imposed in prose exactly what removing
   the PR rule from `develop` had just lifted, and would have forced a separate PR to land a version
   bump. Brandon caught it. The rule is now about **review, not branch**: release-cut work (bump,

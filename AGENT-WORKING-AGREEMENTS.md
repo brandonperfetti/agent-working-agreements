@@ -259,9 +259,10 @@ fails:**
    identity change, open, not decided.
 5. Brandon has not overridden it for this session.
 
-By environment: **Claude Code → autonomous** (passes 1 and 2 by construction, 3 at its first
-commit; **4 must be checked, never assumed** — on 2026-09-10 neither `develop` nor `master` on
-claude-skills carried protection or rulesets [measured]); **Cowork over the device bridge →
+By environment: **Claude Code → autonomous** (1 passes by construction; 2 is a per-repo probe run
+at pickup, never assumed; 3 at its first feature commit; **4 must be checked, never assumed** —
+on 2026-09-10 neither `develop` nor `master` on claude-skills carried protection or rulesets
+[measured]); **Cowork over the device bridge →
 attended** (fails 1 and usually 2); **ChatGPT desktop Codex with a local shell → autonomous** (1
 and 4 measured 2026-09-13, see `clients/codex.md`); OpenClaw → attended unless it demonstrably
 passes 1–4. **Where this file is not reachable at all, attended rules apply.** Any
