@@ -124,7 +124,9 @@ build typically runs neither linter nor formatter, so it can pass while the gate
 A gate line in a report names every command **and the ticket's reproduction re-run on the built
 tree**. Shared-database tiers running in parallel workers snapshot their baseline by id and unwind
 fixtures in `try/finally`; a local run does not reliably catch an order-dependent flake — **CI is
-the arbiter**. Never reason about a running dev server as though your edit is already in it.
+the arbiter**. Never reason about a running dev server as though your edit is already in it. **Never
+disable the repo's hooks to commit** — no `--no-verify`, and no pointing `core.hooksPath` away from
+the hooks the repo installs.
 
 ## A6. Where things go
 
@@ -163,8 +165,6 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
 - **`gh` CLI** — what the skills use (issues, sub-issues, PRs). Primary for skill-driven work.
 - **GitHub MCP** — the read/access layer and PR orchestration. **Its write tools (`push_files`,
   `create_or_update_file`) never author commits** — they bypass the local clone in both modes.
-- **Never disable the repo's hooks to commit, in either mode** — no `--no-verify`, and no pointing
-  `core.hooksPath` away from the hooks the repo installs.
 - **On any create-then-link error, read the current state before retrying** — the create may have
   landed. GitHub's sub-issue cap errors *after* creating and parenting; blind retries burn issue
   numbers and mint duplicates. [learnings: 2026-09-12 wave-8 §3]
