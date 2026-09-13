@@ -217,7 +217,7 @@ silently at pickup**; a failed check downgrades that session to attended with a 
 by saying so in the prompt, and that wins over the default. An initiative's MPD §0 *records* the
 mode its waves run in (so a rotation packet carries it); it does not gate it.
 
-**Capability guard (all must hold):**
+**Capability guard (every item that applies must hold):**
 
 1. Native git on a real checkout — git executes hooks (so whatever the repo installs, e.g. husky,
    fires on commit); `rm`, worktrees, and `git branch -d` work. Worktrees share `.git/hooks` with
@@ -226,7 +226,9 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
    **This probe is always permitted**, in either mode: it is how the mode gets decided, so B1's
    "Brandon runs the suites" governs routine runs afterward, not this one.
-3. The work is on a branch off `develop` that only this initiative uses.
+3. Feature work lands on an initiative branch no other initiative is using, never on a base
+   branch. Scored when a commit would land, not by the checkout's current branch: a session that
+   commits none does not fail it. What may be pushed to `develop` is B2's, not this item's.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
      **deliberately no pull-request rule and no required check**. `develop` is the *head* of the
@@ -248,12 +250,14 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    identity change, open, not decided.
 5. Brandon has not overridden it for this session.
 
-By environment: **Claude Code → autonomous** (passes 1–3 by construction; **4 must be
+By environment: **Claude Code → autonomous** (1 passes by construction; 2 is a per-repo probe run
+at pickup, never assumed; 3 before **every** feature commit, not only the first; **4 must be
 checked, never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skills carried
-protection or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and usually 2); **ChatGPT desktop Codex with a
-local shell → autonomous** (1 and 4 measured 2026-09-13, see `clients/codex.md`); OpenClaw →
-attended unless it demonstrably passes 1–4. **Where this file is not reachable at all, attended rules apply.** Any
-client that passes the guard may run autonomous — the guard is the contract, not the client name.
+protection or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and
+usually 2); **ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13; 4 readable
+there but still checked per repo; see `clients/codex.md`); OpenClaw → attended unless it demonstrably passes 1–4. **Where this
+file is not reachable at all, attended rules apply.** Any client that passes the guard may run
+autonomous — the guard is the contract, not the client name.
 
 ## B1. Attended mode
 

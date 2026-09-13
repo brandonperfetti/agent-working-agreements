@@ -4,8 +4,64 @@ Newest first; each entry says what changed and what produced it. Git history rec
 changed — this records *why*, which a diff cannot. A rule's own `[learnings: …]` citation is its
 receipt; this is the provenance of the *edit*. Moved out of the agreement 2026-09-13 to keep that
 file to its rules; moved into this repo 2026-09-13 when the agreement stopped being machine-local.
+Several amendments can share a date. Entries that carry a `(#n)` are same-day amendments in order,
+highest first; entries written before that convention (2026-09-12 and earlier) do not, and are
+simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #62 (2)" — is a **count
+of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
+being retrofitted onto the other.
 
-- **2026-09-13 (latest) — the agreement became a repo, and Part C became four files.** It had
+- **2026-09-13 (#11) — the rules stop carrying their own biography.** Brandon: this repo states the
+  agreements, it is not a running log of why they are that way — and several review findings were
+  about prose that existed only to justify a rule. Item 3 went from nine lines (tri-state
+  vocabulary, a ritual-step citation, carve-outs for lane commits and release-cut work) back to
+  three: feature work lands on an initiative branch, scored when a commit would land, and what may
+  be pushed to `develop` is B2's. The Codex gate hazard went from seven lines to three. The
+  `[measured]` claim there no longer cites `_agent/evidence/…`: **a path outside this repo does not
+  resolve in a clone**, so a citation to one is unreadable by the agent the rule is written for —
+  provenance belongs here, in the changelog, not beside the rule. The evidence for that measurement
+  is `_agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/` on Brandon's fleet.
+  Two open review findings (how item 3 applies to lane commits; scoping the sandbox
+  classification) were answered by deletion rather than by more prose: the surface they pointed at
+  no longer exists. Every clause added to a rule is surface for the next finding.
+- **2026-09-13 (#10) — three precision fixes from the release PR's review.** The `develop → master`
+  PR (#5) reads the whole diff against the release branch rather than one commit at a time, and
+  caught three things #3's incremental passes did not. B0's by-environment line said item 3 is
+  checked "at its first feature commit", which licenses every later commit to skip the branch and
+  ownership check — it is now checked before **every** feature commit. The same line claimed item 4
+  was "measured" for Codex; `clients/codex.md` records only that it is **queryable** there (`gh`
+  authenticated with the right scopes), which is not a repo's branches having been scored against
+  their profiles — an evidence overclaim, corrected, with 4 still checked per repo. And
+  `clients/codex.md` said a gate could be reported green if you disclosed which steps ran where;
+  A5's bar is every named command succeeding, so the stalled step must be **run and pass** through
+  the permitted route, with split execution allowed and disclosure still required.
+  These pushed straight to `develop` as release-cut work under B2's review-not-branch rule —
+  the first time this repo has exercised it.
+- **2026-09-13 (#9) — an evidence claim retracted, twice.** Answering a review finding on #3, the
+  Codex sandbox-stall hazard was relabelled from `[measured]` to "no raw capture retained" — a
+  claim made **without looking**. The capture existed the whole time, 70 files under
+  `_agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/` with a
+  `SHA256SUMS.json`. The `[measured]` label is restored and now cites the capture. Found by the
+  two-axis `code-review` the agreements require **before** a push, run only after Brandon asked why
+  it had not been. Asserting the absence of evidence without searching for it is the A2 failure
+  performed while arguing A2.
+- **2026-09-13 (#8) — guard item 3 scores at the moment a commit lands, and can be *n/a*.** Two
+  clients read the same item two ways on the same day: a Claude Code session scored it "doesn't
+  apply: this session commits nothing"; a Codex session on the same kind of read-only pass scored
+  it "not satisfied: checkout is on `master`" and downgraded itself to attended partly on that
+  basis. The item was written as a flat condition, so both readings were defensible — and the
+  stricter one is the harmful one, since a session that downgrades because it has not cut a branch
+  *yet* puts Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item
+  3 now names the ritual step it governs (step 1), is scored at the moment a commit would land
+  rather than by the checkout's current branch, and is *n/a* — neither holding nor failing — for a
+  session that has not cut its branch yet or will commit nothing. The guard header and the
+  by-environment line were reconciled to admit that third score. The change is **both** a tri-state
+  score and a move of when the item is evaluated — from the checkout's current branch at pickup to
+  the moment a feature commit would land. The branch name `fix/guard-item-3-timing` names only the
+  second half. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
+  sandbox and completes outside it `[measured]`, its raw capture cited. A named instance of the
+  sandbox-denial hazard already in that file, mattering here because that command is part of the CI
+  gate item 2 requires.
+- **2026-09-13 (#7) — the agreement became a repo, and Part C became four files.** It had
   been machine-local and uncommitted, instantiated per runtime from the `agent-workspace` template,
   which meant three clients could silently drift apart and the only history was this log. It is now
   `sansfaux/agent-working-agreements/`, and the environment appendices C1–C4 are
@@ -19,19 +75,19 @@ file to its rules; moved into this repo 2026-09-13 when the agreement stopped be
   `sansfaux/` root now holds the clone rather than the loose file. `organize.sh` **stays at the
   `sansfaux/` root** — it derives the fleet root from its own location, so moving it into the repo
   would silently retarget every path it touches.
-- **2026-09-13 (latest) — the Codex surface round-trips, on restart.** Following the previous
+- **2026-09-13 (#6) — the Codex surface round-trips, on restart.** Following the previous
   entry, Brandon appended a line to `~/.codex/AGENTS.md` in his editor; it appeared in the
   Personalization field only after restarting the ChatGPT desktop app, while removing it in the
   field deleted it from the file immediately `[measured]`. C3 now records the asymmetry and its
   hazard — a file edit made while the app runs is invisible to it and can be discarded by the next
   field save. The pointer is script-editable with a restart, which is what the AWA repo migration
   needs; the cloud-Codex question stays open.
-- **2026-09-13 (latest) — one Codex surface, not two.** C3 said the pointer lived on line 1 of
+- **2026-09-13 (#5) — one Codex surface, not two.** C3 said the pointer lived on line 1 of
   `~/.codex/AGENTS.md`, and the day's guidance treated the desktop Personalization field as a
   separate place. Brandon's edit in the UI rewrote that file's entire contents `[measured]`, so they
   are one surface; C3's "how this file reaches you" bullet now records that, plus two open
   measurements (does a file edit propagate back to the field; what does a cloud Codex task get).
-- **2026-09-13 (latest) — Codex moved from attended to autonomous.** C3's heading and its
+- **2026-09-13 (#4) — Codex moved from attended to autonomous.** C3's heading and its
   default-mode bullet said "attended **by instruction**, not by incapability"; Brandon lifted that
   standing instruction, so mode there is now decided by the capability guard alone, as in C2 (items
   1 and 4 measured passing 2026-09-13; item 2 stays a per-repo probe at pickup). B0's
@@ -39,24 +95,24 @@ file to its rules; moved into this repo 2026-09-13 when the agreement stopped be
   instruction field is wider than the others': it reaches every ChatGPT/Codex chat, so Part B and
   C3 apply only to a session with a local shell working a repo under `~/dev/sansfaux`, and
   elsewhere only Part A's honesty rules carry.
-- **2026-09-13 (later) — two stale sentences brought in line with the review-not-branch rule.**
+- **2026-09-13 (#3) — two stale sentences brought in line with the review-not-branch rule.**
   B2's first bullet said "never `develop` to land work" and B0 item 4's summary said "Agents never
   push a base branch" — both survived the 2026-09-13 rewrite and still forbade the release-cut
   pushes that rewrite had just permitted. Found by the #68 reviewer in the shipped template, which
   the #56 session corrected there and correctly declined to touch here. Fifth correction to this
   one rule; the ritual section at the head of Part B exists to stop a sixth.
-- **2026-09-13 — the ritual itself is written down, at the head of Part B.** The file carried many
-  rules *about* agents and no description of the release flow they serve, so each time the subject
-  came up it was re-derived from principle — three times in two days, each derivation re-imposing a
-  constraint the previous correction had lifted (a PR rule on `develop`; then a prose ban; then a
-  narrow exception that still forced a PR for a version bump). Brandon named the pattern. Any rule
-  touching a push, branch or merge must now name the ritual step it applies to.
-- **2026-09-13 — B2's exception widened to all release-cut work, on the right principle.** Written
-  the day before as "review findings only", it re-imposed in prose exactly what removing the PR rule
-  from `develop` had just lifted, and would have forced a separate PR to land a version bump.
-  Brandon caught it. The rule is now about **review, not branch**: release-cut work (bump, CHANGELOG,
-  `dist/`, review fixes) pushes straight to `develop` because the release PR reviews it; feature work
-  takes a PR because nothing else would.
+- **2026-09-13 (#2) — the ritual itself is written down, at the head of Part B.** The file
+  carried many rules *about* agents and no description of the release flow they serve, so each time
+  the subject came up it was re-derived from principle — three times in two days, each derivation
+  re-imposing a constraint the previous correction had lifted (a PR rule on `develop`; then a prose
+  ban; then a narrow exception that still forced a PR for a version bump). Brandon named the
+  pattern. Any rule touching a push, branch or merge must now name the ritual step it applies to.
+- **2026-09-13 (#1) — B2's exception widened to all release-cut work, on the right principle.**
+  Written the day before as "review findings only", it re-imposed in prose exactly what removing
+  the PR rule from `develop` had just lifted, and would have forced a separate PR to land a version
+  bump. Brandon caught it. The rule is now about **review, not branch**: release-cut work (bump,
+  CHANGELOG, `dist/`, review fixes) pushes straight to `develop` because the release PR reviews it;
+  feature work takes a PR because nothing else would.
 - **2026-09-12 (third pass) — B2's push rule corrected, and the release-PR exception written.**
   B2 claimed "the protection rules enforce" the never-`develop` rule; after the two-profile split
   that is true only of `master`, so the claim was retired and the rule kept as a rule. The gap the
