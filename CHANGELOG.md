@@ -11,28 +11,29 @@ of amendments in that batch**, not an ordinal; the two notations predate each ot
 being retrofitted onto the other.
 
 - **2026-09-13 (#9) — an evidence claim retracted, twice.** Answering a review finding on #3, the
-  Codex sandbox-stall hazard was relabelled from `[measured]` to "no raw capture retained" — a claim
-  made **without looking**. The capture existed the whole time, 70 files under
-  `_agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/` with a `SHA256SUMS.json`.
-  The `[measured]` label is restored and now cites the capture. Found by the two-axis `code-review`
-  the agreements require **before** a push, run only after Brandon asked why it had not been. Asserting
-  the absence of evidence without searching for it is the A2 failure performed while arguing A2.
-- **2026-09-13 (#8) — guard item 3 scores at the moment a commit lands, and can be *n/a*.** Two clients read
-  the same item two ways on the same day: a Claude Code session scored it "doesn't apply: this
-  session commits nothing"; a Codex session on the same kind of read-only pass scored it "not
-  satisfied: checkout is on `master`" and downgraded itself to attended partly on that basis. The
-  item was written as a flat condition, so both readings were defensible — and the stricter one is
-  the harmful one, since a session that downgrades because it has not cut a branch *yet* puts
-  Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item 3 now names the ritual step it governs
-  (step 1), is scored at the moment a commit would land rather than by the checkout's current
-  branch, and is *n/a* — neither holding nor failing — for a session that has not cut its branch yet
-  or will commit nothing. The guard header and the by-environment line were reconciled to admit that
-  third score. **The branch name `fix/guard-item-3-timing` misdescribes this**: the change is a
-  tri-state, not a move of when the check happens. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
+  Codex sandbox-stall hazard was relabelled from `[measured]` to "no raw capture retained" — a
+  claim made **without looking**. The capture existed the whole time, 70 files under
+  `_agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/` with a
+  `SHA256SUMS.json`. The `[measured]` label is restored and now cites the capture. Found by the
+  two-axis `code-review` the agreements require **before** a push, run only after Brandon asked why
+  it had not been. Asserting the absence of evidence without searching for it is the A2 failure
+  performed while arguing A2.
+- **2026-09-13 (#8) — guard item 3 scores at the moment a commit lands, and can be *n/a*.** Two
+  clients read the same item two ways on the same day: a Claude Code session scored it "doesn't
+  apply: this session commits nothing"; a Codex session on the same kind of read-only pass scored
+  it "not satisfied: checkout is on `master`" and downgraded itself to attended partly on that
+  basis. The item was written as a flat condition, so both readings were defensible — and the
+  stricter one is the harmful one, since a session that downgrades because it has not cut a branch
+  *yet* puts Brandon back in the loop for exactly the work autonomous mode exists to hand off. Item
+  3 now names the ritual step it governs (step 1), is scored at the moment a commit would land
+  rather than by the checkout's current branch, and is *n/a* — neither holding nor failing — for a
+  session that has not cut its branch yet or will commit nothing. The guard header and the
+  by-environment line were reconciled to admit that third score. **The branch name
+  `fix/guard-item-3-timing` misdescribes this**: the change is a tri-state, not a move of when the
+  check happens. Also added to `clients/codex.md`: `claude plugin validate .` stalls inside the
   sandbox and completes outside it `[measured]`, its raw capture cited. A named instance of the
-  sandbox-denial
-  hazard already in that file, mattering here because that command is part of the CI gate item 2
-  requires.
+  sandbox-denial hazard already in that file, mattering here because that command is part of the CI
+  gate item 2 requires.
 - **2026-09-13 (#7) — the agreement became a repo, and Part C became four files.** It had
   been machine-local and uncommitted, instantiated per runtime from the `agent-workspace` template,
   which meant three clients could silently drift apart and the only history was this log. It is now
@@ -73,18 +74,18 @@ being retrofitted onto the other.
   pushes that rewrite had just permitted. Found by the #68 reviewer in the shipped template, which
   the #56 session corrected there and correctly declined to touch here. Fifth correction to this
   one rule; the ritual section at the head of Part B exists to stop a sixth.
-- **2026-09-13 (#2) — the ritual itself is written down, at the head of Part B.** The file carried many
-  rules *about* agents and no description of the release flow they serve, so each time the subject
-  came up it was re-derived from principle — three times in two days, each derivation re-imposing a
-  constraint the previous correction had lifted (a PR rule on `develop`; then a prose ban; then a
-  narrow exception that still forced a PR for a version bump). Brandon named the pattern. Any rule
-  touching a push, branch or merge must now name the ritual step it applies to.
-- **2026-09-13 (#1) — B2's exception widened to all release-cut work, on the right principle.** Written
-  the day before as "review findings only", it re-imposed in prose exactly what removing the PR rule
-  from `develop` had just lifted, and would have forced a separate PR to land a version bump.
-  Brandon caught it. The rule is now about **review, not branch**: release-cut work (bump, CHANGELOG,
-  `dist/`, review fixes) pushes straight to `develop` because the release PR reviews it; feature work
-  takes a PR because nothing else would.
+- - **2026-09-13 (#2) — the ritual itself is written down, at the head of Part B.** The file
+  carried many rules *about* agents and no description of the release flow they serve, so each time
+  the subject came up it was re-derived from principle — three times in two days, each derivation
+  re-imposing a constraint the previous correction had lifted (a PR rule on `develop`; then a prose
+  ban; then a narrow exception that still forced a PR for a version bump). Brandon named the
+  pattern. Any rule touching a push, branch or merge must now name the ritual step it applies to.
+- - **2026-09-13 (#1) — B2's exception widened to all release-cut work, on the right principle.**
+  Written the day before as "review findings only", it re-imposed in prose exactly what removing
+  the PR rule from `develop` had just lifted, and would have forced a separate PR to land a version
+  bump. Brandon caught it. The rule is now about **review, not branch**: release-cut work (bump,
+  CHANGELOG, `dist/`, review fixes) pushes straight to `develop` because the release PR reviews it;
+  feature work takes a PR because nothing else would.
 - **2026-09-12 (third pass) — B2's push rule corrected, and the release-PR exception written.**
   B2 claimed "the protection rules enforce" the never-`develop` rule; after the two-profile split
   that is true only of `master`, so the claim was retired and the rule kept as a rule. The gap the
