@@ -4,7 +4,11 @@ Newest first; each entry says what changed and what produced it. Git history rec
 changed — this records *why*, which a diff cannot. A rule's own `[learnings: …]` citation is its
 receipt; this is the provenance of the *edit*. Moved out of the agreement 2026-09-13 to keep that
 file to its rules; moved into this repo 2026-09-13 when the agreement stopped being machine-local.
-Several amendments can share a date; same-day entries carry a `(#n)`, highest first.
+Several amendments can share a date. Entries that carry a `(#n)` are same-day amendments in order,
+highest first; entries written before that convention (2026-09-12 and earlier) do not, and are
+simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #62 (2)" — is a **count
+of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
+being retrofitted onto the other.
 
 - **2026-09-13 (#8) — guard item 3 is checked when work lands, not at pickup.** Two clients read
   the same item two ways on the same day: a Claude Code session scored it "doesn't apply: this

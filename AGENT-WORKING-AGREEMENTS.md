@@ -229,7 +229,9 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
 3. The work is on a branch off `develop` that only this initiative uses — checked **when the
    session is about to land work, not at pickup**. A session that will commit nothing (an audit, a
    probe, a read-and-report pass) does not fail this item by sitting on a base branch; it fails it
-   by pushing from one. Cutting the branch is a step, not a precondition.
+   by landing **feature work** from one. Cutting the branch is a step, not a precondition.
+   Release-cut pushes straight to `develop` are B2's documented case and are **not** a failure of
+   this item — the question is review, never the branch name.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
      **deliberately no pull-request rule and no required check**. `develop` is the *head* of the
