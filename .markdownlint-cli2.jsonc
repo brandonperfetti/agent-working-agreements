@@ -22,7 +22,9 @@
     "MD024": { "siblings_only": true }
   },
   "globs": ["**/*.md"],
-  // Lint what git tracks: untracked scratch (gitignored) never reaches CI, so a
-  // local run that saw it would disagree with the check.
+  // Skip paths a `.gitignore` matches: scratch there never reaches CI, so a local
+  // run that saw it would disagree with the check. `.git/info/exclude` is not
+  // honoured, and an untracked file nothing ignores is still linted locally,
+  // catching its errors before the first commit.
   "gitignore": true
 }
