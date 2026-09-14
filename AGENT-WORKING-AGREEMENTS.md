@@ -126,7 +126,9 @@ build typically runs neither linter nor formatter, so it can pass while the gate
 A gate line in a report names every command **and the ticket's reproduction re-run on the built
 tree**. Shared-database tiers running in parallel workers snapshot their baseline by id and unwind
 fixtures in `try/finally`; a local run does not reliably catch an order-dependent flake — **CI is
-the arbiter**. Never reason about a running dev server as though your edit is already in it.
+the arbiter**. Never reason about a running dev server as though your edit is already in it. **Never
+disable the repo's hooks to commit** — no `--no-verify`, and no pointing `core.hooksPath` away from
+the hooks the repo installs.
 
 ## A6. Where things go
 

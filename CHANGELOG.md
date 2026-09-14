@@ -10,6 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-13 (#12) — A5: never disable the repo's hooks to commit.** Issue #6. Guard item 1
+  checked that hooks *fire*; nothing forbade turning them off. Every commit on #3 was made over the
+  device bridge with `git -c core.hooksPath=/dev/null commit` [source: #4's decision comment]. Same
+  principle as the override rule on claude-skills #73: a guard an agent can lift on its own is not a
+  guard. First drafted for B2 alone, on the theory that bridge commits might not be able to run
+  hooks; Brandon's probe the same day measured that they do
+  `[measured 2026-09-13, Cowork over the bridge]` (a `pre-commit` sentinel printed and the commit
+  landed through the usual lock-file noise), so disabling them there is a habit, not a necessity,
+  and the rule moved to A5, beside the gate whose commit-time half hooks are. Evidence:
+  `_agent/experiments/2026-09-13-bridge-hook-probe/` on Brandon's fleet. `clients/cowork.md` records
+  the fact and its limit: a hook *firing* is not a hook *passing*, and one that needs `rm`, a
+  worktree or a truncating write is unmeasured there.
 - **2026-09-13 (#11) — the rules stop carrying their own biography.** Brandon: this repo states the
   agreements, it is not a running log of why they are that way — and several review findings were
   about prose that existed only to justify a rule. Item 3 went from nine lines (tri-state
@@ -20,9 +32,12 @@ being retrofitted onto the other.
   resolve in a clone**, so a citation to one is unreadable by the agent the rule is written for —
   provenance belongs here, in the changelog, not beside the rule. The evidence for that measurement
   is `_agent/evidence/2026-09-13-codex-standing-instructions-audit-01a09c32/` on Brandon's fleet.
-  Two open review findings (how item 3 applies to lane commits; scoping the sandbox
-  classification) were answered by deletion rather than by more prose: the surface they pointed at
-  no longer exists. Every clause added to a rule is surface for the next finding.
+  Two open review findings (how item 3 applies to lane commits; scoping the sandbox classification)
+  were answered by deletion rather than by more prose: the surface they pointed at no longer exists.
+  Every clause added to a rule is surface for the next finding. *Clarified 2026-09-13 (#12's PR):*
+  the ban is on citing, in a rule, a specific artifact outside the repo (an evidence directory, an
+  audit file, a dated capture); naming the workspace convention A6 defines, as A1 does with
+  `_agent/initiatives/`, is not a dead reference, because an agent creates that tree.
 - **2026-09-13 (#10) — three precision fixes from the release PR's review.** The `develop → master`
   PR (#5) reads the whole diff against the release branch rather than one commit at a time, and
   caught three things #3's incremental passes did not. B0's by-environment line said item 3 is
