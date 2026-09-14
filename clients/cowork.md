@@ -18,6 +18,9 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   `tmp_obj_*`). `sweep && git add … && sweep && git commit …` in one shell call; a `git status`
   between sweep and commit re-blocks it. `./organize.sh --git-locks --apply` sweeps every repo into
   `.git/_agent_trash/` keeping filenames. `tmp_obj_*` unlink warnings during `git add` are noise.
+- **Git hooks fire over the bridge** [measured 2026-09-13]: item 1 fails here for `rm`, worktrees
+  and `branch -d`, not for hooks. Whether a hook that itself needs those, or a truncating write,
+  also *passes* is unmeasured.
 - **Merge-state files linger** after a bridge merge (`MERGE_HEAD`, `MERGE_MSG`, `MERGE_MODE`) —
   `mv` them to `.git/_agent_trash/`. `git checkout -- <file>` and `git branch -d` fail; restore with
   `git show HEAD:<file> > <file>`; leave dead branches for Brandon to `-D`.
