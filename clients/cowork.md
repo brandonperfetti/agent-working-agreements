@@ -21,8 +21,9 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
 - **Git hooks fire over the bridge** [measured 2026-09-13, a `pre-commit` sentinel]: item 1 fails
   here for `rm`, worktrees and `branch -d`, not for hooks firing. Whether a hook that itself needs
   those, or a truncating write, also *passes* is unmeasured. That is not item 1's `pre-push`
-  probe, which is unmeasured here and not yours: you never push — Brandon pushes from his clone
-  (B1), so the probe there, and any install it calls for, is his.
+  probe, which is unmeasured here. Brandon pushes from his clone (B1: "He pushes himself"), so the
+  probe is about his checkout and, like any install it calls for, his to run — tell him exactly
+  what to run (B1).
 - **Merge-state files linger** after a bridge merge (`MERGE_HEAD`, `MERGE_MSG`, `MERGE_MODE`) —
   `mv` them to `.git/_agent_trash/`. `git checkout -- <file>` and `git branch -d` fail; restore with
   `git show HEAD:<file> > <file>`; leave dead branches for Brandon to `-D`.
@@ -48,6 +49,6 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   Code's [source: this session, 2026-09-17], with no setting here that switches it off — do not
   follow it. A commit over the bridge is one you make after approval, and Brandon pushes it from
   his clone (B1). Whether anything else here writes to a commit message is unmeasured; A4's grep
-  is the check, with A4's scope — the commits a delivery adds, never inherited ones.
+  is the check — its scope and its handling of inherited commits included.
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]
