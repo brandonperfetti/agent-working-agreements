@@ -22,6 +22,11 @@ Code fact.
   `EnterWorktree` tool, where present, does the same.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured). Lanes share `.git/hooks`; never install a per-lane hook.
+- **Attribution (RULE ZERO, A4): this environment injects it by default** — `Co-Authored-By` and
+  `Claude-Session` trailers on commits, a "Generated with Claude Code" footer on PR bodies
+  [source 2026-09-15: the harness's own session instructions].
+  Confirm `"includeCoAuthoredBy": false` in `~/.claude/settings.json` before the first commit, and
+  grep every commit and the PR body for `Co-Authored-By|Claude-Session|Generated with`.
 - A wave orchestrator's session is one wave; rotate by starting a fresh session from the packet
   (or `handoff`).
 - This file is loaded by the one-line pointer in the user-level `~/.claude/CLAUDE.md` (created

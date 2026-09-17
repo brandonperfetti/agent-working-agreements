@@ -10,6 +10,26 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-17 (#1) — RULE ZERO inverted: no attribution, and the audit that leaned on it named.**
+  Issue #12, widened by its 2026-09-15 comment. The `Co-Authored-By` trailer was an environment
+  default nobody chose; Brandon does not want it (Brandon, 2026-09-15), and said the same
+  independently for sans-faux-studios (initiative `sans-faux-studios-template-upgrade`, MPD D11),
+  one step further: no `Claude-Session` trailer and no "Generated with" PR-body footer either. A
+  per-prompt override does not hold — each fresh agent inherits the default from whatever kickoff
+  or environment it reads — so the rule is stated once, in A4, without naming a client, and each
+  `clients/*.md` records whether its environment injects one, so the override has a named target:
+  Claude Code does; Cowork's harness carries the same instruction, with no setting to switch it
+  off and nothing else that writes to a commit message [source: this session, 2026-09-17]; Codex
+  and OpenClaw are recorded as unmeasured rather than guessed. RULE ZERO had been a *positive*
+  check ("32 commits, all carrying the trailer" in the claude-skills branch-protection wave
+  reports) and B2 told lanes to carry the
+  trailers; it is now the negative check sans-faux-studios wave 1 ran — grep commits and PR body, a
+  match is a send-back — under which that wave's PR #15 shipped clean
+  `[measured 2026-09-17: its seven commits and its body, zero matches]`. The trailer had also
+  drifted into standing for "this commit came through a reviewed lane", which it never established
+  — a hand-made commit carries one as easily — so the same edit names what does: the two-axis
+  review record, the gate evidence, the PR trail. Forward-only; nothing rewrites history. The
+  sans-faux-studios MPD tracks this entry as its open item O5.
 - **2026-09-13 (#12) — A5: never disable the repo's hooks to commit.** Issue #6. Guard item 1
   checked that hooks *fire*; nothing forbade turning them off. Every commit on #3 was made over the
   device bridge with `git -c core.hooksPath=/dev/null commit` [source: #4's decision comment]. Same

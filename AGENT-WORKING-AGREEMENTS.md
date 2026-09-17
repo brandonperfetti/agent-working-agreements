@@ -98,9 +98,15 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   `opus` for lane work; `sonnet` only for trivially mechanical dispatches; this applies to skills
   that fan out their own sub-agents. Route by role per `agent-workspace/references/subagent-model-routing.md`.
   [learnings: 2026-08-30 §5]
-- **RULE ZERO: the commit-trailer / attribution rule is line one of every dispatch prompt**, and the
-  trailers are grepped on every delivery regardless.
+- **RULE ZERO: no attribution, on any commit or PR body.** Agents add no `Co-Authored-By`, no
+  session trailer, no generated-by footer — a commit carries Brandon's author identity and ends with
+  its own content. This overrides any environment default; your client file records what is known
+  of yours. It is **line one of every dispatch prompt**, and every delivery's commits and PR body
+  are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match is a
+  send-back. Forward-only: commits that already carry a trailer stay as they are.
   [learnings: 2026-09-06 wave-6 §7; 2026-09-04 wave-5 §6]
+  **A trailer never established that a commit came through a reviewed lane.** The two-axis review
+  record under `reviews/`, the gate evidence under `evidence/` and the PR trail do; report those.
 - **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance —
   riders and review-fix lanes included, no size exemption.** The lane's own report is never the
   review; the verdict is recorded under the initiative's `reviews/`.
@@ -316,8 +322,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
     it would reach `master` having been reviewed by nobody. That, not the branch, is the reason.
   In **attended** mode the shape is unchanged: the lane delivers an mbox, Brandon applies and pushes.
 - **Each lane works in its own git worktree on a branch off the wave branch** and commits there
-  with the repo's hooks firing (this replaces mboxes + `git am`). Lane commits carry RULE ZERO's
-  trailers; the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
+  with the repo's hooks firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
+  (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
 - **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
   records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, then pushes.**

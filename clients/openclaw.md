@@ -12,3 +12,6 @@ your reading** — "read the agreements and `clients/openclaw.md`" — so a skip
 Mostly read-only until the Agent Mind reboot completes; then a handoff/re-education packet. On
 the Codex harness it may pass the guard — measure items 1–4 before declaring autonomous, and record
 the result in `_agent/initiatives/openclaw-codex-harness/`.
+
+Attribution (RULE ZERO, A4): whether this environment injects a commit trailer or a PR-body footer
+by default is **unmeasured** — measure and record. The rule holds either way.
