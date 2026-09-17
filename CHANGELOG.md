@@ -36,7 +36,8 @@ being retrofitted onto the other.
   construction. *Review round 1 (PR #15):* the probe now names its positive evidence. A silent
   `pre-push` and a missing one print the same dry run; `GIT_TRACE=1` separates them — a
   `run_command` line naming the hook, absent with no hook [measured 2026-09-17, git 2.46.0, scratch
-  repo, both controls]. "Shows no hook having run" had left the instrument unnamed (A2: the
+  repo, three cases: absent, silent, and present but not executable — a hint, no `run_command`].
+  "Shows no hook having run" had left the instrument unnamed (A2: the
   instrument is part of the claim). And Codex's item 1 evidence is a `pre-commit` sentinel from
   2026-09-13, which says nothing about a per-checkout `pre-push` probe: B0's by-environment line
   and `clients/codex.md` now say the probe is unmeasured there and run at pickup. Not changed:
