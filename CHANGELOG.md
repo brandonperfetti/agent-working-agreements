@@ -40,7 +40,11 @@ being retrofitted onto the other.
   "Shows no hook having run" had left the instrument unnamed (A2: the
   instrument is part of the claim). And Codex's item 1 evidence is a `pre-commit` sentinel from
   2026-09-13, which says nothing about a per-checkout `pre-push` probe: B0's by-environment line
-  and `clients/codex.md` now say the probe is unmeasured there and run at pickup. Not changed:
+  and `clients/codex.md` now say the probe is unmeasured there and run at pickup. *Round 2:* the
+  ticket's "(sends nothing)" became "sends no objects, but still contacts the remote", because the
+  order matters: with an unreachable remote the dry run exits 128 before `pre-push` runs
+  [measured 2026-09-17, git 2.46.0, scratch repo, loud sentinel hook], which item 1 would have
+  scored as missing hooks and answered with an install. It is now no result, not a FAIL. Not changed:
   `clients/cowork.md` — #14 puts attended-mode installs out of scope. Evidence, on Brandon's fleet:
   `_agent/evidence/2026-09-17-awa-12-14-guard-and-worktree-hookspath-probe/` and, for the review
   round, `_agent/evidence/2026-09-17-awa-pr15-cr-round1/`.
