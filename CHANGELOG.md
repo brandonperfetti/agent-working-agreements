@@ -64,29 +64,34 @@ being retrofitted onto the other.
   or environment it reads — so the rule is stated once, in A4, without naming a client, and each
   `clients/*.md` records whether its environment injects one, so the override has a named target:
   Claude Code does; Cowork's harness carries the same instruction, with no setting to switch it
-  off [source: this session, 2026-09-17] — *review round 1 (PR #15):* it first added "and nothing
-  else writes to a commit message", a universal nobody measured (a `commit-msg` hook or a commit
-  template could), so the delivery grep is named as the check instead; Codex
-  and OpenClaw are recorded as unmeasured rather than guessed. *Round 3:* the grep is scoped to
-  the commits a delivery **adds**. "Every delivery's commits" plus "a match is a send-back" could
-  send back history the same bullet says to leave alone: 195 of the 426 commits on claude-skills'
-  `develop` already carry the trailer [measured 2026-09-17], so any range that reaches them — a
-  release PR, a lane merging an old branch, a grep run without a base — would fail on commits
-  nobody may rewrite [`git log --format='%(trailers:key=Co-Authored-By)'` on `origin/develop` at
-  `1201aa8`; sans-faux-studios, adopted after its own rule, had 0 of 64]. The first wording,
-  "the commits a delivery adds", named no base, which would have let a lane's own commit from an
-  earlier round pass as inherited; the base is now in the rule — not on `develop` or `master`
-  when the branch was cut — and an inherited match has a destination, the review record. Capture:
-  `_agent/evidence/2026-09-17-awa-pr15-cr-round3/` on Brandon's fleet. RULE ZERO had been a *positive*
-  check ("32 commits, all carrying the trailer" in the claude-skills branch-protection wave
-  reports) and B2 told lanes to carry the
-  trailers; it is now the negative check sans-faux-studios wave 1 ran — grep commits and PR body, a
-  match is a send-back — under which that wave's PR #15 shipped clean
+  off [source: this session, 2026-09-17]; Codex and OpenClaw are recorded as unmeasured rather
+  than guessed. RULE ZERO had been a *positive* check ("32 commits, all carrying the trailer" in
+  the claude-skills branch-protection wave reports) and B2 told lanes to carry the trailers; it is
+  now the negative check sans-faux-studios wave 1 ran — grep commits and PR body, a match is a
+  send-back — under which that wave's PR #15 shipped clean
   `[measured 2026-09-17: its seven commits and its body, zero matches]`. The trailer had also
   drifted into standing for "this commit came through a reviewed lane", which it never established
   — a hand-made commit carries one as easily — so the same edit names what does: the two-axis
   review record, the gate evidence, the PR trail. Forward-only; nothing rewrites history. The
   sans-faux-studios MPD tracks this entry as its open item O5.
+  *Review round 1 (PR #15):* the Cowork line first added "and nothing else writes to a commit
+  message", a universal nobody measured (a `commit-msg` hook or a commit template could), so the
+  delivery grep is named as the check instead.
+  *Round 3:* the grep is scoped to the commits a delivery **adds**. "Every delivery's commits" plus
+  "a match is a send-back" could send back history the same bullet says to leave alone: 195 of
+  the 426 commits on claude-skills' `develop` already carry the trailer [measured 2026-09-17,
+  `git log --format='%(trailers:key=Co-Authored-By)'` on `origin/develop` at `1201aa8`;
+  sans-faux-studios, adopted after its own rule, had 0 of 64], so any range that reaches them — a
+  release PR, a lane merging an old branch, a grep run without a base — would fail on commits
+  nobody may rewrite. The first wording named no base, which would have let a lane's own commit
+  from an earlier round pass as inherited; an inherited match also gained a destination, the
+  review record.
+  *Round 4:* that base was "when the delivery's branch was cut", and B2 lets release-cut work push
+  straight to `develop` with no branch to cut. One definition now covers both: not already on
+  `origin/develop` or `origin/master` before the delivery lands. The remote-tracking ref is the
+  baseline, so nothing new has to be recorded; and on the `develop → master` PR every commit was
+  already on `develop`, so it is inherited there and was grepped when it arrived. Captures:
+  `_agent/evidence/2026-09-17-awa-pr15-cr-round3/` and `…-cr-round4/` on Brandon's fleet.
 - **2026-09-13 (#12) — A5: never disable the repo's hooks to commit.** Issue #6. Guard item 1
   checked that hooks *fire*; nothing forbade turning them off. Every commit on #3 was made over the
   device bridge with `git -c core.hooksPath=/dev/null commit` [source: #4's decision comment]. Same

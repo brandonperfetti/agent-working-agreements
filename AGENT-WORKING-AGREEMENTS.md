@@ -103,8 +103,9 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   its own content. This overrides any environment default; your client file records what is known
   of yours. It is **line one of every dispatch prompt**, and the commits a delivery adds and its PR
   body are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match
-  is a send-back. **Added** means not already on `develop` or `master` when the delivery's branch
-  was cut, so a lane's own earlier commits still count. Forward-only: commits that already carry a
+  is a send-back. **Added** means not already on `origin/develop` or `origin/master` before the
+  delivery lands — a lane or wave branch, or release-cut work pushed straight to `develop` (B2) —
+  so a lane's own earlier commits still count. Forward-only: commits that already carry a
   trailer stay as they are, and a match on an inherited one goes in the delivery's review record,
   never back to the lane.
   [learnings: 2026-09-06 wave-6 §7; 2026-09-04 wave-5 §6]
