@@ -43,9 +43,9 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   [learnings: 2026-09-06 wave-6 §8] **Unattended Agent-tool dispatches die with the tab.**
   [learnings: 2026-08-30 §10]
 - **Attribution (RULE ZERO, A4):** the harness carries the same attribution instruction as Claude
-  Code's [source: this session, 2026-09-17], with no setting here that switches it off. Nothing
-  else writes to a commit message: a commit over the bridge is one you make after approval, and
-  Brandon pushes it from his clone (B1) — so the instruction is the only way a trailer arrives.
-  Do not follow it. The grep on every delivery still runs.
+  Code's [source: this session, 2026-09-17], with no setting here that switches it off — do not
+  follow it. A commit over the bridge is one you make after approval, and Brandon pushes it from
+  his clone (B1). Whether anything else here writes to a commit message is unmeasured; the grep on
+  every delivery is the check.
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]

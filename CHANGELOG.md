@@ -52,7 +52,9 @@ being retrofitted onto the other.
   or environment it reads — so the rule is stated once, in A4, without naming a client, and each
   `clients/*.md` records whether its environment injects one, so the override has a named target:
   Claude Code does; Cowork's harness carries the same instruction, with no setting to switch it
-  off and nothing else that writes to a commit message [source: this session, 2026-09-17]; Codex
+  off [source: this session, 2026-09-17] — *review round 1 (PR #15):* it first added "and nothing
+  else writes to a commit message", a universal nobody measured (a `commit-msg` hook or a commit
+  template could), so the delivery grep is named as the check instead; Codex
   and OpenClaw are recorded as unmeasured rather than guessed. RULE ZERO had been a *positive*
   check ("32 commits, all carrying the trailer" in the claude-skills branch-protection wave
   reports) and B2 told lanes to carry the
