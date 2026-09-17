@@ -32,8 +32,9 @@ conversation.
   unmerged branch while `-D` takes it, and an executable `pre-commit` hook fires on commit (sentinel
   in the output). **That is not item 1's hook probe**, which is per checkout and about `pre-push`:
   run `git push --dry-run` at pickup in the checkout you will push from. Whether it completes
-  inside the sandbox is **measure and record** — it contacts the remote, and see the sandbox-denial
-  hazard below. 2 is **measure and record** per repo: node, pnpm and python3 are present, but the
+  inside the sandbox is **measure and record**: a dry run sends no objects but still contacts the
+  remote [measured 2026-09-17, Claude Code, an https remote] — see the sandbox-denial hazard
+  below. 2 is **measure and record** per repo: node, pnpm and python3 are present, but the
   gate also wants `zip`/`unzip`/`mktemp` and a vendor CLI — run it once. 4 is queryable (`gh` is
   authenticated; scopes include `repo` and `workflow`).
 - **Default mode is autonomous** — Brandon lifted the standing attended instruction on 2026-09-13,
