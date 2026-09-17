@@ -10,6 +10,32 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-17 (#2) — guard item 1 proves the hooks exist, per checkout.** Issue #14, from
+  sans-faux-studios wave 4 (learning 69 of its promoted learnings, 2026-09-17; MPD D28). Item 1
+  asked whether git *would* run a hook, which is true of any native checkout; it never asked whether
+  the hooks were there. A release-cut push to `develop` went out of a main checkout whose
+  `node_modules` predated husky: `core.hooksPath` pointed at a `.husky/_` that only the install
+  creates, so `pre-push` was absent rather than disabled — A5 does not cover it — and the push was
+  harmless only because the sha had just passed the gate on a fresh clone
+  `[measured 2026-09-17 by that wave's orchestrator]`. The probe is the one that caught it: after
+  `pnpm install`, `git push --dry-run` ran the full gate line. **One departure from the ticket, on
+  a measurement.** #14's Change section says worktrees inherit the main checkout's hooks, so the
+  probe is per main checkout. That holds for `.git/hooks` and fails for the very configuration the
+  ticket came from: git resolves a relative `core.hooksPath` inside each worktree, and `.husky/_`
+  is untracked, so a fresh lane worktree has no hooks at all
+  [measured 2026-09-17, git 2.46.0, scratch repos: a sentinel `pre-push` fired from main checkout
+  and worktree under `.git/hooks`; from the main checkout only under `core.hooksPath=.husky/_`; a
+  hookless control printed nothing]. Learning 69 itself says hooks are a per-checkout fact. Item 1
+  states what was measured instead, and its older `[measured 2026-09-10]` label now stops short of
+  the worktree sentence, which the 2026-09-17 probe re-measured. `clients/claude-code.md` points at
+  item 1 rather than restating it, and its "never install a per-lane hook" became "a lane never
+  installs a hook of its own", so running the repo's install in a worktree does not read as banned.
+  Also not in the ticket: a repo that installs no `pre-push` hook has nothing to prove and records
+  that — without it the probe fails this repo, which has no hooks and no install step
+  `[measured 2026-09-17]` — and the by-environment line no longer says item 1 passes wholly by
+  construction. Not changed: `clients/cowork.md` — #14 puts attended-mode installs out of scope.
+  Evidence: `_agent/evidence/2026-09-17-awa-12-14-guard-and-worktree-hookspath-probe/` on
+  Brandon's fleet.
 - **2026-09-17 (#1) — RULE ZERO inverted: no attribution, and the audit that leaned on it named.**
   Issue #12, widened by its 2026-09-15 comment. The `Co-Authored-By` trailer was an environment
   default nobody chose; Brandon does not want it (Brandon, 2026-09-15), and said the same
