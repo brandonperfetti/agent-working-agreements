@@ -243,8 +243,8 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    A dry run that shows neither is a **FAIL** for that checkout, not a pass — it needs the repo's
    install step first, then the probe again. A repo that installs no `pre-push` hook has nothing
    to prove; record that instead. Worktrees share the main checkout's `.git/hooks`, so one probe
-   covers them — unless `core.hooksPath` is relative and names an untracked directory (husky's
-   `.husky/_`): that resolves inside each worktree, and the probe is per worktree.
+   covers them — unless `core.hooksPath` is relative (husky's `.husky/_`, a tracked `.githooks/`):
+   that resolves inside each worktree, and the probe is per worktree.
    [measured 2026-09-17, git 2.46.0, scratch repos]
 2. The full CI gate (A5) can be run locally by the agent — *actually run it once at pickup*; the
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
