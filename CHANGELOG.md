@@ -52,9 +52,12 @@ being retrofitted onto the other.
   branch from before the directory existed ran no hook, and one whose branch had edited the hook
   ran the edited one [measured 2026-09-17, git 2.46.0, scratch repo] — the main checkout's probe
   speaks for neither. Any relative `core.hooksPath` now makes the probe per worktree; an absolute
-  one is shared, and fired from main checkout and worktree alike [measured, same instrument]. Not
-  changed:
-  `clients/cowork.md` — #14 puts attended-mode installs out of scope. Evidence, on Brandon's fleet:
+  one is shared, and fired from main checkout and worktree alike [measured, same instrument].
+  *Round 5:* `clients/cowork.md` had been left alone because #14 puts attended-mode installs out of
+  scope, but its "item 1 fails here… not for hooks" rested on a `pre-commit` sentinel
+  (2026-09-13 (#12)) and now read as covering the new `pre-push` half. It says what was measured,
+  and that the probe is Brandon's: he pushes from his clone (B1), so it is his checkout the probe
+  is about. No agent-run probe or install was added there. Evidence, on Brandon's fleet:
   `_agent/evidence/2026-09-17-awa-12-14-guard-and-worktree-hookspath-probe/` and, for the review
   rounds, `_agent/evidence/2026-09-17-awa-pr15-cr-round1/`, `…-cr-round2/` and `…-cr-round4/`.
 - **2026-09-17 (#1) — RULE ZERO inverted: no attribution, and the audit that leaned on it named.**
