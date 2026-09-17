@@ -67,7 +67,12 @@ being retrofitted onto the other.
   send back history the same bullet says to leave alone: 195 of the 426 commits on claude-skills'
   `develop` already carry the trailer [measured 2026-09-17], so any range that reaches them — a
   release PR, a lane merging an old branch, a grep run without a base — would fail on commits
-  nobody may rewrite. An inherited match is recorded, never sent back. RULE ZERO had been a *positive*
+  nobody may rewrite [`git log --format='%(trailers:key=Co-Authored-By)'` on `origin/develop` at
+  `1201aa8`; sans-faux-studios, adopted after its own rule, had 0 of 64]. The first wording,
+  "the commits a delivery adds", named no base, which would have let a lane's own commit from an
+  earlier round pass as inherited; the base is now in the rule — not on `develop` or `master`
+  when the branch was cut — and an inherited match has a destination, the review record. Capture:
+  `_agent/evidence/2026-09-17-awa-pr15-cr-round3/` on Brandon's fleet. RULE ZERO had been a *positive*
   check ("32 commits, all carrying the trailer" in the claude-skills branch-protection wave
   reports) and B2 told lanes to carry the
   trailers; it is now the negative check sans-faux-studios wave 1 ran — grep commits and PR body, a
