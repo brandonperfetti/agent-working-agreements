@@ -62,7 +62,12 @@ being retrofitted onto the other.
   off [source: this session, 2026-09-17] — *review round 1 (PR #15):* it first added "and nothing
   else writes to a commit message", a universal nobody measured (a `commit-msg` hook or a commit
   template could), so the delivery grep is named as the check instead; Codex
-  and OpenClaw are recorded as unmeasured rather than guessed. RULE ZERO had been a *positive*
+  and OpenClaw are recorded as unmeasured rather than guessed. *Round 3:* the grep is scoped to
+  the commits a delivery **adds**. "Every delivery's commits" plus "a match is a send-back" could
+  send back history the same bullet says to leave alone: 195 of the 426 commits on claude-skills'
+  `develop` already carry the trailer [measured 2026-09-17], so any range that reaches them — a
+  release PR, a lane merging an old branch, a grep run without a base — would fail on commits
+  nobody may rewrite. An inherited match is recorded, never sent back. RULE ZERO had been a *positive*
   check ("32 commits, all carrying the trailer" in the claude-skills branch-protection wave
   reports) and B2 told lanes to carry the
   trailers; it is now the negative check sans-faux-studios wave 1 ran — grep commits and PR body, a

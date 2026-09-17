@@ -101,9 +101,10 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **RULE ZERO: no attribution, on any commit or PR body.** Agents add no `Co-Authored-By`, no
   session trailer, no generated-by footer — a commit carries Brandon's author identity and ends with
   its own content. This overrides any environment default; your client file records what is known
-  of yours. It is **line one of every dispatch prompt**, and every delivery's commits and PR body
-  are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match is a
-  send-back. Forward-only: commits that already carry a trailer stay as they are.
+  of yours. It is **line one of every dispatch prompt**, and the commits a delivery adds and its PR
+  body are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match
+  is a send-back. Forward-only: commits that already carry a trailer stay as they are, and a match
+  on one a delivery only inherits is recorded, never sent back.
   [learnings: 2026-09-06 wave-6 §7; 2026-09-04 wave-5 §6]
   **A trailer never established that a commit came through a reviewed lane.** The two-axis review
   record under `reviews/`, the gate evidence under `evidence/` and the PR trail do; report those.

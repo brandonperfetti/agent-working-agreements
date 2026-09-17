@@ -32,7 +32,7 @@ Code fact.
   `Claude-Session` trailers on commits, a "Generated with Claude Code" footer on PR bodies
   [source 2026-09-15: the harness's own session instructions].
   Confirm `"includeCoAuthoredBy": false` in `~/.claude/settings.json` before the first commit, and
-  grep every commit and the PR body for `Co-Authored-By|Claude-Session|Generated with`.
+  grep every commit you add and the PR body for `Co-Authored-By|Claude-Session|Generated with`.
 - A wave orchestrator's session is one wave; rotate by starting a fresh session from the packet
   (or `handoff`).
 - This file is loaded by the one-line pointer in the user-level `~/.claude/CLAUDE.md` (created
