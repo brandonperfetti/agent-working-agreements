@@ -51,7 +51,9 @@ being retrofitted onto the other.
   the first probe measured. A tracked one is no safer: with `.githooks/` tracked, a worktree on a
   branch from before the directory existed ran no hook, and one whose branch had edited the hook
   ran the edited one [measured 2026-09-17, git 2.46.0, scratch repo] — the main checkout's probe
-  speaks for neither. Any relative `core.hooksPath` now makes the probe per worktree. Not changed:
+  speaks for neither. Any relative `core.hooksPath` now makes the probe per worktree; an absolute
+  one is shared, and fired from main checkout and worktree alike [measured, same instrument]. Not
+  changed:
   `clients/cowork.md` — #14 puts attended-mode installs out of scope. Evidence, on Brandon's fleet:
   `_agent/evidence/2026-09-17-awa-12-14-guard-and-worktree-hookspath-probe/` and, for the review
   rounds, `_agent/evidence/2026-09-17-awa-pr15-cr-round1/`, `…-cr-round2/` and `…-cr-round4/`.
@@ -88,9 +90,12 @@ being retrofitted onto the other.
   review record.
   *Round 4:* that base was "when the delivery's branch was cut", and B2 lets release-cut work push
   straight to `develop` with no branch to cut. One definition now covers both: not already on
-  `origin/develop` or `origin/master` before the delivery lands. The remote-tracking ref is the
-  baseline, so nothing new has to be recorded; and on the `develop → master` PR every commit was
-  already on `develop`, so it is inherited there and was grepped when it arrived. Captures:
+  `origin/develop` or `origin/master`, fetched and read before the delivery is pushed or merged.
+  The review's proposal was a recorded baseline OID; the remote-tracking ref does that job only
+  under the two conditions the rule now states — a stale ref moves the boundary, and after the
+  push the added commits read as inherited — and with each release-cut push scored as its own
+  delivery, before it goes. On the `develop → master` PR every commit was already on `develop`, so
+  it is inherited there and was grepped when it arrived. Captures:
   `_agent/evidence/2026-09-17-awa-pr15-cr-round3/` and `…-cr-round4/` on Brandon's fleet.
 - **2026-09-13 (#12) — A5: never disable the repo's hooks to commit.** Issue #6. Guard item 1
   checked that hooks *fire*; nothing forbade turning them off. Every commit on #3 was made over the
