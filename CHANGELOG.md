@@ -33,9 +33,14 @@ being retrofitted onto the other.
   Also not in the ticket: a repo that installs no `pre-push` hook has nothing to prove and records
   that — without it the probe fails this repo, which has no hooks and no install step
   `[measured 2026-09-17]` — and the by-environment line no longer says item 1 passes wholly by
-  construction. Not changed: `clients/cowork.md` — #14 puts attended-mode installs out of scope.
-  Evidence: `_agent/evidence/2026-09-17-awa-12-14-guard-and-worktree-hookspath-probe/` on
-  Brandon's fleet.
+  construction. *Review round 1 (PR #15):* the probe now names its positive evidence. A silent
+  `pre-push` and a missing one print the same dry run; `GIT_TRACE=1` separates them — a
+  `run_command` line naming the hook, absent with no hook [measured 2026-09-17, git 2.46.0, scratch
+  repo, both controls]. "Shows no hook having run" had left the instrument unnamed (A2: the
+  instrument is part of the claim). Not changed: `clients/cowork.md` — #14 puts attended-mode
+  installs out of scope. Evidence, on Brandon's fleet:
+  `_agent/evidence/2026-09-17-awa-12-14-guard-and-worktree-hookspath-probe/` and, for the review
+  round, `_agent/evidence/2026-09-17-awa-pr15-cr-round1/`.
 - **2026-09-17 (#1) — RULE ZERO inverted: no attribution, and the audit that leaned on it named.**
   Issue #12, widened by its 2026-09-15 comment. The `Co-Authored-By` trailer was an environment
   default nobody chose; Brandon does not want it (Brandon, 2026-09-15), and said the same

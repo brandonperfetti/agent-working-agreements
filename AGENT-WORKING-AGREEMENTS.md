@@ -232,12 +232,13 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
 1. Native git on a real checkout — git executes hooks (so whatever the repo installs, e.g. husky,
    fires on commit); `rm`, worktrees, and `git branch -d` work. [measured 2026-09-10, Claude Code
    on claude-skills] **Prove the hooks exist in the checkout you will push from:**
-   `git push --dry-run` (sends nothing) must run the repo's `pre-push` hook. A dry run that shows
-   no hook having run is a **FAIL** for that checkout, not a pass — it needs the repo's install
-   step first, then the probe again. A repo that installs no `pre-push` hook has nothing to prove;
-   record that instead. Worktrees share the main checkout's `.git/hooks`, so one probe covers them
-   — unless `core.hooksPath` is relative and names an untracked directory (husky's `.husky/_`):
-   that resolves inside each worktree, and the probe is per worktree.
+   `git push --dry-run` (sends nothing) must run the repo's `pre-push` hook **and show it** — the
+   hook's own output, or for a silent hook the `run_command: …pre-push` line under `GIT_TRACE=1`.
+   A dry run that shows neither is a **FAIL** for that checkout, not a pass — it needs the repo's
+   install step first, then the probe again. A repo that installs no `pre-push` hook has nothing
+   to prove; record that instead. Worktrees share the main checkout's `.git/hooks`, so one probe
+   covers them — unless `core.hooksPath` is relative and names an untracked directory (husky's
+   `.husky/_`): that resolves inside each worktree, and the probe is per worktree.
    [measured 2026-09-17, git 2.46.0, scratch repos]
 2. The full CI gate (A5) can be run locally by the agent — *actually run it once at pickup*; the
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
