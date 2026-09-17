@@ -234,8 +234,9 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    on claude-skills] **Prove the hooks exist in the checkout you will push from:**
    `git push --dry-run` (sends no objects, but still contacts the remote) must run the repo's
    `pre-push` hook **and show it** — the hook's own output, or for a silent hook the
-   `run_command: …pre-push` line under `GIT_TRACE=1`. A dry run that cannot reach the remote stops
-   before the hook: that is no result, not a FAIL.
+   `run_command: …pre-push` line under `GIT_TRACE=1`. A dry run that dies on the network first
+   (measured: an unresolvable host, exit 128) never runs the hook: that is no result, not a FAIL
+   — fix the route and probe again, and until the probe has run, item 1 has not held.
    A dry run that shows neither is a **FAIL** for that checkout, not a pass — it needs the repo's
    install step first, then the probe again. A repo that installs no `pre-push` hook has nothing
    to prove; record that instead. Worktrees share the main checkout's `.git/hooks`, so one probe

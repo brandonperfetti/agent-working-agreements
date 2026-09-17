@@ -44,10 +44,12 @@ being retrofitted onto the other.
   ticket's "(sends nothing)" became "sends no objects, but still contacts the remote", because the
   order matters: with an unreachable remote the dry run exits 128 before `pre-push` runs
   [measured 2026-09-17, git 2.46.0, scratch repo, loud sentinel hook], which item 1 would have
-  scored as missing hooks and answered with an install. It is now no result, not a FAIL. Not changed:
+  scored as missing hooks and answered with an install. It is now no result, not a FAIL — and not
+  a pass either: item 1 has not held until the probe has run. Only a DNS failure was measured; an
+  auth refusal, which does reach the remote, was not. Not changed:
   `clients/cowork.md` — #14 puts attended-mode installs out of scope. Evidence, on Brandon's fleet:
   `_agent/evidence/2026-09-17-awa-12-14-guard-and-worktree-hookspath-probe/` and, for the review
-  round, `_agent/evidence/2026-09-17-awa-pr15-cr-round1/`.
+  rounds, `_agent/evidence/2026-09-17-awa-pr15-cr-round1/` and `…-cr-round2/`.
 - **2026-09-17 (#1) — RULE ZERO inverted: no attribution, and the audit that leaned on it named.**
   Issue #12, widened by its 2026-09-15 comment. The `Co-Authored-By` trailer was an environment
   default nobody chose; Brandon does not want it (Brandon, 2026-09-15), and said the same
