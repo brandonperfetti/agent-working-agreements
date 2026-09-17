@@ -98,7 +98,10 @@ being retrofitted onto the other.
   under the two conditions the rule now states — a stale ref moves the boundary, and after the
   push the added commits read as inherited — and with each release-cut push scored as its own
   delivery, before it goes. On the `develop → master` PR every commit was already on `develop`, so
-  it is inherited there and was grepped when it arrived. Captures:
+  it is inherited there and was grepped when it arrived.
+  *Round 5:* `clients/cowork.md` said "the grep on every delivery", which could be read without
+  A4's boundary; it now points at A4's grep and scope rather than restating the rule, since a
+  client file adds only what is client-specific. Captures:
   `_agent/evidence/2026-09-17-awa-pr15-cr-round3/` and `…-cr-round4/` on Brandon's fleet.
 - **2026-09-13 (#12) — A5: never disable the repo's hooks to commit.** Issue #6. Guard item 1
   checked that hooks *fire*; nothing forbade turning them off. Every commit on #3 was made over the

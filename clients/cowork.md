@@ -47,7 +47,7 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
 - **Attribution (RULE ZERO, A4):** the harness carries the same attribution instruction as Claude
   Code's [source: this session, 2026-09-17], with no setting here that switches it off — do not
   follow it. A commit over the bridge is one you make after approval, and Brandon pushes it from
-  his clone (B1). Whether anything else here writes to a commit message is unmeasured; the grep on
-  every delivery is the check.
+  his clone (B1). Whether anything else here writes to a commit message is unmeasured; A4's grep
+  is the check, with A4's scope — the commits a delivery adds, never inherited ones.
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]
