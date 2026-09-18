@@ -98,9 +98,20 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   `opus` for lane work; `sonnet` only for trivially mechanical dispatches; this applies to skills
   that fan out their own sub-agents. Route by role per `agent-workspace/references/subagent-model-routing.md`.
   [learnings: 2026-08-30 §5]
-- **RULE ZERO: the commit-trailer / attribution rule is line one of every dispatch prompt**, and the
-  trailers are grepped on every delivery regardless.
+- **RULE ZERO: no attribution, on any commit or PR body.** Agents add no `Co-Authored-By`, no
+  session trailer, no generated-by footer — a commit carries Brandon's author identity and ends with
+  its own content. This overrides any environment default; your client file records what is known
+  of yours. It is **line one of every dispatch prompt**, and the commits a delivery adds and its PR
+  body are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match
+  is a send-back. **Added** means not on `origin/develop` or `origin/master`, fetched and read
+  **before** the delivery is pushed or merged — a lane or wave branch, or release-cut work pushed
+  straight to `develop` (B2), each push its own delivery — so a lane's own earlier commits still
+  count. Forward-only: commits that already carry a
+  trailer stay as they are, and a match on an inherited one goes in the delivery's review record,
+  never back to the lane.
   [learnings: 2026-09-06 wave-6 §7; 2026-09-04 wave-5 §6]
+  **A trailer never established that a commit came through a reviewed lane.** The two-axis review
+  record under `reviews/`, the gate evidence under `evidence/` and the PR trail do; report those.
 - **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance —
   riders and review-fix lanes included, no size exemption.** The lane's own report is never the
   review; the verdict is recorded under the initiative's `reviews/`.
@@ -224,8 +235,22 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
 **Capability guard (every item that applies must hold):**
 
 1. Native git on a real checkout — git executes hooks (so whatever the repo installs, e.g. husky,
-   fires on commit); `rm`, worktrees, and `git branch -d` work. Worktrees share `.git/hooks` with
-   the main checkout. [measured 2026-09-10, Claude Code on claude-skills]
+   fires on commit); `rm`, worktrees, and `git branch -d` work. [measured 2026-09-10, Claude Code
+   on claude-skills] **Prove the hooks exist in the checkout you will push from:**
+   `git push --dry-run <remote> <branch>`, usually `origin HEAD` — name both, because a fresh lane
+   branch has no upstream and a bare `git push` dies before the hook. It sends no objects but
+   still contacts the remote, and must run the repo's `pre-push` hook **and show it**: the hook's
+   own output, or for a silent hook the `run_command: …pre-push` line under `GIT_TRACE=1`.
+   **A dry run that dies before reaching the hook is no result, not a FAIL** — a bare push with no
+   upstream, an unreachable host (both exit 128), or a remote or refspec that does not resolve (a
+   remote not named `origin`; `HEAD` while detached, exit 1): fix the invocation or the route and
+   probe again, and until the probe has run, item 1 has not held.
+   A dry run that shows neither is a **FAIL** for that checkout, not a pass — it needs the repo's
+   install step first, then the probe again. A repo that installs no `pre-push` hook has nothing
+   to prove; record that instead. Worktrees share the main checkout's `.git/hooks`, so one probe
+   covers them — unless `core.hooksPath` is relative (husky's `.husky/_`, a tracked `.githooks/`):
+   that resolves inside each worktree, and the probe is per worktree.
+   [measured 2026-09-17 and 2026-09-18, git 2.46.0, scratch repos]
 2. The full CI gate (A5) can be run locally by the agent — *actually run it once at pickup*; the
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
    **This probe is always permitted**, in either mode: it is how the mode gets decided, so B1's
@@ -254,11 +279,13 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    identity change, open, not decided.
 5. Brandon has not overridden it for this session.
 
-By environment: **Claude Code → autonomous** (1 passes by construction; 2 is a per-repo probe run at
+By environment: **Claude Code → autonomous** (1 passes by construction but for its hook probe,
+which is per checkout; 2 is a per-repo probe run at
 pickup, never assumed; 3 before **every** feature commit, not only the first; **4 must be checked,
 never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skills carried protection
 or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and usually 2);
-**ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13; 4 readable there
+**ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13 but for its hook
+probe, which is per checkout and unmeasured there; 4 readable there
 but still checked per repo; see `clients/codex.md`); OpenClaw → attended unless it demonstrably
 passes 1–4. **Where this file is not reachable at all, attended rules apply.** Any client that
 passes the guard may run autonomous — the guard is the contract, not the client name.
@@ -316,8 +343,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
     it would reach `master` having been reviewed by nobody. That, not the branch, is the reason.
   In **attended** mode the shape is unchanged: the lane delivers an mbox, Brandon applies and pushes.
 - **Each lane works in its own git worktree on a branch off the wave branch** and commits there
-  with the repo's hooks firing (this replaces mboxes + `git am`). Lane commits carry RULE ZERO's
-  trailers; the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
+  with the repo's hooks firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
+  (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
 - **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
   records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, then pushes.**
