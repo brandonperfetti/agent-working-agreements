@@ -30,13 +30,18 @@ conversation.
 - **Guard items:** 1 **passes by demonstration** — `rm` succeeds, a truncating overwrite shrinks the
   file in place with no surviving tail, `git worktree add`/`remove` work, `branch -d` refuses an
   unmerged branch while `-D` takes it, and an executable `pre-commit` hook fires on commit (sentinel
-  in the output). 2 is **measure and record** per repo: node, pnpm and python3 are present, but the
+  in the output). **That is not item 1's hook probe**, which is per checkout and about `pre-push`:
+  run `git push --dry-run` at pickup in the checkout you will push from. Whether it completes
+  inside the sandbox is **measure and record**: a dry run sends no objects but still contacts the
+  remote [measured 2026-09-17, Claude Code, an https remote] — see the sandbox-denial hazard
+  below. 2 is **measure and record** per repo: node, pnpm and python3 are present, but the
   gate also wants `zip`/`unzip`/`mktemp` and a vendor CLI — run it once. 4 is queryable (`gh` is
   authenticated; scopes include `repo` and `workflow`).
 - **Default mode is autonomous** — Brandon lifted the standing attended instruction on 2026-09-13,
   so mode here is decided by the guard alone, exactly as in `claude-code.md`. Items 1 and 4 pass as
-  measured above; **item 2 is still a per-repo probe you run at pickup**, and a failure downgrades
-  this session to attended with a one-line reason, same as anywhere else.
+  measured above, item 1's hook probe excepted; **that probe and item 2 are still yours to run at
+  pickup**, and a failure downgrades this session to attended with a one-line reason, same as
+  anywhere else.
 - **Scope, because this client's instruction field is wider than the others.** The Codex
   instructions field applies to *every* ChatGPT and Codex chat, including ones with no shell and no
   repo; this appendix — and Part B — apply only to a session that has a local shell and is working
@@ -62,6 +67,8 @@ conversation.
   - **A task can keep a stale MCP catalog after a config change, even across an app restart**
     `[source: 2026-09-06 setup record]` — start a fresh task rather than trusting the old one.
   - Truncated tool output is a general hazard, not a Codex one — see A2.
+- **Attribution (RULE ZERO, A4):** whether this environment injects a commit trailer or a PR-body
+  footer by default is **unmeasured** — measure and record. The rule holds either way.
 - **Measure and record:** whether a dispatched worker keeps issuing tool calls while the app window
   is closed (distinct from window-close, app-quit and sleep; a proposed experiment is in the
   2026-09-13 audit).

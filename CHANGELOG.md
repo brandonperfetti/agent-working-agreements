@@ -10,6 +10,99 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-17 (#2) — guard item 1 proves the hooks exist, per checkout.** Issue #14, from
+  sans-faux-studios wave 4 (learning 69 of its promoted learnings, 2026-09-17; MPD D28). Item 1
+  asked whether git *would* run a hook, which is true of any native checkout; it never asked whether
+  the hooks were there. A release-cut push to `develop` went out of a main checkout whose
+  `node_modules` predated husky: `core.hooksPath` pointed at a `.husky/_` that only the install
+  creates, so `pre-push` was absent rather than disabled — A5 does not cover it — and the push was
+  harmless only because the sha had just passed the gate on a fresh clone
+  `[measured 2026-09-17 by that wave's orchestrator]`. The probe is the one that caught it: after
+  `pnpm install`, `git push --dry-run` ran the full gate line. **One departure from the ticket, on
+  a measurement.** #14's Change section says worktrees inherit the main checkout's hooks, so the
+  probe is per main checkout. That holds for `.git/hooks` and fails for the very configuration the
+  ticket came from: git resolves a relative `core.hooksPath` inside each worktree, and `.husky/_`
+  is untracked, so a fresh lane worktree has no hooks at all
+  [measured 2026-09-17, git 2.46.0, scratch repos: a sentinel `pre-push` fired from main checkout
+  and worktree under `.git/hooks`; from the main checkout only under `core.hooksPath=.husky/_`; a
+  hookless control printed nothing]. Learning 69 itself says hooks are a per-checkout fact. Item 1
+  states what was measured instead, and its older `[measured 2026-09-10]` label now stops short of
+  the worktree sentence, which the 2026-09-17 probe re-measured. `clients/claude-code.md` points at
+  item 1 rather than restating it, and its "never install a per-lane hook" became "a lane never
+  installs a hook of its own", so running the repo's install in a worktree does not read as banned.
+  Also not in the ticket: a repo that installs no `pre-push` hook has nothing to prove and records
+  that — without it the probe fails this repo, which has no hooks and no install step
+  `[measured 2026-09-17]` — and the by-environment line no longer says item 1 passes wholly by
+  construction. *Review round 1 (PR #15):* the probe now names its positive evidence. A silent
+  `pre-push` and a missing one print the same dry run; `GIT_TRACE=1` separates them — a
+  `run_command` line naming the hook, absent with no hook [measured 2026-09-17, git 2.46.0, scratch
+  repo, three cases: absent, silent, and present but not executable — a hint, no `run_command`].
+  "Shows no hook having run" had left the instrument unnamed (A2: the
+  instrument is part of the claim). And Codex's item 1 evidence is a `pre-commit` sentinel from
+  2026-09-13, which says nothing about a per-checkout `pre-push` probe: B0's by-environment line
+  and `clients/codex.md` now say the probe is unmeasured there and run at pickup. *Round 2:* the
+  ticket's "(sends nothing)" became "sends no objects, but still contacts the remote", because the
+  order matters: with an unreachable remote the dry run exits 128 before `pre-push` runs
+  [measured 2026-09-17, git 2.46.0, scratch repo, loud sentinel hook], which item 1 would have
+  scored as missing hooks and answered with an install. It is now no result, not a FAIL — and not
+  a pass either: item 1 has not held until the probe has run. Only a DNS failure was measured; an
+  auth refusal, which does reach the remote, was not. *Round 4:* the worktree exception had been
+  narrowed to a relative `core.hooksPath` naming an **untracked** directory, because that was all
+  the first probe measured. A tracked one is no safer: with `.githooks/` tracked, a worktree on a
+  branch from before the directory existed ran no hook, and one whose branch had edited the hook
+  ran the edited one [measured 2026-09-17, git 2.46.0, scratch repo] — the main checkout's probe
+  speaks for neither. Any relative `core.hooksPath` now makes the probe per worktree; an absolute
+  one is shared, and fired from main checkout and worktree alike [measured, same instrument].
+  *Round 5:* `clients/cowork.md` had been left alone because #14 puts attended-mode installs out of
+  scope, but its "item 1 fails here… not for hooks" rested on a `pre-commit` sentinel
+  (2026-09-13 (#12)) and now read as covering the new `pre-push` half. It says what was measured,
+  and that the probe is Brandon's: he pushes from his clone (B1), so it is his checkout the probe
+  is about. No agent-run probe or install was added there. Evidence, on Brandon's fleet:
+  `_agent/evidence/2026-09-17-awa-12-14-guard-and-worktree-hookspath-probe/` and, for the review
+  rounds, `_agent/evidence/2026-09-17-awa-pr15-cr-round1/`, `…-cr-round2/` and `…-cr-round4/`.
+- **2026-09-17 (#1) — RULE ZERO inverted: no attribution, and the audit that leaned on it named.**
+  Issue #12, widened by its 2026-09-15 comment. The `Co-Authored-By` trailer was an environment
+  default nobody chose; Brandon does not want it (Brandon, 2026-09-15), and said the same
+  independently for sans-faux-studios (initiative `sans-faux-studios-template-upgrade`, MPD D11),
+  one step further: no `Claude-Session` trailer and no "Generated with" PR-body footer either. A
+  per-prompt override does not hold — each fresh agent inherits the default from whatever kickoff
+  or environment it reads — so the rule is stated once, in A4, without naming a client, and each
+  `clients/*.md` records whether its environment injects one, so the override has a named target:
+  Claude Code does; Cowork's harness carries the same instruction, with no setting to switch it
+  off [source: this session, 2026-09-17]; Codex and OpenClaw are recorded as unmeasured rather
+  than guessed. RULE ZERO had been a *positive* check ("32 commits, all carrying the trailer" in
+  the claude-skills branch-protection wave reports) and B2 told lanes to carry the trailers; it is
+  now the negative check sans-faux-studios wave 1 ran — grep commits and PR body, a match is a
+  send-back — under which that wave's PR #15 shipped clean
+  `[measured 2026-09-17: its seven commits and its body, zero matches]`. The trailer had also
+  drifted into standing for "this commit came through a reviewed lane", which it never established
+  — a hand-made commit carries one as easily — so the same edit names what does: the two-axis
+  review record, the gate evidence, the PR trail. Forward-only; nothing rewrites history. The
+  sans-faux-studios MPD tracks this entry as its open item O5.
+  *Review round 1 (PR #15):* the Cowork line first added "and nothing else writes to a commit
+  message", a universal nobody measured (a `commit-msg` hook or a commit template could), so the
+  delivery grep is named as the check instead.
+  *Round 3:* the grep is scoped to the commits a delivery **adds**. "Every delivery's commits" plus
+  "a match is a send-back" could send back history the same bullet says to leave alone: 195 of
+  the 426 commits on claude-skills' `develop` already carry the trailer [measured 2026-09-17,
+  `git log --format='%(trailers:key=Co-Authored-By)'` on `origin/develop` at `1201aa8`;
+  sans-faux-studios, adopted after its own rule, had 0 of 64], so any range that reaches them — a
+  release PR, a lane merging an old branch, a grep run without a base — would fail on commits
+  nobody may rewrite. The first wording named no base, which would have let a lane's own commit
+  from an earlier round pass as inherited; an inherited match also gained a destination, the
+  review record.
+  *Round 4:* that base was "when the delivery's branch was cut", and B2 lets release-cut work push
+  straight to `develop` with no branch to cut. One definition now covers both: not already on
+  `origin/develop` or `origin/master`, fetched and read before the delivery is pushed or merged.
+  The review's proposal was a recorded baseline OID; the remote-tracking ref does that job only
+  under the two conditions the rule now states — a stale ref moves the boundary, and after the
+  push the added commits read as inherited — and with each release-cut push scored as its own
+  delivery, before it goes. On the `develop → master` PR every commit was already on `develop`, so
+  it is inherited there and was grepped when it arrived.
+  *Round 5:* `clients/cowork.md` said "the grep on every delivery", which could be read without
+  A4's boundary; it now points at A4's grep and scope rather than restating the rule, since a
+  client file adds only what is client-specific. Captures:
+  `_agent/evidence/2026-09-17-awa-pr15-cr-round3/` and `…-cr-round4/` on Brandon's fleet.
 - **2026-09-13 (#12) — A5: never disable the repo's hooks to commit.** Issue #6. Guard item 1
   checked that hooks *fire*; nothing forbade turning them off. Every commit on #3 was made over the
   device bridge with `git -c core.hooksPath=/dev/null commit` [source: #4's decision comment]. Same
