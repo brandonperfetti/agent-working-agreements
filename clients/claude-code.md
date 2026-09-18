@@ -25,9 +25,9 @@ Code fact.
 - **Lane worktrees and hooks:** a worktree made by `git worktree add` shares the main checkout's
   `.git/hooks` [measured 2026-09-17, as B0 item 1], so item 1's probe there covers it. Read
   `git config core.hooksPath` before dispatching lanes: where item 1 makes the probe per worktree,
-  run it in each lane's — `git push --dry-run origin HEAD` there, since `git worktree add -b` sets
-  no upstream and item 1's bare form would die before the hook. A lane never installs a hook of its
-  own — the repo's install step is the only source of hooks.
+  run it in each lane's, naming remote and branch as item 1 does — `git worktree add -b` sets no
+  upstream. A lane never installs a hook of its own — the repo's install step is the only source
+  of hooks.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
 - **Attribution (RULE ZERO, A4): this environment injects it by default** — `Co-Authored-By` and

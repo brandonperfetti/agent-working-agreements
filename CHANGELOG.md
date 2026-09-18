@@ -21,8 +21,14 @@ being retrofitted onto the other.
   [measured 2026-09-18, git 2.46.0, scratch repo: bare exit 128 and no sentinel; `origin HEAD` and
   a named refspec both fired it; `push.default=current` also fired it, which is why the rule names
   the refspec rather than relying on config]. `clients/claude-code.md` and `clients/codex.md` carry
-  the same form, and the lane bullet says why. Evidence:
-  `_agent/evidence/2026-09-18-awa-pr16-cr/no-upstream-probe.{sh,out}` on Brandon's fleet.
+  the same form. The two-axis review before the push then asked what the explicit form breaks that
+  the bare one did not, and measured two: a remote not named `origin` (exit 128) and `HEAD` while
+  detached (exit 1, "not a full refname") — both die before the hook as well. So the probe is
+  written `<remote> <branch>` with `origin HEAD` as the usual case, and round 2's carve-out is
+  generalised from "dies on the network first" to **dies before reaching the hook**, which is the
+  property that makes all of these no result rather than a FAIL. Evidence, on Brandon's fleet:
+  `_agent/evidence/2026-09-18-awa-pr16-cr/no-upstream-probe.{sh,out}` and
+  `explicit-form-edge-probe.{sh,out}`.
 - **2026-09-17 (#2) — guard item 1 proves the hooks exist, per checkout.** Issue #14, from
   sans-faux-studios wave 4 (learning 69 of its promoted learnings, 2026-09-17; MPD D28). Item 1
   asked whether git *would* run a hook, which is true of any native checkout; it never asked whether

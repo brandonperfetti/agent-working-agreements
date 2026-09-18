@@ -31,9 +31,9 @@ conversation.
   file in place with no surviving tail, `git worktree add`/`remove` work, `branch -d` refuses an
   unmerged branch while `-D` takes it, and an executable `pre-commit` hook fires on commit (sentinel
   in the output). **That is not item 1's hook probe**, which is per checkout and about `pre-push`:
-  run `git push --dry-run origin HEAD` at pickup in the checkout you will push from. Whether it completes
-  inside the sandbox is **measure and record**: a dry run sends no objects but still contacts the
-  remote [measured 2026-09-17, Claude Code, an https remote] — see the sandbox-denial hazard
+  run `git push --dry-run origin HEAD` at pickup in the checkout you will push from. Whether it
+  completes inside the sandbox is **measure and record**: a dry run sends no objects but still
+  contacts the remote [measured 2026-09-17, Claude Code, an https remote] — see the sandbox-denial hazard
   below. 2 is **measure and record** per repo: node, pnpm and python3 are present, but the
   gate also wants `zip`/`unzip`/`mktemp` and a vendor CLI — run it once. 4 is queryable (`gh` is
   authenticated; scopes include `repo` and `workflow`).

@@ -237,19 +237,20 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
 1. Native git on a real checkout — git executes hooks (so whatever the repo installs, e.g. husky,
    fires on commit); `rm`, worktrees, and `git branch -d` work. [measured 2026-09-10, Claude Code
    on claude-skills] **Prove the hooks exist in the checkout you will push from:**
-   `git push --dry-run origin HEAD` — name the remote and the refspec, because a fresh lane branch
-   has no upstream and a bare `git push` dies before the hook (measured: exit 128) — sends no
-   objects but still contacts the remote, and must run the repo's
-   `pre-push` hook **and show it**: the hook's own output, or for a silent hook the
-   `run_command: …pre-push` line under `GIT_TRACE=1`. A dry run that dies on the network first
-   (measured: an unresolvable host, exit 128) never runs the hook: that is no result, not a FAIL
-   — fix the route and probe again, and until the probe has run, item 1 has not held.
+   `git push --dry-run <remote> <branch>`, usually `origin HEAD` — name both, because a fresh lane
+   branch has no upstream and a bare `git push` dies before the hook. It sends no objects but
+   still contacts the remote, and must run the repo's `pre-push` hook **and show it**: the hook's
+   own output, or for a silent hook the `run_command: …pre-push` line under `GIT_TRACE=1`.
+   **A dry run that dies before reaching the hook is no result, not a FAIL** — a bare push with no
+   upstream, an unreachable host (both exit 128), or a remote or refspec that does not resolve (a
+   remote not named `origin`; `HEAD` while detached, exit 1): fix the invocation or the route and
+   probe again, and until the probe has run, item 1 has not held.
    A dry run that shows neither is a **FAIL** for that checkout, not a pass — it needs the repo's
    install step first, then the probe again. A repo that installs no `pre-push` hook has nothing
    to prove; record that instead. Worktrees share the main checkout's `.git/hooks`, so one probe
    covers them — unless `core.hooksPath` is relative (husky's `.husky/_`, a tracked `.githooks/`):
    that resolves inside each worktree, and the probe is per worktree.
-   [measured 2026-09-17, git 2.46.0, scratch repos]
+   [measured 2026-09-17 and 2026-09-18, git 2.46.0, scratch repos]
 2. The full CI gate (A5) can be run locally by the agent — *actually run it once at pickup*; the
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
    **This probe is always permitted**, in either mode: it is how the mode gets decided, so B1's
