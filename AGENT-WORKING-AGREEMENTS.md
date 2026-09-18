@@ -237,8 +237,10 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
 1. Native git on a real checkout — git executes hooks (so whatever the repo installs, e.g. husky,
    fires on commit); `rm`, worktrees, and `git branch -d` work. [measured 2026-09-10, Claude Code
    on claude-skills] **Prove the hooks exist in the checkout you will push from:**
-   `git push --dry-run` (sends no objects, but still contacts the remote) must run the repo's
-   `pre-push` hook **and show it** — the hook's own output, or for a silent hook the
+   `git push --dry-run origin HEAD` — name the remote and the refspec, because a fresh lane branch
+   has no upstream and a bare `git push` dies before the hook (measured: exit 128) — sends no
+   objects but still contacts the remote, and must run the repo's
+   `pre-push` hook **and show it**: the hook's own output, or for a silent hook the
    `run_command: …pre-push` line under `GIT_TRACE=1`. A dry run that dies on the network first
    (measured: an unresolvable host, exit 128) never runs the hook: that is no result, not a FAIL
    — fix the route and probe again, and until the probe has run, item 1 has not held.

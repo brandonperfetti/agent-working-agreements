@@ -11,7 +11,8 @@ your reading** — "read the agreements and `clients/claude-code.md`" — so a s
 
 Native shell on Brandon's machine (or a cloud checkout): `rm`, worktrees, `git branch -d`, and hook
 execution all work [measured 2026-09-10]; none of the Cowork hazards (`cowork.md`) apply. **Still
-check at pickup:** item 1's hook probe (`git push --dry-run` from the checkout you will push from),
+check at pickup:** item 1's hook probe (`git push --dry-run origin HEAD` from the checkout you will
+push from),
 item 2 (run the gate once — the local shell's locale/env differs from the CI runner; the project
 docs name the exports), item 4 (branch protection — query it, it has been
 absent), item 5 (MPD §0). Whether the repo carries any hooks at all is a repo fact, not a Claude
@@ -24,8 +25,9 @@ Code fact.
 - **Lane worktrees and hooks:** a worktree made by `git worktree add` shares the main checkout's
   `.git/hooks` [measured 2026-09-17, as B0 item 1], so item 1's probe there covers it. Read
   `git config core.hooksPath` before dispatching lanes: where item 1 makes the probe per worktree,
-  run it in each lane's. A lane never installs a hook of its own — the repo's install step is the
-  only source of hooks.
+  run it in each lane's — `git push --dry-run origin HEAD` there, since `git worktree add -b` sets
+  no upstream and item 1's bare form would die before the hook. A lane never installs a hook of its
+  own — the repo's install step is the only source of hooks.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
 - **Attribution (RULE ZERO, A4): this environment injects it by default** — `Co-Authored-By` and

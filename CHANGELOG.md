@@ -10,6 +10,19 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-18 — item 1's probe names its remote and refspec.** Issue #14's rule, corrected by the
+  review on the release PR (#16). The probe was written as a bare `git push --dry-run`, which works
+  only where the branch already has an upstream. A lane worktree is exactly where it does not:
+  `git worktree add -b` sets none, and with git's default `push.default=simple` a bare push exits
+  128 with "no upstream branch" **before** `pre-push` runs — so the probe reports no hook evidence
+  in a checkout whose hooks are fine, and item 1 fails for the wrong reason. Round 2's carve-out
+  does not cover it: that one is about dying on the *network*, this dies on configuration.
+  `git push --dry-run origin HEAD` fires the hook in the same worktree
+  [measured 2026-09-18, git 2.46.0, scratch repo: bare exit 128 and no sentinel; `origin HEAD` and
+  a named refspec both fired it; `push.default=current` also fired it, which is why the rule names
+  the refspec rather than relying on config]. `clients/claude-code.md` and `clients/codex.md` carry
+  the same form, and the lane bullet says why. Evidence:
+  `_agent/evidence/2026-09-18-awa-pr16-cr/no-upstream-probe.{sh,out}` on Brandon's fleet.
 - **2026-09-17 (#2) — guard item 1 proves the hooks exist, per checkout.** Issue #14, from
   sans-faux-studios wave 4 (learning 69 of its promoted learnings, 2026-09-17; MPD D28). Item 1
   asked whether git *would* run a hook, which is true of any native checkout; it never asked whether
