@@ -30,10 +30,11 @@ shares main's CWD. When delegation is needed, use canonical role IDs and an expl
 `sessions_spawn` brief. Put A4's RULE ZERO first. Then include only the role, deliverable, mode,
 file fence, role-based model tier, and OpenClaw selector that resolves that tier.
 
-Any specialist that may commit works in a dedicated git worktree on its own feature branch, never
-in another session's shared checkout. For this agreement repository, the amendment exemption in its
-README means one isolated feature worktree branched from `develop`; do not invent a wave merely to
-obtain isolation.
+OpenClaw does not relax either mode's topology: attended sessions use B1's isolated-clone and mbox
+shape; autonomous specialists use B2's dedicated-worktree shape. For this agreement repository,
+the amendment exemption in its README means an autonomous amendment uses one isolated feature
+worktree branched from `develop`, rather than a wave branch; do not invent a wave merely to obtain
+isolation.
 
 ## Pickup guard and delivery audit
 
@@ -49,9 +50,10 @@ authority.
 
 [measured 2026-09-20, current Gateway host] `claude-skills` could not pass guard item 2 because its
 gate step 6 requires Ruby to validate `agents/openai.yaml`, and step 7 requires `zip` to rebuild and
-compare the `.plugin` distribution. OpenClaw may deliver there, but that checkout remains attended
-until [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111) records a
-durable install and a complete passing remeasurement. This does not block agreement adoption or the
+compare the `.plugin` distribution. That measured session was therefore attended. OpenClaw may
+deliver there, and [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111)
+tracks a durable install and complete remeasurement; a future session's mode is still decided only
+by rerunning B0 for its exact checkout and path. This does not block agreement adoption or the
 pointer cutover.
 
 ## Evidence
@@ -65,9 +67,9 @@ workspace's durable evidence store and record its location with the capture.
 
 ## Migration dispositions
 
-[source 2026-09-20] The workspace still boots a complete machine-local agreement. At cutover that
-file is preserved intact for rollback, not edited into a second canonical layer. The following
-rules are deliberately **not carried forward** from it:
+[source 2026-09-20] Workspace-root `AGENTS.md` still points to a complete machine-local agreement.
+At cutover that file is preserved intact for rollback, not edited into a second canonical layer.
+The following rules are deliberately **not carried forward** from it:
 
 - **A — autonomy:** the local autonomous default is superseded by B0's per-checkout mode decision
   and B2's Brandon-only merge boundary.
@@ -107,4 +109,5 @@ no agent starts it merely because the PR merged.
 
 The worktree topology above is adopted before this window and verified independently, so the window
 changes only instruction pickup. The post-cutover B0 default amendment is a separate PR supported by
-fresh main- and specialist-session evidence.
+fresh main- and specialist-session evidence. Its accepted target is `OpenClaw → autonomous`, with
+the same per-session, checkout-specific guard still deciding the effective mode.

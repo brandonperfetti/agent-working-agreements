@@ -14,14 +14,16 @@ being retrofitted onto the other.
   which rules from the complete machine-local agreement are superseded by Parts A–B rather than
   carried forward: local autonomy, shared-checkout specialist delivery, unconditional build/test
   ownership, raw retention for every measured claim, remote-API commits, and the generic ask rule.
-  It retains only OpenClaw mechanics already owned by the appendix, adopts dedicated specialist
-  worktrees before cutover, and defines a Brandon-scheduled quiet window with an inventory,
+  It retains only OpenClaw mechanics already owned by the appendix, preserves B1/B2 topology while
+  proving this autonomous amendment in a dedicated worktree, and defines a Brandon-scheduled quiet
+  window with an inventory,
   hash-and-quarantine rollback, a non-authoritative stale-reader stub, fresh-session verification,
   and later reviewed cleanup. Merging this amendment does not change OpenClaw startup. The
-  `claude-skills` checkout remains attended until issue #111 supplies durable Ruby and `zip`
-  prerequisites and a complete passing gate; that condition does not block pointer adoption. The
-  OpenClaw B0 default remains unchanged until a separate post-cutover amendment can cite deployed
-  main- and specialist-session evidence.
+  measured `claude-skills` route was attended after item 2 failed; issue #111 tracks durable Ruby
+  and `zip` prerequisites plus remeasurement, but future mode decisions still come only from B0.
+  That condition does not block pointer adoption. The OpenClaw B0 default remains unchanged until a
+  separate post-cutover amendment can cite deployed main- and specialist-session evidence; its
+  accepted target is autonomous with the per-session guard still deciding.
 - **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 already maps
   OpenClaw to attended; this amendment emphasizes that mapping, and the appendix now defers to that
   portable rule instead of restating it. [source 2026-09-20] The OpenClaw bootstrap still points to
