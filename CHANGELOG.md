@@ -12,12 +12,13 @@ being retrofitted onto the other.
 
 - **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 already maps
   OpenClaw to attended; this amendment emphasizes that mapping, and the appendix now defers to that
-  portable rule instead of restating it. The OpenClaw bootstrap still points to the complete
-  machine-local agreement at `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`; the canonical
-  pointer is a migration target, not current state. The appendix records that transition and limits
-  any retained workspace-local layer to client mechanics after Parts A–B supersede the complete
-  local agreement; B2 still reserves merging to Brandon. A2 now classifies evidence before
-  preservation:
+  portable rule instead of restating it. [source 2026-09-20] The OpenClaw bootstrap still points to
+  the complete machine-local agreement at `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`;
+  the canonical pointer is a migration target, not current state. The appendix records that
+  transition with a session-specific authority boundary, retains A4's RULE ZERO as the first line
+  of every dispatch, and limits any retained workspace-local layer to client mechanics after Parts
+  A–B supersede the complete local agreement; B2 still reserves merging to Brandon. A2 now
+  classifies evidence before preservation:
   irreproducible bytes are retained, while retrievable evidence gets a stable locator, SHA-256,
   relevant excerpt, or searched terms plus absence. Named OpenClaw paths fall back to the active
   workspace's durable evidence store when unreachable, with its location recorded. This advances
