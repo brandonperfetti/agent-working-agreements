@@ -14,9 +14,9 @@ being retrofitted onto the other.
   which rules from the complete machine-local agreement are superseded by Parts A–B rather than
   carried forward: local autonomy, shared-checkout specialist delivery, unconditional build/test
   ownership, raw retention for every measured claim, remote-API commits, and the generic ask rule.
-  It retains only OpenClaw mechanics already owned by the appendix, preserves B1/B2 topology while
-  proving this autonomous amendment in a dedicated worktree, and defines a Brandon-scheduled quiet
-  window with an inventory,
+  It retains only OpenClaw mechanics already owned by the appendix and preserves B1/B2 topology.
+  [measured 2026-09-20] This autonomous amendment used a dedicated worktree. The appendix also
+  defines a Brandon-scheduled quiet window with an inventory,
   hash-and-quarantine rollback, a non-authoritative stale-reader stub, fresh-session verification,
   and later reviewed cleanup. Merging this amendment does not change OpenClaw startup. The
   measured `claude-skills` route was attended after item 2 failed; issue #111 tracks durable Ruby

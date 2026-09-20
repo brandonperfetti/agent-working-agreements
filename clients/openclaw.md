@@ -73,8 +73,8 @@ The following rules are deliberately **not carried forward** from it:
 
 - **A — autonomy:** the local autonomous default is superseded by B0's per-checkout mode decision
   and B2's Brandon-only merge boundary.
-- **B — specialist commits:** shared-checkout delivery is superseded by the dedicated-worktree
-  rule above and B2's lane isolation.
+- **B — specialist commits:** shared-checkout delivery is not carried forward. Attended sessions
+  use B1's isolated-clone and mbox shape; autonomous sessions use B2's dedicated-worktree shape.
 - **C — builds and tests:** the local unconditional rule is superseded by the selected mode: B1 in
   attended sessions and B2 in autonomous sessions.
 - **D — evidence:** the local requirement to retain raw capture for every measured claim is
