@@ -10,6 +10,20 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 already maps
+  OpenClaw to attended; this amendment emphasizes that mapping, and the appendix now defers to that
+  portable rule instead of restating it. [source 2026-09-20] The OpenClaw bootstrap still points to
+  the complete machine-local agreement at `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`;
+  the canonical pointer is a migration target, not current state. The appendix records that
+  transition with a session-specific authority boundary, retains A4's RULE ZERO as the first line
+  of every dispatch, and limits any retained workspace-local layer to client mechanics after Parts
+  A–B supersede the complete local agreement; B2 still reserves merging to Brandon. A2 now
+  classifies evidence before preservation:
+  irreproducible bytes are retained, while retrievable evidence gets a stable locator, SHA-256,
+  relevant excerpt, or searched terms plus absence. Named OpenClaw paths fall back to the active
+  workspace's durable evidence store when unreachable, with its location recorded. This advances
+  the portable portion of issue #11 without copying retrievable artifacts or closing the issue.
+  Issue #13 remains unchanged and out of scope.
 - **2026-09-18 — item 1's probe names its remote and refspec.** Issue #14's rule, corrected by the
   review on the release PR (#16). The probe was written as a bare `git push --dry-run`, which works
   only where the branch already has an upstream. A lane worktree is exactly where it does not:
