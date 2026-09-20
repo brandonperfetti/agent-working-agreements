@@ -28,7 +28,7 @@ per-client configuration; the agreement itself is identical for all of them.
 | Claude Code | `~/.claude/CLAUDE.md` | plain file, read at session start |
 | Cowork (Claude desktop) | the desktop **Instructions for Claude** field | applies to chats and Cowork only — it does *not* reach Claude Code |
 | Codex (ChatGPT desktop) | **Personalization → Codex instructions**, which *is* `~/.codex/AGENTS.md` | one surface, not two — see below |
-| OpenClaw (Camina) | pending | appendix is unmeasured; see `clients/openclaw.md` |
+| OpenClaw (Camina) | workspace-root `AGENTS.md`, pointing to the canonical checkout/root and `clients/openclaw.md` | application in a new or reset session must be verified; see `clients/openclaw.md` |
 
 **Codex writes both directions, asymmetrically** `[measured 2026-09-13]`: editing the field rewrites
 `~/.codex/AGENTS.md` immediately, while editing the file reaches the field **only after restarting
