@@ -54,6 +54,10 @@ Keep the three apart; never let a right measurement carry a wrong mechanism. Rul
 
 - **Preserve the raw capture behind every [measured] claim** in `evidence/` *before* summarizing,
   named for what it proves. A summary is not evidence.
+- **Classify the capture before keeping it.** For irreproducible evidence, preserve the bytes
+  before summarizing. For retrievable evidence, record a stable locator, SHA-256, and relevant
+  excerpt — or the search terms plus absence. Do not vendor a retrievable artifact merely to prove
+  a claim.
 - **The generalization boundary is part of the label** — "[measured] on the first item" is never
   written as "[measured] on all N". A label is **never inherited across revisions**: re-measure or
   downgrade. [learnings: 2026-09-04 wave-5 §2]
