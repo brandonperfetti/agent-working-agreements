@@ -10,6 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-20 (#2) — OpenClaw migration dispositions and cutover contract.** The appendix records
+  which rules from the complete machine-local agreement are superseded by Parts A–B rather than
+  carried forward: local autonomy, shared-checkout specialist delivery, unconditional build/test
+  ownership, raw retention for every measured claim, remote-API commits, and the generic ask rule.
+  It retains only OpenClaw mechanics already owned by the appendix, adopts dedicated specialist
+  worktrees before cutover, and defines a Brandon-scheduled quiet window with an inventory,
+  hash-and-quarantine rollback, a non-authoritative stale-reader stub, fresh-session verification,
+  and later reviewed cleanup. Merging this amendment does not change OpenClaw startup. The
+  `claude-skills` checkout remains attended until issue #111 supplies durable Ruby and `zip`
+  prerequisites and a complete passing gate; that condition does not block pointer adoption. The
+  OpenClaw B0 default remains unchanged until a separate post-cutover amendment can cite deployed
+  main- and specialist-session evidence.
 - **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 already maps
   OpenClaw to attended; this amendment emphasizes that mapping, and the appendix now defers to that
   portable rule instead of restating it. [source 2026-09-20] The OpenClaw bootstrap still points to
