@@ -2,7 +2,8 @@
 
 **Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B first, then
 the target repository's instructions.** This appendix adds client mechanics only; it never overrides
-Parts A–B. **Name this file when you acknowledge your reading** — "read the agreements and
+Parts A–B, and a rule here that contradicts one there is the rule that is wrong. **Name this file
+when you acknowledge your reading** — "read the agreements and
 `clients/openclaw.md`" — so a skipped read is visible.
 
 ## Startup and mode
@@ -13,10 +14,11 @@ downgrade to attended. Do not assume arbitrary external-file injection or automa
 After a pointer, configuration, or skill-loader change, require a fresh-session observation before
 declaring it effective.
 
-**Portable default: attended.** B0 decides the mode for the exact checkout and delivery path. This
-Sans Faux workspace may carry an explicit autonomous override, but that local policy is not
-portable proof: it still requires checkout-specific guard evidence and Brandon-only merge through
-B2.
+**Mode:** B0 maps OpenClaw to attended and decides the mode for the exact checkout and delivery
+path. The fleet-local autonomous override at
+`/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md` applies only when that file is loaded in
+the active session and the checkout-specific B0 guard passes. It does not change this portable
+rule, and B2 still reserves merging to Brandon alone.
 
 ## Runtime and workspace
 
@@ -43,4 +45,5 @@ When reachable, preserve OpenClaw raw captures under
 `/data/.openclaw/workspace/_agent/evidence/` and analysis under
 `/data/.openclaw/workspace/_agent/analysis/`. Date-name artifacts and label claims
 `[measured]`, `[source]`, or `[inference]`. Do not assume those locations are reachable from
-every workspace; use A2's capture taxonomy when they are.
+every workspace: A2 applies everywhere. When either named path is unreachable, use the active
+workspace's durable evidence store and record its location with the capture.

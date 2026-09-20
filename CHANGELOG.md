@@ -10,13 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** Bounded runtime
-  and preflight evidence promoted the OpenClaw appendix into a client adapter while keeping the
-  portable default attended: B0 remains the per-checkout, per-delivery decision rule, and this
-  fleet's autonomous override is separate from portable proof. A2 now distinguishes preserving
-  irreproducible bytes from recording retrievable evidence, advancing the portable portion of
-  issue #11 without vendoring artifacts or closing the issue. The provenance is the 2026-09-20
-  OpenClaw runtime assessment and capability preflight retained in the workspace evidence store.
+- **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 now maps
+  OpenClaw to attended, and the appendix points back to that portable rule. Its fleet-local
+  autonomous override is named as `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`: it
+  applies only when loaded in the active session and when the checkout-specific B0 guard passes;
+  B2 still reserves merging to Brandon. A2 now classifies evidence before preservation:
+  irreproducible bytes are retained, while retrievable evidence gets a stable locator, SHA-256,
+  relevant excerpt, or searched terms plus absence. Named OpenClaw paths fall back to the active
+  workspace's durable evidence store when unreachable, with its location recorded. This advances
+  the portable portion of issue #11 without copying retrievable artifacts or closing the issue.
   Issue #13 remains unchanged and out of scope.
 - **2026-09-18 — item 1's probe names its remote and refspec.** Issue #14's rule, corrected by the
   review on the release PR (#16). The probe was written as a bare `git push --dry-run`, which works
