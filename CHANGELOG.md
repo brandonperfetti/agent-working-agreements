@@ -10,11 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 now maps
-  OpenClaw to attended, and the appendix points back to that portable rule. Its fleet-local
-  autonomous override is named as `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`: it
-  applies only when loaded in the active session and when the checkout-specific B0 guard passes;
-  B2 still reserves merging to Brandon. A2 now classifies evidence before preservation:
+- **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 already maps
+  OpenClaw to attended; this amendment emphasizes that mapping, and the appendix now defers to that
+  portable rule instead of restating it. Its fleet-local autonomous override is named as
+  `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md` and identified as a workspace-local
+  override layer rather than a copy of the canonical agreement: it applies only when loaded in the
+  active session and when the checkout-specific B0 guard passes; B2 still reserves merging to
+  Brandon. A2 now classifies evidence before preservation:
   irreproducible bytes are retained, while retrievable evidence gets a stable locator, SHA-256,
   relevant excerpt, or searched terms plus absence. Named OpenClaw paths fall back to the active
   workspace's durable evidence store when unreachable, with its location recorded. This advances

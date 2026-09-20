@@ -17,8 +17,9 @@ declaring it effective.
 **Mode:** B0 maps OpenClaw to attended and decides the mode for the exact checkout and delivery
 path. The fleet-local autonomous override at
 `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md` applies only when that file is loaded in
-the active session and the checkout-specific B0 guard passes. It does not change this portable
-rule, and B2 still reserves merging to Brandon alone.
+the active session and the checkout-specific B0 guard passes. That file is a workspace-local
+override layer, not a copy of this agreement; Parts A–B in this checkout remain canonical. The
+override does not change this portable rule, and B2 still reserves merging to Brandon alone.
 
 ## Runtime and workspace
 

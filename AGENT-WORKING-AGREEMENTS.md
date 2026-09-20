@@ -52,7 +52,7 @@ The rule that matters most, because breaking it costs more than any bug. **Label
 
 Keep the three apart; never let a right measurement carry a wrong mechanism. Rules:
 
-- **Classify [measured] evidence before preserving it.** Irreproducible bytes are preserved in
+- **Preserve [measured] evidence — classified first.** Irreproducible bytes are preserved in
   `evidence/`, named for what they prove, before summarizing. Retrievable evidence gets a stable
   locator, SHA-256, and relevant excerpt — or the search terms plus absence; do not copy a
   retrievable artifact merely to prove a claim. A summary is not evidence.
