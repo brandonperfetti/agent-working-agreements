@@ -104,8 +104,10 @@ no agent starts it merely because the PR merged.
    Parts A–B and `clients/openclaw.md`, then run B0's guard for its exact checkout and delivery path.
    Drain every session still holding the old instructions.
 5. **Observe before cleanup.** Keep the stub until every configured route has demonstrated the new
-   pointer. Remove it only in a later reviewed change. If verification fails, restore the preserved
-   agreement and previous pointer using the recorded inverse operation.
+   pointer. A later reviewed cleanup removes the stub and this Quiet cutover contract together, and
+   condenses Migration dispositions to the enduring explanation of why the superseded local rules
+   are absent. If verification fails, restore the preserved agreement and previous pointer using
+   the recorded inverse operation.
 
 The worktree topology above is adopted before this window and verified independently, so the window
 changes only instruction pickup. The post-cutover B0 default amendment is a separate PR supported by
