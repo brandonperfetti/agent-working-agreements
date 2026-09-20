@@ -23,6 +23,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Part C index matches clients/
         run: ./scripts/check-index.sh
+      - name: Part C index regression tests
+        run: ./scripts/check-index.test.sh
       # A step in this job, never a job of its own: a new job reports a new check
       # name, which master's required check (`check`) would not cover.
       # Runs even when the index check failed, so one failure never hides the other.
