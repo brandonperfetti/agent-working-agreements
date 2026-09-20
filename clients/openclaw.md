@@ -8,18 +8,19 @@ when you acknowledge your reading** — "read the agreements and
 
 ## Startup and mode
 
-The workspace-root `AGENTS.md` is the local pointer to the canonical agreement checkout and this
+The workspace-root `AGENTS.md` currently points to the full machine-local agreement at
+`/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`; it does not yet point to this checkout or
+appendix. The migration target is one startup pointer naming the canonical agreement and this
 appendix. If that pointer, Parts A/B, or this appendix is unreachable in the active session,
-downgrade to attended. Do not assume arbitrary external-file injection or automatic refresh.
-After a pointer, configuration, or skill-loader change, require a fresh-session observation before
-declaring it effective.
+downgrade to attended. After installing or changing the pointer, require a fresh-session observation
+before declaring it effective; do not assume arbitrary external-file injection or automatic refresh.
 
 **Mode:** B0 maps OpenClaw to attended and decides the mode for the exact checkout and delivery
-path. The fleet-local autonomous override at
-`/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md` applies only when that file is loaded in
-the active session and the checkout-specific B0 guard passes. That file is a workspace-local
-override layer, not a copy of this agreement; Parts A–B in this checkout remain canonical. The
-override does not change this portable rule, and B2 still reserves merging to Brandon alone.
+path. The workspace currently boots the full machine-local agreement at
+`/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`; it remains the local authority until the
+canonical pointer is installed and verified. During adoption, Parts A–B and this appendix supersede
+that complete local agreement. Any retained workspace-local layer adds client mechanics only; it
+never copies or overrides Parts A–B. B2 still reserves merging to Brandon alone.
 
 ## Runtime and workspace
 
