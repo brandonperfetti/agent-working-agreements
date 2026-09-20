@@ -17,13 +17,14 @@ being retrofitted onto the other.
   It retains only OpenClaw mechanics already owned by the appendix and preserves B1/B2 topology.
   [measured 2026-09-20] This autonomous amendment used a dedicated worktree. The appendix also
   defines a Brandon-scheduled quiet window with an inventory, hash-and-quarantine rollback, a
-  non-authoritative stale-reader stub, fresh-session verification for both adoption and rollback,
-  and later reviewed cleanup.
+  non-authoritative stale-reader stub, fresh or reset-session verification for adoption,
+  fresh-session verification for rollback, and later reviewed cleanup.
   Merging this amendment does not change OpenClaw startup.
   [measured 2026-09-20, current Gateway host] The `claude-skills` route was attended after item 2
-  failed; [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111) tracks
-  durable Ruby and `zip` prerequisites plus remeasurement, but future mode decisions still come
-  only from B0. That condition does not block pointer adoption. The OpenClaw B0 default remains
+  failed; [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111)
+  (private; repository access required) tracks durable Ruby and `zip` prerequisites plus
+  remeasurement, but future mode decisions still come only from B0. That condition does not block
+  pointer adoption. The OpenClaw B0 default remains
   unchanged until a separate post-cutover amendment can cite deployed main- and specialist-session
   evidence; its accepted target is autonomous with the per-session guard still deciding.
 - **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 already maps
