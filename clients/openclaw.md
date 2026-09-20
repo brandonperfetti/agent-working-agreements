@@ -106,8 +106,9 @@ no agent starts it merely because the PR merged.
 5. **Observe before cleanup.** Keep the stub until every configured route has demonstrated the new
    pointer. A later reviewed cleanup removes the stub and this Quiet cutover contract together, and
    condenses Migration dispositions to the enduring explanation of why the superseded local rules
-   are absent. If verification fails, restore the preserved agreement and previous pointer using
-   the recorded inverse operation.
+   are absent. If verification fails, stop or drain every affected session, restore the preserved
+   agreement and previous pointer using the recorded inverse operation, start fresh sessions, and
+   verify that every route loads the restored agreement before dispatches resume.
 
 The worktree topology above is adopted before this window and verified independently, so the window
 changes only instruction pickup. The post-cutover B0 default amendment is a separate PR supported by
