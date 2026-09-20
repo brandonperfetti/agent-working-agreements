@@ -19,7 +19,8 @@ being retrofitted onto the other.
   defines a Brandon-scheduled quiet window with an inventory,
   hash-and-quarantine rollback, a non-authoritative stale-reader stub, fresh-session verification,
   and later reviewed cleanup. Merging this amendment does not change OpenClaw startup. The
-  measured `claude-skills` route was attended after item 2 failed; issue #111 tracks durable Ruby
+  [measured 2026-09-20, current Gateway host] The `claude-skills` route was attended after item 2
+  failed; issue #111 tracks durable Ruby
   and `zip` prerequisites plus remeasurement, but future mode decisions still come only from B0.
   That condition does not block pointer adoption. The OpenClaw B0 default remains unchanged until a
   separate post-cutover amendment can cite deployed main- and specialist-session evidence; its
