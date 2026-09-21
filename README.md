@@ -7,6 +7,7 @@ start there, not here. This README is for the human maintaining the repo.
 ## Layout
 
 ```text
+AGENTS.md                      repository-specific agent instructions
 AGENT-WORKING-AGREEMENTS.md   Parts A (portable discipline) + B (modes) + the Part C index
 clients/<client>.md           one appendix per environment — read only your own
 CHANGELOG.md                  why each rule changed, newest first
