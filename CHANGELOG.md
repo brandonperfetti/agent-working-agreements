@@ -10,6 +10,12 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-21 — OpenClaw cutover names the rollback agreement.** PR #22 review found that the
+  sentence after the workspace-root pointer used “that file,” which could identify `AGENTS.md`
+  rather than the complete machine-local agreement. The appendix now names the complete
+  machine-local agreement as the artifact preserved intact for rollback and still forbids editing
+  it into a second canonical layer. This clarification changes no cutover state; Brandon still
+  schedules the quiet window.
 - **2026-09-20 (#2) — OpenClaw migration dispositions and cutover contract.** The appendix records
   which rules from the complete machine-local agreement are superseded by Parts A–B rather than
   carried forward: local autonomy, shared-checkout specialist delivery, unconditional build/test

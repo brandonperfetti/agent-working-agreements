@@ -68,7 +68,8 @@ workspace's durable evidence store and record its location with the capture.
 ## Migration dispositions
 
 [source 2026-09-20] Workspace-root `AGENTS.md` still points to a complete machine-local agreement.
-At cutover that file is preserved intact for rollback, not edited into a second canonical layer.
+At cutover, preserve the referenced complete machine-local agreement intact for rollback; do not
+edit it into a second canonical layer.
 The following rules are deliberately **not carried forward** from it:
 
 - **A — autonomy:** the local autonomous default is superseded by B0's per-checkout mode decision
