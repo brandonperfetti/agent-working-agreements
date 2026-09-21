@@ -1,12 +1,16 @@
 # Repository instructions
 
 Read [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md) before
-working in this repository. This file adds only repository-specific rules.
+working in this repository. This file adds only what is specific to this
+repository; it never overrides Parts A–B, and a rule here that contradicts one
+there is the rule that is wrong.
 
 ## Commit subjects
 
-Use `type(scope): description (#issue)` for every commit subject in this
-repository.
+Use `type(scope): description` for every commit subject in this repository, and
+append `(#issue)` when the change has an issue. A change with no issue — a
+defect found by a pull request's own review, for instance — omits the suffix
+rather than inventing one.
 
 This convention is local to `brandonperfetti/agent-working-agreements`. Do not
 apply it to another repository unless that repository records the same rule in
