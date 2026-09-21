@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Regression test for the client-opener precedence check.
+# Regression test for repository and client opener checks.
 #
 set -euo pipefail
 
@@ -50,6 +50,42 @@ here that contradicts one there is the rule that is wrong.
 
 Client mechanics without subheadings.
 EOF
+}
+
+write_root_agents_without_sections() {
+  cat >"$repo/AGENTS.md" <<EOF
+# Repository instructions
+
+Read AGENT-WORKING-AGREEMENTS.md first, $clause
+
+Repository rules without subheadings.
+EOF
+}
+
+assert_root_opener_drift_rejected() {
+  local output status
+
+  write_clients
+  write_root_agents_without_sections
+  perl -0pi -e "$pattern" "$repo/AGENTS.md"
+  printf '\n%s\n' "$clause" >>"$repo/AGENTS.md"
+
+  set +e
+  output="$("$repo/scripts/check-index.sh" 2>&1)"
+  status=$?
+  set -e
+
+  if [ "$status" -eq 0 ]; then
+    echo "FAIL: check-index accepted AGENTS.md with clause outside its opener" >&2
+    exit 1
+  fi
+
+  expected="FAIL: AGENTS.md opener is missing: $clause"
+  if ! grep -qxF "$expected" <<<"$output"; then
+    echo "FAIL: unexpected check-index output for AGENTS.md" >&2
+    printf '%s\n' "$output" >&2
+    exit 1
+  fi
 }
 
 assert_opener_drift_rejected() {
@@ -117,11 +153,13 @@ assert_wrapped_clause_with_trailing_space_accepted() {
 }
 
 write_clients
+write_root_agents_without_sections
 "$repo/scripts/check-index.sh" >/dev/null
 assert_wrapped_clause_with_trailing_space_accepted
 assert_opener_drift_rejected with-sections.md
 assert_opener_drift_rejected without-sections.md
 assert_pointer_drift_rejected with-sections.md
 assert_pointer_drift_rejected without-sections.md
+assert_root_opener_drift_rejected
 
-echo "ok: check-index rejects pointer and precedence drift and accepts wrapped clauses"
+echo "ok: check-index rejects root/client opener drift and accepts wrapped clauses"
