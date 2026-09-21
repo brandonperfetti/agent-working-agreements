@@ -78,6 +78,32 @@ assert_opener_drift_rejected() {
   fi
 }
 
+assert_pointer_drift_rejected() {
+  local target="$1"
+  local output status
+
+  write_clients
+  perl -0pi -e 's/AGENT-WORKING-AGREEMENTS\.md/root agreement/' "$repo/clients/$target"
+  printf '\nRead AGENT-WORKING-AGREEMENTS.md later.\n' >>"$repo/clients/$target"
+
+  set +e
+  output="$("$repo/scripts/check-index.sh" 2>&1)"
+  status=$?
+  set -e
+
+  if [ "$status" -eq 0 ]; then
+    echo "FAIL: check-index accepted $target with the agreement pointer outside its opener" >&2
+    exit 1
+  fi
+
+  expected="FAIL: $target opener does not point back at Parts A and B"
+  if ! grep -qxF "$expected" <<<"$output"; then
+    echo "FAIL: unexpected check-index output for $target" >&2
+    printf '%s\n' "$output" >&2
+    exit 1
+  fi
+}
+
 assert_wrapped_clause_with_trailing_space_accepted() {
   local output
 
@@ -95,5 +121,7 @@ write_clients
 assert_wrapped_clause_with_trailing_space_accepted
 assert_opener_drift_rejected with-sections.md
 assert_opener_drift_rejected without-sections.md
+assert_pointer_drift_rejected with-sections.md
+assert_pointer_drift_rejected without-sections.md
 
-echo "ok: check-index rejects opener drift and accepts wrapped clauses"
+echo "ok: check-index rejects pointer and precedence drift and accepts wrapped clauses"

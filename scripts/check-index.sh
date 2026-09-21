@@ -35,9 +35,6 @@ done <<<"$present"
 # standard conflict-precedence clause. Read only the first paragraph after the H1
 # so later prose or sections cannot mask drift in the opener.
 for f in "$ROOT"/clients/*.md; do
-  grep -q 'AGENT-WORKING-AGREEMENTS.md' "$f" || {
-    echo "FAIL: $(basename "$f") does not point back at Parts A and B" >&2; fail=1; }
-
   opener="$(
     awk '
       BEGIN { ORS = " " }
@@ -56,6 +53,8 @@ for f in "$ROOT"/clients/*.md; do
       }
     ' "$f"
   )"
+  [[ "$opener" == *"AGENT-WORKING-AGREEMENTS.md"* ]] || {
+    echo "FAIL: $(basename "$f") opener does not point back at Parts A and B" >&2; fail=1; }
   [[ "$opener" == *"$precedence_clause"* ]] || {
     echo "FAIL: $(basename "$f") opener is missing: $precedence_clause" >&2; fail=1; }
 done
