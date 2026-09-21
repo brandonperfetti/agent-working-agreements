@@ -50,6 +50,8 @@ for f in "$ROOT"/clients/*.md; do
       started && ($0 ~ /^[[:space:]]*$/ || $0 ~ /^#/) { exit }
       {
         gsub(/[[:space:]]+/, " ")
+        sub(/^ /, "")
+        sub(/ $/, "")
         print
       }
     ' "$f"
