@@ -32,13 +32,28 @@ while read -r f; do
 done <<<"$present"
 
 # Every client opener must send the reader to Parts A and B first and preserve the
-# standard conflict-precedence clause. Stop at the first H2 so a later mention
-# cannot mask drift in the opener.
+# standard conflict-precedence clause. Read only the first paragraph after the H1
+# so later prose or sections cannot mask drift in the opener.
 for f in "$ROOT"/clients/*.md; do
   grep -q 'AGENT-WORKING-AGREEMENTS.md' "$f" || {
     echo "FAIL: $(basename "$f") does not point back at Parts A and B" >&2; fail=1; }
 
-  opener="$(awk 'BEGIN { ORS=" " } /^## / { exit } { print }' "$f")"
+  opener="$(
+    awk '
+      BEGIN { ORS = " " }
+      NR == 1 && /^# / { next }
+      !started && /^[[:space:]]*$/ { next }
+      !started {
+        if (/^#/) { exit }
+        started = 1
+      }
+      started && ($0 ~ /^[[:space:]]*$/ || $0 ~ /^#/) { exit }
+      {
+        gsub(/[[:space:]]+/, " ")
+        print
+      }
+    ' "$f"
+  )"
   [[ "$opener" == *"$precedence_clause"* ]] || {
     echo "FAIL: $(basename "$f") opener is missing: $precedence_clause" >&2; fail=1; }
 done

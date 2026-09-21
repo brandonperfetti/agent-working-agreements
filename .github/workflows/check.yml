@@ -24,6 +24,7 @@ jobs:
       - name: Part C index matches clients/
         run: ./scripts/check-index.sh
       - name: Part C index regression tests
+        if: ${{ !cancelled() }}
         run: ./scripts/check-index.test.sh
       # A step in this job, never a job of its own: a new job reports a new check
       # name, which master's required check (`check`) would not cover.
