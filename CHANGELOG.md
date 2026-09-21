@@ -10,6 +10,43 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-21 — OpenClaw cutover names the rollback agreement.** PR #22 review found that the
+  sentence after the workspace-root pointer used “that file,” which could identify `AGENTS.md`
+  rather than the complete machine-local agreement. The appendix now names the complete
+  machine-local agreement as the artifact preserved intact for rollback and still forbids editing
+  it into a second canonical layer. This clarification changes no cutover state; Brandon still
+  schedules the quiet window.
+- **2026-09-20 (#2) — OpenClaw migration dispositions and cutover contract.** The appendix records
+  which rules from the complete machine-local agreement are superseded by Parts A–B rather than
+  carried forward: local autonomy, shared-checkout specialist delivery, unconditional build/test
+  ownership, raw retention for every measured claim, remote-API commits, and the generic ask rule.
+  It retains only OpenClaw mechanics already owned by the appendix and preserves B1/B2 topology.
+  [measured 2026-09-20] This autonomous amendment used a dedicated worktree. The appendix also
+  defines a Brandon-scheduled quiet window with an inventory, hash-and-quarantine rollback, a
+  non-authoritative stale-reader stub, fresh or reset-session verification for adoption,
+  fresh-session verification for rollback, and later reviewed cleanup.
+  Merging this amendment does not change OpenClaw startup.
+  [measured 2026-09-20, current Gateway host] The `claude-skills` route was attended after item 2
+  failed; [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111)
+  (private; repository access required) tracks durable Ruby and `zip` prerequisites plus
+  remeasurement, but future mode decisions still come only from B0. That condition does not block
+  pointer adoption. The OpenClaw B0 default remains
+  unchanged until a separate post-cutover amendment can cite deployed main- and specialist-session
+  evidence; its accepted target is autonomous with the per-session guard still deciding.
+- **2026-09-20 — OpenClaw appendix promoted from stub; #11 advanced, not closed.** B0 already maps
+  OpenClaw to attended; this amendment emphasizes that mapping, and the appendix now defers to that
+  portable rule instead of restating it. [source 2026-09-20] The OpenClaw bootstrap still points to
+  the complete machine-local agreement at `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`;
+  the canonical pointer is a migration target, not current state. The appendix records that
+  transition with a session-specific authority boundary, retains A4's RULE ZERO as the first line
+  of every dispatch, and limits any retained workspace-local layer to client mechanics after Parts
+  A–B supersede the complete local agreement; B2 still reserves merging to Brandon. A2 now
+  classifies evidence before preservation:
+  irreproducible bytes are retained, while retrievable evidence gets a stable locator, SHA-256,
+  relevant excerpt, or searched terms plus absence. Named OpenClaw paths fall back to the active
+  workspace's durable evidence store when unreachable, with its location recorded. This advances
+  the portable portion of issue #11 without copying retrievable artifacts or closing the issue.
+  Issue #13 remains unchanged and out of scope.
 - **2026-09-18 — item 1's probe names its remote and refspec.** Issue #14's rule, corrected by the
   review on the release PR (#16). The probe was written as a bare `git push --dry-run`, which works
   only where the branch already has an upstream. A lane worktree is exactly where it does not:

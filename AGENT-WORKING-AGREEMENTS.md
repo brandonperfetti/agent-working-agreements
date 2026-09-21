@@ -52,8 +52,10 @@ The rule that matters most, because breaking it costs more than any bug. **Label
 
 Keep the three apart; never let a right measurement carry a wrong mechanism. Rules:
 
-- **Preserve the raw capture behind every [measured] claim** in `evidence/` *before* summarizing,
-  named for what it proves. A summary is not evidence.
+- **Preserve [measured] evidence — classified first.** Irreproducible bytes are preserved in
+  `evidence/`, named for what they prove, before summarizing. Retrievable evidence gets a stable
+  locator, SHA-256, and relevant excerpt — or the search terms plus absence; do not copy a
+  retrievable artifact merely to prove a claim. A summary is not evidence.
 - **The generalization boundary is part of the label** — "[measured] on the first item" is never
   written as "[measured] on all N". A label is **never inherited across revisions**: re-measure or
   downgrade. [learnings: 2026-09-04 wave-5 §2]
@@ -286,7 +288,7 @@ never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skill
 or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and usually 2);
 **ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13 but for its hook
 probe, which is per checkout and unmeasured there; 4 readable there
-but still checked per repo; see `clients/codex.md`); OpenClaw → attended unless it demonstrably
+but still checked per repo; see `clients/codex.md`); **OpenClaw → attended** unless it demonstrably
 passes 1–4. **Where this file is not reachable at all, attended rules apply.** Any client that
 passes the guard may run autonomous — the guard is the contract, not the client name.
 
