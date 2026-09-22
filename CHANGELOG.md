@@ -10,6 +10,26 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-22 (#2) — on-fleet artifact placement outranks generic skill defaults.** Issue #39
+  makes explicit that the `agent-workspace` convention governs artifact destinations on an
+  on-fleet workspace ahead of a generic skill default. A1 already identifies the skills plugin as
+  a mirror of `mattpocock/skills` plus Brandon's own skills, while A6 already owns workspace
+  destinations and keeps experiments out of `/tmp`; those neighboring rules make the canonical
+  agreement, rather than a patch to one mirrored skill, the durable place to settle precedence.
+  Off-fleet fallbacks remain the skill's to define. This supersedes
+  [claude-skills #113](https://github.com/brandonperfetti/claude-skills/issues/113).
+  Release review clarified that the following `_agent/` layout sentence is on-fleet too, so an
+  off-fleet fallback selected by a skill cannot conflict with a universal-sounding workspace
+  destination.
+- **2026-09-22 — every client resolves A2 to its evidence store.** Issue #11's remaining client
+  mappings are now explicit: Claude Code uses the desktop's per-machine `_agent/` store; Codex
+  records the same location as an inference that still needs separate measurement; Cowork uses the
+  linked desktop store and takes no irreproducible measurement when no durable folder is linked.
+  [measured 2026-09-22, current OpenClaw instance] OpenClaw's store resolves to the active
+  workspace's `_agent/` tree. A2 remains the one portable source for the capture classification:
+  preserve irreproducible bytes, but record a stable locator, SHA-256 and relevant excerpt (or
+  searched terms plus absence) for retrievable evidence. The stores remain per-machine working
+  state rather than repository content.
 - **2026-09-21 — OpenClaw cutover names the rollback agreement.** PR #22 review found that the
   sentence after the workspace-root pointer used “that file,” which could identify `AGENTS.md`
   rather than the complete machine-local agreement. The appendix now names the complete
