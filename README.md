@@ -10,6 +10,7 @@ start there, not here. This README is for the human maintaining the repo.
 AGENTS.md                      repository-specific agent instructions
 AGENT-WORKING-AGREEMENTS.md   Parts A (portable discipline) + B (modes) + the Part C index
 clients/<client>.md           one appendix per environment — read only your own
+docs/agents/issue-tracker.md  repository-specific issue/spec fetch and PR-linkage rules
 CHANGELOG.md                  why each rule changed, newest first
 scripts/check-index.sh        CI: the index and clients/ must correspond
 .markdownlint-cli2.jsonc      CI: markdown lint rules, each exception with its reason
