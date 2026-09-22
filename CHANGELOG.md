@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-22 — every client resolves A2 to its evidence store.** Issue #11's remaining client
+  mappings are now explicit: Claude Code uses the desktop's per-machine `_agent/` store; Codex
+  records the same location as an inference that still needs separate measurement; Cowork uses the
+  linked desktop store and takes no irreproducible measurement when no durable folder is linked.
+  [measured 2026-09-22, current OpenClaw instance] OpenClaw's store resolves to the active
+  workspace's `_agent/` tree. A2 remains the one portable source for the capture classification:
+  preserve irreproducible bytes, but record a stable locator, SHA-256 and relevant excerpt (or
+  searched terms plus absence) for retrievable evidence. The stores remain per-machine working
+  state rather than repository content.
 - **2026-09-21 — OpenClaw cutover names the rollback agreement.** PR #22 review found that the
   sentence after the workspace-root pointer used “that file,” which could identify `AGENTS.md`
   rather than the complete machine-local agreement. The appendix now names the complete

@@ -56,14 +56,13 @@ tracks a durable install and complete remeasurement; a future session's mode is 
 by rerunning B0 for its exact checkout and path. This does not block agreement adoption or the
 pointer cutover.
 
-## Evidence
+## Evidence store
 
-[measured 2026-09-20, current OpenClaw workspace] When reachable, preserve OpenClaw raw captures
-under `/data/.openclaw/workspace/_agent/evidence/` and analysis under
-`/data/.openclaw/workspace/_agent/analysis/`. Date-name artifacts and label claims
-`[measured]`, `[source]`, or `[inference]`. Do not assume those locations are reachable from
-every workspace: A2 applies everywhere. When either named path is unreachable, use the active
-workspace's durable evidence store and record its location with the capture.
+[measured 2026-09-22, current OpenClaw instance] This instance's per-machine `_agent` store resolves
+to `/data/.openclaw/workspace/_agent/`; use its `evidence/` and `analysis/` subdirectories per A2
+and A6. Date-name artifacts and label claims `[measured]`, `[source]`, or `[inference]`. Do not
+assume that path is reachable from every OpenClaw workspace: use the active workspace's durable
+`_agent/` store and record its concrete location with the capture.
 
 ## Migration dispositions
 
