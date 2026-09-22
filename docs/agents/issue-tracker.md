@@ -21,12 +21,15 @@ specification from the title or PR body alone.
 
 ## Agent permissions
 
-Agents may read, list, and comment on issues through `gh`. They may file an
-actionable issue under A7 when the working agreement permits it, but must apply the
-`agent-filed` label and identify the agent provenance in the issue body.
+Agents may read, list, and comment on issues through `gh`. A7 designates `gh` as
+the primary skill-driven surface and GitHub Issues as the tracker. B2 authorizes
+agents to file findings through `writing-tickets`; those issues carry the
+`agent-filed` label so Brandon can sweep them.
 
-Closing an issue is not an agent decision. Agents do not close issues, merge pull
-requests, or flip releases; Brandon makes those calls.
+Closing is not a delivery agent's call. Closing or relabelling an existing issue
+is orchestrator-only and must be cited. For issue-backed delivery, Brandon triggers
+closure by merging the release PR. Brandon alone merges pull requests and flips
+draft PRs to ready for review.
 
 ## Reference an issue from a pull request
 
