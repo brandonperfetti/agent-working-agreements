@@ -147,6 +147,11 @@ the hooks the repo installs.
 
 The `sansfaux/` root holds project checkouts, the `agent-working-agreements/` clone, and
 `organize.sh` — nothing else.
+
+**Artifact placement precedence.** On an on-fleet workspace, the `agent-workspace` convention
+governs where agent artifacts are written and overrides any generic skill default; off-fleet
+fallbacks remain the skill's to define.
+
 Everything an agent produces goes under `_agent/`:
 
 ```text
