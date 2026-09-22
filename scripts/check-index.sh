@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# check-index.sh — the Part C index in AGENT-WORKING-AGREEMENTS.md and the files in
-# clients/ must correspond exactly. A client file with no index row, or an index row
-# pointing at a file that does not exist, fails the build.
+# check-index.sh — verify Part C/client correspondence and the opener invariants
+# shared by root AGENTS.md and clients/*.md. Missing mappings, agreement pointers, or
+# standard precedence clauses fail the build.
 #
-# This is the one piece of drift progressive disclosure introduces that nobody notices
-# by reading: the root file looks fine, and the missing appendix is simply never read.
+# Progressive disclosure makes both failure modes easy to miss: an unindexed
+# appendix is never read, while later duplicate text can mask a drifting opener.
 #
 set -euo pipefail
 
@@ -31,10 +31,10 @@ while read -r f; do
   fi
 done <<<"$present"
 
-# Every client opener must send the reader to Parts A and B first and preserve the
-# standard conflict-precedence clause. Read only the first paragraph after the H1
-# so later prose or sections cannot mask drift in the opener.
-for f in "$ROOT"/clients/*.md; do
+# Every repository and client opener must send the reader to Parts A and B and
+# preserve the standard conflict-precedence clause. Read only the first paragraph
+# after the H1 so later prose or sections cannot mask drift in the opener.
+for f in "$ROOT/AGENTS.md" "$ROOT"/clients/*.md; do
   opener="$(
     awk '
       BEGIN { ORS = " " }
