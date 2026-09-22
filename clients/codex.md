@@ -9,6 +9,13 @@ your reading** — "read the agreements and `clients/codex.md`" — so a skipped
 
 ---
 
+## Evidence store
+
+[inference 2026-09-15] On Brandon's Mac, Codex uses `~/dev/sansfaux/_agent/`, the same per-machine
+store as Claude Code because both clients run against the same desktop checkout root; this was not
+separately measured in Codex. Use its `evidence/` and `analysis/` subdirectories per A2 and A6, and
+re-measure the store location on another machine.
+
 Everything below is `[measured 2026-09-13]` on Brandon's Mac unless marked; **re-measure on yours**.
 Note the scope: this describes a *Codex session with local shell tools*, not every ChatGPT
 conversation.

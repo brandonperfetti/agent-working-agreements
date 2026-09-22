@@ -9,6 +9,13 @@ your reading** — "read the agreements and `clients/claude-code.md`" — so a s
 
 ---
 
+## Evidence store
+
+[measured 2026-09-15, Brandon's desktop] This client's per-machine `_agent` store is
+`~/dev/sansfaux/_agent/`. Use its `evidence/` and `analysis/` subdirectories per A2 and A6; the
+store is working state, not repository content. A cloud checkout uses its active workspace's
+durable `_agent/` store and records that location with the capture.
+
 Native shell on Brandon's machine (or a cloud checkout): `rm`, worktrees, `git branch -d`, and hook
 execution all work [measured 2026-09-10]; none of the Cowork hazards (`cowork.md`) apply. **Still
 check at pickup:** item 1's hook probe (`git push --dry-run origin HEAD` from the checkout you will

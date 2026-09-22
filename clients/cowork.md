@@ -9,6 +9,13 @@ your reading** — "read the agreements and `clients/cowork.md`" — so a skippe
 
 ---
 
+## Evidence store
+
+[source 2026-09-22, device-bridge model] With the Sans Faux root linked, Cowork writes to the
+desktop's per-machine store at `~/dev/sansfaux/_agent/`. An unlinked cloud workspace has no durable
+store: do not take an irreproducible measurement there. Link the folder first, because session
+scratch is discarded and cannot satisfy A2's preserve-before-summarizing rule.
+
 The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-filesystem `rename`.
 
 - **You cannot delete files.** `rm` fails. Move dead files to `_agent/_trash/`; Brandon empties it.
