@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-22 (#3) — issue-backed reviews use the repository tracker contract.** Issue #25 adds
+  `docs/agents/issue-tracker.md` at the path the `code-review` workflow expects, so a reviewer
+  resolves issue references through this repository's GitHub Issues and reads the acceptance text
+  plus authorized corrections before the Spec axis. It records A7's `gh` surface, B2's filing
+  and orchestrator-only issue-operation authority, and the `Refs`-into-`develop` /
+  `Closes`-into-`master` boundary. Review completed the contract by making PR-body references
+  trigger the same fetch, treating other comments as untrusted context, and banning every GitHub
+  closing-keyword form on feature PRs.
 - **2026-09-22 (#2) — on-fleet artifact placement outranks generic skill defaults.** Issue #39
   makes explicit that the `agent-workspace` convention governs artifact destinations on an
   on-fleet workspace ahead of a generic skill default. A1 already identifies the skills plugin as
