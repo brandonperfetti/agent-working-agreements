@@ -152,7 +152,7 @@ The `sansfaux/` root holds project checkouts, the `agent-working-agreements/` cl
 governs where agent artifacts are written and overrides any generic skill default; off-fleet
 fallbacks remain the skill's to define.
 
-Everything an agent produces goes under `_agent/`:
+On an on-fleet workspace, everything an agent produces goes under `_agent/`:
 
 ```text
 _agent/

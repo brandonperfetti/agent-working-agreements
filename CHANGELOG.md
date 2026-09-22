@@ -18,6 +18,9 @@ being retrofitted onto the other.
   agreement, rather than a patch to one mirrored skill, the durable place to settle precedence.
   Off-fleet fallbacks remain the skill's to define. This supersedes
   [claude-skills #113](https://github.com/brandonperfetti/claude-skills/issues/113).
+  Release review clarified that the following `_agent/` layout sentence is on-fleet too, so an
+  off-fleet fallback selected by a skill cannot conflict with a universal-sounding workspace
+  destination.
 - **2026-09-22 — every client resolves A2 to its evidence store.** Issue #11's remaining client
   mappings are now explicit: Claude Code uses the desktop's per-machine `_agent/` store; Codex
   records the same location as an inference that still needs separate measurement; Cowork uses the
