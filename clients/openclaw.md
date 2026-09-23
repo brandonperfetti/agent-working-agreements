@@ -44,8 +44,9 @@ explicitly selected the instruction-source clone with `git -C`; their presence v
 clone's one-worktree contract even though the commands ran from the workspace root.
 
 **After every `develop → master` merge, fetch and fast-forward the instruction-source clone before
-any further work.** Run `git fetch origin`, then `git merge --ff-only origin/master`; verify the
-tree is clean and `HEAD == origin/master`. The next report names the exact SHA the clone serves.
+any further work.** Run `git switch master`, then `git fetch origin`, then
+`git merge --ff-only origin/master`; verify the tree is clean and `HEAD == origin/master`. The
+next report names the exact SHA the clone serves.
 [measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
 2026-09-22T20:18:10Z, but the clone remained six commits behind until the next day.
 
