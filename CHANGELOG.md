@@ -10,6 +10,39 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-23 (#3) — OpenClaw keeps its instruction source isolated and current.** Issue #48
+  records two measured failures after the canonical-source cutover: delivery commands explicitly
+  selected the instruction-source clone as the Git host and created three worktrees under it, and
+  PR #41 merged to `master` at `b733b59982736285d078ee9f67209bcce2fea957` on
+  2026-09-22T20:18:10Z while that clone remained six commits behind until the next day. The
+  OpenClaw appendix now requires delivery worktrees to come only from the delivery checkout host
+  and requires a fetch plus fast-forward after every `develop → master` merge, before further
+  work, with the next report naming the exact served SHA.
+- **2026-09-23 (#2) — feature PRs open ready and finish CodeRabbit before hand-back.**
+  [decision 2026-09-23, Brandon] Issue #46 records the ratified practice: agents open feature PRs
+  into `develop` ready for review, complete the CodeRabbit round before hand-back, and leave every
+  merge to Brandon. The earlier pre-bot read moved to Brandon's external verification of the
+  completed report, so the additional draft-to-ready relay bought nothing. Drafts had controlled
+  CodeRabbit's measured 5-reviews/hour allowance. For the authorized release queue that prompted
+  this amendment, one-PR-at-a-time pacing covers that cost without treating the current allowance
+  as a permanent guarantee or adding a global scheduling rule.
+- **2026-09-23 — A6 defines an on-fleet workspace by its `_agent/` directory.** Issue #42 cited
+  the installed `agent-workspace` convention
+  (`skills/personal/agent-workspace/references/workspace-convention.md`, lines 7–10 at `366c84e`),
+  which also treats `AGENT-WORKING-AGREEMENTS.md` as a nearest-wins marker. After the first draft
+  transcribed that rule, a source read showed that it contradicts this agreement's preamble:
+  “`_agent/` and `organize.sh` are at the root of the `sansfaux/` checkout tree — the parent of
+  this clone, when it is cloned there” (lines 21–23). This agreement is itself a repository, so
+  every clone and worktree carries the file at its own root and would resolve itself as the agent
+  root. Following the 2026-09-17 (#2) precedent — “One departure from the ticket, on a
+  measurement” — A6 deliberately departs from #42's cited convention: the directory containing
+  the first `_agent/` found while walking upward is the agent root. A positive-controlled VPS
+  audit of both live Git common directories found one resulting incident: the legacy delivery checkout
+  contains an empty `_agent/notes/`; none of the other 15 registered roots contains `_agent/`.
+  The incident was recorded and left intact at
+  `_agent/evidence/2026-09-23-pr47-agent-root-marker-audit.md`. Release review in
+  `8ad6ebc` also corrected A6's
+  root inventory to name `_agent/`, matching the preamble and the marker rule.
 - **2026-09-22 (#2) — on-fleet artifact placement outranks generic skill defaults.** Issue #39
   makes explicit that the `agent-workspace` convention governs artifact destinations on an
   on-fleet workspace ahead of a generic skill default. A1 already identifies the skills plugin as

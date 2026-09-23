@@ -63,5 +63,5 @@ done
 grep -q '^# Part A' "$AWA" || { echo "FAIL: Part A missing from the root file" >&2; fail=1; }
 grep -q '^# Part B' "$AWA" || { echo "FAIL: Part B missing from the root file" >&2; fail=1; }
 
-if [ "$fail" -eq 0 ]; then echo "ok: index and clients/ agree ($(wc -l <<<"$present") client files)"; fi
+if [ "$fail" -eq 0 ]; then echo "ok: index/client mapping and root/client opener checks pass ($(wc -l <<<"$present") client files)"; fi
 exit "$fail"
