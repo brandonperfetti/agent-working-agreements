@@ -361,10 +361,10 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 - **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
   records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, then pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
-- **Open the draft PR against `develop` at the first push** (`writing-pull-requests` shape; body
-  seeded under the initiative's `pull-requests/`, grown as lanes land). Brandon flips it to
-  ready-for-review; that is what triggers CodeRabbit (`auto_review.drafts: false` [measured
-  2026-09-10 on bp-portfolio, claude-skills]).
+- **Open the ready-for-review PR against `develop` at the first push. CodeRabbit runs on that ready
+  PR, and the orchestrator completes the round before hand-back.** The PR uses the
+  `writing-pull-requests` shape; its body is seeded under the initiative's `pull-requests/` and
+  grown as lanes land.
 - **File-disjoint lanes may run in parallel up to the measured cap.** Claude Code: **≥ 3 concurrent**
   [measured 2026-09-10, three lanes in one message, floor not ceiling]. Any other client measures
   its own Agent tool before assuming concurrency and records the number in the MPD.
@@ -390,7 +390,8 @@ orchestrator's own hands. Work already merged into the wave branch goes through 
 
 **The review loop (Brandon + the orchestrator)**
 
-1. Brandon reads the draft PR, flips it to **ready for review**; CodeRabbit runs.
+1. **The agent opens the feature PR ready for review; CodeRabbit runs; the orchestrator completes
+   the round before hand-back.**
 2. The orchestrator works the review end-to-end with `coderabbit-response`: verifies every finding,
    redispatches fixes to lanes (worktrees, review, merge, push as above), replies per thread with
    receipts, monitors re-reviews to clean. Brandon's review is the PR's final state, not the threads.
