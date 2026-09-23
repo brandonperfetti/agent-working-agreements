@@ -95,8 +95,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   (on the attended mbox path, its own isolated clone), and the orchestrator's checkout is the
   orchestrator's alone — no lane runs git against it, changes its branch, or alters its git
   state — because that isolation is what makes concurrent lanes safe at all, and a lane that has
-  run git in the shared checkout has left it, whatever files it edited. B1's attended delivery of
-  uncommitted edits to named files runs no git there and crosses neither fence.
+  run git in the shared checkout has left that isolation, whatever files it edited. B1's attended
+  delivery of uncommitted edits to named files runs no git there and crosses neither fence.
   [learnings: 2026-09-23 sfs-wave-1 §1]
 - **Every lane report states the model it ran on, and how it knows.** Requested, inherited,
   configured and backend-attested are four different claims; a dispatched tier resolves to whatever
