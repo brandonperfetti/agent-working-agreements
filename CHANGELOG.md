@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-23 — A6 defines an on-fleet workspace from its marker and agent root.** Issue #42.
+  The definition follows the
+  [`agent-workspace` marker rule, lines 7–10 at `366c84e`](https://github.com/brandonperfetti/claude-skills/blob/366c84e142fff8a6b35eb6b2d2ed01c65cafa9b4/skills/personal/agent-workspace/references/workspace-convention.md#L7-L10):
+  walk upward from the working directory to the first `AGENT-WORKING-AGREEMENTS.md` file or
+  `_agent/` directory marker; its containing directory is the agent root, and finding one makes
+  the workspace on-fleet. This makes A6's existing placement-precedence and `_agent/` layout
+  rules self-contained without adding another artifact-placement rule.
 - **2026-09-22 (#2) — on-fleet artifact placement outranks generic skill defaults.** Issue #39
   makes explicit that the `agent-workspace` convention governs artifact destinations on an
   on-fleet workspace ahead of a generic skill default. A1 already identifies the skills plugin as
