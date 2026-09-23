@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-23 (#3) — OpenClaw keeps its instruction source isolated and current.** Issue #48
+  records two measured failures after the canonical-source cutover: delivery commands explicitly
+  selected the instruction-source clone as the Git host and created three worktrees under it, and
+  PR #41 merged to `master` at `b733b59982736285d078ee9f67209bcce2fea957` on
+  2026-09-22T20:18:10Z while that clone remained six commits behind until the next day. The
+  OpenClaw appendix now requires delivery worktrees to come only from the delivery checkout host
+  and requires a fetch plus fast-forward after every `develop → master` merge, before further
+  work, with the next report naming the exact served SHA.
 - **2026-09-23 (#2) — feature PRs open ready and finish CodeRabbit before hand-back.**
   [decision 2026-09-23, Brandon] Issue #46 records the ratified practice: agents open feature PRs
   into `develop` ready for review, complete the CodeRabbit round before hand-back, and leave every

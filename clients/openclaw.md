@@ -36,6 +36,19 @@ the amendment exemption in its README means an autonomous amendment uses one iso
 worktree branched from `develop`, rather than a wave branch; do not invent a wave merely to obtain
 isolation.
 
+## Instruction-source isolation and freshness
+
+**Cut every delivery worktree from the delivery checkout host, never from the instruction-source
+clone.** [measured 2026-09-23, issue #24] Three delivery worktrees were created by commands that
+explicitly selected the instruction-source clone with `git -C`; their presence violated that
+clone's one-worktree contract even though the commands ran from the workspace root.
+
+**After every `develop → master` merge, fetch and fast-forward the instruction-source clone before
+any further work.** Run `git fetch origin`, then `git merge --ff-only origin/master`; verify the
+tree is clean and `HEAD == origin/master`. The next report names the exact SHA the clone serves.
+[measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
+2026-09-22T20:18:10Z, but the clone remained six commits behind until the next day.
+
 ## Pickup guard and delivery audit
 
 Record the checkout and HEAD, Git author identity, `core.hooksPath` and hook presence, an explicit
