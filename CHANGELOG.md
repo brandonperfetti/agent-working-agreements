@@ -11,8 +11,8 @@ of amendments in that batch**, not an ordinal; the two notations predate each ot
 being retrofitted onto the other.
 
 - **2026-09-23 — A6 defines an on-fleet workspace from its marker and agent root.** Issue #42.
-  The definition follows the
-  [`agent-workspace` marker rule, lines 7–10 at `366c84e`](https://github.com/brandonperfetti/claude-skills/blob/366c84e142fff8a6b35eb6b2d2ed01c65cafa9b4/skills/personal/agent-workspace/references/workspace-convention.md#L7-L10):
+  The definition follows the installed `agent-workspace` skill's own marker rule
+  (`skills/personal/agent-workspace/references/workspace-convention.md`, lines 7–10 at `366c84e`):
   walk upward from the working directory to the first `AGENT-WORKING-AGREEMENTS.md` file or
   `_agent/` directory marker; its containing directory is the agent root, and finding one makes
   the workspace on-fleet. This makes A6's existing placement-precedence and `_agent/` layout
