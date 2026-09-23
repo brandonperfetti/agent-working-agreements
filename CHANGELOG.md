@@ -15,8 +15,9 @@ being retrofitted onto the other.
   into `develop` ready for review, complete the CodeRabbit round before hand-back, and leave every
   merge to Brandon. The earlier pre-bot read moved to Brandon's external verification of the
   completed report, so the additional draft-to-ready relay bought nothing. Drafts had controlled
-  CodeRabbit's measured 5-reviews/hour allowance; serial one-PR-at-a-time pacing now controls that
-  cost without treating the current allowance as a permanent guarantee.
+  CodeRabbit's measured 5-reviews/hour allowance. For the authorized release queue that prompted
+  this amendment, one-PR-at-a-time pacing covers that cost without treating the current allowance
+  as a permanent guarantee or adding a global scheduling rule.
 - **2026-09-23 — A6 defines an on-fleet workspace by its `_agent/` directory.** Issue #42 cited
   the installed `agent-workspace` convention
   (`skills/personal/agent-workspace/references/workspace-convention.md`, lines 7–10 at `366c84e`),
