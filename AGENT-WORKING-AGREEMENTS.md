@@ -149,8 +149,9 @@ The `sansfaux/` root holds project checkouts, the `agent-working-agreements/` cl
 `organize.sh` — nothing else.
 
 An **on-fleet workspace** is one where walking upward from the working directory finds an
-`AGENT-WORKING-AGREEMENTS.md` file or `_agent/` directory marker; the first marker's containing
-directory is the **agent root**.
+`_agent/` directory; the directory containing its first occurrence is the **agent root**, and
+`AGENT-WORKING-AGREEMENTS.md` is not a marker because this agreement is a repository whose file
+appears at the root of every clone and worktree.
 
 **Artifact placement precedence.** On an on-fleet workspace, the `agent-workspace` convention
 governs where agent artifacts are written and overrides any generic skill default; off-fleet
