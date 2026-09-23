@@ -145,7 +145,7 @@ the hooks the repo installs.
 
 ## A6. Where things go
 
-The `sansfaux/` root holds project checkouts, the `agent-working-agreements/` clone, and
+The `sansfaux/` root holds `_agent/`, project checkouts, the `agent-working-agreements/` clone, and
 `organize.sh` — nothing else.
 
 An **on-fleet workspace** is one where walking upward from the working directory finds an
