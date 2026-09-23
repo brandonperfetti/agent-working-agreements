@@ -90,11 +90,13 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   manifests, generated files, single-owner dirs) are serialised. A lane that spots a defect in a
   file it touched **reports it into the ledger — it is our finding** — rather than crossing its
   fence or smoothing it over. [learnings: 2026-09-06 wave-6 §4]
-- **Lanes stand in their own worktree only.** The file fence says which files a lane edits; this
-  says where a lane *is*. A lane operates only within its own worktree, and the orchestrator's
-  checkout is the orchestrator's alone — no lane runs git against it, changes its branch, or
-  alters its state — because the worktree boundary is what makes concurrent lanes safe at all,
-  and a lane standing in the shared checkout has left the mechanism whatever files it touches.
+- **Lanes keep their git in their own worktree.** The file fence says which files a lane edits;
+  this says which working tree a lane may run git in. A lane runs git only in its own worktree
+  (on the attended mbox path, its own isolated clone), and the orchestrator's checkout is the
+  orchestrator's alone — no lane runs git against it, changes its branch, or alters its git
+  state — because that isolation is what makes concurrent lanes safe at all, and a lane that has
+  run git in the shared checkout has left it, whatever files it edited. B1's attended delivery of
+  uncommitted edits to named files runs no git there and crosses neither fence.
   [learnings: 2026-09-23 sfs-wave-1 §1]
 - **Every lane report states the model it ran on, and how it knows.** Requested, inherited,
   configured and backend-attested are four different claims; a dispatched tier resolves to whatever

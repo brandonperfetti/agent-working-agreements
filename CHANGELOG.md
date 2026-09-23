@@ -17,10 +17,13 @@ being retrofitted onto the other.
   between" error at PR time, not by any check. Read against that event, "Lanes work their named
   files only" governs which files a lane edits and says nothing about which working tree it stands
   in, so the switch crossed no fence as written. A4 now carries the worktree boundary as its own
-  invariant, distinct from the file fence: a lane operates only within its own worktree, and the
-  orchestrator's checkout is out of bounds for any lane git operation, branch change, or state
-  change, with the reason in the sentence. The `orchestrate` skill keeps the mechanics of where
-  lanes commit; the agreement holds the law.
+  invariant, distinct from the file fence: a lane runs git only in its own worktree or isolated
+  clone, and the orchestrator's checkout is out of bounds for any lane git operation, branch
+  change, or git-state change, with the reason in the sentence. Two-axis review of the first
+  draft found it outlawed B1's attended shape, uncommitted edits to named files in the shared
+  checkout, which A4 governs too ("These hold in both modes"); the bullet scopes the boundary to
+  git so that shape crosses neither fence. The `orchestrate` skill keeps the loop; the agreement
+  holds the law.
 - **2026-09-23 (#3) — OpenClaw keeps its instruction source isolated and current.** Issue #48
   records two measured failures after the canonical-source cutover: delivery commands explicitly
   selected the instruction-source clone as the Git host and created three worktrees under it, and
