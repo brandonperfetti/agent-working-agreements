@@ -40,7 +40,9 @@ being retrofitted onto the other.
   audit of both live Git common directories found one resulting incident: the legacy delivery checkout
   contains an empty `_agent/notes/`; none of the other 15 registered roots contains `_agent/`.
   The incident was recorded and left intact at
-  `_agent/evidence/2026-09-23-pr47-agent-root-marker-audit.md`.
+  `_agent/evidence/2026-09-23-pr47-agent-root-marker-audit.md`. Release review in
+  `8ad6ebc` also corrected A6's
+  root inventory to name `_agent/`, matching the preamble and the marker rule.
 - **2026-09-22 (#2) — on-fleet artifact placement outranks generic skill defaults.** Issue #39
   makes explicit that the `agent-workspace` convention governs artifact destinations on an
   on-fleet workspace ahead of a generic skill default. A1 already identifies the skills plugin as
