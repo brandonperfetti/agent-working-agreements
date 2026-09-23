@@ -20,8 +20,8 @@ being retrofitted onto the other.
   every clone and worktree carries the file at its own root and would resolve itself as the agent
   root. Following the 2026-09-17 (#2) precedent — “One departure from the ticket, on a
   measurement” — A6 deliberately departs from #42's cited convention: the directory containing
-  the first `_agent/` found while walking upward is the agent root. A positive-controlled VPS audit of
-  both live Git common directories found one resulting incident: the legacy delivery checkout
+  the first `_agent/` found while walking upward is the agent root. A positive-controlled VPS
+  audit of both live Git common directories found one resulting incident: the legacy delivery checkout
   contains an empty `_agent/notes/`; none of the other 15 registered roots contains `_agent/`.
   The incident was recorded and left intact at
   `_agent/evidence/2026-09-23-pr47-agent-root-marker-audit.md`.
