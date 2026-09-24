@@ -9,24 +9,23 @@ when you acknowledge your reading** — "read the agreements and
 ## Startup and mode
 
 [measured 2026-09-22, issue #44] The workspace-root `AGENTS.md` routes Parts A–B and this appendix
-to one read-only instruction-source clone on `master`, fast-forwarded after each release per
+to the canonical instruction-source clone, and the former workspace-root agreement path is a
+non-authoritative stale-reader stub. That clone is the read-only instruction source, kept current
+with released `master` per
 [Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness) below.
-That canonical route is the only startup pointer. The former workspace-root agreement path is a
-non-authoritative stale-reader stub, and the complete machine-local agreement it replaced is
-preserved intact under a dated `_agent/quarantine/` path with its inverse move recorded; both stay
-as the completed cutover left them (the contract this appendix carried until 2026-09-24, in git
-history and CHANGELOG 2026-09-20 (#2), step 5) until the reviewed cleanup that record names —
-nothing here deletes either. If the pointer, Parts A–B, or this appendix is unreachable in the
-active session, downgrade to attended. After changing the pointer, require a fresh-session
-observation before declaring it effective; do not assume arbitrary external-file injection or
-automatic refresh.
+The stub stays in place, and the complete machine-local agreement it replaced stays preserved
+intact for rollback, until the OpenClaw session on that host removes the stub once every
+configured route has demonstrated the new pointer — a host-side step recorded in that host's
+`_agent/` store, not a change this repository makes. The cutover steps this appendix carried until
+this amendment remain readable at `29b6360:clients/openclaw.md`, lines 104–130. If the pointer,
+Parts A–B, or this appendix is unreachable in the active session, downgrade to attended. After
+changing the pointer, require a fresh-session observation before declaring it effective; do not
+assume arbitrary external-file injection or automatic refresh.
 
-**Mode:** B0 maps OpenClaw to attended and decides the mode for the exact checkout and delivery
-path; a session is autonomous only when its own guard run says so. The accepted target is
-`OpenClaw → autonomous`, in a separate amendment supported by fresh main- and specialist-session
-evidence, with the same per-session guard still deciding the effective mode. Any retained
-workspace-local layer adds client mechanics only; it never copies or overrides Parts A–B. B2 still
-reserves merging to Brandon alone.
+**Default mode: attended.** The capability guard (B0) still decides, for the exact checkout and
+delivery path. The accepted target is `OpenClaw → autonomous`, in a separate amendment supported
+by fresh main- and specialist-session evidence. Any retained workspace-local layer adds client
+mechanics only; it never copies or overrides Parts A–B. B2 still reserves merging to Brandon alone.
 
 ## Runtime and workspace
 
@@ -86,8 +85,7 @@ assume that path is reachable from every OpenClaw workspace: use the active work
 ## Migration dispositions
 
 The complete machine-local agreement that preceded the canonical route carried rules that Parts
-A–B now supersede. Why each is absent, so nobody reads the gap as an oversight — they are
-deliberately **not carried forward**:
+A–B now supersede. They are deliberately **not carried forward**, for these reasons:
 
 - **A — autonomy:** the local autonomous default is superseded by B0's per-checkout mode decision
   and B2's Brandon-only merge boundary.
