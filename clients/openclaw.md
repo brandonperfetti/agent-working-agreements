@@ -59,10 +59,11 @@ Run it from the delivery checkout host, never the instruction-source clone: `git
 then `git merge-base --is-ancestor <branch> origin/develop` — exit 0 is the only permission. On
 exit 0, `git worktree remove <path>` without `--force`; then, only if that removal succeeded,
 `git branch -d <branch>`. A protected base worktree, a dirty worktree, or a branch that is not an
-ancestor of `origin/develop` is retained and reported, never forced. [measured 2026-09-23, issue
-#57] The delivery host went from 13 to 16 registered worktrees in one delivery cycle; the recorded
-dry-run and live cleanup then removed 14 merged worktrees and their branches without a forced
-removal, leaving the protected delivery host plus a release-review worktree.
+ancestor of `origin/develop` is retained and reported, never forced.
+[measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
+delivery cycle; the recorded dry-run and live cleanup then removed 14 merged worktrees and their
+branches without a forced removal, leaving the protected delivery host plus a release-review
+worktree.
 
 ## Pickup guard and delivery audit
 
