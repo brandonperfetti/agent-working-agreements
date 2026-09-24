@@ -17,7 +17,8 @@ The stub stays in place until the OpenClaw session on that host removes it in a 
 once every configured route has demonstrated the new pointer — a host-side step recorded in that
 host's `_agent/` store, not a change this repository makes. The complete machine-local agreement
 the stub replaced stays preserved intact for rollback. The cutover steps this appendix carried until
-this amendment remain readable at `29b6360:clients/openclaw.md`, lines 104–130. If the pointer,
+the 2026-09-24 amendment for issue #54 remain readable at `29b6360:clients/openclaw.md`, lines
+104–130. If the pointer,
 Parts A–B, or this appendix is unreachable in the active session, downgrade to attended. After
 changing the pointer, require a fresh-session observation before declaring it effective; do not
 assume arbitrary external-file injection or automatic refresh.
@@ -67,6 +68,9 @@ rule the session keeps:
 | non-repository workspace or memory writes | the appropriate OpenClaw-owned write tool |
 | reviewer filesystem failure | supply the exact diff and receipts to the same reviewer and label the verdict evidence-bounded |
 
+A7 still governs the GitHub row: the GitHub API's write tools never author commits, so a commit
+comes from a checkout on every route.
+
 This is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
 generic rule for failures that occur after the target program starts. [source, issue #58,
 measured there 2026-09-23] The agent-working-agreements delivery cycle retried native shell and
@@ -90,16 +94,16 @@ next report names the exact SHA the clone serves.
 Run it from the delivery checkout host, never the instruction-source clone: `git fetch origin`
 — if the fetch fails, stop, and retain and report the worktree and branch — then
 `git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
-not by itself enough: a protected base worktree (the delivery host's own checkout, and any other
+not by itself enough: a protected base worktree (the delivery checkout host itself, and any other
 the host reserves, such as its release-review worktree), a dirty worktree, and a branch that is
-not an ancestor of `origin/develop` are all retained and reported. On exit 0, `git worktree
-remove <path>` without `--force`; then, only if that removal succeeded, `git branch -d <branch>`.
+not an ancestor of `origin/develop` are all retained and reported. On exit 0 and outside those
+exclusions, `git worktree remove <path>` without `--force`; then, only if that removal succeeded,
+`git branch -d <branch>`.
 Any refusal from either command is left as it is and reported, never overridden.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
-delivery cycle; the dry-run and live cleanup recorded in that host's
-`_agent/evidence/2026-09-23-agent-working-agreements-delivery-host-worktree-cleanup.md` then
-removed 14 merged worktrees and their branches without forcing a dirty removal, leaving the
-protected delivery host plus a release-review worktree.
+delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
+and their branches without forcing a dirty removal, leaving the protected delivery host plus a
+release-review worktree.
 
 ## Pickup guard and delivery audit
 
@@ -118,8 +122,8 @@ gate step 6 requires Ruby to validate `agents/openai.yaml`, and step 7 requires 
 compare the `.plugin` distribution. That measured session was therefore attended. OpenClaw may
 deliver there, and [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111)
 tracks a durable install and complete remeasurement; a future session's mode is still decided only
-by rerunning B0 for its exact checkout and path. This does not block agreement adoption or the
-pointer cutover.
+by rerunning B0 for its exact checkout and path. It did not block agreement adoption or the
+pointer cutover, and does not block the autonomous-default amendment.
 
 ## Evidence store
 
