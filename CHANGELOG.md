@@ -10,6 +10,20 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-24 — OpenClaw's appendix describes the completed cutover, not a pending one.** Issue
+  #54: after the canonical-source cutover, `clients/openclaw.md` still said the workspace-root
+  `AGENTS.md` pointed at the full machine-local agreement and still carried the Quiet cutover
+  contract, whose own step 5 named a later reviewed cleanup to remove it together with the
+  stale-reader stub and to condense Migration dispositions. [measured 2026-09-22, issue #44] The
+  live workspace-root `AGENTS.md` routes Parts A–B and the appendix through the read-only
+  instruction-source clone. This amendment is that cleanup's text half: Startup and mode now
+  describes the live route; the retired path is described as a non-authoritative stale-reader
+  stub, and it and the quarantined machine-local agreement are left where the cutover record placed
+  them rather than deleted (the stub's removal is Camina's operational act on her host, per that
+  record); the contract is removed; Migration dispositions keep only the enduring explanation of
+  why the superseded local rules are absent. The accepted `OpenClaw → autonomous` target moved
+  from the contract into Startup and mode, still gated on a separate evidence-backed amendment.
+  The #48 isolation-and-freshness section and the pickup guard are untouched.
 - **2026-09-23 (#4) — A4 names the worktree boundary beside the file fence.** Issue #51 records
   a sans-faux-studios maintenance wave-1 lane (2026-09-23) that ran git against the orchestrator's
   checkout and switched its branch mid-wave; the orchestrator's next merge landed on local
