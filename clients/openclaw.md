@@ -40,6 +40,38 @@ the amendment exemption in its README means an autonomous amendment uses one iso
 worktree branched from `develop`, rather than a wave branch; do not invent a wave merely to obtain
 isolation.
 
+## Bubblewrap circuit breaker
+
+[source, issue #58] Camina's measured specification, transcribed; a Mac session cannot observe
+OpenClaw's sandbox. The signature is a **prelaunch** failure: Bubblewrap cannot create a namespace
+inside the Docker/AppArmor boundary, so the target program never starts. [source, issue #58, from
+the OpenClaw system expert] OpenClaw has no supported sticky per-session failover —
+`tools.exec.host: auto` does not reclassify a failed Bubblewrap launch, loop detection does not
+reroute execution, and a fixed `host: gateway` must be configured in advance — so the breaker is a
+rule the session keeps:
+
+1. One confirmed namespace/Bubblewrap/AppArmor prelaunch failure marks the native sandbox
+   unavailable for the remainder of that session.
+2. Do not retry the same boundary through another native shell, elevation mode, absolute path, or
+   native patch call.
+3. Route the bounded operation deterministically, by the table below.
+4. Preserve AppArmor/seccomp, the task's authority, and its original read/write constraints.
+5. If no bounded fallback exists, stop and report the missing capability instead of improvising
+   an overwrite.
+
+| Operation | Route |
+| --- | --- |
+| read-only shell and Git inspection | narrowly scoped Gateway execution |
+| GitHub work | GitHub tools or `gh` through Gateway |
+| repository edits | an exact unified patch, `git apply --check`, `git apply`, then diff/readback verification through Gateway |
+| non-repository workspace or memory writes | the appropriate OpenClaw-owned write tool |
+| reviewer filesystem failure | supply the exact diff and receipts to the same reviewer and label the verdict evidence-bounded |
+
+This is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
+generic rule for failures that occur after the target program starts. [source, issue #58,
+measured there 2026-09-23] The agent-working-agreements delivery cycle retried native shell and
+patch paths after the same prelaunch error; the bounded Gateway equivalents reached the target.
+
 ## Instruction-source isolation and freshness
 
 **Cut every delivery worktree from the delivery checkout host, never from the instruction-source
@@ -114,6 +146,8 @@ A–B now supersede. They are deliberately **not carried forward**, for these re
   unchanged.
 - **F — asking Brandon:** the local generic ask rule is superseded by A8 and B2's stop-list.
 
-Staff consultation, Bubblewrap recovery, process restart behavior, and Claude wrapper behavior stay
-in the fleet documents or wrappers that already own them. Do not copy them into this appendix or a
-replacement local agreement.
+Staff consultation, process restart behavior, Claude wrapper behavior, and Bubblewrap recovery's
+fuller five-step pattern (`docs/team-operating-model.md` on the OpenClaw host) stay in the fleet
+documents or wrappers that already own them; only the one-strike circuit breaker above, the part
+that applies in-session, lives here. Do not copy them into this appendix or a replacement local
+agreement.

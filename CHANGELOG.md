@@ -10,6 +10,20 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-24 (#3) — OpenClaw gets a one-strike Bubblewrap circuit breaker.** Issue #58 is
+  Camina's measured specification, transcribed: [source, issue #58] the agent-working-agreements
+  delivery cycle of 2026-09-23 retried native shell and patch paths after the same prelaunch
+  error — Bubblewrap could not create a namespace inside the Docker/AppArmor boundary — while the
+  bounded Gateway equivalents reached the target, and OpenClaw has no supported sticky per-session
+  failover to make the switch for it. The appendix now carries the breaker every session reads at
+  bootstrap: one confirmed prelaunch failure marks the native sandbox unavailable for the session,
+  equivalent native retries are prohibited, a five-row routing table names the bounded fallback
+  per operation, AppArmor/seccomp and the task's authority are preserved, and a missing fallback
+  is a stop-and-report. Not a global Gateway switch, not a sandbox weakening, not a rule for
+  failures after the target starts. The Migration dispositions sentence that sent all Bubblewrap
+  guidance to the fleet documents is reconciled: the fuller five-step pattern stays in the fleet
+  operating model (`docs/team-operating-model.md` on the OpenClaw host); the in-session breaker
+  lives here.
 - **2026-09-24 (#2) — OpenClaw removes a delivery worktree once its PR has merged.** Issue #48
   made the delivery checkout host the only place delivery worktrees are cut, but nothing ended a
   worktree's life: [measured 2026-09-23, issue #57] the host went from 13 to 16 registered
