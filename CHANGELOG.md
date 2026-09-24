@@ -10,6 +10,16 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-24 (#2) — OpenClaw removes a delivery worktree once its PR has merged.** Issue #48
+  made the delivery checkout host the only place delivery worktrees are cut, but nothing ended a
+  worktree's life: [measured 2026-09-23, issue #57] the host went from 13 to 16 registered
+  worktrees in one delivery cycle, and the recorded cleanup then removed 14 merged ones without a
+  forced removal. The OpenClaw appendix now names the end of the lifecycle: after the feature PR
+  merges into `develop`, fetch `origin`, gate on `git merge-base --is-ancestor <branch>
+  origin/develop` exit 0, remove the worktree without `--force`, delete the branch only after the
+  removal succeeds, and retain and report anything protected, dirty, or unmerged — from the
+  delivery host, never the instruction-source clone. The rule is durable client text only; it
+  authorises no cleanup run and no change to the instruction-source clone.
 - **2026-09-24 — OpenClaw's appendix describes the completed cutover, not a pending one.** Issue
   #54: after the canonical-source cutover, `clients/openclaw.md` still said the workspace-root
   `AGENTS.md` pointed at the full machine-local agreement and still carried the Quiet cutover

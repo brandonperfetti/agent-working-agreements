@@ -54,6 +54,16 @@ next report names the exact SHA the clone serves.
 [measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
 2026-09-22T20:18:10Z, but the clone remained six commits behind until the next day.
 
+**Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
+Run it from the delivery checkout host, never the instruction-source clone: `git fetch origin`,
+then `git merge-base --is-ancestor <branch> origin/develop` — exit 0 is the only permission. On
+exit 0, `git worktree remove <path>` without `--force`; then, only if that removal succeeded,
+`git branch -d <branch>`. A protected base worktree, a dirty worktree, or a branch that is not an
+ancestor of `origin/develop` is retained and reported, never forced. [measured 2026-09-23, issue
+#57] The delivery host went from 13 to 16 registered worktrees in one delivery cycle; the recorded
+dry-run and live cleanup then removed 14 merged worktrees and their branches without a forced
+removal, leaving the protected delivery host plus a release-review worktree.
+
 ## Pickup guard and delivery audit
 
 Record the checkout and HEAD, Git author identity, `core.hooksPath` and hook presence, an explicit
