@@ -23,7 +23,8 @@ being retrofitted onto the other.
   failures after the target starts. The Migration dispositions sentence that sent all Bubblewrap
   guidance to the fleet documents is reconciled: the fuller five-step pattern stays in the fleet
   operating model (`docs/team-operating-model.md` on the OpenClaw host); the in-session breaker
-  lives here.
+  lives here. Release review of 2026-09-24 added, beside the table rather than in it, that A7
+  still governs the GitHub row: the API's write tools never author commits.
 - **2026-09-24 (#2) — OpenClaw removes a delivery worktree once its PR has merged.** Issue #48
   made the delivery checkout host the only place delivery worktrees are cut, but nothing ended a
   worktree's life: [measured 2026-09-23, issue #57] the host went from 13 to 16 registered
@@ -33,6 +34,9 @@ being retrofitted onto the other.
   removal from the delivery host, the branch deleted only after the worktree, and anything
   protected, dirty, unmerged, or otherwise refused left intact and reported. The rule is durable
   client text only; it authorises no cleanup run and no change to the instruction-source clone.
+  Release review of 2026-09-24 moved the cleanup's evidence-file path out of the rule, per
+  2026-09-13 (#11): the dry-run and live cleanup are recorded on the OpenClaw host at
+  `_agent/evidence/2026-09-23-agent-working-agreements-delivery-host-worktree-cleanup.md`.
 - **2026-09-24 — OpenClaw's appendix describes the completed cutover, not a pending one.** Issue
   #54: after the canonical-source cutover, `clients/openclaw.md` still said the workspace-root
   `AGENTS.md` pointed at the full machine-local agreement and still carried the Quiet cutover
@@ -45,7 +49,10 @@ being retrofitted onto the other.
   accepted `OpenClaw → autonomous` target moved from the contract into Startup and mode because
   it is standing mode status, not migration scaffolding. Review of the first draft narrowed the
   `[measured]` label to what #44 observed and replaced a citation to the deleted contract with
-  that locator. The #48 section and the pickup guard are untouched.
+  that locator. The #48 section and the pickup guard are untouched. Release review of 2026-09-24
+  dated the "until this amendment" locator to this entry's issue and put the pickup guard's "does
+  not block … the pointer cutover" into the past tense, the one pre-cutover sentence the sweep
+  found.
 - **2026-09-23 (#4) — A4 names the worktree boundary beside the file fence.** Issue #51 records
   a sans-faux-studios maintenance wave-1 lane (2026-09-23) that ran git against the orchestrator's
   checkout and switched its branch mid-wave; the orchestrator's next merge landed on local
