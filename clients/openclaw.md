@@ -55,8 +55,9 @@ next report names the exact SHA the clone serves.
 2026-09-22T20:18:10Z, but the clone remained six commits behind until the next day.
 
 **Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
-Run it from the delivery checkout host, never the instruction-source clone: `git fetch origin`,
-then `git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
+Run it from the delivery checkout host, never the instruction-source clone: `git fetch origin`
+— if the fetch fails, stop, and retain and report the worktree and branch — then
+`git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
 not by itself enough: a protected base worktree (the delivery host's own checkout, and any other
 the host reserves, such as its release-review worktree), a dirty worktree, and a branch that is
 not an ancestor of `origin/develop` are all retained and reported. On exit 0, `git worktree
