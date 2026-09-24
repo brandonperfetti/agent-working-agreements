@@ -56,14 +56,16 @@ next report names the exact SHA the clone serves.
 
 **Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
 Run it from the delivery checkout host, never the instruction-source clone: `git fetch origin`,
-then `git merge-base --is-ancestor <branch> origin/develop` — exit 0 is the only permission. On
-exit 0, `git worktree remove <path>` without `--force`; then, only if that removal succeeded,
-`git branch -d <branch>`. A protected base worktree, a dirty worktree, or a branch that is not an
-ancestor of `origin/develop` is retained and reported, never forced.
+then `git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
+not by itself enough: the delivery host's own base checkout, a dirty worktree, and a branch that
+is not an ancestor of `origin/develop` are all retained and reported. On exit 0, `git worktree
+remove <path>` without `--force`; then, only if that removal succeeded, `git branch -d <branch>`.
+Any refusal from either command is left as it is and reported, never overridden.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
-delivery cycle; the recorded dry-run and live cleanup then removed 14 merged worktrees and their
-branches without a forced removal, leaving the protected delivery host plus a release-review
-worktree.
+delivery cycle; the dry-run and live cleanup recorded in that host's
+`_agent/evidence/2026-09-23-agent-working-agreements-delivery-host-worktree-cleanup.md` then
+removed 14 merged worktrees and their branches without forcing a dirty removal, leaving the
+protected delivery host plus a release-review worktree.
 
 ## Pickup guard and delivery audit
 
