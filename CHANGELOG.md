@@ -10,6 +10,12 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-24 (#4) — B1's "never touch git" names the shared checkout.** Release review of the
+  #51 → #58 queue (CodeRabbit on PR #65): the new A4 worktree bullet lets an attended lane commit
+  in its own isolated clone, which B1's mbox shape already required, while B1's closing sentence
+  said sub-agents "never … touch git" with no qualifier. The two disagreed on whether an attended
+  lane may run git at all. B1 now says sub-agents never touch git **in the shared checkout**,
+  which is what its own parenthetical meant; the isolated-clone commit stays as it was.
 - **2026-09-24 (#3) — OpenClaw gets a one-strike Bubblewrap circuit breaker.** Issue #58 is
   Camina's measured specification, transcribed: [source, issue #58] the agent-working-agreements
   delivery cycle of 2026-09-23 retried native shell and patch paths after the same prelaunch

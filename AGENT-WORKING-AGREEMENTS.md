@@ -321,8 +321,9 @@ Brandon is the verification step, on purpose.
 - **Sub-agents never commit, stage, or push in the shared checkout.** Their deliverable is a
   **written report** plus either uncommitted code or an mbox / format-patch series in the
   initiative's `mboxes/` (committed only in the lane's own isolated clone, applied by the
-  orchestrator with `git am` after review). **Sub-agents never write tickets or touch git; the
-  orchestrator owns tickets, staging, commits (post-approval), and any live/browser verification.**
+  orchestrator with `git am` after review). **Sub-agents never write tickets or touch git in the
+  shared checkout; the orchestrator owns tickets, staging, commits (post-approval), and any
+  live/browser verification.**
   Review compounds; a report can be argued with, a commit has to be reverted; a wrong premise gets
   faithfully implemented unless a human reads first.
 - **Brandon runs all builds, test suites, and installs.** Tell him exactly what to run. Type-checks,
