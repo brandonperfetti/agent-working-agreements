@@ -21,8 +21,9 @@ being retrofitted onto the other.
   per operation, AppArmor/seccomp and the task's authority are preserved, and a missing fallback
   is a stop-and-report. Not a global Gateway switch, not a sandbox weakening, not a rule for
   failures after the target starts. The Migration dispositions sentence that sent all Bubblewrap
-  guidance to the fleet documents is reconciled: the fuller five-step pattern stays in the
-  operating model; the in-session breaker lives here.
+  guidance to the fleet documents is reconciled: the fuller five-step pattern stays in the fleet
+  operating model (`docs/team-operating-model.md` on the OpenClaw host); the in-session breaker
+  lives here.
 - **2026-09-24 (#2) — OpenClaw removes a delivery worktree once its PR has merged.** Issue #48
   made the delivery checkout host the only place delivery worktrees are cut, but nothing ended a
   worktree's life: [measured 2026-09-23, issue #57] the host went from 13 to 16 registered
