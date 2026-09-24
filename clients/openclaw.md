@@ -13,10 +13,10 @@ to the canonical instruction-source clone, and the former workspace-root agreeme
 non-authoritative stale-reader stub. That clone is the read-only instruction source, kept current
 with released `master` per
 [Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness) below.
-The stub stays in place, and the complete machine-local agreement it replaced stays preserved
-intact for rollback, until the OpenClaw session on that host removes the stub once every
-configured route has demonstrated the new pointer — a host-side step recorded in that host's
-`_agent/` store, not a change this repository makes. The cutover steps this appendix carried until
+The stub stays in place until the OpenClaw session on that host removes it in a reviewed cleanup,
+once every configured route has demonstrated the new pointer — a host-side step recorded in that
+host's `_agent/` store, not a change this repository makes. The complete machine-local agreement
+the stub replaced stays preserved intact for rollback. The cutover steps this appendix carried until
 this amendment remain readable at `29b6360:clients/openclaw.md`, lines 104–130. If the pointer,
 Parts A–B, or this appendix is unreachable in the active session, downgrade to attended. After
 changing the pointer, require a fresh-session observation before declaring it effective; do not
