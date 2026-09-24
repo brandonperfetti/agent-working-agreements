@@ -18,8 +18,8 @@ once every configured route has demonstrated the new pointer — a host-side ste
 host's `_agent/` store, not a change this repository makes. The complete machine-local agreement
 the stub replaced stays preserved intact for rollback. The cutover steps this appendix carried until
 the 2026-09-24 amendment for issue #54 remain readable at `29b6360:clients/openclaw.md`, lines
-104–130. If the pointer,
-Parts A–B, or this appendix is unreachable in the active session, downgrade to attended. After
+104–130. If the pointer, Parts A–B, or this appendix is unreachable in the active session,
+downgrade to attended. After
 changing the pointer, require a fresh-session observation before declaring it effective; do not
 assume arbitrary external-file injection or automatic refresh.
 
@@ -68,7 +68,7 @@ rule the session keeps:
 | non-repository workspace or memory writes | the appropriate OpenClaw-owned write tool |
 | reviewer filesystem failure | supply the exact diff and receipts to the same reviewer and label the verdict evidence-bounded |
 
-A7 still governs the GitHub row: the GitHub API's write tools never author commits, so a commit
+A7 still governs the GitHub row: the GitHub MCP's write tools never author commits, so a commit
 comes from a checkout on every route.
 
 This is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
@@ -123,7 +123,7 @@ compare the `.plugin` distribution. That measured session was therefore attended
 deliver there, and [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111)
 tracks a durable install and complete remeasurement; a future session's mode is still decided only
 by rerunning B0 for its exact checkout and path. It did not block agreement adoption or the
-pointer cutover, and does not block the autonomous-default amendment.
+pointer cutover.
 
 ## Evidence store
 
