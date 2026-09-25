@@ -90,6 +90,14 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   manifests, generated files, single-owner dirs) are serialised. A lane that spots a defect in a
   file it touched **reports it into the ledger — it is our finding** — rather than crossing its
   fence or smoothing it over. [learnings: 2026-09-06 wave-6 §4]
+- **Lanes keep their git in their own worktree.** The file fence says which files a lane edits;
+  this says which working tree a lane may run git in. A lane runs git only in its own worktree
+  (on the attended mbox path, its own isolated clone), and the orchestrator's checkout is the
+  orchestrator's alone — no lane runs git against it, changes its branch, or alters its git
+  state — because that isolation is what makes concurrent lanes safe at all, and a lane that has
+  run git in the shared checkout has left that isolation, whatever files it edited. B1's attended
+  delivery of uncommitted edits to named files runs no git there and crosses neither fence.
+  [learnings: 2026-09-23 sfs-wave-1 §1]
 - **Every lane report states the model it ran on, and how it knows.** Requested, inherited,
   configured and backend-attested are four different claims; a dispatched tier resolves to whatever
   the account serves, and config is not attestation. Say which you have. [learnings: 2026-08-30 §5]
@@ -313,8 +321,9 @@ Brandon is the verification step, on purpose.
 - **Sub-agents never commit, stage, or push in the shared checkout.** Their deliverable is a
   **written report** plus either uncommitted code or an mbox / format-patch series in the
   initiative's `mboxes/` (committed only in the lane's own isolated clone, applied by the
-  orchestrator with `git am` after review). **Sub-agents never write tickets or touch git; the
-  orchestrator owns tickets, staging, commits (post-approval), and any live/browser verification.**
+  orchestrator with `git am` after review). **Sub-agents never write tickets, and never touch git
+  in the shared checkout; the orchestrator owns tickets, staging, commits (post-approval), and
+  any live/browser verification.**
   Review compounds; a report can be argued with, a commit has to be reverted; a wrong premise gets
   faithfully implemented unless a human reads first.
 - **Brandon runs all builds, test suites, and installs.** Tell him exactly what to run. Type-checks,

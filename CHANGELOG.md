@@ -10,6 +10,69 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-24 (#4) — B1's "never touch git" names the shared checkout.** Release review of the
+  #51 → #58 queue (CodeRabbit on PR #65): the new A4 worktree bullet lets an attended lane commit
+  in its own isolated clone, which B1's mbox shape already required, while B1's closing sentence
+  said sub-agents "never … touch git" with no qualifier. The two disagreed on whether an attended
+  lane may run git at all. B1 now says sub-agents never touch git **in the shared checkout**,
+  which is what its own parenthetical meant; the isolated-clone commit stays as it was.
+- **2026-09-24 (#3) — OpenClaw gets a one-strike Bubblewrap circuit breaker.** Issue #58 is
+  Camina's measured specification, transcribed: [source, issue #58] the agent-working-agreements
+  delivery cycle of 2026-09-23 retried native shell and patch paths after the same prelaunch
+  error — Bubblewrap could not create a namespace inside the Docker/AppArmor boundary — while the
+  bounded Gateway equivalents reached the target, and OpenClaw has no supported sticky per-session
+  failover to make the switch for it. The appendix now carries the breaker every session reads at
+  bootstrap: one confirmed prelaunch failure marks the native sandbox unavailable for the session,
+  equivalent native retries are prohibited, a five-row routing table names the bounded fallback
+  per operation, AppArmor/seccomp and the task's authority are preserved, and a missing fallback
+  is a stop-and-report. Not a global Gateway switch, not a sandbox weakening, not a rule for
+  failures after the target starts. The Migration dispositions sentence that sent all Bubblewrap
+  guidance to the fleet documents is reconciled: the fuller five-step pattern stays in the fleet
+  operating model (`docs/team-operating-model.md` on the OpenClaw host); the in-session breaker
+  lives here. Release review of 2026-09-24 added, beside the table rather than in it, that A7
+  still governs the GitHub row: the GitHub MCP's write tools never author commits.
+- **2026-09-24 (#2) — OpenClaw removes a delivery worktree once its PR has merged.** Issue #48
+  made the delivery checkout host the only place delivery worktrees are cut, but nothing ended a
+  worktree's life: [measured 2026-09-23, issue #57] the host went from 13 to 16 registered
+  worktrees in one delivery cycle, and the recorded cleanup then removed 14 merged ones without
+  forcing a dirty removal. The OpenClaw appendix now names the end of the lifecycle: a
+  merge-gated (`git merge-base --is-ancestor` against a fresh `origin/develop`), non-forced
+  removal from the delivery host, the branch deleted only after the worktree, and anything
+  protected, dirty, unmerged, or otherwise refused left intact and reported. The rule is durable
+  client text only; it authorises no cleanup run and no change to the instruction-source clone.
+  Release review of 2026-09-24 moved the cleanup's evidence-file path out of the rule, per
+  2026-09-13 (#11): the dry-run and live cleanup are recorded on the OpenClaw host at
+  `_agent/evidence/2026-09-23-agent-working-agreements-delivery-host-worktree-cleanup.md`.
+- **2026-09-24 — OpenClaw's appendix describes the completed cutover, not a pending one.** Issue
+  #54: after the canonical-source cutover, `clients/openclaw.md` still said the workspace-root
+  `AGENTS.md` pointed at the full machine-local agreement and still carried the Quiet cutover
+  contract, whose own step 5 named a later reviewed cleanup to remove it and condense Migration
+  dispositions. [measured 2026-09-22, issue #44] The live workspace-root `AGENTS.md` routes
+  Parts A–B and the appendix through the instruction-source clone, and the former path is a
+  non-authoritative stale-reader stub. This amendment is the text half of that cleanup; the
+  stub's removal is a host-side step the appendix now names, since a repository PR cannot perform
+  it, and the removed steps stay readable at `29b6360:clients/openclaw.md` lines 104–130. The
+  accepted `OpenClaw → autonomous` target moved from the contract into Startup and mode because
+  it is standing mode status, not migration scaffolding. Review of the first draft narrowed the
+  `[measured]` label to what #44 observed and replaced a citation to the deleted contract with
+  that locator. The #48 section and the pickup guard are untouched. Release review of 2026-09-24
+  dated the "until this amendment" locator to this entry's issue and put the pickup guard's "does
+  not block … the pointer cutover" into the past tense, the one pre-cutover sentence the sweep
+  found.
+- **2026-09-23 (#4) — A4 names the worktree boundary beside the file fence.** Issue #51 records
+  a sans-faux-studios maintenance wave-1 lane (2026-09-23) that ran git against the orchestrator's
+  checkout and switched its branch mid-wave; the orchestrator's next merge landed on local
+  `develop` instead of the wave branch, never reached origin, and was caught only by a "no commits
+  between" error at PR time, not by any check. Read against that event, "Lanes work their named
+  files only" governs which files a lane edits and says nothing about which working tree it stands
+  in, so the switch crossed no fence as written. A4 now carries the worktree boundary as its own
+  invariant, distinct from the file fence: a lane runs git only in its own worktree or isolated
+  clone, and the orchestrator's checkout is out of bounds for any lane git operation, branch
+  change, or git-state change, with the reason in the sentence. Two-axis review of the first
+  draft found it outlawed B1's attended shape, uncommitted edits to named files in the shared
+  checkout, which A4 governs too ("These hold in both modes"); the bullet scopes the boundary to
+  git so that shape crosses neither fence. The `orchestrate` skill keeps the loop; the agreement
+  holds the law.
 - **2026-09-23 (#3) — OpenClaw keeps its instruction source isolated and current.** Issue #48
   records two measured failures after the canonical-source cutover: delivery commands explicitly
   selected the instruction-source clone as the Git host and created three worktrees under it, and

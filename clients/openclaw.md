@@ -8,20 +8,25 @@ when you acknowledge your reading** — "read the agreements and
 
 ## Startup and mode
 
-[source 2026-09-20] The workspace-root `AGENTS.md` currently points to the full machine-local
-agreement at `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`; it does not yet point to this
-checkout or appendix. The migration target is one startup pointer naming the canonical agreement and
-this appendix. If that pointer, Parts A/B, or this appendix is unreachable in the active session,
-downgrade to attended. After installing or changing the pointer, require a fresh-session observation
-before declaring it effective; do not assume arbitrary external-file injection or automatic refresh.
+[measured 2026-09-22, issue #44] The workspace-root `AGENTS.md` routes Parts A–B and this appendix
+to the canonical instruction-source clone, and the former workspace-root agreement path is a
+non-authoritative stale-reader stub. That clone is the read-only instruction source, kept current
+with released `master` per
+[Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness) below.
+The stub stays in place until the OpenClaw session on that host removes it in a reviewed cleanup,
+once every configured route has demonstrated the new pointer — a host-side step recorded in that
+host's `_agent/` store, not a change this repository makes. The complete machine-local agreement
+the stub replaced stays preserved intact for rollback. The cutover steps this appendix carried until
+the 2026-09-24 amendment for issue #54 remain readable at `29b6360:clients/openclaw.md`, lines
+104–130. If the pointer, Parts A–B, or this appendix is unreachable in the active session,
+downgrade to attended. After
+changing the pointer, require a fresh-session observation before declaring it effective; do not
+assume arbitrary external-file injection or automatic refresh.
 
-**Mode:** B0 maps OpenClaw to attended and decides the mode for the exact checkout and delivery
-path. [measured 2026-09-20, current OpenClaw session] The workspace boots the full machine-local
-agreement at `/data/.openclaw/workspace/AGENT-WORKING-AGREEMENTS.md`. That agreement remains
-authoritative for any session still booted from it. Once a fresh or reset session loads the
-canonical pointer and acknowledges Parts A–B plus this appendix, those canonical sources are
-authoritative in that session. Any retained workspace-local layer adds client mechanics only; it
-never copies or overrides Parts A–B. B2 still reserves merging to Brandon alone.
+**Default mode: attended.** The capability guard (B0) still decides, for the exact checkout and
+delivery path. The accepted target is `OpenClaw → autonomous`, in a separate amendment supported
+by fresh main- and specialist-session evidence. Any retained workspace-local layer adds client
+mechanics only; it never copies or overrides Parts A–B. B2 still reserves merging to Brandon alone.
 
 ## Runtime and workspace
 
@@ -36,6 +41,41 @@ the amendment exemption in its README means an autonomous amendment uses one iso
 worktree branched from `develop`, rather than a wave branch; do not invent a wave merely to obtain
 isolation.
 
+## Bubblewrap circuit breaker
+
+[source, issue #58] Camina's measured specification, transcribed; a Mac session cannot observe
+OpenClaw's sandbox. The signature is a **prelaunch** failure: Bubblewrap cannot create a namespace
+inside the Docker/AppArmor boundary, so the target program never starts. [source, issue #58, from
+the OpenClaw system expert] OpenClaw has no supported sticky per-session failover —
+`tools.exec.host: auto` does not reclassify a failed Bubblewrap launch, loop detection does not
+reroute execution, and a fixed `host: gateway` must be configured in advance — so the breaker is a
+rule the session keeps:
+
+1. One confirmed namespace/Bubblewrap/AppArmor prelaunch failure marks the native sandbox
+   unavailable for the remainder of that session.
+2. Do not retry the same boundary through another native shell, elevation mode, absolute path, or
+   native patch call.
+3. Route the bounded operation deterministically, by the table below.
+4. Preserve AppArmor/seccomp, the task's authority, and its original read/write constraints.
+5. If no bounded fallback exists, stop and report the missing capability instead of improvising
+   an overwrite.
+
+| Operation | Route |
+| --- | --- |
+| read-only shell and Git inspection | narrowly scoped Gateway execution |
+| GitHub work | GitHub tools or `gh` through Gateway |
+| repository edits | an exact unified patch, `git apply --check`, `git apply`, then diff/readback verification through Gateway |
+| non-repository workspace or memory writes | the appropriate OpenClaw-owned write tool |
+| reviewer filesystem failure | supply the exact diff and receipts to the same reviewer and label the verdict evidence-bounded |
+
+A7 still governs the GitHub row: the GitHub MCP's write tools never author commits, so a commit
+comes from a checkout on every route.
+
+This is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
+generic rule for failures that occur after the target program starts. [source, issue #58,
+measured there 2026-09-23] The agent-working-agreements delivery cycle retried native shell and
+patch paths after the same prelaunch error; the bounded Gateway equivalents reached the target.
+
 ## Instruction-source isolation and freshness
 
 **Cut every delivery worktree from the delivery checkout host, never from the instruction-source
@@ -49,6 +89,21 @@ any further work.** Run `git switch master`, then `git fetch origin`, then
 next report names the exact SHA the clone serves.
 [measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
 2026-09-22T20:18:10Z, but the clone remained six commits behind until the next day.
+
+**Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
+Run it from the delivery checkout host, never the instruction-source clone: `git fetch origin`
+— if the fetch fails, stop, and retain and report the worktree and branch — then
+`git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
+not by itself enough: a protected base worktree (the delivery checkout host itself, and any other
+the host reserves, such as its release-review worktree), a dirty worktree, and a branch that is
+not an ancestor of `origin/develop` are all retained and reported. On exit 0 and outside those
+exclusions, `git worktree remove <path>` without `--force`; then, only if that removal succeeded,
+`git branch -d <branch>`.
+Any refusal from either command is left as it is and reported, never overridden.
+[measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
+delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
+and their branches without forcing a dirty removal, leaving the protected delivery host plus a
+release-review worktree.
 
 ## Pickup guard and delivery audit
 
@@ -67,7 +122,7 @@ gate step 6 requires Ruby to validate `agents/openai.yaml`, and step 7 requires 
 compare the `.plugin` distribution. That measured session was therefore attended. OpenClaw may
 deliver there, and [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111)
 tracks a durable install and complete remeasurement; a future session's mode is still decided only
-by rerunning B0 for its exact checkout and path. This does not block agreement adoption or the
+by rerunning B0 for its exact checkout and path. It did not block agreement adoption or the
 pointer cutover.
 
 ## Evidence store
@@ -80,10 +135,8 @@ assume that path is reachable from every OpenClaw workspace: use the active work
 
 ## Migration dispositions
 
-[source 2026-09-20] Workspace-root `AGENTS.md` still points to a complete machine-local agreement.
-At cutover, preserve the referenced complete machine-local agreement intact for rollback; do not
-edit it into a second canonical layer.
-The following rules are deliberately **not carried forward** from it:
+The complete machine-local agreement that preceded the canonical route carried rules that Parts
+A–B now supersede. They are deliberately **not carried forward**, for these reasons:
 
 - **A — autonomy:** the local autonomous default is superseded by B0's per-checkout mode decision
   and B2's Brandon-only merge boundary.
@@ -97,34 +150,8 @@ The following rules are deliberately **not carried forward** from it:
   unchanged.
 - **F — asking Brandon:** the local generic ask rule is superseded by A8 and B2's stop-list.
 
-Staff consultation, Bubblewrap recovery, process restart behavior, and Claude wrapper behavior stay
-in the fleet documents or wrappers that already own them. Do not copy them into this appendix or a
-replacement local agreement.
-
-## Quiet cutover contract
-
-Merging this amendment does **not** change OpenClaw startup. Brandon schedules the cutover window;
-no agent starts it merely because the PR merged.
-
-1. **Quiesce and inventory.** Stop new dispatches. Confirm there is no in-flight delivery,
-   uncommitted work, or branch operation. Record active main and specialist sessions, their
-   checkouts, branches, and instruction source.
-2. **Preserve rollback.** Hash the complete machine-local agreement, move it intact to a dated
-   `_agent/quarantine/` path, and record the inverse move. Delete nothing.
-3. **Install the pointer.** Replace the old agreement path with an explicitly **not authoritative**
-   “Moved — the agent working agreements are a repo now” stub, used only to expose stale readers.
-   Update workspace-root `AGENTS.md` to point to the canonical Parts A–B and this appendix.
-4. **Verify every route.** Start fresh or reset main and every configured specialist. Each must name
-   Parts A–B and `clients/openclaw.md`, then run B0's guard for its exact checkout and delivery path.
-   Drain every session still holding the old instructions.
-5. **Observe before cleanup.** Keep the stub until every configured route has demonstrated the new
-   pointer. A later reviewed cleanup removes the stub and this Quiet cutover contract together, and
-   condenses Migration dispositions to the enduring explanation of why the superseded local rules
-   are absent. If verification fails, stop or drain every affected session, restore the preserved
-   agreement and previous pointer using the recorded inverse operation, start fresh sessions, and
-   verify that every route loads the restored agreement before dispatches resume.
-
-The worktree topology above is adopted before this window and verified independently, so the window
-changes only instruction pickup. The post-cutover B0 default amendment is a separate PR supported by
-fresh main- and specialist-session evidence. Its accepted target is `OpenClaw → autonomous`, with
-the same per-session, checkout-specific guard still deciding the effective mode.
+Staff consultation, process restart behavior, Claude wrapper behavior, and Bubblewrap recovery's
+fuller five-step pattern (`docs/team-operating-model.md` on the OpenClaw host) stay in the fleet
+documents or wrappers that already own them; only the one-strike circuit breaker above, the part
+that applies in-session, lives here. Do not copy them into this appendix or a replacement local
+agreement.
