@@ -29,6 +29,7 @@ clients/<client>.md                  one appendix per environment — read only 
 docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
 docs/agents/commit-subject-audit.md  the 2026-09-23 audit of commit-subject conventions across active repositories
 CHANGELOG.md                         why each rule changed, newest first
+LICENSE                              CC BY 4.0, the whole repository: reuse with attribution
 scripts/check-index.sh               CI: the index and clients/ must correspond
 .markdownlint-cli2.jsonc             CI: markdown lint rules, each exception with its reason
 ```
