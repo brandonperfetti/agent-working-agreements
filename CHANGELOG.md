@@ -113,7 +113,7 @@ being retrofitted onto the other.
   destinations and keeps experiments out of `/tmp`; those neighboring rules make the canonical
   agreement, rather than a patch to one mirrored skill, the durable place to settle precedence.
   Off-fleet fallbacks remain the skill's to define. This supersedes
-  [claude-skills #113](https://github.com/brandonperfetti/claude-skills/issues/113).
+  claude-skills #113.
   Release review clarified that the following `_agent/` layout sentence is on-fleet too, so an
   off-fleet fallback selected by a skill cannot conflict with a universal-sounding workspace
   destination.
@@ -143,7 +143,7 @@ being retrofitted onto the other.
   fresh-session verification for rollback, and later reviewed cleanup.
   Merging this amendment does not change OpenClaw startup.
   [measured 2026-09-20, current Gateway host] The `claude-skills` route was attended after item 2
-  failed; [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111)
+  failed; claude-skills #111
   (private; repository access required) tracks durable Ruby and `zip` prerequisites plus
   remeasurement, but future mode decisions still come only from B0. That condition does not block
   pointer adoption. The OpenClaw B0 default remains
