@@ -120,7 +120,7 @@ authority.
 [measured 2026-09-20, current Gateway host] `claude-skills` could not pass guard item 2 because its
 gate step 6 requires Ruby to validate `agents/openai.yaml`, and step 7 requires `zip` to rebuild and
 compare the `.plugin` distribution. That measured session was therefore attended. OpenClaw may
-deliver there, and [claude-skills #111](https://github.com/brandonperfetti/claude-skills/issues/111)
+deliver there, and claude-skills #111
 tracks a durable install and complete remeasurement; a future session's mode is still decided only
 by rerunning B0 for its exact checkout and path. It did not block agreement adoption or the
 pointer cutover.
