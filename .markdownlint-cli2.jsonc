@@ -23,8 +23,9 @@
   },
   "globs": [
     "**/*.md",
-    // CLAUDE.md is a client-discovery symlink to AGENTS.md. Lint the one real
-    // file so a violation is reported once rather than once per alias.
+    // CLAUDE.md is Claude Code's one-line import of AGENTS.md (`@AGENTS.md`), not
+    // a document. Lint the one real file so a violation is reported once rather
+    // than once per alias.
     "!CLAUDE.md"
   ],
   // Skip paths a `.gitignore` matches: scratch there never reaches CI, so a local
