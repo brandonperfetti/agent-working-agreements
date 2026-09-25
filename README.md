@@ -1,19 +1,36 @@
 # agent-working-agreements
 
-The cross-project working agreement between Brandon and whatever agent he is working with under Sans
-Faux. **The agreement itself is [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md)** —
-start there, not here. This README is for the human maintaining the repo.
+The working agreement between Brandon Perfetti and every AI agent he works with — Claude Code,
+Cowork, Codex, OpenClaw (Camina) — across the repositories he runs under Sans Faux. It is the
+written form of deciding what gets built and holding agents to it: how work is specified (a
+grilling session, a master priority document, tickets, waves of agents), how every claim is
+labelled as measured, read from source or inferred, which branch a change may land on and who
+merges it, and what an agent must stop and ask about rather than decide. **The agreement itself is
+[`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md)** — start there, not here. This README
+is for a human reader: the maintainer, or someone arriving from outside.
+
+## Reading this repo
+
+These are one engineer's working agreements, running against a real fleet. The paths
+(`~/dev/sansfaux/_agent/`), the client appendices and the initiatives named in the changelog are
+his, and they stay as they are: agents read this file at the start of every session, and a path an
+agent can follow is worth more than one a stranger finds tidy. What is portable is the structure
+and the rules — the evidence labels, the two modes and the guard that picks between them, the git
+ritual, the stop-list — not the layout. This is the real thing, not a template. The changelog is
+the record of these rules being exercised: an entry names what produced it, and a rule earns its
+place only after something bit.
 
 ## Layout
 
 ```text
-AGENTS.md                      repository-specific agent instructions
-AGENT-WORKING-AGREEMENTS.md   Parts A (portable discipline) + B (modes) + the Part C index
-clients/<client>.md           one appendix per environment — read only your own
-docs/agents/issue-tracker.md  repository-specific issue/spec fetch and PR-linkage rules
-CHANGELOG.md                  why each rule changed, newest first
-scripts/check-index.sh        CI: the index and clients/ must correspond
-.markdownlint-cli2.jsonc      CI: markdown lint rules, each exception with its reason
+AGENTS.md                            repository-specific agent instructions
+AGENT-WORKING-AGREEMENTS.md          Parts A (portable discipline) + B (modes) + the Part C index
+clients/<client>.md                  one appendix per environment — read only your own
+docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
+docs/agents/commit-subject-audit.md  the 2026-09-23 audit of commit-subject conventions across active repositories
+CHANGELOG.md                         why each rule changed, newest first
+scripts/check-index.sh               CI: the index and clients/ must correspond
+.markdownlint-cli2.jsonc             CI: markdown lint rules, each exception with its reason
 ```
 
 **The split rule:** anything every client is judged against stays in the root file, in full.
