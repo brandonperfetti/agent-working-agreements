@@ -18,7 +18,9 @@ every session, and a path an agent can follow is worth more than one a stranger 
 is portable is the structure and the rules — the evidence labels, the two modes and the guard that
 picks between them, the git ritual, the stop-list — not the layout. This is the real thing, not a
 template. The changelog is the record of these rules being exercised: an entry names what produced
-it, and a rule earns its place only after something bit.
+it, and a rule earns its place only after something bit. The documentation is licensed CC BY 4.0
+(the text is in `LICENSE`); the shell scripts under `scripts/` and the GitHub workflows are MIT,
+copyright 2026 Brandon Perfetti.
 
 ## Layout
 
@@ -29,6 +31,7 @@ clients/<client>.md                  one appendix per environment — read only 
 docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
 docs/agents/commit-subject-audit.md  the 2026-09-23 audit of commit-subject conventions across active repositories
 CHANGELOG.md                         why each rule changed, newest first
+LICENSE                              the CC BY 4.0 legal code; it covers the documentation
 scripts/check-index.sh               CI: the index and clients/ must correspond
 .markdownlint-cli2.jsonc             CI: markdown lint rules, each exception with its reason
 ```
