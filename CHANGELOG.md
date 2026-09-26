@@ -15,7 +15,7 @@ being retrofitted onto the other.
   identity ("a commit carries Brandon's author identity") but named only a text check, the grep for
   attribution trailers; B1's attended mbox path applies a lane's series with `git am`, which
   reproduces each patch's `From:` line as the commit author [source: git-am docs], so an mbox whose
-  commits carry the lane's own identity passed the grep and landed a commit that broke the rule.
+  commits carry the lane's own identity would pass the grep and land a commit that breaks the rule.
   [measured, claude-skills-fleet-alignment waves 1–2] Orchestrators had been reading
   `git log --format='%an <%ae>'` on every delivery beside the grep, and on this fleet the lane
   clones share the machine's git identity, so it had not bitten; it bites on a machine where a lane
@@ -24,14 +24,13 @@ being retrofitted onto the other.
   one value both compare against — `Brandon Perfetti <brandon@brandonperfetti.com>`, the only author
   on either base branch — so operators do not each decide what "authored as Brandon" means
   (CodeRabbit on #77, thread 4112345800); B1's apply-block bullet says `git am` preserves the patch
-  author, so the check precedes the apply. Not
-  a change to the grep, to who applies, or to the forward-only rule for inherited commits. The
-  skill and template halves are claude-skills #133, blocked on this entry (1.18.0 `### Known`,
-  item 2).
+  author, so the check precedes the apply. Not a change to the grep, to who applies, or to the
+  forward-only rule for inherited commits. The skill and template halves are claude-skills #133,
+  blocked on this entry (1.18.0 `### Known`, item 2).
 - **2026-09-26 — A7's "In Review" move is qualified by mode.** Issue #68: A7's Tracker bullet said
-  the orchestrator moves an issue to "In Review" "by hand at PR time" with no mode qualifier, but the
-  only "PR time" a wave has is B2's autonomous review loop; in attended mode there is no PR when a
-  delivery is reviewed (the human pushes, the orchestrator commits per batch), so the move happens
+  the orchestrator moves an issue to "In Review" "by hand at PR time" with no mode qualifier, but
+  the only "PR time" a wave has is B2's autonomous review loop; in attended mode there is no PR when
+  a delivery is reviewed (the human pushes, the orchestrator commits per batch), so the move happens
   at commit time. [decision 2026-09-25, Brandon, claude-skills MPD O3] No conflict in substance:
   the `orchestrate` skill's split ("commit time attended, PR time autonomous") stands and the skill
   does not change; A7's sentence was the one that read unqualified. A7 now says "at PR time in
