@@ -202,7 +202,9 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
   landed. GitHub's sub-issue cap errors *after* creating and parenting; blind retries burn issue
   numbers and mint duplicates. [learnings: 2026-09-12 wave-8 §3]
 - **Tracker** = GitHub Issues + the user-level Projects board (`users/brandonperfetti/projects/2`,
-  Auto-add intake). "In Review" is a board Status the orchestrator moves by hand at PR time.
+  Auto-add intake). "In Review" is a board Status the orchestrator moves by hand — at PR time in
+  autonomous mode (B2's review loop), and at commit time in attended mode, where no PR exists when
+  a delivery is reviewed.
 
 ## A8. When you are unsure
 
