@@ -10,6 +10,33 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-26 (#2) — RULE ZERO's check reads the author, not only the trailers.** Issue #69, from
+  CodeRabbit on claude-skills PR #128 (thread 4108126735, 2026-09-25): A4 stated the rule as an
+  identity ("a commit carries Brandon's author identity") but named only a text check, the grep for
+  attribution trailers; B1's attended mbox path applies a lane's series with `git am`, which
+  reproduces each patch's `From:` line as the commit author [source: git-am docs], so an mbox whose
+  commits carry the lane's own identity would pass the grep and land a commit that breaks the rule.
+  [measured, claude-skills-fleet-alignment waves 1–2] Orchestrators had been reading
+  `git log --format='%an <%ae>'` on every delivery beside the grep, and on this fleet the lane
+  clones share the machine's git identity, so it had not bitten; it bites on a machine where a lane
+  clone's `user.name`/`user.email` differ from the human's — a fresh-machine template's case. A4
+  now names the author read beside the grep, for both delivery shapes, with the send-back, and the
+  one value both compare against — `Brandon Perfetti <brandon@brandonperfetti.com>`, the only author
+  on either base branch — so operators do not each decide what "authored as Brandon" means
+  (CodeRabbit on #77, thread 4112345800); B1's apply-block bullet says `git am` preserves the patch
+  author, so the check precedes the apply. Not a change to the grep, to who applies, or to the
+  forward-only rule for inherited commits. The skill and template halves are claude-skills #133,
+  blocked on this entry (1.18.0 `### Known`, item 2).
+- **2026-09-26 — A7's "In Review" move is qualified by mode.** Issue #68: A7's Tracker bullet said
+  the orchestrator moves an issue to "In Review" "by hand at PR time" with no mode qualifier, but
+  the only "PR time" a wave has is B2's autonomous review loop; in attended mode there is no PR when
+  a delivery is reviewed (the human pushes, the orchestrator commits per batch), so the move happens
+  at commit time. [decision 2026-09-25, Brandon, claude-skills MPD O3] No conflict in substance:
+  the `orchestrate` skill's split ("commit time attended, PR time autonomous") stands and the skill
+  does not change; A7's sentence was the one that read unqualified. A7 now says "at PR time in
+  autonomous mode (B2's review loop), and at commit time in attended mode, where no PR exists when
+  a delivery is reviewed". B2's review loop item 3 is unchanged. Recorded in claude-skills 1.18.0's
+  `### Known` (item 3) as this repository's half.
 - **2026-09-24 (#4) — B1's "never touch git" names the shared checkout.** Release review of the
   #51 → #58 queue (CodeRabbit on PR #65): the new A4 worktree bullet lets an attended lane commit
   in its own isolated clone, which B1's mbox shape already required, while B1's closing sentence

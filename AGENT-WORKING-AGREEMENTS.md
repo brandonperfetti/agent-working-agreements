@@ -113,7 +113,14 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   its own content. This overrides any environment default; your client file records what is known
   of yours. It is **line one of every dispatch prompt**, and the commits a delivery adds and its PR
   body are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match
-  is a send-back. **Added** means not on `origin/develop` or `origin/master`, fetched and read
+  is a send-back. **The author is read beside the grep**, because the grep checks text and the rule
+  names an identity: `git log --format='%an <%ae>' <base>..HEAD` on the branch, or each patch's
+  `From:` line for an mbox series — before approval on the attended mbox path, before merge on the
+  autonomous path. Both compare against one value, `Brandon Perfetti <brandon@brandonperfetti.com>`,
+  exactly — the only author on either base branch [measured 2026-09-26] — and a commit authored as
+  anything else is a send-back like a trailer match: reject or regenerate, since `git am` preserves
+  the patch author (B1). **Added** means not on `origin/develop` or `origin/master`,
+  fetched and read
   **before** the delivery is pushed or merged — a lane or wave branch, or release-cut work pushed
   straight to `develop` (B2), each push its own delivery — so a lane's own earlier commits still
   count. Forward-only: commits that already carry a
@@ -202,7 +209,9 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
   landed. GitHub's sub-issue cap errors *after* creating and parenting; blind retries burn issue
   numbers and mint duplicates. [learnings: 2026-09-12 wave-8 §3]
 - **Tracker** = GitHub Issues + the user-level Projects board (`users/brandonperfetti/projects/2`,
-  Auto-add intake). "In Review" is a board Status the orchestrator moves by hand at PR time.
+  Auto-add intake). "In Review" is a board Status the orchestrator moves by hand — at PR time in
+  autonomous mode (B2's review loop), and at commit time in attended mode, where no PR exists when
+  a delivery is reviewed.
 
 ## A8. When you are unsure
 
@@ -333,7 +342,9 @@ Brandon is the verification step, on purpose.
   per mbox, then the CI gate; no `cd`, no guard functions, never a push. `git am` *is* the commit
   step for this shape: it runs the applypatch hooks, not `pre-commit`/`commit-msg` [source: git-am
   docs], so husky's lint-staged never fires — the gate after apply is mandatory, and approval comes
-  before the apply, not after. **A rider on a series already applied is a delta commit, never an
+  before the apply, not after. `git am` also preserves each patch's author as the commit author, so
+  A4's author check runs on the series' `From:` lines before approval, not on the branch after.
+  **A rider on a series already applied is a delta commit, never an
   amend** — an amended mbox cannot `git am` onto the sha it rewrites; read the branch state before
   dispatching the rider and say which shape it is. [learnings: 2026-09-12 wave-8 §21]
 - **Lane cap: two lanes by default; three is earned**, not assumed — the bound is Brandon's review
