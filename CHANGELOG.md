@@ -10,6 +10,16 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-26 — A7's "In Review" move is qualified by mode.** Issue #68: A7's Tracker bullet said
+  the orchestrator moves an issue to "In Review" "by hand at PR time" with no mode qualifier, but the
+  only "PR time" a wave has is B2's autonomous review loop; in attended mode there is no PR when a
+  delivery is reviewed (the human pushes, the orchestrator commits per batch), so the move happens
+  at commit time. [decision 2026-09-25, Brandon, claude-skills MPD O3] No conflict in substance:
+  the `orchestrate` skill's split ("commit time attended, PR time autonomous") stands and the skill
+  does not change; A7's sentence was the one that read unqualified. A7 now says "at PR time in
+  autonomous mode (B2's review loop), and at commit time in attended mode, where no PR exists when
+  a delivery is reviewed". B2's review loop item 3 is unchanged. Recorded in claude-skills 1.18.0's
+  `### Known` (item 3) as this repository's half.
 - **2026-09-24 (#4) — B1's "never touch git" names the shared checkout.** Release review of the
   #51 → #58 queue (CodeRabbit on PR #65): the new A4 worktree bullet lets an attended lane commit
   in its own isolated clone, which B1's mbox shape already required, while B1's closing sentence
