@@ -116,9 +116,11 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   is a send-back. **The author is read beside the grep**, because the grep checks text and the rule
   names an identity: `git log --format='%an <%ae>' <base>..HEAD` on the branch, or each patch's
   `From:` line for an mbox series — before approval on the attended mbox path, before merge on the
-  autonomous path — and a commit not authored as Brandon is a send-back like a trailer match:
-  reject or regenerate, since `git am` preserves the patch author (B1). **Added** means not on
-  `origin/develop` or `origin/master`, fetched and read
+  autonomous path. Both compare against one value, `Brandon Perfetti <brandon@brandonperfetti.com>`,
+  exactly — the only author on either base branch [measured 2026-09-26] — and a commit authored as
+  anything else is a send-back like a trailer match: reject or regenerate, since `git am` preserves
+  the patch author (B1). **Added** means not on `origin/develop` or `origin/master`,
+  fetched and read
   **before** the delivery is pushed or merged — a lane or wave branch, or release-cut work pushed
   straight to `develop` (B2), each push its own delivery — so a lane's own earlier commits still
   count. Forward-only: commits that already carry a

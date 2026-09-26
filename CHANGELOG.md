@@ -20,8 +20,11 @@ being retrofitted onto the other.
   `git log --format='%an <%ae>'` on every delivery beside the grep, and on this fleet the lane
   clones share the machine's git identity, so it had not bitten; it bites on a machine where a lane
   clone's `user.name`/`user.email` differ from the human's — a fresh-machine template's case. A4
-  now names the author read beside the grep, for both delivery shapes, with the send-back; B1's
-  apply-block bullet says `git am` preserves the patch author, so the check precedes the apply. Not
+  now names the author read beside the grep, for both delivery shapes, with the send-back, and the
+  one value both compare against — `Brandon Perfetti <brandon@brandonperfetti.com>`, the only author
+  on either base branch — so operators do not each decide what "authored as Brandon" means
+  (CodeRabbit on #77, thread 4112345800); B1's apply-block bullet says `git am` preserves the patch
+  author, so the check precedes the apply. Not
   a change to the grep, to who applies, or to the forward-only rule for inherited commits. The
   skill and template halves are claude-skills #133, blocked on this entry (1.18.0 `### Known`,
   item 2).
