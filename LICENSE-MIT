@@ -1,3 +1,8 @@
+This MIT License applies to the shell scripts under scripts/ and the GitHub
+Actions workflows under .github/workflows/ in this repository. It does not
+apply to the documentation or to other repository material outside those
+locations, which is licensed under CC BY 4.0 (see LICENSE).
+
 MIT License
 
 Copyright (c) 2026 Brandon Perfetti
