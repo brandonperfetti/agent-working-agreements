@@ -10,6 +10,21 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-26 (#2) — RULE ZERO's check reads the author, not only the trailers.** Issue #69, from
+  CodeRabbit on claude-skills PR #128 (thread 4108126735, 2026-09-25): A4 stated the rule as an
+  identity ("a commit carries Brandon's author identity") but named only a text check, the grep for
+  attribution trailers; B1's attended mbox path applies a lane's series with `git am`, which
+  reproduces each patch's `From:` line as the commit author [source: git-am docs], so an mbox whose
+  commits carry the lane's own identity passed the grep and landed a commit that broke the rule.
+  [measured, claude-skills-fleet-alignment waves 1–2] Orchestrators had been reading
+  `git log --format='%an <%ae>'` on every delivery beside the grep, and on this fleet the lane
+  clones share the machine's git identity, so it had not bitten; it bites on a machine where a lane
+  clone's `user.name`/`user.email` differ from the human's — a fresh-machine template's case. A4
+  now names the author read beside the grep, for both delivery shapes, with the send-back; B1's
+  apply-block bullet says `git am` preserves the patch author, so the check precedes the apply. Not
+  a change to the grep, to who applies, or to the forward-only rule for inherited commits. The
+  skill and template halves are claude-skills #133, blocked on this entry (1.18.0 `### Known`,
+  item 2).
 - **2026-09-26 — A7's "In Review" move is qualified by mode.** Issue #68: A7's Tracker bullet said
   the orchestrator moves an issue to "In Review" "by hand at PR time" with no mode qualifier, but the
   only "PR time" a wave has is B2's autonomous review loop; in attended mode there is no PR when a
