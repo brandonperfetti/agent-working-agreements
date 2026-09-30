@@ -37,6 +37,9 @@ Code fact.
   of hooks.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
+- **CodeRabbit CLI, for B2's preflight:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti`
+  [measured 2026-09-29, Brandon's desktop]. A record, not a guarantee: `coderabbit-preflight`
+  re-checks the CLI on every run.
 - **Attribution (RULE ZERO, A4): this environment injects it by default** — `Co-Authored-By` and
   `Claude-Session` trailers on commits, a "Generated with Claude Code" footer on PR bodies
   [source 2026-09-15: the harness's own session instructions].
