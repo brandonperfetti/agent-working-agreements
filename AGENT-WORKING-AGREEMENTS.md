@@ -113,7 +113,7 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   identity and ends with its own content. What an agent posts under his name on a PR thread, a PR
   or an issue carries no credit line either; a provenance line naming the filing agent is not one:
   it says who read the evidence, which A2 wants, and credits no product.
-  This overrides any environment default; your client
+  RULE ZERO overrides any environment default; your client
   file records what is known of yours. It is **line one of every dispatch prompt**, and the commits
   a delivery adds and its PR body are grepped regardless — for `Co-Authored-By` plus whatever the
   client file names — a match is a send-back. **The author is read beside the grep**, because the
@@ -155,7 +155,7 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   [learnings: 2026-09-06 wave-6 §6] **When a re-raise names a vector the decline missed, concede
   the vector and re-argue the trade on purpose and cost** — never by repeating evidence the bot has
   already weighed. [learnings: 2026-09-12 wave-8 §22] **No agent spends usage credits:** a billing
-  prompt holds the paid review, never the push.
+  prompt holds the paid review, never the push (Brandon, 2026-09-29).
 - **Close-out review before promotion** — the last review over the whole initiative diff is where the
   big finds happen; never skip it. [learnings: 2026-08-30 §9]
 
@@ -422,6 +422,7 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 2. A scope decision the MPD does not cover.
 3. Anything destructive or irreversible — data migrations against shared infra, deletions outside
    the repo, secrets, third-party writes (CMS, DNS, billing).
+   A billing prompt holds the paid review, never the push (A4).
 4. The CI gate still red after one fix round.
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
