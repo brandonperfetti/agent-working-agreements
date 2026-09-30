@@ -114,11 +114,13 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   of yours. It is **line one of every dispatch prompt**, and the commits a delivery adds and its PR
   body are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match
   is a send-back. **The author is read beside the grep**, because the grep checks text and the rule
-  names an identity: `git log --format='%an <%ae>' <base>..HEAD` on the branch, or each patch's
-  `From:` line for an mbox series — before approval on the attended mbox path, before merge on the
-  autonomous path. Both compare against one value, `Brandon Perfetti <brandon@brandonperfetti.com>`,
-  exactly — the only author on either base branch [measured 2026-09-26] — and a commit authored as
-  anything else is a send-back like a trailer match: reject or regenerate, since `git am` preserves
+  names an identity: `git log --format='%ae' <base>..HEAD` on the branch, or the address in each
+  patch's `From:` line for an mbox series — before approval on the attended mbox path, before merge
+  on the autonomous path. Both compare the **author email alone** against
+  `brandon@brandonperfetti.com`, exactly. The name is not compared: it varies by machine and clone
+  (`emp_app`'s `origin/develop` holds three spellings of it at that email [measured 2026-09-26,
+  emp-app-template-upgrade D54]). A commit at any other email is a send-back like a trailer match:
+  reject or regenerate, since `git am` preserves
   the patch author (B1). **Added** means not on `origin/develop` or `origin/master`,
   fetched and read
   **before** the delivery is pushed or merged — a lane or wave branch, or release-cut work pushed
