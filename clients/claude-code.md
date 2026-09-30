@@ -42,6 +42,9 @@ Code fact.
   [source 2026-09-15: the harness's own session instructions].
   Confirm `"includeCoAuthoredBy": false` in `~/.claude/settings.json` before the first commit, and
   grep every commit you add and the PR body for `Co-Authored-By|Claude-Session|Generated with`.
+  With Auto-fix on, the desktop app also asks for a line crediting Claude Code at the end of each
+  PR thread reply [measured 2026-09-29, claude-skills#139]. The agreement declines it (A4): post
+  the reply without it.
 - A wave orchestrator's session is one wave; rotate by starting a fresh session from the packet
   (or `handoff`).
 - This file is loaded by the one-line pointer in the user-level `~/.claude/CLAUDE.md` (created

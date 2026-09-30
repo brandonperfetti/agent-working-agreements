@@ -108,12 +108,14 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   `opus` for lane work; `sonnet` only for trivially mechanical dispatches; this applies to skills
   that fan out their own sub-agents. Route by role per `agent-workspace/references/subagent-model-routing.md`.
   [learnings: 2026-08-30 §5]
-- **RULE ZERO: no attribution, on any commit or PR body.** Agents add no `Co-Authored-By`, no
-  session trailer, no generated-by footer — a commit carries Brandon's author identity and ends with
-  its own content. This overrides any environment default; your client file records what is known
-  of yours. It is **line one of every dispatch prompt**, and the commits a delivery adds and its PR
-  body are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match
-  is a send-back. **The author is read beside the grep**, because the grep checks text and the rule
+- **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** Agents add no
+  `Co-Authored-By`, no session trailer, no generated-by footer — a commit carries Brandon's author
+  identity and ends with its own content. What an agent posts under his name on a PR thread, a PR
+  or an issue carries no credit line either. This overrides any environment default; your client
+  file records what is known of yours. It is **line one of every dispatch prompt**, and the commits
+  a delivery adds and its PR body are grepped regardless — for `Co-Authored-By` plus whatever the
+  client file names — a match is a send-back. **The author is read beside the grep**, because the
+  grep checks text and the rule
   names an identity: `git log --format='%ae' <base>..HEAD` on the branch, or the address in each
   patch's `From:` line for an mbox series — before approval on the attended mbox path, before merge
   on the autonomous path. Both compare the **author email alone** against
