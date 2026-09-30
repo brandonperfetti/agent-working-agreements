@@ -10,6 +10,49 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-29 (#3) — B2 names `coderabbit-preflight`, and A4 says which review findings are
+  fixed.** Issue #81, from the `fleet-coderabbit-preflight` initiative (MPD §6): Brandon adopted
+  the CodeRabbit CLI as a pass before the push, run by the orchestrator through its own skill
+  (D1–D3, D7), degrading on any client where the CLI cannot run (D8), never spending usage credits
+  (D5, D9).
+  After the claude-skills 1.19.0 release PR (claude-skills#145) took three PR rounds and seven CLI
+  runs [measured 2026-09-29, MPD update log], he set when it runs and which findings are acted on
+  (D14–D16, the ticket's comment of 2026-09-29). B2's git contract now runs `coderabbit-preflight`
+  between the gate on the merged tree and the push, where the CLI is available to that client:
+  once before each push that carries new work, a lane landing or a release cut, never before one
+  that only answers review findings, and never re-run. An unavailable CLI never holds a push and
+  never downgrades the mode; B0 is unchanged, the CLI is not a guard item. The review loop gains
+  the step before the PR round as item 1 (old items 1–4 are now 2–5), and its fix step
+  redispatches only the fixes A4's threshold calls for. A4's review-bot bullet now leads with the
+  threshold, for the CLI and the PR bot alike and on release PRs: a finding is fixed before the
+  merge only when verified and doing real harm; one that holds without such harm becomes a ticket
+  with a short reply; one the code disproves is declined with receipts, as before. Stop-list item
+  3 says no agent spends usage credits: a billing prompt holds the paid review, never the push. A1
+  lists the skill; `clients/claude-code.md` records the CLI measured there (0.8.2, org
+  `brandonperfetti`). The skill carries the rules of a run; this file carries the step, the
+  condition and the law. Not a change to when the PR opens (B2's PR-open sentence is unchanged),
+  to who merges, or to the two-axis review.
+- **2026-09-29 (#2) — RULE ZERO covers thread replies and comments.** Issue #82: with Auto-fix on,
+  Claude's desktop app asked the agent to end each PR thread reply with a line crediting Claude
+  Code [measured 2026-09-29, claude-skills#139]; the orchestrator left it off, and A4 named only
+  commits and PR bodies. [decision 2026-09-29, Brandon; fleet-coderabbit-preflight MPD D11] What an
+  agent posts under his name on a PR thread, a PR or an issue carries no credit line. A4 now says
+  so, and `clients/claude-code.md` records the Auto-fix request and that the agreement declines it.
+  Not a change to the grep or the author check.
+- **2026-09-29 — A4's author check reads the email, not the name.** Issue #79: since 2026-09-26
+  (#2) A4 compared every added commit against `Brandon Perfetti <brandon@brandonperfetti.com>`
+  exactly, as "the only author on either base branch [measured 2026-09-26]" — true of this
+  repository, which sets a repo-local `user.name`, and false on `emp_app`, whose `origin/develop`
+  holds `brandonperfetti` ×51, `brandonperfeti` ×24 and `Brandon Perfetti` ×16, all at that email
+  [measured 2026-09-26, emp-app-template-upgrade 22:40Z entry]. Every lane commit there, all at his
+  email, failed the literal check, and merges held until D54 made a per-repo exception. [decision
+  2026-09-29: option 1, in the wave-2 packet Brandon agreed under fleet-coderabbit-preflight MPD
+  D18] A4 now compares the author email alone (`%ae` on the branch, the `From:` address in an
+  mbox); the name is not compared, and the unscoped measurement is removed. #69's case is still
+  caught wherever a lane clone's email differs; one differing only in name now passes, by design.
+  Written from the draft kept at `evidence/2026-09-29-awa-79-draft/` in that initiative, less its
+  sentence on the global `user.name`, which had since changed. Not a change to the trailer grep,
+  to who applies an mbox, or to the forward-only rule.
 - **2026-09-26 (#2) — RULE ZERO's check reads the author, not only the trailers.** Issue #69, from
   CodeRabbit on claude-skills PR #128 (thread 4108126735, 2026-09-25): A4 stated the rule as an
   identity ("a commit carries Brandon's author identity") but named only a text check, the grep for
@@ -26,7 +69,9 @@ being retrofitted onto the other.
   (CodeRabbit on #77, thread 4112345800); B1's apply-block bullet says `git am` preserves the patch
   author, so the check precedes the apply. Not a change to the grep, to who applies, or to the
   forward-only rule for inherited commits. The skill and template halves are claude-skills #133,
-  blocked on this entry (1.18.0 `### Known`, item 2).
+  blocked on this entry (1.18.0 `### Known`, item 2). *(Marked 2026-09-29: the compared value is
+  now the author email alone — the 2026-09-29 entry above; "the only author on either base
+  branch" was true of this repository only.)*
 - **2026-09-26 — A7's "In Review" move is qualified by mode.** Issue #68: A7's Tracker bullet said
   the orchestrator moves an issue to "In Review" "by hand at PR time" with no mode qualifier, but
   the only "PR time" a wave has is B2's autonomous review loop; in attended mode there is no PR when

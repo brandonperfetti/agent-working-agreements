@@ -39,8 +39,8 @@ and never overrides Parts A–B. Initiatives (`_agent/initiatives/`) are how *or
 organised, not a gate on whether these rules apply: with no MPD, you are in **attended mode** (B1).
 Skills come from the `brandonperfetti-skills` plugin (mirror of `mattpocock/skills` plus
 Brandon's own); read the relevant skill *before* that kind of work — `orchestrate`, `deep-grill`,
-`handoff`, `code-review`, `writing-tickets`, `writing-pull-requests`, `coderabbit-response`,
-`what-did-we-learn`, `writing-for-agents`.
+`handoff`, `code-review`, `writing-tickets`, `writing-pull-requests`, `coderabbit-preflight`,
+`coderabbit-response`, `what-did-we-learn`, `writing-for-agents`.
 
 ## A2. Evidence discipline
 
@@ -108,17 +108,21 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   `opus` for lane work; `sonnet` only for trivially mechanical dispatches; this applies to skills
   that fan out their own sub-agents. Route by role per `agent-workspace/references/subagent-model-routing.md`.
   [learnings: 2026-08-30 §5]
-- **RULE ZERO: no attribution, on any commit or PR body.** Agents add no `Co-Authored-By`, no
-  session trailer, no generated-by footer — a commit carries Brandon's author identity and ends with
-  its own content. This overrides any environment default; your client file records what is known
-  of yours. It is **line one of every dispatch prompt**, and the commits a delivery adds and its PR
-  body are grepped regardless — for `Co-Authored-By` plus whatever the client file names — a match
-  is a send-back. **The author is read beside the grep**, because the grep checks text and the rule
-  names an identity: `git log --format='%an <%ae>' <base>..HEAD` on the branch, or each patch's
-  `From:` line for an mbox series — before approval on the attended mbox path, before merge on the
-  autonomous path. Both compare against one value, `Brandon Perfetti <brandon@brandonperfetti.com>`,
-  exactly — the only author on either base branch [measured 2026-09-26] — and a commit authored as
-  anything else is a send-back like a trailer match: reject or regenerate, since `git am` preserves
+- **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** Agents add no
+  `Co-Authored-By`, no session trailer, no generated-by footer — a commit carries Brandon's author
+  identity and ends with its own content. What an agent posts under his name on a PR thread, a PR
+  or an issue carries no credit line either. This overrides any environment default; your client
+  file records what is known of yours. It is **line one of every dispatch prompt**, and the commits
+  a delivery adds and its PR body are grepped regardless — for `Co-Authored-By` plus whatever the
+  client file names — a match is a send-back. **The author is read beside the grep**, because the
+  grep checks text and the rule
+  names an identity: `git log --format='%ae' <base>..HEAD` on the branch, or the address in each
+  patch's `From:` line for an mbox series — before approval on the attended mbox path, before merge
+  on the autonomous path. Both compare the **author email alone** against
+  `brandon@brandonperfetti.com`, exactly. The name is not compared: it varies by machine and clone
+  (`emp_app`'s `origin/develop` holds three spellings of it at that email [measured 2026-09-26,
+  emp-app-template-upgrade D54]). A commit at any other email is a send-back like a trailer match:
+  reject or regenerate, since `git am` preserves
   the patch author (B1). **Added** means not on `origin/develop` or `origin/master`,
   fetched and read
   **before** the delivery is pushed or merged — a lane or wave branch, or release-cut work pushed
@@ -136,7 +140,13 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.
-- **Review-bot declines are argued per thread with cited receipts** (file, test name, documented
+- **A review-bot finding, the CodeRabbit CLI's or the PR bot's, is fixed before the merge only
+  when it is verified and does real harm:** wrong behaviour, a result reported as clean that was
+  not, a leak, a signal or write to something not identified, a held push or a hang. One that holds
+  but does no such harm becomes a ticket, with a short reply on its thread; one the code disproves
+  is declined. The verdict rests on verification, not on the bot's severity label, and the same
+  threshold holds on release PRs, which CodeRabbit keeps reviewing (Brandon, 2026-09-29).
+  **Declines are argued per thread with cited receipts** (file, test name, documented
   ops order); "Fixed in `<sha>`" on accepted findings. Bare declines teach the bot nothing.
   [learnings: 2026-09-06 wave-6 §6] **When a re-raise names a vector the decline missed, concede
   the vector and re-argue the trade on purpose and cost** — never by repeating evidence the bot has
@@ -379,8 +389,14 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
 - **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
-  records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, then pushes.**
+  records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, runs
+  `coderabbit-preflight` where the CodeRabbit CLI is available to that client, then pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
+- **The preflight runs once before each push that carries new work** — a lane landing, a release
+  cut — and never before a push that only answers review findings, which the PR's own review
+  covers; there is no re-run. An unavailable CLI never holds a push and never downgrades the mode:
+  the round is recorded as not run, and the PR round is the review. The skill carries the rules of
+  a run, the checks that decide whether the CLI is available among them.
 - **Open the ready-for-review PR against `develop` at the first push. CodeRabbit runs on that ready
   PR, and the orchestrator completes the round before hand-back.** The PR uses the
   `writing-pull-requests` shape; its body is seeded under the initiative's `pull-requests/` and
@@ -399,7 +415,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 1. A premise conflict with the MPD or a ticket.
 2. A scope decision the MPD does not cover.
 3. Anything destructive or irreversible — data migrations against shared infra, deletions outside
-   the repo, secrets, third-party writes (CMS, DNS, billing).
+   the repo, secrets, third-party writes (CMS, DNS, billing). **No agent spends usage credits:** a
+   billing prompt holds the paid review, never the push.
 4. The CI gate still red after one fix round.
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
@@ -410,15 +427,18 @@ orchestrator's own hands. Work already merged into the wave branch goes through 
 
 **The review loop (Brandon + the orchestrator)**
 
-1. **The agent opens the feature PR ready for review; CodeRabbit runs; the orchestrator completes
+1. **Before each push that carries new work, the orchestrator runs `coderabbit-preflight`** where the
+   CodeRabbit CLI is available (Git contract above).
+2. **The agent opens the feature PR ready for review; CodeRabbit runs; the orchestrator completes
    the round before hand-back.**
-2. The orchestrator works the review end-to-end with `coderabbit-response`: verifies every finding,
-   redispatches fixes to lanes (worktrees, review, merge, push as above), replies per thread with
-   receipts, monitors re-reviews to clean. Brandon's review is the PR's final state, not the threads.
-3. **Brandon alone merges, manually, in the GitHub UI** — wave PRs into `develop`, and the release
+3. The orchestrator works the review end-to-end with `coderabbit-response`: verifies every finding,
+   redispatches the fixes A4's threshold calls for to lanes (worktrees, review, merge, push as
+   above), replies per thread with receipts, monitors re-reviews to clean. Brandon's review is the
+   PR's final state, not the threads.
+4. **Brandon alone merges, manually, in the GitHub UI** — wave PRs into `develop`, and the release
    PR `develop → master`, which the orchestrator may open as a draft with a changelog. Closing
    keywords fire on the default branch; the orchestrator moves issues to In Review at PR time.
-4. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`.
+5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`.
 
 # Part C — Environment appendices (read only yours)
 
