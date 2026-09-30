@@ -76,15 +76,15 @@ no row above routes a test run of any repository's suite, and none is to be impr
 a test run executes project code and can write caches, snapshots or build output, so it is not
 read-only inspection. [source, issue #67, measured there 2026-09-30] Camina's measurement: the live
 Gateway execution surface takes a host command and a `workdir` and exposes no filesystem-root or
-path allowlist, mount namespace, UID remap or read-only control; in a positive-control canary from
-a probe worktree, `printf 'escape\n' > ../outside/escape.txt` succeeded. [inference, issue #67,
-from that measurement] `workdir` selects the starting directory and does not confine writes, so
-no command and `workdir` pair, however narrowly scoped, keeps a test run inside the session's
-worktree as rule 4 requires, and rule 5 applies. **Attended:** Brandon runs the suite (B1); give
-him the exact command. **Autonomous:** stop and report that the required command has no bounded
-route, naming it exactly; do not run it through Gateway. This repository's
-`./scripts/check-index.sh && ./scripts/check-index.test.sh` is an example of such a command, not
-the rule.
+path allowlist, mount namespace, UID remap or read-only-filesystem control; in a positive-control
+canary from a probe worktree, `printf 'escape\n' > ../outside/escape.txt` succeeded. [inference,
+Camina's, issue #67, from that measurement] `workdir` selects the starting directory and does not
+confine writes on the measured host, so no command and `workdir` pair, however narrowly scoped,
+keeps a test run inside the session's worktree as rule 4 requires, and rule 5 applies.
+**Attended:** Brandon runs the suite (B1); give him the exact command. **Autonomous:** stop and
+report that the required command has no bounded route, naming it exactly; do not run it through
+Gateway. This repository's `./scripts/check-index.sh && ./scripts/check-index.test.sh` is an
+example of such a command, not the rule.
 
 This is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
 generic rule for failures that occur after the target program starts. [source, issue #58,
