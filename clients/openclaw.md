@@ -60,9 +60,25 @@ rule the session keeps:
 5. If no bounded fallback exists, stop and report the missing capability instead of improvising
    an overwrite.
 
+**The signature, and what rule 1's "confirmed" means.** [source, issue #67, comment of 2026-09-27
+relaying Camina's follow-ups of 2026-09-26; measured there, on the OpenClaw Gateway host] The exact
+prelaunch error string:
+
+```text
+bwrap: No permissions to create a new namespace, likely because the kernel does not allow non-privileged user namespaces. On e.g. debian this can be enabled with 'sysctl kernel.unprivileged_userns_clone=1'.
+```
+
+[source, Camina's, same comment] The `sysctl` remedy the message names is **not** a route:
+enabling unprivileged user namespaces would weaken the sandbox, which #58's "Not" list, carried in
+this section's closing paragraph, rules out. A failure is **confirmed** when the native boundary
+returns the Bubblewrap/namespace/AppArmor prelaunch signature **before** the requested target
+produces any output or side effect: the target never started. A failure after the target starts,
+shown by output, exit behaviour or side effects that belong to the target, is a target failure and
+does not trip the breaker.
+
 | Operation | Route |
 | --- | --- |
-| read-only shell and Git inspection | narrowly scoped Gateway execution |
+| read-only shell and Git inspection | Gateway execution of a command that writes nothing outside what the task may write; the bound is the command's (below) |
 | GitHub work | GitHub tools or `gh` through Gateway |
 | repository edits | an exact unified patch, `git apply --check`, `git apply`, then diff/readback verification through Gateway |
 | non-repository workspace or memory writes | the appropriate OpenClaw-owned write tool |
@@ -70,6 +86,32 @@ rule the session keeps:
 
 A7 still governs the GitHub row: the GitHub MCP's write tools never author commits, so a commit
 comes from a checkout on every route.
+
+**Row 1's bound is the command's, not Gateway's.** Inspection qualifies only when the command
+writes nothing outside what the task may write. Gateway's `workdir` supplies no bound — Camina's
+inference, on the measured host, in the paragraph below that begins "**Test runs deliberately have
+no route.**", where its measurement is cited. [source, Camina's, issue #88, 2026-10-01] A linked
+worktree's index resolves to `.git/worktrees/<id>/index` in the main repository, outside the
+worktree directory, and nothing in the breaker's contract (rule 4) implicitly expands a
+worktree-only write grant to that administrative directory. [inference, Camina's, same comment]
+An index refresh there is therefore outside a worktree-only grant unless the session's original
+grant expressly includes that exact path. [measured 2026-09-30, issue #88, git 2.46.0, scratch
+repos] In a linked worktree with a stat-stale tracked file, `git status` and `git diff` rewrote
+that index; `git --no-optional-locks status` and `git log` did not, and `--no-optional-locks` did
+not stop `git diff`'s write. Camina's eligible set for row 1: [measured, Camina's label, issue #88;
+its controls ran `git --no-optional-locks status` and `git log --oneline`]
+`git --no-optional-locks status --porcelain …` and `git log` without patch or textconv output;
+[source, Camina's, issue #88] ref and object reads such as `git rev-parse`, `git for-each-ref`,
+`git cat-file` and `git ls-tree`;
+`git -c diff.autoRefreshIndex=false diff --no-ext-diff --no-textconv …`; and plumbing comparisons
+such as `git diff-files`, `git diff-index --cached` and `git diff-tree`, with external diff and
+textconv disabled where applicable. [inference/recommendation, Camina's, issue #88] Row 1 permits
+only commands whose complete execution, configured helpers, fsmonitor and lazy fetching included,
+has been established not to write outside authorized paths, and default-denies ordinary
+worktree-facing `git diff`, default `git status`, `git describe --dirty` and explicit index
+refreshes; an inspection for which that cannot be established has no Gateway route.
+Her answer is bounded to the current OpenClaw contract and measured host; a session whose original
+grant expressly includes the exact linked-worktree administrative path needs a fresh determination.
 
 **Test runs deliberately have no route.** Once rule 1 has marked the native sandbox unavailable,
 no row above routes a test run of any repository's suite, and none is to be improvised from them:
@@ -86,7 +128,15 @@ report that the required command has no bounded route, naming it exactly; do not
 Gateway. This repository's `./scripts/check-index.sh && ./scripts/check-index.test.sh` is an
 example of such a command, not the rule.
 
-This is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
+**A confirmed strike does not change the session's mode:** it marks the native sandbox unavailable
+(rule 1) and leaves the mode as B0 selected it, so the session carries on by bounded routes and
+stops at the first required operation that has none — attended, giving Brandon the exact command;
+autonomous, stopping and reporting it — and only Brandon's explicit override changes the mode after
+pickup, while a strike during the pickup guard that stops the gate being demonstrated is an
+ordinary B0 attended start (Brandon's decision of 2026-10-01, on Camina's recommendation; see
+issue #94).
+
+The breaker is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
 generic rule for failures that occur after the target program starts. [source, issue #58,
 measured there 2026-09-23] The agent-working-agreements delivery cycle retried native shell and
 patch paths after the same prelaunch error; the bounded Gateway equivalents reached the target.
