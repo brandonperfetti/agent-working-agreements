@@ -10,6 +10,45 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-09-30 (#3) — A4 carries the usage-credits rule, and three more wording items from the
+  wave-2 review land.** Issue #84, from the two-axis review of PR #83, five findings labelled not
+  blocking. [decision 2026-09-30, Brandon; fleet-coderabbit-preflight MPD D27, D28] "No agent spends
+  usage credits: a billing prompt holds the paid review, never the push" moves from B2's stop-list
+  item 3 to the end of A4's review-bot bullet, so it binds in attended mode too, where A8 already
+  has the agent ask first; the stop-list keeps billing among its third-party writes and points back
+  to A4 for the push. A4's author-check parenthesis says "a repository of Brandon's" in place of the
+  repository and initiative it named, keeping `[measured 2026-09-26]`; the 2026-09-29 entry on #79
+  keeps the locator. [decision 2026-09-30, the orchestrator; MPD D29, under D22] B2's merge bullet
+  runs `coderabbit-preflight` when the push carries new work, pointing at the bullet that defines
+  it, so it no longer reads as every lane merge; A4's short reply on a finding's thread, and its
+  per-thread declines, apply where a thread exists, since a CLI finding has none. Item 3 (when the
+  preflight runs is stated three times) is declined: the review loop's item 1 already ends "(Git
+  contract above)", the pointer it asked for, and the merge bullet's restatement now points at the
+  definition. Items 1, 2 and 5 change no rule's meaning; item 4 widens the credits rule to attended
+  mode, where A8 already asked first.
+- **2026-09-30 (#2) — A provenance line is not a credit line.** Issue #85, from the Spec review of
+  PR #83: since 2026-09-29 (#2) RULE ZERO covers what an agent posts under Brandon's name on an
+  issue, and every issue the fleet's agents file ends with a Provenance line naming the filing
+  agent. [decision 2026-09-30, Brandon: option 1; fleet-coderabbit-preflight MPD D26] A4 now says
+  a provenance line naming the filing agent is not a credit line: it says who read the evidence,
+  which A2 wants, and credits no product. The practice stays; `writing-tickets` is unchanged. Not
+  a change to the grep or the author check.
+- **2026-09-30 — OpenClaw: test runs deliberately have no route after the breaker trips.**
+  Issue #67: the circuit breaker's routing table had no row for test runs, and the skill that
+  applies it had to declare them unrouted in its own text. The decision was Camina's (her comment
+  of 2026-09-30 on the ticket), accepted by Brandon the same day (fleet-coderabbit-preflight MPD
+  D30): no row, a stated no-route rule. [source, issue #67, measured there 2026-09-30] The live
+  Gateway execution surface takes a host command and a `workdir` and exposes no filesystem-root
+  or path allowlist, mount namespace, UID remap or read-only-filesystem control, and a sibling
+  write from a probe worktree succeeded. [inference, Camina's, issue #67] `workdir` does not
+  confine writes on the measured host, so no command and `workdir` pair keeps a test run inside
+  the worktree as rule 4 requires, and rule 5 applies. The appendix now says so beside the table,
+  for any repository's suite: attended, Brandon runs it from the exact command (B1); autonomous,
+  the session stops and reports the command as having no bounded route and does not run it
+  through Gateway. This repository's `./scripts/check-index.sh && ./scripts/check-index.test.sh`
+  is named as an example, not the rule. Not a change to the five rules, the five rows, the A7
+  sentence or the "not a global switch" paragraph; the ticket's two follow-ups (the literal
+  prelaunch string, the definition of "confirmed") stay open there.
 - **2026-09-29 (#3) — B2 names `coderabbit-preflight`, and A4 says which review findings are
   fixed.** Issue #81, from the `fleet-coderabbit-preflight` initiative (MPD §6): Brandon adopted
   the CodeRabbit CLI as a pass before the push, run by the orchestrator through its own skill
