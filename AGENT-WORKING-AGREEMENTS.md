@@ -111,7 +111,9 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** Agents add no
   `Co-Authored-By`, no session trailer, no generated-by footer — a commit carries Brandon's author
   identity and ends with its own content. What an agent posts under his name on a PR thread, a PR
-  or an issue carries no credit line either. This overrides any environment default; your client
+  or an issue carries no credit line either; a provenance line naming the filing agent is not one:
+  it says who read the evidence, which A2 wants, and credits no product.
+  RULE ZERO overrides any environment default; your client
   file records what is known of yours. It is **line one of every dispatch prompt**, and the commits
   a delivery adds and its PR body are grepped regardless — for `Co-Authored-By` plus whatever the
   client file names — a match is a send-back. **The author is read beside the grep**, because the
@@ -120,8 +122,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   patch's `From:` line for an mbox series — before approval on the attended mbox path, before merge
   on the autonomous path. Both compare the **author email alone** against
   `brandon@brandonperfetti.com`, exactly. The name is not compared: it varies by machine and clone
-  (`emp_app`'s `origin/develop` holds three spellings of it at that email [measured 2026-09-26,
-  emp-app-template-upgrade D54]). A commit at any other email is a send-back like a trailer match:
+  (a repository of Brandon's holds three spellings of it on its integration branch, all at that
+  email [measured 2026-09-26]). A commit at any other email is a send-back like a trailer match:
   reject or regenerate, since `git am` preserves
   the patch author (B1). **Added** means not on `origin/develop` or `origin/master`,
   fetched and read
@@ -143,14 +145,17 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **A review-bot finding, the CodeRabbit CLI's or the PR bot's, is fixed before the merge only
   when it is verified and does real harm:** wrong behaviour, a result reported as clean that was
   not, a leak, a signal or write to something not identified, a held push or a hang. One that holds
-  but does no such harm becomes a ticket, with a short reply on its thread; one the code disproves
-  is declined. The verdict rests on verification, not on the bot's severity label, and the same
+  but does no such harm becomes a ticket, with a short reply on its thread where it has one; one
+  the code disproves is declined.
+  The verdict rests on verification, not on the bot's severity label, and the same
   threshold holds on release PRs, which CodeRabbit keeps reviewing (Brandon, 2026-09-29).
-  **Declines are argued per thread with cited receipts** (file, test name, documented
-  ops order); "Fixed in `<sha>`" on accepted findings. Bare declines teach the bot nothing.
+  **Declines are argued per thread, where there is one, with cited receipts** (file, test name,
+  documented ops order); "Fixed in `<sha>`" on accepted findings.
+  Bare declines teach the bot nothing.
   [learnings: 2026-09-06 wave-6 §6] **When a re-raise names a vector the decline missed, concede
   the vector and re-argue the trade on purpose and cost** — never by repeating evidence the bot has
-  already weighed. [learnings: 2026-09-12 wave-8 §22]
+  already weighed. [learnings: 2026-09-12 wave-8 §22] **No agent spends usage credits:** a billing
+  prompt holds the paid review, never the push (Brandon, 2026-09-29).
 - **Close-out review before promotion** — the last review over the whole initiative diff is where the
   big finds happen; never skip it. [learnings: 2026-08-30 §9]
 
@@ -390,7 +395,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   with the repro named, model it ran on).
 - **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
   records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, runs
-  `coderabbit-preflight` where the CodeRabbit CLI is available to that client, then pushes.**
+  `coderabbit-preflight` when the push carries new work (below) and the CodeRabbit CLI is
+  available to that client, then pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
 - **The preflight runs once before each push that carries new work** — a lane landing, a release
   cut — and never before a push that only answers review findings, which the PR's own review
@@ -415,8 +421,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 1. A premise conflict with the MPD or a ticket.
 2. A scope decision the MPD does not cover.
 3. Anything destructive or irreversible — data migrations against shared infra, deletions outside
-   the repo, secrets, third-party writes (CMS, DNS, billing). **No agent spends usage credits:** a
-   billing prompt holds the paid review, never the push.
+   the repo, secrets, third-party writes (CMS, DNS, billing).
+   A billing prompt holds the paid review, never the push (A4).
 4. The CI gate still red after one fix round.
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
