@@ -10,6 +10,57 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-01 (#6) — B0 item 1: the dry-run probe runs `pre-push` as a real push would.** Issue
+  #89, from the triage of claude-skills#144 (the CodeRabbit CLI's finding 5 against the scaffold
+  template's copy). The hook probe's `git push --dry-run` "sends no objects", which is git's own
+  behaviour; [measured 2026-09-30, git 2.46.0, scratch repos] the `pre-push` hook ran on the dry
+  run with arguments, stdin and environment identical to a real push's, and its own side effect
+  happened. Item 1 now says so and has the prober read the hook first and neutralise any part that
+  sends data, keeping its invocation visible under `GIT_TRACE=1`; [source: `git-lfs-pre-push(1)`,
+  `git-lfs-config(5)`] for Git LFS, whose hook uploads the pushed range's LFS objects, that is
+  `GIT_LFS_SKIP_PUSH=1`. That the probe would upload LFS objects stays the ticket's unmeasured
+  inference; no checkout on the maintainer's machine uses LFS [measured 2026-09-30]. What the
+  probe proves, its FAIL and no-result cases and the per-worktree clause are unchanged.
+- **2026-10-01 (#5) — OpenClaw: the breaker's closing paragraph names its subject.** Issue #90,
+  from the Standards review of wave 3a's `openclaw` lane (not blocking): since #67 the paragraph
+  "This is **not** a global switch…" follows the no-route paragraph, so its "This" read first as
+  that rule. It now begins "The breaker is **not**…"; nothing else in the paragraph changes.
+- **2026-10-01 (#4) — OpenClaw: a confirmed strike does not change the session's mode.** Issue
+  #94, from CodeRabbit's question on PR #87 (thread `4150248351`). [decision 2026-10-01, Brandon,
+  on Camina's recommendation; fleet-coderabbit-preflight MPD D36] One sentence beside the no-route
+  paragraph: the strike marks the native sandbox unavailable and leaves the mode as B0 selected it;
+  the session carries on by bounded routes and stops at the first required operation with none
+  (attended, Brandon gets the exact command; autonomous, stop and report it); only Brandon's
+  explicit override changes the mode after pickup; a strike during the pickup guard that stops the
+  gate being demonstrated is an ordinary B0 attended start. B0 already gives that result (a guard
+  item that fails at pickup starts the session attended) and is unchanged. Not a new mode, a new
+  guard item or a change to the five rules.
+- **2026-10-01 (#3) — OpenClaw: the prelaunch string, and what "confirmed" means.** Issue #91,
+  carrying #67's two follow-ups (its comment of 2026-09-27, relaying Camina's of 2026-09-26).
+  [measured on the OpenClaw Gateway host, as that comment gives it] The exact `bwrap` prelaunch
+  string is quoted after the five rules. [source, Camina's, same comment] The `sysctl` remedy it
+  names is not a route, since enabling unprivileged user namespaces would weaken the sandbox
+  (#58's "Not" list); a failure is confirmed when the signature returns before the target produces
+  any output or side effect, and a failure after the target starts is a target failure that does
+  not trip the breaker. This entry leaves the five rules, the routing table and the no-route
+  paragraph unchanged; row 1 changes under #88.
+- **2026-10-01 (#2) — OpenClaw: row 1's bound is the command's, and the inspection commands that
+  keep it are named.** Issue #88: the circuit breaker's row 1 routed read-only inspection to
+  "narrowly scoped Gateway execution", putting the bound on Gateway, whose `workdir` does not
+  confine writes on the measured host (#67: Camina's measurement and her inference from it).
+  Camina's answer on the ticket (2026-10-01) is no, not by default: [source, Camina's] a linked
+  worktree's index resolves to `.git/worktrees/<id>/index` in the main repository, and nothing in
+  the breaker's contract implicitly expands a worktree-only grant to it; [inference, Camina's] a
+  refresh there is outside that grant unless the exact path was granted. [measured 2026-09-30, git
+  2.46.0, scratch repos, issue #88] With a stat-stale tracked file, `git status` and `git diff`
+  rewrote that index, `--no-optional-locks` stopped `status`'s write but not `diff`'s, and
+  `git log` wrote nothing. Row 1 now says the bound is the command's; a paragraph under the table
+  names her eligible set and carries her recommendation — permit only commands established not to
+  write outside authorized paths, default-deny the four forms she names, no route where that
+  cannot be established — each clause under her own label (her "source-backed" items as
+  `[source]`, attributed to her; her `[measured]` item with what its controls ran), with the bound
+  she put on her answer. Rules 1–5, rows 2–5, the A7 sentence and the no-route paragraph are
+  unchanged.
 - **2026-10-01 — A provenance line names the initiative, the role and the mode, never the client
   or the product.** Issue #92, a revision made after option 1 shipped. On 2026-09-30, #85 was
   decided as option 1 and shipped in PR #87: a provenance line naming the filing agent is not a
