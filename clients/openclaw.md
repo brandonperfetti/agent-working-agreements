@@ -135,7 +135,7 @@ pickup, while a strike during the pickup guard that stops the gate being demonst
 ordinary B0 attended start (Brandon's decision of 2026-10-01, on Camina's recommendation; see
 issue #94).
 
-This is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
+The breaker is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
 generic rule for failures that occur after the target program starts. [source, issue #58,
 measured there 2026-09-23] The agent-working-agreements delivery cycle retried native shell and
 patch paths after the same prelaunch error; the bounded Gateway equivalents reached the target.
