@@ -60,6 +60,22 @@ rule the session keeps:
 5. If no bounded fallback exists, stop and report the missing capability instead of improvising
    an overwrite.
 
+**The signature, and what rule 1's "confirmed" means.** [measured on the OpenClaw Gateway host;
+source, issue #67, comment of 2026-09-27 relaying Camina's follow-ups of 2026-09-26] The exact
+prelaunch error string:
+
+```text
+bwrap: No permissions to create a new namespace, likely because the kernel does not allow non-privileged user namespaces. On e.g. debian this can be enabled with 'sysctl kernel.unprivileged_userns_clone=1'.
+```
+
+[source, Camina's, same comment] The `sysctl` remedy the message names is **not** a route:
+enabling unprivileged user namespaces would weaken the sandbox, which #58's "Not" list, carried in
+this section's closing paragraph, rules out. A failure is **confirmed** when the native boundary
+returns the Bubblewrap/namespace/AppArmor prelaunch signature **before** the requested target
+produces any output or side effect: the target never started. A failure after the target starts,
+shown by output, exit behaviour or side effects that belong to the target, is a target failure and
+does not trip the breaker.
+
 | Operation | Route |
 | --- | --- |
 | read-only shell and Git inspection | Gateway execution of a command that writes nothing outside what the task may write; the bound is the command's (below) |
