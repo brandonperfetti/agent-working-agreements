@@ -111,8 +111,9 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** Agents add no
   `Co-Authored-By`, no session trailer, no generated-by footer — a commit carries Brandon's author
   identity and ends with its own content. What an agent posts under his name on a PR thread, a PR
-  or an issue carries no credit line either; a provenance line naming the filing agent is not one:
-  it says who read the evidence, which A2 wants, and credits no product.
+  or an issue carries no credit line either; a provenance line is not one: it names the initiative,
+  the role (wave orchestrator, lane) and the mode the filing agent worked in — never the client or
+  the product — and says who read the evidence, which A2 wants.
   RULE ZERO overrides any environment default; your client
   file records what is known of yours. It is **line one of every dispatch prompt**, and the commits
   a delivery adds and its PR body are grepped regardless — for `Co-Authored-By` plus whatever the
