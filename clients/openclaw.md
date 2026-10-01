@@ -62,7 +62,7 @@ rule the session keeps:
 
 | Operation | Route |
 | --- | --- |
-| read-only shell and Git inspection | narrowly scoped Gateway execution |
+| read-only shell and Git inspection | Gateway execution of a command that writes nothing outside what the task may write; the bound is the command's (below) |
 | GitHub work | GitHub tools or `gh` through Gateway |
 | repository edits | an exact unified patch, `git apply --check`, `git apply`, then diff/readback verification through Gateway |
 | non-repository workspace or memory writes | the appropriate OpenClaw-owned write tool |
@@ -70,6 +70,31 @@ rule the session keeps:
 
 A7 still governs the GitHub row: the GitHub MCP's write tools never author commits, so a commit
 comes from a checkout on every route.
+
+**Row 1's bound is the command's, not Gateway's.** Inspection qualifies only when the command
+writes nothing outside what the task may write. Gateway's `workdir` supplies no bound — Camina's
+inference, on the measured host, in the paragraph below that begins "**Test runs deliberately have
+no route.**", where its measurement is cited. [source, Camina's, issue #88, 2026-10-01] A linked
+worktree's index resolves to `.git/worktrees/<id>/index` in the main repository, outside the
+worktree directory, and nothing in the breaker's contract (rule 4) implicitly expands a
+worktree-only write grant to that administrative directory. [inference, Camina's, same comment]
+An index refresh there is therefore outside a worktree-only grant unless the session's original
+grant expressly includes that exact path. [measured 2026-09-30, issue #88, git 2.46.0 controls] In
+a linked worktree with a stat-stale tracked file, `git status` and `git diff` rewrote that index;
+`git --no-optional-locks status` and `git log` did not, and `--no-optional-locks` did not stop
+`git diff`'s write. Row 1 routes only Camina's eligible set: [measured, issue #88, the same
+controls] `git --no-optional-locks status --porcelain …` and `git log` without patch or textconv
+output; [source, Camina's, issue #88] ref and object reads such as `git rev-parse`,
+`git for-each-ref`, `git cat-file` and `git ls-tree`;
+`git -c diff.autoRefreshIndex=false diff --no-ext-diff --no-textconv …`; and the plumbing
+comparisons `git diff-files`, `git diff-index --cached` and `git diff-tree`, with external diff and
+textconv disabled where applicable. [inference/recommendation, Camina's, issue #88] Everything else
+is default-denied, ordinary worktree-facing `git diff`, default `git status`, `git describe --dirty`
+and explicit index refreshes among it: a command qualifies only once its complete execution,
+configured helpers, fsmonitor and lazy fetching included, is established not to write outside
+authorized paths, and an inspection for which that cannot be established has no Gateway route.
+Her answer is bounded to the current OpenClaw contract and measured host; a session whose original
+grant expressly includes the exact linked-worktree administrative path needs a fresh determination.
 
 **Test runs deliberately have no route.** Once rule 1 has marked the native sandbox unavailable,
 no row above routes a test run of any repository's suite, and none is to be improvised from them:
