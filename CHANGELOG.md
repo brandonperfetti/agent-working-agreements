@@ -10,6 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-01 — A provenance line names the initiative, the role and the mode, never the client
+  or the product.** Issue #92, a revision made after option 1 shipped. On 2026-09-30, #85 was
+  decided as option 1 and shipped in PR #87: a provenance line naming the filing agent is not a
+  credit line. The line as the fleet filed it named the client the agent ran in, and the Spec
+  review of that change had flagged the tension. [decision 2026-10-01, Brandon: option 3;
+  fleet-coderabbit-preflight MPD D40] A4 now says what a provenance line names — the initiative,
+  the role (e.g. wave orchestrator, lane) and the mode the filing agent worked in — and that it
+  names no client and no product; it is still not a credit line, and still says who read the
+  evidence, which A2 wants. The 2026-09-30 (#2) entry stands as the record of option 1 and is not
+  rewritten. Forward-only: no Provenance line on an issue already filed is edited. Not a change to
+  the grep or the author check. The claude-skills half (`writing-tickets`, `orchestrate` and its
+  `HANDOFFS.md`, the scaffold template's mirror of A4) is claude-skills#161.
 - **2026-09-30 (#3) — A4 carries the usage-credits rule, and three more wording items from the
   wave-2 review land.** Issue #84, from the two-axis review of PR #83, five findings labelled not
   blocking. [decision 2026-09-30, Brandon; fleet-coderabbit-preflight MPD D27, D28] "No agent spends
@@ -25,7 +37,8 @@ being retrofitted onto the other.
   preflight runs is stated three times) is declined: the review loop's item 1 already ends "(Git
   contract above)", the pointer it asked for, and the merge bullet's restatement now points at the
   definition. Items 1, 2 and 5 change no rule's meaning; item 4 widens the credits rule to attended
-  mode, where A8 already asked first.
+  mode, where A8 already asked first. *(Marked 2026-10-01: the 2026-09-29 entry on #79 no longer
+  keeps the locator; issue #93 removed it.)*
 - **2026-09-30 (#2) — A provenance line is not a credit line.** Issue #85, from the Spec review of
   PR #83: since 2026-09-29 (#2) RULE ZERO covers what an agent posts under Brandon's name on an
   issue, and every issue the fleet's agents file ends with a Provenance line naming the filing
@@ -81,17 +94,19 @@ being retrofitted onto the other.
 - **2026-09-29 — A4's author check reads the email, not the name.** Issue #79: since 2026-09-26
   (#2) A4 compared every added commit against `Brandon Perfetti <brandon@brandonperfetti.com>`
   exactly, as "the only author on either base branch [measured 2026-09-26]" — true of this
-  repository, which sets a repo-local `user.name`, and false on `emp_app`, whose `origin/develop`
-  holds `brandonperfetti` ×51, `brandonperfeti` ×24 and `Brandon Perfetti` ×16, all at that email
-  [measured 2026-09-26, emp-app-template-upgrade 22:40Z entry]. Every lane commit there, all at his
-  email, failed the literal check, and merges held until D54 made a per-repo exception. [decision
+  repository, which sets a repo-local `user.name`, and false on a repository of Brandon's, whose
+  `origin/develop` holds `brandonperfetti` ×51, `brandonperfeti` ×24 and `Brandon Perfetti` ×16,
+  all at that email [measured 2026-09-26]. Every lane commit there, all at his email, failed the
+  literal check, and merges held until an exception was made for that repository. [decision
   2026-09-29: option 1, in the wave-2 packet Brandon agreed under fleet-coderabbit-preflight MPD
   D18] A4 now compares the author email alone (`%ae` on the branch, the `From:` address in an
   mbox); the name is not compared, and the unscoped measurement is removed. #69's case is still
   caught wherever a lane clone's email differs; one differing only in name now passes, by design.
   Written from the draft kept at `evidence/2026-09-29-awa-79-draft/` in that initiative, less its
   sentence on the global `user.name`, which had since changed. Not a change to the trailer grep,
-  to who applies an mbox, or to the forward-only rule.
+  to who applies an mbox, or to the forward-only rule. *(Corrected 2026-10-01, issue #93: the
+  repository's name removed, with the entry locator and decision number from that repository's
+  own initiative; the measurement and its counts stand.)*
 - **2026-09-26 (#2) — RULE ZERO's check reads the author, not only the trailers.** Issue #69, from
   CodeRabbit on claude-skills PR #128 (thread 4108126735, 2026-09-25): A4 stated the rule as an
   identity ("a commit carries Brandon's author identity") but named only a text check, the grep for
