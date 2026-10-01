@@ -60,8 +60,8 @@ rule the session keeps:
 5. If no bounded fallback exists, stop and report the missing capability instead of improvising
    an overwrite.
 
-**The signature, and what rule 1's "confirmed" means.** [measured on the OpenClaw Gateway host;
-source, issue #67, comment of 2026-09-27 relaying Camina's follow-ups of 2026-09-26] The exact
+**The signature, and what rule 1's "confirmed" means.** [source, issue #67, comment of 2026-09-27
+relaying Camina's follow-ups of 2026-09-26; measured there, on the OpenClaw Gateway host] The exact
 prelaunch error string:
 
 ```text
@@ -95,20 +95,21 @@ worktree's index resolves to `.git/worktrees/<id>/index` in the main repository,
 worktree directory, and nothing in the breaker's contract (rule 4) implicitly expands a
 worktree-only write grant to that administrative directory. [inference, Camina's, same comment]
 An index refresh there is therefore outside a worktree-only grant unless the session's original
-grant expressly includes that exact path. [measured 2026-09-30, issue #88, git 2.46.0 controls] In
-a linked worktree with a stat-stale tracked file, `git status` and `git diff` rewrote that index;
-`git --no-optional-locks status` and `git log` did not, and `--no-optional-locks` did not stop
-`git diff`'s write. Row 1 routes only Camina's eligible set: [measured, issue #88, the same
-controls] `git --no-optional-locks status --porcelain …` and `git log` without patch or textconv
-output; [source, Camina's, issue #88] ref and object reads such as `git rev-parse`,
-`git for-each-ref`, `git cat-file` and `git ls-tree`;
-`git -c diff.autoRefreshIndex=false diff --no-ext-diff --no-textconv …`; and the plumbing
-comparisons `git diff-files`, `git diff-index --cached` and `git diff-tree`, with external diff and
-textconv disabled where applicable. [inference/recommendation, Camina's, issue #88] Everything else
-is default-denied, ordinary worktree-facing `git diff`, default `git status`, `git describe --dirty`
-and explicit index refreshes among it: a command qualifies only once its complete execution,
-configured helpers, fsmonitor and lazy fetching included, is established not to write outside
-authorized paths, and an inspection for which that cannot be established has no Gateway route.
+grant expressly includes that exact path. [measured 2026-09-30, issue #88, git 2.46.0, scratch
+repos] In a linked worktree with a stat-stale tracked file, `git status` and `git diff` rewrote
+that index; `git --no-optional-locks status` and `git log` did not, and `--no-optional-locks` did
+not stop `git diff`'s write. Camina's eligible set for row 1: [measured, Camina's label, issue #88;
+its controls ran `git --no-optional-locks status` and `git log --oneline`]
+`git --no-optional-locks status --porcelain …` and `git log` without patch or textconv output;
+[source, Camina's, issue #88] ref and object reads such as `git rev-parse`, `git for-each-ref`,
+`git cat-file` and `git ls-tree`;
+`git -c diff.autoRefreshIndex=false diff --no-ext-diff --no-textconv …`; and plumbing comparisons
+such as `git diff-files`, `git diff-index --cached` and `git diff-tree`, with external diff and
+textconv disabled where applicable. [inference/recommendation, Camina's, issue #88] Row 1 permits
+only commands whose complete execution, configured helpers, fsmonitor and lazy fetching included,
+has been established not to write outside authorized paths, and default-denies ordinary
+worktree-facing `git diff`, default `git status`, `git describe --dirty` and explicit index
+refreshes; an inspection for which that cannot be established has no Gateway route.
 Her answer is bounded to the current OpenClaw contract and measured host; a session whose original
 grant expressly includes the exact linked-worktree administrative path needs a fresh determination.
 
