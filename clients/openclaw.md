@@ -127,6 +127,14 @@ report that the required command has no bounded route, naming it exactly; do not
 Gateway. This repository's `./scripts/check-index.sh && ./scripts/check-index.test.sh` is an
 example of such a command, not the rule.
 
+**A confirmed strike does not change the session's mode:** it marks the native sandbox unavailable
+(rule 1) and leaves the mode as B0 selected it, so the session carries on by bounded routes and
+stops at the first required operation that has none — attended, giving Brandon the exact command;
+autonomous, stopping and reporting it — and only Brandon's explicit override changes the mode after
+pickup, while a strike during the pickup guard that stops the gate being demonstrated is an
+ordinary B0 attended start (Brandon's decision of 2026-10-01, on Camina's recommendation; see
+issue #94).
+
 This is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
 generic rule for failures that occur after the target program starts. [source, issue #58,
 measured there 2026-09-23] The agent-working-agreements delivery cycle retried native shell and
