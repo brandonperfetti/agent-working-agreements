@@ -111,8 +111,9 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** Agents add no
   `Co-Authored-By`, no session trailer, no generated-by footer — a commit carries Brandon's author
   identity and ends with its own content. What an agent posts under his name on a PR thread, a PR
-  or an issue carries no credit line either; a provenance line naming the filing agent is not one:
-  it says who read the evidence, which A2 wants, and credits no product.
+  or an issue carries no credit line either; a provenance line is not one: it names the initiative,
+  the role (e.g. wave orchestrator, lane) and the mode the filing agent worked in — never the client
+  or the product — and says who read the evidence, which A2 wants.
   RULE ZERO overrides any environment default; your client
   file records what is known of yours. It is **line one of every dispatch prompt**, and the commits
   a delivery adds and its PR body are grepped regardless — for `Co-Authored-By` plus whatever the
@@ -282,9 +283,15 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    fires on commit); `rm`, worktrees, and `git branch -d` work. [measured 2026-09-10, Claude Code
    on claude-skills] **Prove the hooks exist in the checkout you will push from:**
    `git push --dry-run <remote> <branch>`, usually `origin HEAD` — name both, because a fresh lane
-   branch has no upstream and a bare `git push` dies before the hook. It sends no objects but
-   still contacts the remote, and must run the repo's `pre-push` hook **and show it**: the hook's
-   own output, or for a silent hook the `run_command: …pre-push` line under `GIT_TRACE=1`.
+   branch has no upstream and a bare `git push` dies before the hook. It sends no objects (git's
+   own behaviour) but still contacts the remote, and must run the repo's `pre-push` hook **and
+   show it**: the hook's own output, or for a silent hook the `run_command: …pre-push` line under
+   `GIT_TRACE=1`. **The hook runs exactly as on a real push, with no dry-run signal** [measured
+   2026-09-30, git 2.46.0, scratch repos: the same arguments, stdin and environment, and the hook's
+   own side effect happened], so read it before probing and, where it would send data, neutralise
+   that part for the probe while keeping its invocation visible under `GIT_TRACE=1` — for Git LFS,
+   `GIT_LFS_SKIP_PUSH=1` [source: `git-lfs-pre-push(1)` uploads the LFS objects of the pushed
+   range; `git-lfs-config(5)` documents `GIT_LFS_SKIP_PUSH`].
    **A dry run that dies before reaching the hook is no result, not a FAIL** — a bare push with no
    upstream, an unreachable host (both exit 128), or a remote or refspec that does not resolve (a
    remote not named `origin`; `HEAD` while detached, exit 1): fix the invocation or the route and
