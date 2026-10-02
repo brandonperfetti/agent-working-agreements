@@ -10,6 +10,20 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-01 (#7) — OpenClaw: row 3's readback names its diff form.** Issue #96, from finding 7
+  of the Spec review of wave 3b's `openclaw` lane; the clause is Camina's (her confirmation on #96
+  of 2026-10-01; Brandon's instruction, fleet-coderabbit-preflight MPD D52 as corrected by D54). A
+  paragraph after row 1's bound: [inference/recommendation, Camina's, issue #96] row 3's
+  diff/readback is inspection, and when it uses Git diff it uses row 1's eligible form limited to
+  the patched paths,
+  `git -c diff.autoRefreshIndex=false diff --no-ext-diff --no-textconv -- <patched paths>`,
+  bounded, as she bounds it, to the current OpenClaw host and breaker contract. Her recommendation
+  clauses carry that label and her `[source]` clause is attributed to her; her notes on her own
+  session stay on the issue. The measurement it rests on is the Spec reviewer's of 2026-10-01 on
+  the maintainer's machine (git 2.46.0, scratch repos), recorded on #96, which she cites and did
+  not re-run; that record names the form without the pathspec. Rules 1–5, the table's rows (row
+  3's cell included) and what row 3 routes are unchanged.
+
 - **2026-10-01 (#6) — B0 item 1: the dry-run probe runs `pre-push` as a real push would.** Issue
   #89, from the triage of claude-skills#144 (the CodeRabbit CLI's finding 5 against the scaffold
   template's copy). The hook probe's `git push --dry-run` "sends no objects", which is git's own
