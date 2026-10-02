@@ -113,6 +113,27 @@ refreshes; an inspection for which that cannot be established has no Gateway rou
 Her answer is bounded to the current OpenClaw contract and measured host; a session whose original
 grant expressly includes the exact linked-worktree administrative path needs a fresh determination.
 
+**Row 3's readback form.** [inference/recommendation, Camina's, issue #96] Confirmed for the
+current OpenClaw host and breaker contract: row 3's diff/readback is inspection; when that
+inspection uses Git diff, it uses the row 1 eligible form:
+
+```sh
+git -c diff.autoRefreshIndex=false diff --no-ext-diff --no-textconv -- <patched paths>
+```
+
+[measured 2026-10-01 by the Spec reviewer of #88's change, git 2.46.0, scratch repos on the
+maintainer's machine, not the OpenClaw host; recorded on issue #96, whose record names the diff
+form without its `-- <patched paths>` pathspec, and which Camina cites and did not re-run]
+`git apply --check` and `git apply` left the linked worktree index unchanged. Plain `git diff`
+rewrote the index when another tracked file was stat-stale; the command above did not.
+[source, Camina's, issue #96] The current breaker requires every fallback to preserve the task's
+original read/write constraints. Row 1's confirmed eligible set already includes this diff form;
+`--no-ext-diff` and `--no-textconv` exclude those configured helper paths.
+[inference/recommendation, Camina's, issue #96] Pointing row 3 at row 1's eligible set keeps one
+inspection boundary and prevents "diff/readback" from being read as permission for plain
+worktree-facing `git diff`. Restricting the pathspec to the patched paths also keeps the readback
+bounded to the edit.
+
 **Test runs deliberately have no route.** Once rule 1 has marked the native sandbox unavailable,
 no row above routes a test run of any repository's suite, and none is to be improvised from them:
 a test run executes project code and can write caches, snapshots or build output, so it is not
