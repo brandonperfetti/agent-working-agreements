@@ -134,6 +134,43 @@ inspection boundary and prevents "diff/readback" from being read as permission f
 worktree-facing `git diff`. Restricting the pathspec to the patched paths also keeps the readback
 bounded to the edit.
 
+**Row 3's readback of a file the patch adds.** [inference/recommendation, Camina's, issue #103]
+An added file's readback has a route. After a confirmed strike, row 3 may read each added path
+directly through Gateway, provided that exact path is inside the session's original read scope
+and the complete command writes nothing outside the authorized paths. For a regular file, this
+qualifies:
+
+```sh
+cat -- <added-path>
+```
+
+[inference/recommendation, Camina's, issue #103] A generic/native read tool is not automatically
+a route after the strike; it qualifies only if it is separately established not to cross the
+failed native boundary. The deterministic breaker route is the exact-path read through Gateway.
+[measured 2026-10-02 by the orchestrator that filed issue #103, git 2.46.0, a scratch repository
+on the maintainer's machine, not the OpenClaw host; recorded on that issue, which Camina cites and
+did not re-run] `git apply` left the added file untracked, and row 3's index-based diff printed no
+hunk for it. [source, Camina's, issue #103] The current breaker requires the fallback to preserve
+the task's original read/write constraints, and row 1 admits inspection only when the command's
+complete execution writes nothing outside what the task may write. A direct read of an authorized
+regular-file path invokes no Git index, external diff, or textconv helper.
+[source, Camina's, issue #103] Git documents `git diff --no-index` as comparing two paths on the
+filesystem and says that form implies `--exit-code`. It also documents `--no-ext-diff` and
+`--no-textconv` as disabling those helper paths. Accordingly, this is also an eligible
+patch-shaped read for an added regular text file:
+
+```sh
+git --no-pager diff --no-index --no-ext-diff --no-textconv -- /dev/null <added-path>
+```
+
+[source, Camina's, issue #103] Exit 1 is the expected "different" result; the emitted added-file
+patch is the readback. [inference/recommendation, Camina's, issue #103] The direct exact-path
+Gateway read is the general rule, and the `--no-index` form the convenient regular-text form. Do
+not use `cat` to dereference an added symlink: inspect its link payload without dereference
+instead. For binary content, or whenever tool output can truncate, use a bounded byte-for-byte
+read or checksum/size comparison and verify complete output under A2; a partial display is not
+confirmation.
+
 **Test runs deliberately have no route.** Once rule 1 has marked the native sandbox unavailable,
 no row above routes a test run of any repository's suite, and none is to be improvised from them:
 a test run executes project code and can write caches, snapshots or build output, so it is not
