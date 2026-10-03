@@ -28,7 +28,14 @@ Code fact.
 - Lane isolation: `git worktree add ../<repo>-<lane> -b <initiative>/wave-<n>-<lane>` from the wave
   branch (flat form — git refuses a ref that is a path prefix of another, so `wave-<n>/<lane>`
   cannot coexist with `wave-<n>` [measured 2026-09-11]); remove the worktree after merge. The
-  `EnterWorktree` tool, where present, does the same.
+  `EnterWorktree` tool does not make this worktree, so a lane uses the command: [measured
+  interactive 2026-10-03, Brandon, session banner v2.1.91, scratch repository; #101] it created
+  `.claude/worktrees/<generated name>` on branch `worktree-<generated name>`, based on
+  `origin/<default>`, not the session's `HEAD` — though its description said "based on HEAD". A
+  newer description [source, served by the desktop app's 2.1.286] names a `worktree.baseRef`
+  setting whose `head` value bases on the local `HEAD`; what it does is unmeasured, and the
+  directory and branch name would differ from the command's on either version [source, both
+  descriptions].
 - **Lane worktrees and hooks:** a worktree made by `git worktree add` shares the main checkout's
   `.git/hooks` [measured 2026-09-17, as B0 item 1], so item 1's probe there covers it. Read
   `git config core.hooksPath` before dispatching lanes: where item 1 makes the probe per worktree,
