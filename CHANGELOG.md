@@ -10,6 +10,29 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-02 (#1) — OpenClaw: row 3's readback of a file the patch adds.** Issue #103, from
+  CodeRabbit on claude-skills PR #177 (thread `4169652576`): `git apply` leaves an added file
+  untracked, so row 3's index-based diff prints nothing for it. The answer is Camina's (her
+  confirmation on #103 of 2026-10-02, carried clause by clause in her order, each under a label of
+  the kind she gave it; Brandon's instruction, fleet-coderabbit-preflight MPD D68). A paragraph
+  after "Row 3's readback form.": [inference/recommendation, Camina's, issue #103] after a confirmed
+  strike, row 3 may read each added path directly through Gateway, provided that exact path is
+  inside the session's original read scope and the complete command writes nothing outside the
+  authorized paths (`cat -- <added-path>` for a regular file), and that exact-path read is the
+  general rule; a generic/native read tool is not automatically a route after the strike; no `cat`
+  to dereference an added symlink; for binary content, or whenever tool output can truncate, a
+  bounded byte-for-byte read or a checksum/size comparison, verified complete under A2.
+  [source, Camina's, issue #103] For an added regular text file,
+  `git --no-pager diff --no-index --no-ext-diff --no-textconv -- /dev/null <added-path>` is also
+  eligible, exit 1 expected. Two of her `[source]` clauses also state a conclusion (that a direct
+  read invokes no Git index or helper; that the `--no-index` form is eligible); they are carried
+  under the label she gave them. The one measurement the paragraph cites shows the gap, not either
+  read: taken 2026-10-02 by the orchestrator that filed #103, on the maintainer's machine, not the
+  OpenClaw host (git 2.46.0, a scratch repository), recorded on #103, which she cites and did not
+  re-run; her notes on her own session stay on the issue. Rules 1–5, the table's rows (row 3's cell
+  included), the whole #96 paragraph with its diff form, and row 1's eligible-set paragraph, which
+  does not list the `--no-index` form, are unchanged.
+
 - **2026-10-01 (#7) — OpenClaw: row 3's readback names its diff form.** Issue #96, from finding 7
   of the Spec review of wave 3b's `openclaw` lane; the clause is Camina's (her confirmation on #96
   of 2026-10-01; Brandon's instruction, fleet-coderabbit-preflight MPD D52 as corrected by D54). A
