@@ -10,6 +10,76 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-03 (#1) — OpenClaw: how row 3's added-file readback passes the path.** Issue #104,
+  from the CodeRabbit CLI's review of the wave-4 branch and CodeRabbit on
+  release PR #107 (thread `4173542541`): `--` ends option parsing but does not stop a shell
+  interpreting a path spliced into a command string. The answer is Camina's (her comment on #104
+  of 2026-10-03, posted under the owner's account; Brandon's instruction, fleet-coderabbit-preflight
+  MPD D72), carried in her order, each clause under a label of the kind she gave it. In "Row 3's
+  readback of a file the patch adds.", the two forms `cat -- <added-path>` and the `--no-index`
+  form with `<added-path>` are replaced. [source, Camina's, issue #104] As the current Gateway tool
+  contract describes it, Gateway execution takes one `command` described as a shell command,
+  exposes no argv-array interface, and takes separate `env` overrides described as literal, with
+  no expansion. Her `[source]` clause also states a conclusion (Gateway does not make a spliced
+  path safe, but provides a separate literal-value channel); it is carried under the label she
+  gave it. [inference/recommendation, Camina's, issue #104] Row 3 passes the exact,
+  scope-validated added path as a literal `ADDED_PATH` override, supplied separately from the fixed
+  command, and expands it quoted: `cat -- "$ADDED_PATH"` for a regular file, and
+  `git --no-pager diff --no-index --no-ext-diff --no-textconv -- /dev/null "$ADDED_PATH"` for an
+  added regular text file. The session must not splice the path into `command`, re-evaluate it
+  with `eval`, or leave the expansion unquoted; the literal override plus the quoted expansion, not
+  `--`, is what closes shell splitting, globbing, expansion and command-substitution vectors for
+  the path value. For an added symlink, under the same override, `readlink -- "$ADDED_PATH"` (or an
+  equivalent argv-based, non-dereferencing link-payload read if Gateway later provides one), then
+  A2's complete-output checks. That form joins the paragraph's existing #103 sentence keeping `cat`
+  from dereferencing an added symlink. Three of her sentences are not repeated, because the #103
+  clauses beside them already say them: that exit 1 remains the expected result, that a symlink
+  needs its own non-dereferencing form, and that the regular-file `cat` form is not repurposed for
+  one. Two #103 sentences that introduced the old blocks now name "the `cat` form" and "the
+  `--no-index` form" and end with a period; the new blocks follow under her #104 label. She ran no
+  metacharacter-path or symlink-readback experiment, and none was run for this change: nothing it
+  adds is measured, and the paragraph's one measurement is still the #103 gap, taken on the
+  maintainer's machine, not the OpenClaw host. Her notes on her own session, and her line
+  describing the paragraph at #107's head, stay on the issue. Unchanged: the rest of the paragraph
+  under its #103 labels (the route and its bound, the generic-tool caution, exit 1 expected, the
+  binary/truncation sentence, the measurement of the gap), rules 1–5, the table's rows (row 3's
+  cell included), the whole #96 paragraph with its diff form, and row 1's eligible-set paragraph.
+
+- **2026-10-02 (#2) — Claude Code: `EnterWorktree` is not the lane-isolation command.** Issue
+  #101, from findings 4 and 5 of the two reviews of claude-skills#167. The lane-isolation line
+  said the tool "does the same" as `git worktree add ../<repo>-<lane> -b
+  <initiative>/wave-<n>-<lane>` from the wave branch. [measured interactive 2026-10-03, Brandon,
+  Claude Code 2.1.91, scratch repository; recorded on #101] It made a worktree in a different
+  directory, on a differently named branch, based on `origin/<default>` rather than the
+  session's `HEAD`. **Decision (Brandon, 2026-10-03 UTC): drop the sentence; a one-line replacement
+  saying lanes use the command is acceptable.** The line that stands in its place says a lane uses
+  the command, not the `EnterWorktree` tool, and points to #101; nothing is claimed about any other
+  version. The command, its flat-form note and the hooks bullet are unchanged; claude-skills#176
+  item 2 is to mirror the change into the scaffold template.
+
+- **2026-10-02 (#1) — OpenClaw: row 3's readback of a file the patch adds.** Issue #103, from
+  CodeRabbit on claude-skills PR #177 (thread `4169652576`): `git apply` leaves an added file
+  untracked, so row 3's index-based diff prints nothing for it. The answer is Camina's (her
+  confirmation on #103 of 2026-10-02, carried clause by clause in her order, each under a label of
+  the kind she gave it; Brandon's instruction, fleet-coderabbit-preflight MPD D68). A paragraph
+  after "Row 3's readback form.": [inference/recommendation, Camina's, issue #103] after a confirmed
+  strike, row 3 may read each added path directly through Gateway, provided that exact path is
+  inside the session's original read scope and the complete command writes nothing outside the
+  authorized paths (`cat -- <added-path>` for a regular file), and that exact-path read is the
+  general rule; a generic/native read tool is not automatically a route after the strike; no `cat`
+  to dereference an added symlink; for binary content, or whenever tool output can truncate, a
+  bounded byte-for-byte read or a checksum/size comparison, verified complete under A2.
+  [source, Camina's, issue #103] For an added regular text file,
+  `git --no-pager diff --no-index --no-ext-diff --no-textconv -- /dev/null <added-path>` is also
+  eligible, exit 1 expected. Two of her `[source]` clauses also state a conclusion (that a direct
+  read invokes no Git index or helper; that the `--no-index` form is eligible); they are carried
+  under the label she gave them. The one measurement the paragraph cites shows the gap, not either
+  read: taken 2026-10-02 by the orchestrator that filed #103, on the maintainer's machine, not the
+  OpenClaw host (git 2.46.0, a scratch repository), recorded on #103, which she cites and did not
+  re-run; her notes on her own session stay on the issue. Rules 1–5, the table's rows (row 3's cell
+  included), the whole #96 paragraph with its diff form, and row 1's eligible-set paragraph, which
+  does not list the `--no-index` form, are unchanged.
+
 - **2026-10-01 (#7) — OpenClaw: row 3's readback names its diff form.** Issue #96, from finding 7
   of the Spec review of wave 3b's `openclaw` lane; the clause is Camina's (her confirmation on #96
   of 2026-10-01; Brandon's instruction, fleet-coderabbit-preflight MPD D52 as corrected by D54). A
