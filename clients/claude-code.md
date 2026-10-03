@@ -27,8 +27,8 @@ Code fact.
 
 - Lane isolation: `git worktree add ../<repo>-<lane> -b <initiative>/wave-<n>-<lane>` from the wave
   branch (flat form — git refuses a ref that is a path prefix of another, so `wave-<n>/<lane>`
-  cannot coexist with `wave-<n>` [measured 2026-09-11]); remove the worktree after merge. The
-  `EnterWorktree` tool, where present, does the same.
+  cannot coexist with `wave-<n>` [measured 2026-09-11]); remove the worktree after merge. A
+  lane uses this command, not the `EnterWorktree` tool (#101).
 - **Lane worktrees and hooks:** a worktree made by `git worktree add` shares the main checkout's
   `.git/hooks` [measured 2026-09-17, as B0 item 1], so item 1's probe there covers it. Read
   `git config core.hooksPath` before dispatching lanes: where item 1 makes the probe per worktree,

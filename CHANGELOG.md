@@ -10,6 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-02 (#2) — Claude Code: `EnterWorktree` is not the lane-isolation command.** Issue
+  #101, from findings 4 and 5 of the two reviews of claude-skills#167. The lane-isolation line
+  said the tool "does the same" as `git worktree add ../<repo>-<lane> -b
+  <initiative>/wave-<n>-<lane>` from the wave branch. [measured interactive 2026-10-03, Brandon,
+  Claude Code 2.1.91, scratch repository; recorded on #101] It made a worktree in a different
+  directory, on a differently named branch, based on `origin/<default>` rather than the
+  session's `HEAD`. **Decision (Brandon, 2026-10-03 UTC): drop the sentence; a one-line replacement
+  saying lanes use the command is acceptable.** The line that stands in its place says a lane uses
+  the command, not the `EnterWorktree` tool, and points to #101; nothing is claimed about any other
+  version. The command, its flat-form note and the hooks bullet are unchanged; claude-skills#176
+  item 2 is to mirror the change into the scaffold template.
+
 - **2026-10-02 (#1) — OpenClaw: row 3's readback of a file the patch adds.** Issue #103, from
   CodeRabbit on claude-skills PR #177 (thread `4169652576`): `git apply` leaves an added file
   untracked, so row 3's index-based diff prints nothing for it. The answer is Camina's (her
