@@ -10,6 +10,51 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-07 (#112) — OpenClaw: this amendment defines an inactive cross-session native-boundary
+  record.** Issue #112: Once activated, fresh sessions may suppress a
+  repeated, confirmed Bubblewrap prelaunch discovery only by consulting a valid
+  Ashford/OpenClaw-owned durable record for the existing host and native-exec boundary. The record
+  is metadata, not repository, `_agent/`, session, or new runtime state; Ashford alone owns and
+  writes it, Bull supplies read-only change evidence, and Camina coordinates. Its non-secret
+  boundary fingerprint and invalidators cover the effective host, executor, OCI, and security
+  facts, not chats, processes, worktrees, models, commands, or time alone. A valid unavailable
+  state follows only a reported exact confirmed strike and preserves the existing table and stop
+  when no bounded route exists. Availability requires both separately authorized repair or a
+  relevant boundary change and separately authorized execution of one evidence-bearing fixed
+  no-write native canary through the recomputed boundary; it proves only prelaunch availability.
+  Missing,
+  invalid, or mismatched state preserves the one-strike-per-session behavior. Activation awaits
+  Ashford designating both the supported resolver/writer and state location as active; after a
+  restart, the resolver re-attests every keyed fact and the same deployment/container boundary or
+  the record becomes unknown. This amendment authorizes neither maintenance, repair, lifecycle
+  action, security weakening, nor canary execution. #58's signature-confirmation, #88's
+  command-bounded inspection, and #94's no-mode-change remain unchanged. This batch narrows #67's
+  categorical test no-route without making Gateway a general test runner: an unchanged,
+  deterministic, source-audited executable check may run only when its complete
+  repository-controlled execution path, identified host utilities and their relevant behavior,
+  inputs, expected result, writes, exact scratch root, and absence of network, credentials,
+  dynamic execution, and external effects are established before the run. Completion compares the
+  observed exit, output, scratch cleanup, and candidate-diff hash with those recorded baselines.
+  Every other test still has no Gateway route.
+
+- **2026-10-07 (#111) — OpenClaw: staff-lane autonomy has separate boundaries.** Issue #111,
+  from Brandon's 2026-10-06 direction: the OpenClaw appendix now separates staff authority, the
+  selected lane's B0 capability, risk and reversibility, delivery topology, and the point of human
+  approval. Camina defaults to coordination, briefing, boundary enforcement, continuity, review
+  evidence, and synthesis; a B0-qualified specialist owns routine reversible work on its own path
+  even when the parent cannot use that path. Child branches may compose beneath an assigned feature
+  branch and return reviewed work to it, but Brandon remains the sole merger into `develop`,
+  `master`, or `main`. Destructive, irreversible, production, credentialed, financial, and
+  externally published actions remain stops. Review scales the packet and added scrutiny with risk
+  and substance while preserving A4's two-axis verdict, gate evidence, diff, and Brandon's
+  decision context; it does not waive A4. Independent Claude and Codex advisors received the same
+  frozen evidence packet before this amendment's final wording; their reconciled advice informed
+  the amendment as evidence and was not an approval gate. Agent Workspace PR #4 is the concrete
+  pilot: its CodeRabbit finding on the committed control-file validation was corrected in
+  `d6f917029168a89c01c0b94a6fa5fa1a530a8cb7`, and its later review reported no actionable
+  comments. The amendment changes only `clients/openclaw.md`; Parts A–B and the Claude Code and
+  Codex appendices remain unchanged.
+
 - **2026-10-03 (#1) — OpenClaw: how row 3's added-file readback passes the path.** Issue #104,
   from the CodeRabbit CLI's review of the wave-4 branch and CodeRabbit on
   release PR #107 (thread `4173542541`): `--` ends option parsing but does not stop a shell
