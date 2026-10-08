@@ -41,6 +41,50 @@ the amendment exemption in its README means an autonomous amendment uses one iso
 worktree branched from `develop`, rather than a wave branch; do not invent a wave merely to obtain
 isolation.
 
+## Staff operating model
+
+This is an OpenClaw-only operating model. It does not change B0's guard, B1/B2's delivery rules,
+the Part B ritual, or another client's appendix.
+
+Camina's default is coordination: brief the selected lane, enforce its boundaries, preserve
+continuity, coordinate review evidence, and synthesize a decision-ready handoff. Specialist
+implementation and diagnostics of authorized routine, reversible repository work stay with the
+selected specialist unless the work's boundary requires escalation. The orchestrator handles the
+A4 two-axis review cycle; a specialist's own report is never that independent review.
+Administration outside that boundary retains its existing authorization and stop conditions.
+
+Keep five decisions separate:
+
+1. **Staff authority** — the owner has authorized the lane to decide and proceed within its scope.
+2. **Lane capability** — B0 is evaluated for the selected lane's exact checkout and delivery path;
+   a parent session unable to use that path does not downgrade the lane.
+3. **Risk and reversibility** — only routine, reversible repository work may proceed on that
+   authority.
+4. **Delivery topology** — the lane uses B1's isolated-clone shape or B2's dedicated-worktree
+   shape, as its own mode requires.
+5. **Human approval** — Brandon alone merges into `develop`, `master`, or `main`.
+
+An authorized, B0-qualified specialist owns authorized routine, reversible repository work only
+through the ready B1/B2 delivery handoff. Brandon alone merges into `develop`, `master`, or `main`.
+Every existing stop remains in force, including destructive, irreversible, production,
+credentialed, financial, and externally published actions; those stops are not delegated with the
+lane.
+
+Within an assigned B2 feature branch, an authorized lane may create a child branch from that
+feature branch. The assigned feature-branch owner may integrate the child's reviewed work back into
+that feature branch only after a completed A4 two-axis review. B1 deliveries retain B1's mbox
+shape. Neither child-branch composition nor feature-branch ownership permits an agent merge into
+`develop`, `master`, or `main`.
+
+Every delivery retains a completed A4 two-axis verdict, the relevant diff and gate evidence, and
+Brandon's decision context. Routine reversible work may present those required items in the
+smallest sufficient packet; higher-risk or more substantive work adds scrutiny and evidence. This
+scales ceremony around A4; it does not waive or replace A4's review requirement.
+
+The B2 readiness boundary is unchanged: Brandon receives a ready feature PR with its A4 verdict,
+relevant diff and gate evidence, and material decisions. This section adds no second acceptance
+ceremony.
+
 ## Bubblewrap circuit breaker
 
 [source, issue #58] Camina's measured specification, transcribed; a Mac session cannot observe
@@ -59,6 +103,60 @@ rule the session keeps:
 4. Preserve AppArmor/seccomp, the task's authority, and its original read/write constraints.
 5. If no bounded fallback exists, stop and report the missing capability instead of improvising
    an overwrite.
+
+**Cross-session native-boundary capability record.** [source, issue #112, Brandon's 2026-10-07
+decision]
+The contract also defines an Ashford/OpenClaw-owned durable capability record for the existing
+host and its native-exec boundary. It is metadata, not repository state, session memory,
+`_agent/` artifact state, a replica, or a new instance, container, image, volume, database, or
+probe environment. An Ashford-managed resolver/writer uses the supported OpenClaw-owned state
+location Ashford designates, validates the schema and fingerprint, and makes locked atomic
+transitions; this policy names no machine path. Until Ashford designates both an Ashford-managed,
+supported resolver/writer and supported state location as active, the cross-session protocol is
+documented but inactive: no record is valid, and the existing one-strike-per-session rules apply.
+
+When active, a fresh session consults that record through the resolver before its first native
+shell or native patch attempt. Ashford is its sole logical writer and lifecycle owner; sessions
+consult it mechanically and never write, clear, invent, or edit it. Bull supplies read-only
+host/runtime/security change facts and evidence, but does not write or clear the record, run the
+restoration canary, or declare availability. Camina coordinates. The non-secret fingerprint is a
+composite of stable host/instance identity; the OpenClaw and native-executor build and effective
+configuration; OCI image, runtime, and effective security configuration (including user/UID
+mapping, user namespace, capabilities, `no_new_privs`, mounts, and security options); and kernel
+plus relevant user-namespace, AppArmor, and seccomp facts. It excludes chat, session, process and
+PID identity; cwd, repository and worktree; model/provider; and command text.
+
+A valid `unavailable` record may be written by Ashford only after a session reports a strike
+matching the exact confirmed Bubblewrap/namespace/AppArmor prelaunch signature below, before
+target output or side effect. It suppresses the default native probe and uses the existing routing
+table; an operation with no bounded route still stops. A valid `available` record may be written
+by Ashford only after both (a) separately authorized repair or a relevant boundary change and (b)
+separately authorized execution of one fixed native-exec, no-write canary through that same
+recomputed boundary; repair or change does not itself authorize the canary. Its durable evidence
+records native-exec route attestation, correlation and timestamp, exit 0 with the expected marker,
+absence of the prelaunch signature, old/new fingerprint comparison, the authorization reference,
+and an evidence locator with integrity information. It proves only that the native prelaunch
+boundary reached the no-write target; it does not establish B0 eligibility or general health,
+weaken security, reclassify a target failure, or change B0's selected mode.
+
+Missing, malformed, schema-invalid, evidence-invalid, or fingerprint-mismatched state is no valid
+record and retains the one-strike behavior; a fingerprint mismatch invalidates to unknown, never
+to available, and triggers no repair. Invalidate to unknown on host replacement, reimage, or
+migration; a kernel, LSM, or relevant user-namespace setting change; AppArmor or seccomp revision,
+mode, or label change; OCI image, runtime, container, effective user/UID mapping, user namespace,
+capabilities, `no_new_privs`, mounts, or security-option change; an OpenClaw/native-exec launcher,
+backend, build, or effective-configuration change; explicit sandbox-repair maintenance; or
+inability to re-attest a keyed fact. A new chat, session, process, PID, or time alone does not
+invalidate. A restart preserves validity only when the resolver re-attests every keyed fact and
+the same deployment/container boundary; otherwise the record becomes unknown.
+
+This policy authorizes no maintenance, repair, container lifecycle work, runtime weakening, or
+canary execution; each requires separately approved maintenance scope.
+
+The record changes only whether a fresh session spends the default probe. It does not grant the
+audited-check route below. That route separately narrows #67's categorical test no-route while
+preserving its measured Gateway boundary; #58's signature-confirmation, #88's command-bounded
+inspection, and #94's no-mode-change remain unchanged.
 
 **The signature, and what rule 1's "confirmed" means.** [source, issue #67, comment of 2026-09-27
 relaying Camina's follow-ups of 2026-09-26; measured there, on the OpenClaw Gateway host] The exact
@@ -83,6 +181,7 @@ does not trip the breaker.
 | repository edits | an exact unified patch, `git apply --check`, `git apply`, then diff/readback verification through Gateway |
 | non-repository workspace or memory writes | the appropriate OpenClaw-owned write tool |
 | reviewer filesystem failure | supply the exact diff and receipts to the same reviewer and label the verdict evidence-bounded |
+| source-audited executable check | Gateway execution only after the eligibility procedure below passes; otherwise no route |
 
 A7 still governs the GitHub row: the GitHub MCP's write tools never author commits, so a commit
 comes from a checkout on every route.
@@ -191,20 +290,46 @@ Gateway later provides one), then apply A2's complete-output checks.
 truncate, use a bounded byte-for-byte read or checksum/size comparison and verify complete output
 under A2; a partial display is not confirmation.
 
-**Test runs deliberately have no route.** Once rule 1 has marked the native sandbox unavailable,
-no row above routes a test run of any repository's suite, and none is to be improvised from them:
-a test run executes project code and can write caches, snapshots or build output, so it is not
-read-only inspection. [source, issue #67, measured there 2026-09-30] Camina's measurement: the live
-Gateway execution surface takes a host command and a `workdir` and exposes no filesystem-root or
-path allowlist, mount namespace, UID remap or read-only-filesystem control; in a positive-control
-canary from a probe worktree, `printf 'escape\n' > ../outside/escape.txt` succeeded. [inference,
-Camina's, issue #67, from that measurement] `workdir` selects the starting directory and does not
-confine writes on the measured host, so no command and `workdir` pair, however narrowly scoped,
-keeps a test run inside the session's worktree as rule 4 requires, and rule 5 applies.
-**Attended:** Brandon runs the suite (B1); give him the exact command. **Autonomous:** stop and
-report that the required command has no bounded route, naming it exactly; do not run it through
-Gateway. This repository's `./scripts/check-index.sh && ./scripts/check-index.test.sh` is an
-example of such a command, not the rule.
+**Executable checks are classified by behavior, not by name.** Gateway is not a generic test
+runner. [source, issue #67] The live Gateway execution surface takes a host command and a
+`workdir` and exposes no filesystem-root or path allowlist, mount namespace, UID remap or
+read-only-filesystem control. [measured, issue #67, 2026-09-30] In a positive-control canary from a
+probe worktree, `printf 'escape\n' > ../outside/escape.txt` succeeded. [inference, Camina's,
+issue #67, from that measurement] `workdir` selects the starting directory and does not confine writes
+on the measured host.
+
+When the native sandbox is unavailable — either rule 1 marked it unavailable in this session or a
+valid durable `unavailable` record suppressed the default probe — an executable check may use
+Gateway only when every condition below is established before the run:
+
+1. The delivery changes neither the command nor any repository-controlled executable it invokes.
+2. The agent reads those executables in full, records their SHA-256 values, and enumerates every
+   subprocess. Every host utility, shell runtime, and shell builtin is named; executable paths and
+   versions or hashes are recorded where exposed, and the relevant read, write, network, and
+   process behavior is established from trusted documentation or measurement. The transitive
+   execution path contains no package manager, build tool, test framework, hook, plugin, or
+   dynamically discovered or loaded code.
+3. Inputs, execution order, and the expected exit and output are deterministic and declared. The
+   command reads no clock, randomness, ambient mutable state, or input outside the recorded set.
+4. Every write is confined to one exact task-authorized scratch root, passed as a literal
+   environment value and consumed through quoted expansion. The command writes no repository,
+   Git-index, system, or shared state.
+5. The command uses no network, credential, external service, production resource, or
+   externally published surface.
+6. The evidence record names the exact command; executable and utility identities; subprocesses;
+   recorded inputs; expected exit and output; complete write set; scratch root; a SHA-256 of the
+   pre-run candidate diff; and the checks supporting conditions 1–5.
+
+Run the eligible command with the literal scratch-root environment value. Completion requires the
+observed exit and output to match the recorded expectation, removal of the scratch root, and the
+bounded Git readback's SHA-256 to equal the pre-run candidate-diff SHA-256. CI remains the arbiter
+and must pass before handoff.
+
+If any condition cannot be established, the command is an unbounded test and has no Gateway route:
+**attended**, Brandon runs it under B1; **autonomous**, stop and name the exact missing route. This
+repository's unchanged `./scripts/check-index.sh && ./scripts/check-index.test.sh` is the
+motivating example, not a permanent exception; establish the conditions for each delivery, and a
+delivery that changes either script fails condition 1.
 
 **A confirmed strike does not change the session's mode:** it marks the native sandbox unavailable
 (rule 1) and leaves the mode as B0 selected it, so the session carries on by bounded routes and
