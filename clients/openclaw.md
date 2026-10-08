@@ -294,8 +294,8 @@ under A2; a partial display is not confirmation.
 runner. [source, issue #67] The live Gateway execution surface takes a host command and a
 `workdir` and exposes no filesystem-root or path allowlist, mount namespace, UID remap or
 read-only-filesystem control. [measured, issue #67, 2026-09-30] In a positive-control canary from a
-probe worktree, `printf 'escape\n' > ../outside/escape.txt` succeeded. [inference, Camina's, issue
-#67, from that measurement] `workdir` selects the starting directory and does not confine writes
+probe worktree, `printf 'escape\n' > ../outside/escape.txt` succeeded. [inference, Camina's,
+issue #67, from that measurement] `workdir` selects the starting directory and does not confine writes
 on the measured host.
 
 When the native sandbox is unavailable — either rule 1 marked it unavailable in this session or a
