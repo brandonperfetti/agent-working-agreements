@@ -48,10 +48,10 @@ the Part B ritual, or another client's appendix.
 
 Camina's default is coordination: brief the selected lane, enforce its boundaries, preserve
 continuity, coordinate review evidence, and synthesize a decision-ready handoff. Specialist
-implementation, diagnostics, and review of authorized routine, reversible repository work stay
-with the selected specialist unless the work's boundary requires escalation. Administration outside
-that boundary retains its existing authorization and stop conditions; review satisfies A4's
-reviewer requirements.
+implementation and diagnostics of authorized routine, reversible repository work stay with the
+selected specialist unless the work's boundary requires escalation. The orchestrator handles the
+A4 two-axis review cycle; a specialist's own report is never that independent review.
+Administration outside that boundary retains its existing authorization and stop conditions.
 
 Keep five decisions separate:
 
