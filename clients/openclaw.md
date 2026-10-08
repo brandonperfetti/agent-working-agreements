@@ -321,9 +321,9 @@ Gateway only when every condition below is established before the run:
    pre-run candidate diff; and the checks supporting conditions 1–5.
 
 Run the eligible command with the literal scratch-root environment value. Completion requires the
-observed exit and output to match the recorded expectation, an empty or removed scratch root, and
-the bounded Git readback's SHA-256 to equal the pre-run candidate-diff SHA-256. CI remains the
-arbiter and must pass before handoff.
+observed exit and output to match the recorded expectation, removal of the scratch root, and the
+bounded Git readback's SHA-256 to equal the pre-run candidate-diff SHA-256. CI remains the arbiter
+and must pass before handoff.
 
 If any condition cannot be established, the command is an unbounded test and has no Gateway route:
 **attended**, Brandon runs it under B1; **autonomous**, stop and name the exact missing route. This

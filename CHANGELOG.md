@@ -34,7 +34,7 @@ being retrofitted onto the other.
   repository-controlled execution path, identified host utilities and their relevant behavior,
   inputs, expected result, writes, exact scratch root, and absence of network, credentials,
   dynamic execution, and external effects are established before the run. Completion compares the
-  observed exit, output, scratch cleanup, and candidate-diff hash with those recorded baselines.
+  observed exit, output, scratch-root removal, and candidate-diff hash with those recorded baselines.
   Every other test still has no Gateway route.
 
 - **2026-10-07 (#111) — OpenClaw: staff-lane autonomy has separate boundaries.** Issue #111,
