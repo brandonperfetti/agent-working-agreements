@@ -10,6 +10,58 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#5) — A7: Kody's GitHub package is a third GitHub path.** Issue #109: A7 named two
+  GitHub paths, the `gh` CLI and the GitHub MCP, and Kody's `@brandonperfetti/github` package had
+  come into use as a GitHub API path for issues, PRs and checks with nothing in the agreement naming
+  it or the approval rules that bind it. A7 gains a third bullet; the `gh` and GitHub MCP bullets
+  are unchanged, and nothing is retired. **Decision (Brandon, 2026-10-12): the amendment lands with
+  this initiative's A4 sentence, and per-client tool names go in `clients/`, not A7.** Each
+  sub-decision and its reason:
+  - **What it is for:** the GitHub REST/GraphQL API for issues, PRs, checks, PR status and merge
+    previews, for any client with Kody connected — named so that the approval rules are visible
+    before an agent uses it, not inferred from B1's general wording.
+  - **It never authors commits**, in both modes, because like the GitHub MCP's write tools it
+    bypasses the local clone, where the repository's hooks and gate run.
+  - **`confirm: true` is per call and is not B1's per-batch approval:** it is the agent confirming
+    its own call, not Brandon reviewing a batch, so in attended mode a Kody write falls under B1's
+    "no routing around it with API/MCP writes or another client".
+  - **A fine-grained token scoped per repository, one `secretName` per organisation:** a call
+    reaches whatever its token reaches. [measured 2026-10-03] The token first used was a classic
+    token (GitHub returned its scopes header, listing `repo` and `workflow`) whose repository list
+    took in work-organisation repositories, with permissions reported up to admin; it was rotated to
+    a fine-grained token. On the new token the same call returned no scopes header, where on the old
+    one it had — the instrument shows the header when GitHub sends it — and its repository list held
+    no work-organisation repository, a direct read of one returning 404. That the new token is
+    fine-grained is [inference] from the header's absence; its settings page verifies it.
+  - **`secretName` on every call:** the package defaults to an OAuth lane, and [measured 2026-10-03]
+    with no OAuth integration connected a call that omits `secretName` fails (`Integration "github"
+    was not found`). Connecting OAuth as well would make the default work, but two credentials could
+    then serve the same call with nothing showing which one did.
+  - **Fallback:** where Kody is not connected, `gh` or the GitHub MCP, as before.
+
+  The 2026-10-03 measurements behind it, each with its reason for being recorded: the identity check
+  — a read-only `get-viewer` call on the token lane resolved to Brandon's account, in a working
+  session and in a fresh Claude Code session with no prior conversation, after the secret was set to
+  allow the package (Kody refuses a secret a package is not allowed) — shows the path acts as
+  Brandon, as `gh` and the GitHub MCP do. The write probe, on a private repository of Brandon's with
+  no workflows or webhooks, opened a draft PR between two existing branches, created and deleted an
+  issue comment and a pending review, and closed the PR unmerged; every write succeeded on both the
+  classic and the rotated token, and no commit was authored. Left behind: the closed draft PR, which
+  GitHub cannot delete, and a comment the review bot posted on its close. It shows the PR surface is
+  writable through the package, which is why the commit rule and the approval rule are stated rather
+  than assumed. The decision against a permission allow rule for the Kody tools (on the ticket,
+  2026-10-03): a fresh session ran every Kody call it needed, reads and writes, in auto mode with no
+  rule; [source: Claude Code's permission documentation] a call that matches an allow rule skips the
+  auto-mode check, so a rule for the code-running tool would remove review from every Kody code run,
+  including runs that use secrets, and no rule was added. The Kody tools are named differently per
+  client (the server segment is the connector's id in the desktop app's Code tab and its display
+  name in Cowork; the terminal CLI lists it by display name), so `clients/claude-code.md` and
+  `clients/cowork.md` each say to use the name the session reports, read before it is written.
+  **Decision (the wave-4 orchestrator, 2026-10-13, under B2's decide and record, reviewed on the
+  wave's PR):** neither file carries the literal id, because this repository is public and the id is
+  an account fact; `clients/codex.md` and `clients/openclaw.md` carry no note, because Kody is
+  unmeasured in those clients.
+
 - **2026-10-13 (#4) — B0 item 4: a separate agent identity is decided not now.** Issue #13: B0
   item 4 said that making "only Brandon merges" and "feature work never lands on a base branch"
   mechanical needs a separate agent identity, and called that "an identity change, open, not

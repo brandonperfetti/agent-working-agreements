@@ -47,6 +47,13 @@ Code fact.
 - **CodeRabbit CLI, for B2's preflight:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti`
   [measured 2026-09-29, Brandon's desktop]. A record, not a guarantee: `coderabbit-preflight`
   re-checks the CLI on every run.
+- **Kody tool names (A7):** the same Kody connector is named differently per client [measured
+  2026-10-03]: in the desktop app's Code tab the server segment of a Kody tool's name is the
+  connector's id, not its display name; Cowork uses the display name (`cowork.md`); the terminal
+  CLI lists the connector by its display name, and the tool names a terminal session reports are
+  read there, not inferred from that listing. A permission rule or a reference to a Kody tool uses
+  the name the session reports, read before it is written, because a name taken from another
+  client matches nothing here.
 - **Attribution (RULE ZERO, A4): this environment injects it by default** — `Co-Authored-By` and
   `Claude-Session` trailers on commits, a "Generated with Claude Code" footer on PR bodies
   [source 2026-09-15: the harness's own session instructions].

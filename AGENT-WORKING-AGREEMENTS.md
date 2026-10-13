@@ -239,6 +239,17 @@ each client file's to name. (Brandon, 2026-10-12)
 - **`gh` CLI** — what the skills use (issues, sub-issues, PRs). Primary for skill-driven work.
 - **GitHub MCP** — the read/access layer and PR orchestration. **Its write tools (`push_files`,
   `create_or_update_file`) never author commits** — they bypass the local clone in both modes.
+- **Kody's `@brandonperfetti/github` package** — the GitHub REST/GraphQL API for issues, PRs,
+  checks, PR status and merge previews, for any client with Kody connected. **It never authors
+  commits**, in both modes, for the GitHub MCP's reason: it bypasses the local clone. **Its
+  `confirm: true` is per call and is not B1's per-batch approval** — it is the agent confirming
+  its own call, not Brandon reviewing a batch — so in attended mode a Kody write is one of the
+  API writes B1 allows no routing around. **Its token is fine-grained and scoped per repository,
+  with one `secretName` per organisation**, because a call's reach is its token's, so the owner a
+  call names matters as much as its `confirm: true`; **every call passes `secretName`**, because
+  the package defaults to an OAuth lane that is not connected and a call that omits it fails.
+  Where Kody is not connected, use `gh` or the GitHub MCP. How a client names the Kody tools is
+  its client file's to record.
 - **On any create-then-link error, read the current state before retrying** — the create may have
   landed. GitHub's sub-issue cap errors *after* creating and parenting; blind retries burn issue
   numbers and mint duplicates. [learnings: 2026-09-12 wave-8 §3]
