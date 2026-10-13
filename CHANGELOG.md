@@ -10,7 +10,147 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-10-13 (#128) — OpenClaw: scope mode and approvals to the delivery path.** Issue #128:
+- **2026-10-13 (#7) — A4: an orchestrator's hand-back is never the review of its wave.** Issue #63:
+  A4 said the lane's own report is never the review, and said nothing of the orchestrator's; when
+  an orchestrator reported its own wave green, that report was the only attestation the delivery
+  got, though the orchestrator had chosen, batched, dispatched and merged the work it attested to.
+  In practice a session supervising the dispatched agents had been re-measuring their claims
+  against the repository and the services before a merge, and that seat was written down nowhere
+  [measured 2026-10-12: a case-insensitive search for "supervis" over the agreement and
+  `clients/cowork.md` found nothing]. **Decision (Brandon, 2026-10-12, recorded on #63): write the
+  seat down, as one sentence in A4 beside the lane rule.** A4's two-axis bullet now says an
+  orchestrator's hand-back is never the review of its wave: the hand-back names the claims to
+  re-measure, and before a merge a reader outside the wave reads them against the repository. Each
+  sub-decision and its reason:
+  - **The sentence:** the party that produced the work does not attest to it, and A4's rule was
+    observed to stop one level too early, at the lane. Rotation does not close the gap: it changes
+    who orchestrates the next wave and adds no reader before this wave's merge.
+  - **The trigger is the situation, not the client:** the seat is a session supervising dispatched
+    agents. Most sessions own their work and should, and a Genesis session is attended by design
+    and builds the MPD with Brandon, so a rule keyed to a client would wrongly take ownership away
+    from both.
+  - **Attended mode gains nothing new:** Brandon's per-batch review (B1) is already a reader
+    outside the work before anything is committed.
+
+  The lane rule, the two-axis review and B2's review loop are unchanged. #63 closes when this
+  lands.
+
+- **2026-10-13 (#6) — A7: Kody's GitHub package is a third GitHub path.** Issue #109: A7 named two
+  GitHub paths, the `gh` CLI and the GitHub MCP, and Kody's `@brandonperfetti/github` package had
+  come into use as a GitHub API path for issues, PRs and checks with nothing in the agreement naming
+  it or the approval rules that bind it. A7 gains a third bullet; the `gh` and GitHub MCP bullets
+  are unchanged, and nothing is retired. **Decision (Brandon, 2026-10-12): the amendment lands with
+  #63's A4 sentence, and per-client tool names go in `clients/`, not A7.** Each
+  sub-decision and its reason:
+  - **What it is for:** the GitHub REST/GraphQL API for issues, PRs, checks, PR status and merge
+    previews, for any client with Kody connected — named so that the approval rules are visible
+    before an agent uses it, not inferred from B1's general wording.
+  - **It never authors commits**, in both modes, because like the GitHub MCP's write tools it
+    bypasses the local clone, where the repository's hooks and gate run.
+  - **`confirm: true` is per call and is not B1's per-batch approval:** it is the agent confirming
+    its own call, not Brandon reviewing a batch, so in attended mode a Kody write falls under B1's
+    "no routing around it with API/MCP writes or another client".
+  - **A fine-grained token scoped per repository, one `secretName` per organisation:** a call
+    reaches whatever its token reaches. [measured 2026-10-03] On the token first used, GitHub
+    returned the `x-oauth-scopes` header, listing `repo` and `workflow`, and the repository list
+    took in work-organisation repositories, with permissions reported up to admin; the token was
+    then rotated, and on the new one the same call returned no scopes header — the instrument shows
+    the header when GitHub sends it — and the repository list held no work-organisation repository,
+    a direct read of one returning 404. [source: GitHub's REST docs on token scopes] GitHub sends
+    that header for classic tokens only; [inference, from the header and that premise] the first
+    token was classic and the rotated one fine-grained, which the token's settings page verifies.
+  - **`secretName` on every call:** the package defaults to an OAuth lane, and [measured 2026-10-03]
+    with no OAuth integration connected a call that omits `secretName` fails (`Integration "github"
+    was not found`). Connecting OAuth as well would make the default work, but two credentials could
+    then serve the same call with nothing showing which one did.
+  - **Fallback:** where Kody is not connected, `gh` or the GitHub MCP, as before.
+
+  The 2026-10-03 measurements behind it, each with its reason for being recorded: the identity check
+  — a read-only `get-viewer` call on the token lane resolved to Brandon's account, in a working
+  session and in a fresh Claude Code session with no prior conversation, after the secret was set to
+  allow the package (Kody refuses a secret a package is not allowed) — shows the path acts as
+  Brandon, as `gh` and the GitHub MCP do. [measured 2026-10-03] Before that, the agent-side
+  permission check blocked three early attempts that ran package code with the token, which shows
+  that check sees a package run that uses a secret — the review the allow-rule decision below
+  keeps; and the ticket itself was filed through the package after the GitHub MCP's create-issue
+  call rendered a confirmation form that never reached Brandon.
+  The write probe, on a private repository of Brandon's with no workflows or webhooks,
+  opened a draft PR between two existing branches, created and deleted an issue comment and a
+  pending review, and closed the PR unmerged; every write succeeded on both the
+  first and the rotated token, and no commit was authored. It shows the PR surface is
+  writable through the package, which is why the commit rule and the approval rule are stated rather
+  than assumed. The decision against a permission allow rule for the Kody tools (Brandon,
+  2026-10-03, on the ticket): a fresh session ran every Kody call it needed, reads and writes, in
+  auto mode with no rule; [source: Claude Code's permission documentation] a call that matches an
+  allow rule skips the auto-mode check, so a rule for the code-running tool would remove review from
+  every Kody code run, including runs that use secrets, and no rule was added. The Kody tools are
+  named differently per client (the server segment is the connector's id in the desktop app's Code
+  tab and its display name in Cowork; the terminal CLI lists it by display name), so
+  `clients/claude-code.md` and `clients/cowork.md` each say to use the name the session reports,
+  read before it is written. **Decision (the wave-4 orchestrator, 2026-10-13, under B2's decide and
+  record, reviewed on the wave's PR):** neither file carries the literal id, because this repository
+  is public and the id is an account fact; `clients/codex.md` and `clients/openclaw.md` carry no
+  note, because Kody is unmeasured in those clients.
+
+- **2026-10-13 (#5) — B0 item 4: a separate agent identity is decided not now.** Issue #13: B0
+  item 4 said that making "only Brandon merges" and "feature work never lands on a base branch"
+  mechanical needs a separate agent identity, and called that "an identity change, open, not
+  decided". **Decision (Brandon, 2026-10-12, recorded on #13, which closed as decided): not now.**
+  The sentence now records it, with the decision's reason and what reopens it. The reason: the two
+  rules stay rules of this agreement because one account has write access to each repository,
+  every change reaches `master` through a pull request Brandon merges by hand, the CI gate is a
+  required check on `master`, and feature work goes through a wave branch and a PR into
+  `develop`; a separate identity would cost a secret, a token-switch step in every client and a
+  new PR author, a cost not paid while those conditions hold. It reopens on a second account with
+  write access to a repository this agreement governs, or on one measured breach of either rule,
+  with a GitHub App as the recommended shape, so the condition that would change the answer is written
+  where the question is asked. The sentence is edited, not left open, because "open, not decided"
+  sent every reader who met the two rules to re-derive a question that has been answered, which is
+  what #13 was filed to stop. The untested-inference sentence before it is unchanged.
+
+- **2026-10-13 (#4) — A6's root names the lane worktrees a client file places there.** Issue
+  #122: A6 said the `sansfaux/` root holds `_agent/`, project checkouts, the
+  `agent-working-agreements/` clone and `organize.sh` — "nothing else" — while
+  `clients/claude-code.md` cuts each lane's worktree at `../<repo>-<lane>`, which is in that root.
+  Read charitably a lane worktree is a project checkout; read literally the two disagreed. A6's
+  sentence now names, beside project checkouts, the lane worktrees a client file places beside
+  them; the client file's command stands. **Decision (the wave-4 orchestrator, 2026-10-13, under
+  B2's decide and record, reviewed on the wave's PR): the ticket's first option, the clause in
+  A6.** The reason: the agreement is the file every client reads, and where a lane worktree goes
+  is a client fact the agreement should not contradict; the other option, a client file declaring
+  its worktrees project checkouts for A6's purposes, would be a client file carving an exception
+  out of Part A, which a client file never does. Where lane worktrees live is still each client
+  file's to name (A6, **Clones**); no worktree moves.
+
+- **2026-10-13 (#3) — A conflict resolution's fix round starts on its own red.** Issue #126: B2's
+  conflict bullet opened its bound with "One fix round on a red gate, then stop and report", and
+  stop-list item 4 repeated "still red after one fix round — inside a merge-conflict resolution
+  too"; which red counts arrived only a sentence later ("no red of its own") and in the next
+  sub-bullet (a red a side's own gate record already shows is that side's). Read in order, any red
+  started the fix round and the abort; read whole, only the resolution's own did. The fix-round
+  sentence and stop-list item 4 now name the red where they state the action — one of the
+  resolution's own, absent from both sides' pre-merge gate records — and the 2026-10-12 (#3)
+  entry's "one fix round on a red gate" phrase says the same. The reason: a reader acts on the
+  sentence that names the action, and the stop-list is read on its own, so a condition stated
+  later lets a red that belongs to one side abort a resolution that the next sub-bullet says should
+  report that red with the side's record instead. The text produced no wrong behaviour read whole;
+  this is wording, raised by the review bot on the release PR. **Decision (the wave-4 orchestrator,
+  2026-10-13, under B2's decide and record, reviewed on the wave's PR): the change as the ticket
+  states it.** The sub-bullet on a side's own red, and the rule, are unchanged.
+
+- **2026-10-13 (#2) — Release-cut work names the built artifact by role.** Issue #127: B2's Git
+  contract listed "the `dist/` rebuild" among the release-cut work pushed straight to `develop`.
+  A repository that publishes releases need not commit a built artifact at all, and one that has
+  stopped committing it has no such step, so the sentence sent a reader cutting a release to
+  rebuild something that may not exist. The sub-bullet now says "any built artifact the
+  repository commits", the role the ritual's step 5 already uses ("any built artifact"), because
+  a step named by what it is for stays true of every repository, where a step named by one
+  repository's layout goes stale when that layout changes. The rule and its reason are unchanged:
+  whatever a release cut touches is reviewed on the `develop → master` PR, whose head is
+  `develop`. **Decision (Brandon, 2026-10-13): the change as drafted, approved in principle when
+  he read the ticket before it was filed.** No other line of the agreement names `dist/`.
+
+- **2026-10-13 (#1) — OpenClaw: scope mode and approvals to the delivery path.** Issue #128:
   live OpenClaw use exposed an ambiguity in the opening attended default: an attended parent
   conversation could be read as making every coordinated action attended, turning informational
   progress updates into approval pauses and spreading B1's per-batch ceremony beyond the delivery
@@ -34,7 +174,8 @@ being retrofitted onto the other.
   scoped review; the orchestrator's merge is then clean. Where the lane is no longer available, the
   orchestrator resolves and the resolution gets a scoped two-axis review before the push. The
   reason: a resolution is new work, and no work reaches the wave branch unreviewed. Inside a
-  resolution the bound is the general one — one fix round on a red gate, then stop and report — and
+  resolution the bound is the general one — one fix round on a red of the resolution's own, one
+  absent from both sides' pre-merge gate records, then stop and report — and
   the rule names the state the tree is left in: the pre-merge tip, with the resolution's diff and
   the red gate's output saved under `evidence/` before `git merge --abort`, because a branch left
   mid-merge holds unreviewed work where the next reader may not know a merge is in progress, and on
@@ -79,7 +220,7 @@ being retrofitted onto the other.
   **Decision (Brandon, 2026-10-12): adopt the clause as proposed.** No skill is named or changed,
   and two skills that disagree with each other are not ruled on.
 
-- **2026-10-07 (#112) — OpenClaw: this amendment defines an inactive cross-session native-boundary
+- **2026-10-07 (#2) — OpenClaw: this amendment defines an inactive cross-session native-boundary
   record.** Issue #112: Once activated, fresh sessions may suppress a
   repeated, confirmed Bubblewrap prelaunch discovery only by consulting a valid
   Ashford/OpenClaw-owned durable record for the existing host and native-exec boundary. The record
@@ -106,7 +247,7 @@ being retrofitted onto the other.
   observed exit, output, scratch-root removal, and candidate-diff hash with those recorded baselines.
   Every other test still has no Gateway route.
 
-- **2026-10-07 (#111) — OpenClaw: staff-lane autonomy has separate boundaries.** Issue #111,
+- **2026-10-07 (#1) — OpenClaw: staff-lane autonomy has separate boundaries.** Issue #111,
   from Brandon's 2026-10-06 direction: the OpenClaw appendix now separates staff authority, the
   selected lane's B0 capability, risk and reversibility, delivery topology, and the point of human
   approval. Camina defaults to coordination, briefing, boundary enforcement, continuity, review
