@@ -26,9 +26,13 @@ it, and a rule earns its place only after something bit. The documentation is li
 
 ```text
 AGENTS.md                            repository-specific agent instructions
+.github/copilot-instructions.md      a symlink to AGENTS.md, the name GitHub Copilot reads
+.github/pull_request_template.md     the pull request template
 AGENT-WORKING-AGREEMENTS.md          Parts A (portable discipline) + B (modes) + the Part C index
 clients/<client>.md                  one appendix per environment — read only your own
 docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
+docs/agents/triage-labels.md         the triage roles mapped to this repository's labels
+docs/agents/domain.md                the agreement's terms, and GLOSSARY.md as where resolved ones go
 docs/agents/commit-subject-audit.md  the 2026-09-23 audit of commit-subject conventions across active repositories
 CHANGELOG.md                         why each rule changed, newest first
 LICENSE                              the CC BY 4.0 legal code; it covers the documentation
