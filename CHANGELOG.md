@@ -10,6 +10,23 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#8) — A4: RULE ZERO's identity rule names whose commits it governs.** Issue
+  #132: RULE ZERO said a commit carries Brandon's author identity, with no scope. Inside the fleet
+  that names the identity an agent's commit carries when it works for him; read from outside, by a
+  contributor's agent, it is an instruction to author a commit as the owner. [measured
+  2026-10-13] One arrived that way: a pull request from a fork, by an account the owner does not
+  know, carried one commit authored and committed under his name and email, which the hosting
+  platform attributed to him; the owner asked for it to be re-authored. A4 now scopes the
+  sentence: the identity rule governs commits made by agents working on Brandon's behalf inside
+  this fleet; a contribution from anyone else carries its author's own identity; and a pull
+  request whose commits carry his identity from another account is not merged until re-authored.
+  The reason: B0 item 4's "one account has write access to each repository" does not reach a pull
+  request from a fork, which needs no write access, so the merge is the only guard, and a
+  maintainer merging on the content alone would record a stranger's commit as the owner's.
+  **Decision (Brandon, 2026-10-13, on the ticket): the clause as the ticket words it.** RULE
+  ZERO's attribution half, the author check on deliveries (the author email against his,
+  exactly) and who merges are unchanged.
+
 - **2026-10-13 (#7) — A4: an orchestrator's hand-back is never the review of its wave.** Issue #63:
   A4 said the lane's own report is never the review, and said nothing of the orchestrator's; when
   an orchestrator reported its own wave green, that report was the only attestation the delivery
@@ -51,14 +68,13 @@ being retrofitted onto the other.
     its own call, not Brandon reviewing a batch, so in attended mode a Kody write falls under B1's
     "no routing around it with API/MCP writes or another client".
   - **A fine-grained token scoped per repository, one `secretName` per organisation:** a call
-    reaches whatever its token reaches. [measured 2026-10-03] On the token first used, GitHub
-    returned the `x-oauth-scopes` header, listing `repo` and `workflow`, and the repository list
-    took in work-organisation repositories, with permissions reported up to admin; the token was
-    then rotated, and on the new one the same call returned no scopes header — the instrument shows
-    the header when GitHub sends it — and the repository list held no work-organisation repository,
-    a direct read of one returning 404. [source: GitHub's REST docs on token scopes] GitHub sends
-    that header for classic tokens only; [inference, from the header and that premise] the first
-    token was classic and the rotated one fine-grained, which the token's settings page verifies.
+    reaches whatever its token reaches. [measured 2026-10-03] The token first used reached
+    repositories beyond this account's own, and GitHub returned the `x-oauth-scopes` header on it;
+    the token was then rotated, and on the new one the same call returned no scopes header — the
+    instrument shows the header when GitHub sends it. [source: GitHub's REST docs on token scopes]
+    GitHub sends that header for classic tokens only; [inference, from the header and that premise]
+    the first token was classic and the rotated one fine-grained, scoped per repository, which the
+    token's settings page verifies.
   - **`secretName` on every call:** the package defaults to an OAuth lane, and [measured 2026-10-03]
     with no OAuth integration connected a call that omits `secretName` fails (`Integration "github"
     was not found`). Connecting OAuth as well would make the default work, but two credentials could
