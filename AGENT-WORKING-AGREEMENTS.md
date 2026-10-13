@@ -431,7 +431,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   where the lane is no longer available does the orchestrator resolve, and its resolution gets a
   scoped two-axis review before the push. A resolution is new work, and no work reaches the wave
   branch unreviewed (Brandon, 2026-10-12). Inside a resolution, whoever resolves:
-  - **One fix round on a red gate, then stop and report** (stop-list item 4), with the branch
+  - **One fix round when the gate shows a red of the resolution's own — one absent from both
+    sides' pre-merge gate records — then stop and report** (stop-list item 4), with the branch
     back at its pre-merge tip. The merge is committed only once the gate shows no red of its own,
     so stopping is: save the resolution's diff and the red gate's output under `evidence/`, then
     `git merge --abort`. A branch left mid-merge holds unreviewed work where the next reader may
@@ -466,8 +467,9 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 3. Anything destructive or irreversible — data migrations against shared infra, deletions outside
    the repo, secrets, third-party writes (CMS, DNS, billing).
    A billing prompt holds the paid review, never the push (A4).
-4. The CI gate still red after one fix round — inside a merge-conflict resolution too, which
-   leaves the branch at its pre-merge tip (Git contract above).
+4. The CI gate still red after one fix round — inside a merge-conflict resolution too, where
+   only a red of the resolution's own counts (one absent from both sides' pre-merge gate
+   records) and stopping leaves the branch at its pre-merge tip (Git contract above).
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
 

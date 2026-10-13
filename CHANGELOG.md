@@ -10,6 +10,22 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#2) — A conflict resolution's fix round starts on its own red.** Issue #126: B2's
+  conflict bullet opened its bound with "One fix round on a red gate, then stop and report", and
+  stop-list item 4 repeated "still red after one fix round — inside a merge-conflict resolution
+  too"; which red counts arrived only a sentence later ("no red of its own") and in the next
+  sub-bullet (a red a side's own gate record already shows is that side's). Read in order, any red
+  started the fix round and the abort; read whole, only the resolution's own did. The fix-round
+  sentence and stop-list item 4 now name the red where they state the action — one of the
+  resolution's own, absent from both sides' pre-merge gate records — and the 2026-10-12 (#3)
+  entry's "one fix round on a red gate" phrase says the same. The reason: a reader acts on the
+  sentence that names the action, and the stop-list is read on its own, so a condition stated
+  later lets a red that belongs to one side abort a resolution that the next sub-bullet says should
+  report that red with the side's record instead. The text produced no wrong behaviour read whole;
+  this is wording, raised by the review bot on the release PR. **Decision (the wave-4 orchestrator,
+  2026-10-13, under B2's decide and record, reviewed on the wave's PR): the change as the ticket
+  states it.** The sub-bullet on a side's own red, and the rule, are unchanged.
+
 - **2026-10-13 (#1) — Release-cut work names the built artifact by role.** Issue #127: B2's Git
   contract listed "the `dist/` rebuild" among the release-cut work pushed straight to `develop`.
   A repository that publishes releases need not commit a built artifact at all, and one that has
@@ -32,7 +48,8 @@ being retrofitted onto the other.
   scoped review; the orchestrator's merge is then clean. Where the lane is no longer available, the
   orchestrator resolves and the resolution gets a scoped two-axis review before the push. The
   reason: a resolution is new work, and no work reaches the wave branch unreviewed. Inside a
-  resolution the bound is the general one — one fix round on a red gate, then stop and report — and
+  resolution the bound is the general one — one fix round on a red of the resolution's own, one
+  absent from both sides' pre-merge gate records, then stop and report — and
   the rule names the state the tree is left in: the pre-merge tip, with the resolution's diff and
   the red gate's output saved under `evidence/` before `git merge --abort`, because a branch left
   mid-merge holds unreviewed work where the next reader may not know a merge is in progress, and on
