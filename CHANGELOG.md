@@ -10,6 +10,20 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#3) — A6's root names the lane worktrees a client file places there.** Issue
+  #122: A6 said the `sansfaux/` root holds `_agent/`, project checkouts, the
+  `agent-working-agreements/` clone and `organize.sh` — "nothing else" — while
+  `clients/claude-code.md` cuts each lane's worktree at `../<repo>-<lane>`, which is in that root.
+  Read charitably a lane worktree is a project checkout; read literally the two disagreed. A6's
+  sentence now names, beside project checkouts, the lane worktrees a client file places beside
+  them; the client file's command stands. **Decision (the wave-4 orchestrator, 2026-10-13, under
+  B2's decide and record, reviewed on the wave's PR): the ticket's first option, the clause in
+  A6.** The reason: the agreement is the file every client reads, and where a lane worktree goes
+  is a client fact the agreement should not contradict; the other option, a client file declaring
+  its worktrees project checkouts for A6's purposes, would be a client file carving an exception
+  out of Part A, which a client file never does. Where lane worktrees live is still each client
+  file's to name (A6, **Clones**); no worktree moves.
+
 - **2026-10-13 (#2) — A conflict resolution's fix round starts on its own red.** Issue #126: B2's
   conflict bullet opened its bound with "One fix round on a red gate, then stop and report", and
   stop-list item 4 repeated "still red after one fix round — inside a merge-conflict resolution
