@@ -10,6 +10,20 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#128) — OpenClaw: scope mode and approvals to the delivery path.** Issue #128:
+  live OpenClaw use exposed an ambiguity in the opening attended default: an attended parent
+  conversation could be read as making every coordinated action attended, turning informational
+  progress updates into approval pauses and spreading B1's per-batch ceremony beyond the delivery
+  it governs. The appendix now says B0 decides for each exact checkout and repository delivery
+  path, not the whole conversation; routine authorized reversible repository work defaults to an
+  available B2-qualified specialist lane; and status updates are informational and non-blocking.
+  It also names the ordinary authorized B2 work that needs no per-batch owner approval — commits,
+  pushes, pull-request creation or updates, review responses, and reviewed child-branch
+  integration — while retaining the B2 stop-list and Brandon's ready-PR/manual-merge boundary.
+  When no qualified safe route exists, only that delivery follows B1 or stops with its exact
+  capability boundary. B0, A4, B1/B2 mechanics, consequential-action stops, Brandon-only
+  base-branch merges, and the Claude Code, Cowork, and Codex appendices are unchanged.
+
 - **2026-10-12 (#3) — Who resolves a conflicting lane merge, and how its gate is read.** Issue #115:
   B2 had the orchestrator merge a lane after two-axis review, gate the merged tree and push, and
   said nothing of a merge that does not apply cleanly, so an agent guessed who resolves, how long to
