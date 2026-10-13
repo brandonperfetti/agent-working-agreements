@@ -51,14 +51,13 @@ being retrofitted onto the other.
     its own call, not Brandon reviewing a batch, so in attended mode a Kody write falls under B1's
     "no routing around it with API/MCP writes or another client".
   - **A fine-grained token scoped per repository, one `secretName` per organisation:** a call
-    reaches whatever its token reaches. [measured 2026-10-03] On the token first used, GitHub
-    returned the `x-oauth-scopes` header, listing `repo` and `workflow`, and the repository list
-    took in work-organisation repositories, with permissions reported up to admin; the token was
-    then rotated, and on the new one the same call returned no scopes header — the instrument shows
-    the header when GitHub sends it — and the repository list held no work-organisation repository,
-    a direct read of one returning 404. [source: GitHub's REST docs on token scopes] GitHub sends
-    that header for classic tokens only; [inference, from the header and that premise] the first
-    token was classic and the rotated one fine-grained, which the token's settings page verifies.
+    reaches whatever its token reaches. [measured 2026-10-03] The token first used reached
+    repositories beyond this account's own, and GitHub returned the `x-oauth-scopes` header on it;
+    the token was then rotated, and on the new one the same call returned no scopes header — the
+    instrument shows the header when GitHub sends it. [source: GitHub's REST docs on token scopes]
+    GitHub sends that header for classic tokens only; [inference, from the header and that premise]
+    the first token was classic and the rotated one fine-grained, scoped per repository, which the
+    token's settings page verifies.
   - **`secretName` on every call:** the package defaults to an OAuth lane, and [measured 2026-10-03]
     with no OAuth integration connected a call that omits `secretName` fails (`Integration "github"
     was not found`). Connecting OAuth as well would make the default work, but two credentials could
