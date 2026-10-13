@@ -407,7 +407,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 - **What decides is review, not the branch name.** `develop` accepts pushes by design; the question
   for any commit is whether it will be **reviewed before it reaches `master`**.
   - **Release-cut work pushes straight to `develop`** — the version bump, the CHANGELOG section
-    rename, the `dist/` rebuild, and every fix commit answering the release PR's review. All of it
+    rename, any built artifact the repository commits, and every fix commit answering the
+    release PR's review. All of it
     is reviewed *on the `develop → master` PR itself*, whose head is `develop`; there is no other
     branch to push and no second review to wait for. Same gate, same two-axis review before the
     push, never a force-push.

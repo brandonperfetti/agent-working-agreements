@@ -10,6 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#1) — Release-cut work names the built artifact by role.** Issue #127: B2's Git
+  contract listed "the `dist/` rebuild" among the release-cut work pushed straight to `develop`.
+  A repository that publishes releases need not commit a built artifact at all, and one that has
+  stopped committing it has no such step, so the sentence sent a reader cutting a release to
+  rebuild something that may not exist. The sub-bullet now says "any built artifact the
+  repository commits", the role the ritual's step 5 already uses ("any built artifact"), because
+  a step named by what it is for stays true of every repository, where a step named by one
+  repository's layout goes stale when that layout changes. The rule and its reason are unchanged:
+  whatever a release cut touches is reviewed on the `develop → master` PR, whose head is
+  `develop`. **Decision (Brandon, 2026-10-13): the change as drafted, approved in principle when
+  he read the ticket before it was filed.** No other line of the agreement names `dist/`.
+
 - **2026-10-12 (#3) — Who resolves a conflicting lane merge, and how its gate is read.** Issue #115:
   B2 had the orchestrator merge a lane after two-axis review, gate the merged tree and push, and
   said nothing of a merge that does not apply cleanly, so an agent guessed who resolves, how long to
