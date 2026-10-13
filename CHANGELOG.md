@@ -68,24 +68,29 @@ being retrofitted onto the other.
   — a read-only `get-viewer` call on the token lane resolved to Brandon's account, in a working
   session and in a fresh Claude Code session with no prior conversation, after the secret was set to
   allow the package (Kody refuses a secret a package is not allowed) — shows the path acts as
-  Brandon, as `gh` and the GitHub MCP do. The write probe, on a private repository of Brandon's with
-  no workflows or webhooks, opened a draft PR between two existing branches, created and deleted an
-  issue comment and a pending review, and closed the PR unmerged; every write succeeded on both the
+  Brandon, as `gh` and the GitHub MCP do. [measured 2026-10-03] Before that, the agent-side
+  permission check blocked three early attempts that ran package code with the token, which shows
+  that check sees a package run that uses a secret — the review the allow-rule decision below
+  keeps; and the ticket itself was filed through the package after the GitHub MCP's create-issue
+  call rendered a confirmation form that never reached Brandon, which is how the path came into
+  use. The write probe, on a private repository of Brandon's with no workflows or webhooks,
+  opened a draft PR between two existing branches, created and deleted an issue comment and a
+  pending review, and closed the PR unmerged; every write succeeded on both the
   classic and the rotated token, and no commit was authored. Left behind: the closed draft PR, which
   GitHub cannot delete, and a comment the review bot posted on its close. It shows the PR surface is
   writable through the package, which is why the commit rule and the approval rule are stated rather
-  than assumed. The decision against a permission allow rule for the Kody tools (on the ticket,
-  2026-10-03): a fresh session ran every Kody call it needed, reads and writes, in auto mode with no
-  rule; [source: Claude Code's permission documentation] a call that matches an allow rule skips the
-  auto-mode check, so a rule for the code-running tool would remove review from every Kody code run,
-  including runs that use secrets, and no rule was added. The Kody tools are named differently per
-  client (the server segment is the connector's id in the desktop app's Code tab and its display
-  name in Cowork; the terminal CLI lists it by display name), so `clients/claude-code.md` and
-  `clients/cowork.md` each say to use the name the session reports, read before it is written.
-  **Decision (the wave-4 orchestrator, 2026-10-13, under B2's decide and record, reviewed on the
-  wave's PR):** neither file carries the literal id, because this repository is public and the id is
-  an account fact; `clients/codex.md` and `clients/openclaw.md` carry no note, because Kody is
-  unmeasured in those clients.
+  than assumed. The decision against a permission allow rule for the Kody tools (Brandon,
+  2026-10-03, on the ticket): a fresh session ran every Kody call it needed, reads and writes, in
+  auto mode with no rule; [source: Claude Code's permission documentation] a call that matches an
+  allow rule skips the auto-mode check, so a rule for the code-running tool would remove review from
+  every Kody code run, including runs that use secrets, and no rule was added. The Kody tools are
+  named differently per client (the server segment is the connector's id in the desktop app's Code
+  tab and its display name in Cowork; the terminal CLI lists it by display name), so
+  `clients/claude-code.md` and `clients/cowork.md` each say to use the name the session reports,
+  read before it is written. **Decision (the wave-4 orchestrator, 2026-10-13, under B2's decide and
+  record, reviewed on the wave's PR):** neither file carries the literal id, because this repository
+  is public and the id is an account fact; `clients/codex.md` and `clients/openclaw.md` carry no
+  note, because Kody is unmeasured in those clients.
 
 - **2026-10-13 (#4) — B0 item 4: a separate agent identity is decided not now.** Issue #13: B0
   item 4 said that making "only Brandon merges" and "feature work never lands on a base branch"
@@ -97,8 +102,8 @@ being retrofitted onto the other.
   required check on `master`, and feature work goes through a wave branch and a PR into
   `develop`; a separate identity would cost a secret, a token-switch step in every client and a
   new PR author, a cost not paid while those conditions hold. It reopens on a second account with
-  write access to one of Brandon's repositories, or on one measured breach of either rule, with a
-  GitHub App as the recommended shape, so the condition that would change the answer is written
+  write access to a repository this agreement governs, or on one measured breach of either rule,
+  with a GitHub App as the recommended shape, so the condition that would change the answer is written
   where the question is asked. The sentence is edited, not left open, because "open, not decided"
   sent every reader who met the two rules to re-derive a question that has been answered, which is
   what #13 was filed to stop. The untested-inference sentence before it is unchanged.

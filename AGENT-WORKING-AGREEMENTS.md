@@ -368,8 +368,8 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    request Brandon merges by hand, the CI gate is a required check on `master`, and feature work
    goes through a wave branch and a PR into `develop`; a separate identity costs a secret, a
    token-switch step in every client and a new PR author, a cost not paid while those conditions
-   hold. It reopens on a second account with write access to one of Brandon's repositories, or on
-   one measured breach of either rule, with a GitHub App as the recommended shape.
+   hold. It reopens on a second account with write access to a repository this agreement governs,
+   or on one measured breach of either rule, with a GitHub App as the recommended shape.
 5. Brandon has not overridden it for this session.
 
 By environment: **Claude Code → autonomous** (1 passes by construction but for its hook probe,
