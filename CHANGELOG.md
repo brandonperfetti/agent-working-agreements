@@ -40,7 +40,7 @@ being retrofitted onto the other.
   come into use as a GitHub API path for issues, PRs and checks with nothing in the agreement naming
   it or the approval rules that bind it. A7 gains a third bullet; the `gh` and GitHub MCP bullets
   are unchanged, and nothing is retired. **Decision (Brandon, 2026-10-12): the amendment lands with
-  this initiative's A4 sentence, and per-client tool names go in `clients/`, not A7.** Each
+  #63's A4 sentence, and per-client tool names go in `clients/`, not A7.** Each
   sub-decision and its reason:
   - **What it is for:** the GitHub REST/GraphQL API for issues, PRs, checks, PR status and merge
     previews, for any client with Kody connected — named so that the approval rules are visible
@@ -51,13 +51,14 @@ being retrofitted onto the other.
     its own call, not Brandon reviewing a batch, so in attended mode a Kody write falls under B1's
     "no routing around it with API/MCP writes or another client".
   - **A fine-grained token scoped per repository, one `secretName` per organisation:** a call
-    reaches whatever its token reaches. [measured 2026-10-03] The token first used was a classic
-    token (GitHub returned its scopes header, listing `repo` and `workflow`) whose repository list
-    took in work-organisation repositories, with permissions reported up to admin; it was rotated to
-    a fine-grained token. On the new token the same call returned no scopes header, where on the old
-    one it had — the instrument shows the header when GitHub sends it — and its repository list held
-    no work-organisation repository, a direct read of one returning 404. That the new token is
-    fine-grained is [inference] from the header's absence; its settings page verifies it.
+    reaches whatever its token reaches. [measured 2026-10-03] On the token first used, GitHub
+    returned the `x-oauth-scopes` header, listing `repo` and `workflow`, and the repository list
+    took in work-organisation repositories, with permissions reported up to admin; the token was
+    then rotated, and on the new one the same call returned no scopes header — the instrument shows
+    the header when GitHub sends it — and the repository list held no work-organisation repository,
+    a direct read of one returning 404. [inference, from the header] GitHub sends that header for
+    classic tokens only, so the first token was classic and the rotated one fine-grained; the
+    token's settings page verifies it.
   - **`secretName` on every call:** the package defaults to an OAuth lane, and [measured 2026-10-03]
     with no OAuth integration connected a call that omits `secretName` fails (`Integration "github"
     was not found`). Connecting OAuth as well would make the default work, but two credentials could
@@ -76,8 +77,7 @@ being retrofitted onto the other.
   use. The write probe, on a private repository of Brandon's with no workflows or webhooks,
   opened a draft PR between two existing branches, created and deleted an issue comment and a
   pending review, and closed the PR unmerged; every write succeeded on both the
-  classic and the rotated token, and no commit was authored. Left behind: the closed draft PR, which
-  GitHub cannot delete, and a comment the review bot posted on its close. It shows the PR surface is
+  first and the rotated token, and no commit was authored. It shows the PR surface is
   writable through the package, which is why the commit rule and the approval rule are stated rather
   than assumed. The decision against a permission allow rule for the Kody tools (Brandon,
   2026-10-03, on the ticket): a fresh session ran every Kody call it needed, reads and writes, in

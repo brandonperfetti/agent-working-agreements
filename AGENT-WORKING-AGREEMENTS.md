@@ -151,7 +151,7 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   who orchestrates the next wave without adding a reader before the merge. That reader's seat is
   set by the situation — a session supervising dispatched agents — not by the client, because most
   sessions own their work, as they should, and Genesis builds the MPD with Brandon by design. In
-  attended mode Brandon's per-batch review is already that reader.
+  attended mode Brandon's per-batch review is already that reader (Brandon, 2026-10-12).
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.
@@ -251,12 +251,13 @@ each client file's to name. (Brandon, 2026-10-12)
   commits**, in both modes, for the GitHub MCP's reason: it bypasses the local clone. **Its
   `confirm: true` is per call and is not B1's per-batch approval** — it is the agent confirming
   its own call, not Brandon reviewing a batch — so in attended mode a Kody write is one of the
-  API writes B1 allows no routing around. **Its token is fine-grained and scoped per repository,
-  with one `secretName` per organisation**, because a call's reach is its token's, so the owner a
-  call names matters as much as its `confirm: true`; **every call passes `secretName`**, because
-  the package defaults to an OAuth lane that is not connected and a call that omits it fails.
-  Where Kody is not connected, use `gh` or the GitHub MCP. How a client names the Kody tools is
-  its client file's to record.
+  API writes B1 allows no routing around. **The token it uses is fine-grained and scoped per
+  repository, with one `secretName` per organisation**, because a call's reach is its token's, so
+  the owner a call names matters as much as its `confirm: true`; **every call passes
+  `secretName`**, because the package otherwise defaults to an OAuth lane, which may not be
+  connected and, where it is, would leave two credentials able to serve one call with nothing
+  showing which did. Where Kody is not connected, use `gh` or the GitHub MCP. How a client names
+  the Kody tools is its client file's to record (Brandon, 2026-10-12).
 - **On any create-then-link error, read the current state before retrying** — the create may have
   landed. GitHub's sub-issue cap errors *after* creating and parenting; blind retries burn issue
   numbers and mint duplicates. [learnings: 2026-09-12 wave-8 §3]
