@@ -10,7 +10,7 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-10-13 (#6) — A4: an orchestrator's hand-back is never the review of its wave.** Issue #63:
+- **2026-10-13 (#7) — A4: an orchestrator's hand-back is never the review of its wave.** Issue #63:
   A4 said the lane's own report is never the review, and said nothing of the orchestrator's; when
   an orchestrator reported its own wave green, that report was the only attestation the delivery
   got, though the orchestrator had chosen, batched, dispatched and merged the work it attested to.
@@ -35,7 +35,7 @@ being retrofitted onto the other.
   The lane rule, the two-axis review and B2's review loop are unchanged. #63 closes when this
   lands.
 
-- **2026-10-13 (#5) — A7: Kody's GitHub package is a third GitHub path.** Issue #109: A7 named two
+- **2026-10-13 (#6) — A7: Kody's GitHub package is a third GitHub path.** Issue #109: A7 named two
   GitHub paths, the `gh` CLI and the GitHub MCP, and Kody's `@brandonperfetti/github` package had
   come into use as a GitHub API path for issues, PRs and checks with nothing in the agreement naming
   it or the approval rules that bind it. A7 gains a third bullet; the `gh` and GitHub MCP bullets
@@ -92,7 +92,7 @@ being retrofitted onto the other.
   is public and the id is an account fact; `clients/codex.md` and `clients/openclaw.md` carry no
   note, because Kody is unmeasured in those clients.
 
-- **2026-10-13 (#4) — B0 item 4: a separate agent identity is decided not now.** Issue #13: B0
+- **2026-10-13 (#5) — B0 item 4: a separate agent identity is decided not now.** Issue #13: B0
   item 4 said that making "only Brandon merges" and "feature work never lands on a base branch"
   mechanical needs a separate agent identity, and called that "an identity change, open, not
   decided". **Decision (Brandon, 2026-10-12, recorded on #13, which closed as decided): not now.**
@@ -108,7 +108,7 @@ being retrofitted onto the other.
   sent every reader who met the two rules to re-derive a question that has been answered, which is
   what #13 was filed to stop. The untested-inference sentence before it is unchanged.
 
-- **2026-10-13 (#3) — A6's root names the lane worktrees a client file places there.** Issue
+- **2026-10-13 (#4) — A6's root names the lane worktrees a client file places there.** Issue
   #122: A6 said the `sansfaux/` root holds `_agent/`, project checkouts, the
   `agent-working-agreements/` clone and `organize.sh` — "nothing else" — while
   `clients/claude-code.md` cuts each lane's worktree at `../<repo>-<lane>`, which is in that root.
@@ -122,7 +122,7 @@ being retrofitted onto the other.
   out of Part A, which a client file never does. Where lane worktrees live is still each client
   file's to name (A6, **Clones**); no worktree moves.
 
-- **2026-10-13 (#2) — A conflict resolution's fix round starts on its own red.** Issue #126: B2's
+- **2026-10-13 (#3) — A conflict resolution's fix round starts on its own red.** Issue #126: B2's
   conflict bullet opened its bound with "One fix round on a red gate, then stop and report", and
   stop-list item 4 repeated "still red after one fix round — inside a merge-conflict resolution
   too"; which red counts arrived only a sentence later ("no red of its own") and in the next
@@ -138,7 +138,7 @@ being retrofitted onto the other.
   2026-10-13, under B2's decide and record, reviewed on the wave's PR): the change as the ticket
   states it.** The sub-bullet on a side's own red, and the rule, are unchanged.
 
-- **2026-10-13 (#1) — Release-cut work names the built artifact by role.** Issue #127: B2's Git
+- **2026-10-13 (#2) — Release-cut work names the built artifact by role.** Issue #127: B2's Git
   contract listed "the `dist/` rebuild" among the release-cut work pushed straight to `develop`.
   A repository that publishes releases need not commit a built artifact at all, and one that has
   stopped committing it has no such step, so the sentence sent a reader cutting a release to
@@ -149,6 +149,20 @@ being retrofitted onto the other.
   whatever a release cut touches is reviewed on the `develop → master` PR, whose head is
   `develop`. **Decision (Brandon, 2026-10-13): the change as drafted, approved in principle when
   he read the ticket before it was filed.** No other line of the agreement names `dist/`.
+
+- **2026-10-13 (#1) — OpenClaw: scope mode and approvals to the delivery path.** Issue #128:
+  live OpenClaw use exposed an ambiguity in the opening attended default: an attended parent
+  conversation could be read as making every coordinated action attended, turning informational
+  progress updates into approval pauses and spreading B1's per-batch ceremony beyond the delivery
+  it governs. The appendix now says B0 decides for each exact checkout and repository delivery
+  path, not the whole conversation; routine authorized reversible repository work defaults to an
+  available B2-qualified specialist lane; and status updates are informational and non-blocking.
+  It also names the ordinary authorized B2 work that needs no per-batch owner approval — commits,
+  pushes, pull-request creation or updates, review responses, and reviewed child-branch
+  integration — while retaining the B2 stop-list and Brandon's ready-PR/manual-merge boundary.
+  When no qualified safe route exists, only that delivery follows B1 or stops with its exact
+  capability boundary. B0, A4, B1/B2 mechanics, consequential-action stops, Brandon-only
+  base-branch merges, and the Claude Code, Cowork, and Codex appendices are unchanged.
 
 - **2026-10-12 (#3) — Who resolves a conflicting lane merge, and how its gate is read.** Issue #115:
   B2 had the orchestrator merge a lane after two-axis review, gate the merged tree and push, and
