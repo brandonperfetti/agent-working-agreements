@@ -35,6 +35,13 @@ Code fact.
   run it in each lane's, naming remote and branch as item 1 does — `git worktree add -b` sets no
   upstream. A lane never installs a hook of its own — the repo's install step is the only source
   of hooks.
+- **Scratch clones (A6, "Clones"):** a scratch clone goes in the scratchpad directory the
+  session's environment names [source 2026-10-12: the harness's session instructions], never
+  under `_agent/`. In the two dispatches measured, a sub-agent shared it: each one's own
+  environment named the directory its handoff's scratch subdirectory sat under [measured
+  2026-10-12: a lane and its Spec reviewer, by reading the environment's scratchpad line against
+  the handoff's path]; whether every dispatch shares it is unmeasured. So a dispatch names one
+  subdirectory of it per sub-agent.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
 - **CodeRabbit CLI, for B2's preflight:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti`

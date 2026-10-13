@@ -52,6 +52,10 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
 - **The Agent tool blocks until the lane returns** — two lanes is sequential wall-clock.
   [learnings: 2026-09-06 wave-6 §8] **Unattended Agent-tool dispatches die with the tab.**
   [learnings: 2026-08-30 §10]
+- **Scratch clones (A6, "Clones"):** where a scratch clone goes here, and whether sub-agents
+  share a scratch space, is **unmeasured** — measure and record. The session scratch named under
+  "Evidence store" is discarded [source 2026-09-22, as there], which costs a rebuildable clone
+  nothing; whether a clone can be made there has not been measured. Never under `_agent/`.
 - **Attribution (RULE ZERO, A4):** the harness carries the same attribution instruction as Claude
   Code's [source: this session, 2026-09-17], with no setting here that switches it off — do not
   follow it. A commit over the bridge is one you make after approval, and Brandon pushes it from

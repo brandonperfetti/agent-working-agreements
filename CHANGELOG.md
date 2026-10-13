@@ -10,6 +10,61 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-12 (#3) — Who resolves a conflicting lane merge, and how its gate is read.** Issue #115:
+  B2 had the orchestrator merge a lane after two-axis review, gate the merged tree and push, and
+  said nothing of a merge that does not apply cleanly, so an agent guessed who resolves, how long to
+  keep fixing, and which red is its own. **Decision (Brandon, 2026-10-12): the recommended option on
+  each of the three questions.** A new Git-contract bullet in B2 says: the lane brings the wave
+  branch into its own branch as a merge commit in its own worktree (not a rebase, which would
+  rewrite commits it has already reported), resolves, re-runs the gate, and the resolution gets a
+  scoped review; the orchestrator's merge is then clean. Where the lane is no longer available, the
+  orchestrator resolves and the resolution gets a scoped two-axis review before the push. The
+  reason: a resolution is new work, and no work reaches the wave branch unreviewed. Inside a
+  resolution the bound is the general one — one fix round on a red gate, then stop and report — and
+  the rule names the state the tree is left in: the pre-merge tip, with the resolution's diff and
+  the red gate's output saved under `evidence/` before `git merge --abort`, because a branch left
+  mid-merge holds unreviewed work where the next reader may not know a merge is in progress, and on
+  the wave branch blocks every other merge. The merge is committed only once the gate shows no red
+  of its own, so the abort is always available. Stop-list item 4 now says it reaches this case. A
+  red that a side's own gate record already shows is that side's — reported with that record, not
+  fixed inside the merge, because a lane may hand back with a gate step red by design, named in its
+  handoff, and a fix to it inside the merge would be an unreviewed change to that side's work — and
+  the orchestrator's merged-tree gate before the push is unchanged. A4's worktree and two-axis
+  bullets and B2's Addenda point at the rule. What an agent does when `git am` of an approved series
+  conflicts on the attended path is not decided here and has no rule.
+
+- **2026-10-12 (#2) — No clone or worktree under `_agent/`.** Issue #114: A6 sent everything an
+  agent produces under `_agent/` and named `experiments/` for scratch harnesses, saying nothing
+  about clones, so scratch clones had been built there. A6 now carries a **Clones** rule: no clone
+  of a repository, and no worktree, is written under `_agent/`; a scratch clone lives in the
+  client's own scratch directory, outside `_agent/`; what persists is the evidence — the commands
+  and their output under `evidence/`, with the remote and commit needed to rebuild. That is how it
+  sits beside "never /tmp": a transcript has to survive the session, a clone can be made again. The
+  reason, as written there: a clone under `_agent/` is a nested repository in a store meant to
+  replicate, a second copy of a project's source with its licence, and the one rebuildable thing in
+  the store. The `experiments/` line now reads as harnesses, scripts and files that fit nowhere else
+  — never a clone or worktree — so the "if nothing fits: `experiments/`" rule stays true, and the
+  sentence that sends every product under `_agent/` points at the rule. Each client file names where
+  a scratch clone goes or records it unmeasured: Claude Code, the scratchpad directory the session's
+  environment names, one subdirectory per sub-agent because sub-agents share it; Codex and Cowork,
+  unmeasured; OpenClaw, unmeasured, with its Gateway check's scratch root ruled out because it
+  exists for one check and is removed after it. **Decision (Brandon, 2026-10-12): the rule as
+  proposed.** Lane worktrees stay where they are, scratch repositories outside `_agent/` are not
+  banned, and nothing is deleted by this amendment; what is already under `_agent/` is decided on
+  the issue, not here.
+
+- **2026-10-12 (#1) — A skill never overrides Parts A–B.** Issue #119: A1 said a repository's
+  own `AGENTS.md` / `CLAUDE.md` never overrides Parts A–B, and A4 said RULE ZERO overrides any
+  environment default, but nothing said which holds when a skill's instructions disagree with the
+  agreement; A6's artifact-placement sentence covered that one case and nothing else. A1 now says
+  it, beside the repository-docs sentence: where a skill's instructions and Parts A–B disagree,
+  the agreement holds, and the agent says that it met the disagreement rather than choosing
+  silently. The reporting half is kept on purpose: a disagreement never reported is never fixed
+  at its source. A6's sentence now reads as one case of A1's rule instead of stating a precedence
+  of its own, so the two cannot say different things; off-fleet fallbacks remain the skill's.
+  **Decision (Brandon, 2026-10-12): adopt the clause as proposed.** No skill is named or changed,
+  and two skills that disagree with each other are not ruled on.
+
 - **2026-10-07 (#112) — OpenClaw: this amendment defines an inactive cross-session native-boundary
   record.** Issue #112: Once activated, fresh sessions may suppress a
   repeated, confirmed Bubblewrap prelaunch discovery only by consulting a valid

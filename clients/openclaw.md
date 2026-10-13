@@ -401,6 +401,12 @@ and A6. Date-name artifacts and label claims `[measured]`, `[source]`, or `[infe
 assume that path is reachable from every OpenClaw workspace: use the active workspace's durable
 `_agent/` store and record its concrete location with the capture.
 
+**Scratch clones (A6, "Clones").** The task-authorized scratch root in the Gateway
+executable-check conditions above is not a place for a scratch clone: it exists for one eligible
+check and is removed when that check completes [source: this appendix]. Where a scratch clone goes
+on this host, and whether specialists share a scratch space, is **unmeasured** — measure and
+record. Never under `_agent/`.
+
 ## Migration dispositions
 
 The complete machine-local agreement that preceded the canonical route carried rules that Parts

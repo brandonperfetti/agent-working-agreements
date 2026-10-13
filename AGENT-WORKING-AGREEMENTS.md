@@ -35,7 +35,10 @@ The AWA governs **every session Brandon runs, on any of his repositories, wherev
 lives** — a brand-new repo with no history, a one-off fix, or a multi-wave initiative alike.
 Checkouts are migrating under `sansfaux/` as they are rebuilt; location changes nothing. A repo's
 own `AGENTS.md` / `CLAUDE.md` adds project specifics (its CI gate, its exports, its conventions)
-and never overrides Parts A–B. Initiatives (`_agent/initiatives/`) are how *orchestrated* work is
+and never overrides Parts A–B. **Neither does a skill: where a skill's instructions and Parts A–B
+disagree, the agreement holds, and you say that you met the disagreement** rather than choosing
+silently — a disagreement never reported is never fixed at its source (Brandon, 2026-10-12).
+Initiatives (`_agent/initiatives/`) are how *orchestrated* work is
 organised, not a gate on whether these rules apply: with no MPD, you are in **attended mode** (B1).
 Skills come from the `brandonperfetti-skills` plugin (mirror of `mattpocock/skills` plus
 Brandon's own); read the relevant skill *before* that kind of work — `orchestrate`, `deep-grill`,
@@ -97,6 +100,7 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   state — because that isolation is what makes concurrent lanes safe at all, and a lane that has
   run git in the shared checkout has left that isolation, whatever files it edited. B1's attended
   delivery of uncommitted edits to named files runs no git there and crosses neither fence.
+  A lane whose merge into the wave branch conflicts resolves it in its own worktree too (B2).
   [learnings: 2026-09-23 sfs-wave-1 §1]
 - **Every lane report states the model it ran on, and how it knows.** Requested, inherited,
   configured and backend-attested are four different claims; a dispatched tier resolves to whatever
@@ -137,8 +141,9 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   **A trailer never established that a commit came through a reviewed lane.** The two-axis review
   record under `reviews/`, the gate evidence under `evidence/` and the PR trail do; report those.
 - **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance —
-  riders and review-fix lanes included, no size exemption.** The lane's own report is never the
-  review; the verdict is recorded under the initiative's `reviews/`.
+  riders, review-fix lanes and merge-conflict resolutions (scoped to the resolution, B2)
+  included, no size exemption.** The lane's own report is never the review; the verdict is
+  recorded under the initiative's `reviews/`.
   [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
@@ -184,11 +189,13 @@ An **on-fleet workspace** is one where walking upward from the working directory
 `AGENT-WORKING-AGREEMENTS.md` is not a marker because this agreement is a repository whose file
 appears at the root of every clone and worktree.
 
-**Artifact placement precedence.** On an on-fleet workspace, the `agent-workspace` convention
-governs where agent artifacts are written and overrides any generic skill default; off-fleet
-fallbacks remain the skill's to define.
+**Artifact placement precedence** is one case of A1's rule that a skill never overrides Parts
+A–B: on an on-fleet workspace, where agent artifacts are written is this section's to decide (the
+`agent-workspace` convention carries it out), not a skill's default; off-fleet fallbacks remain
+the skill's to define.
 
-On an on-fleet workspace, everything an agent produces goes under `_agent/`:
+On an on-fleet workspace, everything an agent produces goes under `_agent/` — a clone is not a
+product (**Clones**, below):
 
 ```text
 _agent/
@@ -199,7 +206,8 @@ _agent/
 ├── plans/         execution plans, initiative briefs, grill records
 ├── analysis/      cross-repo findings that belong to no initiative
 ├── evidence/      raw captures for cross-initiative claims
-├── experiments/   scratch harnesses (never /tmp — the next session can't see it)
+├── experiments/   harnesses, scripts, and files you write that fit nowhere else (never /tmp —
+│                  the next session can't see it); never a clone or worktree
 ├── notes/         session scratch, decisions-in-progress
 ├── quarantine/    superseded docs kept for the trail (move, don't rewrite beyond recognition)
 ├── _trash/        staged for deletion — only Brandon empties this
@@ -215,6 +223,16 @@ updated at wave close. Date-prefix files
 `YYYY-MM-DD-`. Never a loose file at `_agent/` root or `sansfaux/` root; never a new top-level
 folder (if nothing fits: `experiments/`, and say so). `./organize.sh` (dry-run by default) tidies
 loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's command, not an agent's**.
+
+**Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
+lives in the client's own scratch directory, outside `_agent/` — your client file names that
+directory, or records that it is unmeasured. What persists is the evidence: the commands run and
+their output, under `evidence/`, with the remote and the commit needed to rebuild the clone. That
+is how this sits beside the `experiments/` line's "never /tmp": a transcript has to survive the
+session, a clone can be made again. The reason: a clone under `_agent/` is a nested repository in a
+store meant to replicate, a second copy of a project's source with its licence, and the one thing
+in `_agent/` that is rebuildable. This moves no lane worktree: where those live is unchanged and is
+each client file's to name. (Brandon, 2026-10-12)
 
 ## A7. GitHub paths
 
@@ -405,6 +423,23 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   `coderabbit-preflight` when the push carries new work (below) and the CodeRabbit CLI is
   available to that client, then pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
+- **A lane merge that conflicts goes back to the lane.** The lane merges the wave
+  branch into its own branch in its own worktree — a merge commit, never a rebase, which would
+  rewrite commits it has already reported — resolves there and re-runs the gate; the resolution
+  gets a scoped review, as an addendum's fix does; the orchestrator's merge is then clean. Only
+  where the lane is no longer available does the orchestrator resolve, and its resolution gets a
+  scoped two-axis review before the push. A resolution is new work, and no work reaches the wave
+  branch unreviewed (Brandon, 2026-10-12). Inside a resolution, whoever resolves:
+  - **One fix round on a red gate, then stop and report** (stop-list item 4), with the branch
+    back at its pre-merge tip. The merge is committed only once the gate shows no red of its own,
+    so stopping is: save the resolution's diff and the red gate's output under `evidence/`, then
+    `git merge --abort`. A branch left mid-merge holds unreviewed work where the next reader may
+    not know a merge is in progress, and on the wave branch it blocks every other lane's merge;
+    the pre-merge tip was reviewed, and the record keeps what the attempt learned.
+  - **A red that a side's own gate record already shows is that side's, not the merge's:**
+    reported with that record, not fixed inside the merge — a lane may hand back with a gate step
+    red by design, named in its handoff, and a fix to it inside the merge would be an unreviewed
+    change to that side's work. The orchestrator's merged-tree gate before the push is unchanged.
 - **The preflight runs once before each push that carries new work** — a lane landing, a release
   cut — and never before a push that only answers review findings, which the PR's own review
   covers; there is no re-run. An unavailable CLI never holds a push and never downgrades the mode:
@@ -430,13 +465,15 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 3. Anything destructive or irreversible — data migrations against shared infra, deletions outside
    the repo, secrets, third-party writes (CMS, DNS, billing).
    A billing prompt holds the paid review, never the push (A4).
-4. The CI gate still red after one fix round.
+4. The CI gate still red after one fix round — inside a merge-conflict resolution too, which
+   leaves the branch at its pre-merge tip (Git contract above).
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
 
 **Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new
 commit**, and is re-reviewed (scoped to the fix) before merge — never a fresh session, never the
 orchestrator's own hands. Work already merged into the wave branch goes through a fresh ticket.
+A lane merge that conflicts goes back to the lane the same way (Git contract above).
 
 **The review loop (Brandon + the orchestrator)**
 
