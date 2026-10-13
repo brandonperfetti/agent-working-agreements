@@ -56,9 +56,9 @@ being retrofitted onto the other.
     took in work-organisation repositories, with permissions reported up to admin; the token was
     then rotated, and on the new one the same call returned no scopes header — the instrument shows
     the header when GitHub sends it — and the repository list held no work-organisation repository,
-    a direct read of one returning 404. [inference, from the header] GitHub sends that header for
-    classic tokens only, so the first token was classic and the rotated one fine-grained; the
-    token's settings page verifies it.
+    a direct read of one returning 404. [source: GitHub's REST docs on token scopes] GitHub sends
+    that header for classic tokens only; [inference, from the header and that premise] the first
+    token was classic and the rotated one fine-grained, which the token's settings page verifies.
   - **`secretName` on every call:** the package defaults to an OAuth lane, and [measured 2026-10-03]
     with no OAuth integration connected a call that omits `secretName` fails (`Integration "github"
     was not found`). Connecting OAuth as well would make the default work, but two credentials could
@@ -73,8 +73,8 @@ being retrofitted onto the other.
   permission check blocked three early attempts that ran package code with the token, which shows
   that check sees a package run that uses a secret — the review the allow-rule decision below
   keeps; and the ticket itself was filed through the package after the GitHub MCP's create-issue
-  call rendered a confirmation form that never reached Brandon, which is how the path came into
-  use. The write probe, on a private repository of Brandon's with no workflows or webhooks,
+  call rendered a confirmation form that never reached Brandon.
+  The write probe, on a private repository of Brandon's with no workflows or webhooks,
   opened a draft PR between two existing branches, created and deleted an issue comment and a
   pending review, and closed the PR unmerged; every write succeeded on both the
   first and the rotated token, and no commit was authored. It shows the PR surface is
