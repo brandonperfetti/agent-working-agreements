@@ -145,6 +145,13 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   included, no size exemption.** The lane's own report is never the review; the verdict is
   recorded under the initiative's `reviews/`.
   [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
+  **An orchestrator's hand-back is never the review of its wave either:** the hand-back names the
+  claims to re-measure, and before a merge a reader outside the wave reads them against the
+  repository, because the party that produced the work does not attest to it, and rotation changes
+  who orchestrates the next wave without adding a reader before the merge. That reader's seat is
+  set by the situation — a session supervising dispatched agents — not by the client, because most
+  sessions own their work, as they should, and Genesis builds the MPD with Brandon by design. In
+  attended mode Brandon's per-batch review is already that reader.
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.

@@ -10,6 +10,31 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#6) — A4: an orchestrator's hand-back is never the review of its wave.** Issue #63:
+  A4 said the lane's own report is never the review, and said nothing of the orchestrator's; when
+  an orchestrator reported its own wave green, that report was the only attestation the delivery
+  got, though the orchestrator had chosen, batched, dispatched and merged the work it attested to.
+  In practice a session supervising the dispatched agents had been re-measuring their claims
+  against the repository and the services before a merge, and that seat was written down nowhere
+  [measured 2026-10-12: a case-insensitive search for "supervis" over the agreement and
+  `clients/cowork.md` found nothing]. **Decision (Brandon, 2026-10-12, recorded on #63): write the
+  seat down, as one sentence in A4 beside the lane rule.** A4's two-axis bullet now says an
+  orchestrator's hand-back is never the review of its wave: the hand-back names the claims to
+  re-measure, and before a merge a reader outside the wave reads them against the repository. Each
+  sub-decision and its reason:
+  - **The sentence:** the party that produced the work does not attest to it, and A4's rule was
+    observed to stop one level too early, at the lane. Rotation does not close the gap: it changes
+    who orchestrates the next wave and adds no reader before this wave's merge.
+  - **The trigger is the situation, not the client:** the seat is a session supervising dispatched
+    agents. Most sessions own their work and should, and a Genesis session is attended by design
+    and builds the MPD with Brandon, so a rule keyed to a client would wrongly take ownership away
+    from both.
+  - **Attended mode gains nothing new:** Brandon's per-batch review (B1) is already a reader
+    outside the work before anything is committed.
+
+  The lane rule, the two-axis review and B2's review loop are unchanged. #63 closes when this
+  lands.
+
 - **2026-10-13 (#5) — A7: Kody's GitHub package is a third GitHub path.** Issue #109: A7 named two
   GitHub paths, the `gh` CLI and the GitHub MCP, and Kody's `@brandonperfetti/github` package had
   come into use as a GitHub API path for issues, PRs and checks with nothing in the agreement naming
