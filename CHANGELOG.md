@@ -65,7 +65,7 @@ being retrofitted onto the other.
   **Decision (Brandon, 2026-10-12): adopt the clause as proposed.** No skill is named or changed,
   and two skills that disagree with each other are not ruled on.
 
-- **2026-10-07 (#112) — OpenClaw: this amendment defines an inactive cross-session native-boundary
+- **2026-10-07 (#2) — OpenClaw: this amendment defines an inactive cross-session native-boundary
   record.** Issue #112: Once activated, fresh sessions may suppress a
   repeated, confirmed Bubblewrap prelaunch discovery only by consulting a valid
   Ashford/OpenClaw-owned durable record for the existing host and native-exec boundary. The record
@@ -92,7 +92,7 @@ being retrofitted onto the other.
   observed exit, output, scratch-root removal, and candidate-diff hash with those recorded baselines.
   Every other test still has no Gateway route.
 
-- **2026-10-07 (#111) — OpenClaw: staff-lane autonomy has separate boundaries.** Issue #111,
+- **2026-10-07 (#1) — OpenClaw: staff-lane autonomy has separate boundaries.** Issue #111,
   from Brandon's 2026-10-06 direction: the OpenClaw appendix now separates staff authority, the
   selected lane's B0 capability, risk and reversibility, delivery topology, and the point of human
   approval. Camina defaults to coordination, briefing, boundary enforcement, continuity, review
