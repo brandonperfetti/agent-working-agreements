@@ -10,6 +10,22 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#4) — B0 item 4: a separate agent identity is decided not now.** Issue #13: B0
+  item 4 said that making "only Brandon merges" and "feature work never lands on a base branch"
+  mechanical needs a separate agent identity, and called that "an identity change, open, not
+  decided". **Decision (Brandon, 2026-10-12, recorded on #13, which closed as decided): not now.**
+  The sentence now records it, with the decision's reason and what reopens it. The reason: the two
+  rules stay rules of this agreement because one account has write access to each repository,
+  every change reaches `master` through a pull request Brandon merges by hand, the CI gate is a
+  required check on `master`, and feature work goes through a wave branch and a PR into
+  `develop`; a separate identity would cost a secret, a token-switch step in every client and a
+  new PR author, a cost not paid while those conditions hold. It reopens on a second account with
+  write access to one of Brandon's repositories, or on one measured breach of either rule, with a
+  GitHub App as the recommended shape, so the condition that would change the answer is written
+  where the question is asked. The sentence is edited, not left open, because "open, not decided"
+  sent every reader who met the two rules to re-derive a question that has been answered, which is
+  what #13 was filed to stop. The untested-inference sentence before it is unchanged.
+
 - **2026-10-13 (#3) — A6's root names the lane worktrees a client file places there.** Issue
   #122: A6 said the `sansfaux/` root holds `_agent/`, project checkouts, the
   `agent-working-agreements/` clone and `organize.sh` — "nothing else" — while
