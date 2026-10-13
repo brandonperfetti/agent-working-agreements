@@ -23,10 +23,11 @@ downgrade to attended. After
 changing the pointer, require a fresh-session observation before declaring it effective; do not
 assume arbitrary external-file injection or automatic refresh.
 
-**Default mode: attended.** The capability guard (B0) still decides, for the exact checkout and
-delivery path. The accepted target is `OpenClaw → autonomous`, in a separate amendment supported
-by fresh main- and specialist-session evidence. Any retained workspace-local layer adds client
-mechanics only; it never copies or overrides Parts A–B. B2 still reserves merging to Brandon alone.
+**Default mode: attended.** The capability guard (B0) still decides, for each exact checkout and
+repository delivery path — not for the conversation as a whole or every action Camina coordinates.
+The accepted target is `OpenClaw → autonomous`, in a separate amendment supported by fresh main-
+and specialist-session evidence. Any retained workspace-local layer adds client mechanics only; it
+never copies or overrides Parts A–B. B2 still reserves merging to Brandon alone.
 
 ## Runtime and workspace
 
@@ -53,6 +54,12 @@ selected specialist unless the work's boundary requires escalation. The orchestr
 A4 two-axis review cycle; a specialist's own report is never that independent review.
 Administration outside that boundary retains its existing authorization and stop conditions.
 
+When available, an authorized B2-qualified specialist lane is the default delivery path for
+routine, reversible repository work. Progress and status updates are informational and
+non-blocking: sending one neither requests owner approval nor creates an approval checkpoint.
+If no qualified safe route is available, apply B1 only to that affected delivery or stop with the
+precise capability boundary; do not convert the whole conversation or unrelated deliveries to B1.
+
 Keep five decisions separate:
 
 1. **Staff authority** — the owner has authorized the lane to decide and proceed within its scope.
@@ -69,6 +76,12 @@ through the ready B1/B2 delivery handoff. Brandon alone merges into `develop`, `
 Every existing stop remains in force, including destructive, irreversible, production,
 credentialed, financial, and externally published actions; those stops are not delegated with the
 lane.
+
+Within an authorized B2 delivery, commits, pushes, pull-request creation or updates, review
+responses, and reviewed child-branch integration are routine delivery work and require no
+per-batch owner approval. This is not authority for a B2 stop-list action or for a merge into
+`develop`, `master`, or `main`; Brandon's ready-PR review and manual merge remain the human
+acceptance boundary.
 
 Within an assigned B2 feature branch, an authorized lane may create a child branch from that
 feature branch. The assigned feature-branch owner may integrate the child's reviewed work back into
