@@ -10,6 +10,23 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-13 (#8) — A4: RULE ZERO's identity rule names whose commits it governs.** Issue
+  #132: RULE ZERO said a commit carries Brandon's author identity, with no scope. Inside the fleet
+  that names the identity an agent's commit carries when it works for him; read from outside, by a
+  contributor's agent, it is an instruction to author a commit as the owner. [measured
+  2026-10-13] One arrived that way: a pull request from a fork, by an account the owner does not
+  know, carried one commit authored and committed under his name and email, which the hosting
+  platform attributed to him; the owner asked for it to be re-authored. A4 now scopes the
+  sentence: the identity rule governs commits made by agents working on Brandon's behalf inside
+  this fleet; a contribution from anyone else carries its author's own identity; and a pull
+  request whose commits carry his identity from another account is not merged until re-authored.
+  The reason: B0 item 4's "one account has write access to each repository" does not reach a pull
+  request from a fork, which needs no write access, so the merge is the only guard, and a
+  maintainer merging on the content alone would record a stranger's commit as the owner's.
+  **Decision (Brandon, 2026-10-13, on the ticket): the clause as the ticket words it.** RULE
+  ZERO's attribution half, the author check on deliveries (the author email against his,
+  exactly) and who merges are unchanged.
+
 - **2026-10-13 (#7) — A4: an orchestrator's hand-back is never the review of its wave.** Issue #63:
   A4 said the lane's own report is never the review, and said nothing of the orchestrator's; when
   an orchestrator reported its own wave green, that report was the only attestation the delivery

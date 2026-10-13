@@ -114,7 +114,12 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   [learnings: 2026-08-30 §5]
 - **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** Agents add no
   `Co-Authored-By`, no session trailer, no generated-by footer — a commit carries Brandon's author
-  identity and ends with its own content. What an agent posts under his name on a PR thread, a PR
+  identity and ends with its own content. That identity rule governs commits made by agents
+  working on Brandon's behalf inside this fleet: a contribution from anyone else carries its
+  author's own identity, and a pull request whose commits carry Brandon's identity from another
+  account is not merged until re-authored, because a pull request from a fork needs no write
+  access and the merge is then the only guard (Brandon, 2026-10-13). What an agent posts under his
+  name on a PR thread, a PR
   or an issue carries no credit line either; a provenance line is not one: it names the initiative,
   the role (e.g. wave orchestrator, lane) and the mode the filing agent worked in — never the client
   or the product — and says who read the evidence, which A2 wants.
