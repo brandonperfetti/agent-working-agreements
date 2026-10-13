@@ -8,7 +8,8 @@
 
 ## Scope
 
-<!-- Describe the scope of the PR: What parts of the codebase are affected, what is being added/removed/refactored -->
+<!-- Describe the scope of the PR: What parts of the codebase are affected,
+what is being added/removed/refactored -->
 
 -
 
