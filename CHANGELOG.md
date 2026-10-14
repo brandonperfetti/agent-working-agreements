@@ -187,7 +187,8 @@ being retrofitted onto the other.
   each of the three questions.** A new Git-contract bullet in B2 says: the lane brings the wave
   branch into its own branch as a merge commit in its own worktree (not a rebase, which would
   rewrite commits it has already reported), resolves, re-runs the gate, and the resolution gets a
-  scoped review; the orchestrator's merge is then clean. Where the lane is no longer available, the
+  scoped review; the orchestrator's merge is clean against the tip the lane merged. Where the lane is
+  no longer available, the
   orchestrator resolves and the resolution gets a scoped two-axis review before the push. The
   reason: a resolution is new work, and no work reaches the wave branch unreviewed. Inside a
   resolution the bound is the general one — one fix round on a red of the resolution's own, one

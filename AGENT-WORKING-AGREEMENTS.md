@@ -457,7 +457,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 - **A lane merge that conflicts goes back to the lane.** The lane merges the wave
   branch into its own branch in its own worktree — a merge commit, never a rebase, which would
   rewrite commits it has already reported — resolves there and re-runs the gate; the resolution
-  gets a scoped review, as an addendum's fix does; the orchestrator's merge is then clean. Only
+  gets a scoped review, as an addendum's fix does; the orchestrator's merge is clean against the tip
+  the lane merged. Only
   where the lane is no longer available does the orchestrator resolve, and its resolution gets a
   scoped two-axis review before the push. A resolution is new work, and no work reaches the wave
   branch unreviewed (Brandon, 2026-10-12). Inside a resolution, whoever resolves:
