@@ -201,8 +201,9 @@ comes from a checkout on every route.
 
 **Row 1's bound is the command's, not Gateway's.** Inspection qualifies only when the command
 writes nothing outside what the task may write. Gateway's `workdir` supplies no bound — Camina's
-inference, on the measured host, in the paragraph below that begins "**Test runs deliberately have
-no route.**", where its measurement is cited. [source, Camina's, issue #88, 2026-10-01] A linked
+inference, on the measured host, in the paragraph below that begins "**Executable checks are
+classified by behavior, not by name.**", where its measurement is cited.
+[source, Camina's, issue #88, 2026-10-01] A linked
 worktree's index resolves to `.git/worktrees/<id>/index` in the main repository, outside the
 worktree directory, and nothing in the breaker's contract (rule 4) implicitly expands a
 worktree-only write grant to that administrative directory. [inference, Camina's, same comment]
