@@ -22,6 +22,6 @@ B2 lets agents file issues and keeps relabelling for the orchestrator.
 ## Telling a role from the other labels
 
 A role's label on an issue is its triage state; `wontfix` is one. A label the first section does
-not name is not a role. `agent-filed` marks an issue an agent filed, so Brandon can sweep them
-(B2). `agent-filed`, `documentation` and `question` say who filed an issue or what kind of issue
-it is, and nothing about its triage state.
+not name is not a triage-state role. `documentation` and `question` say what kind of issue it is,
+and `agent-filed` that an agent filed it, so Brandon can sweep them (B2); none of the three says
+anything about its triage state.

@@ -10,7 +10,7 @@ monorepo signal, so there is no `GLOSSARY-MAP.md` and no per-context layout.
 
 ## Before exploring, read these
 
-- **`GLOSSARY.md`** at the repository root, where resolved terms go, once the first is written.
+- **`GLOSSARY.md`** at the repository root, where resolved terms go.
 - **`AGENT-WORKING-AGREEMENTS.md`**, which defines every term below in the section named
   beside it. Read the section before using the term; the table only points at it.
 - **`CHANGELOG.md`**, newest first: why each rule changed. This repository keeps no
@@ -31,7 +31,7 @@ not a finding: `/domain-modeling` writes it when it resolves the first term, and
 | wave | A4 and B2: one phase of an initiative, run by one orchestrator on one branch off `develop` |
 | orchestrator | A4: the lead agent; runs one wave, then rotates to a fresh one through a packet |
 | lane | A4 and B2: one sub-agent's work on named files, in its own worktree |
-| RULE ZERO | A4: no attribution on any commit, PR body, reply or comment; an agent's commits on Brandon's behalf carry his identity, anyone else's carry their own, and a PR carrying his identity from another account is re-authored before it merges |
+| RULE ZERO | A4: no attribution on any commit, PR body, reply or comment; an agent's commits on Brandon's behalf carry his identity, anyone else's carry their own, and a PR carrying his identity from another account is not merged until re-authored |
 | evidence labels | A2: `[measured]`, `[source]`, `[inference]` on every claim |
 | stop-list | B2: what an agent in autonomous mode stops and asks about |
 
@@ -62,7 +62,7 @@ repository: find the one it already uses. Or the vocabulary has a gap: leave a n
 
 ## Flag decision conflicts
 
-Output that goes against a reason the changelog records says so where it is read, names the
-entry, and makes the case for reopening it:
+When your output goes against a reason the changelog records, the output itself says so, names
+the entry and makes the case for reopening it:
 
 > _This departs from the changelog's entry for #N; it is worth reopening because…_
