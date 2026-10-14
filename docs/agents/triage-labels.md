@@ -16,8 +16,9 @@ gh label list --repo brandonperfetti/agent-working-agreements
 ```
 
 A skill that needs a role whose label is not on that list asks Brandon, who owns the tracker, to
-create it. Adding a label is a write to the tracker that no rule gives an agent: the agreement's
-B2 lets agents file issues and keeps relabelling for the orchestrator.
+create it. Creating a label definition is a write to the tracker that no rule gives an agent.
+Applying a label that exists when filing an issue is an agent's: the agreement's B2 has agents
+file findings labelled `agent-filed`. Relabelling an existing issue stays the orchestrator's (B2).
 
 ## Telling a role from the other labels
 
