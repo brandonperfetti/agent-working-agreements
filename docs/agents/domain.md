@@ -31,7 +31,7 @@ not a finding: `/domain-modeling` writes it when it resolves the first term, and
 | wave | A4 and B2: one phase of an initiative, run by one orchestrator on one branch off `develop` |
 | orchestrator | A4: the lead agent; runs one wave, then rotates to a fresh one through a packet |
 | lane | A4 and B2: one sub-agent's work on named files, in its own worktree |
-| RULE ZERO | A4: no attribution on any commit, PR body, reply or comment |
+| RULE ZERO | A4: no attribution on any commit, PR body, reply or comment; an agent's commits on Brandon's behalf carry his identity, anyone else's carry their own, and a PR carrying his identity from another account is re-authored before it merges |
 | evidence labels | A2: `[measured]`, `[source]`, `[inference]` on every claim |
 | stop-list | B2: what an agent in autonomous mode stops and asks about |
 
@@ -42,10 +42,12 @@ becomes the first place to look.
 
 ```text
 /
+├── AGENTS.md                      ← this repository's agent instructions, its CI gate among them
 ├── GLOSSARY.md                    ← resolved terms (created when the first one is)
 ├── AGENT-WORKING-AGREEMENTS.md    ← the agreement: Parts A and B, the Part C index
 ├── CHANGELOG.md                   ← why each rule changed
-└── clients/
+├── clients/
+└── docs/agents/                   ← agent docs, this file among them; README.md's layout lists each
 ```
 
 ## Use the glossary's vocabulary
