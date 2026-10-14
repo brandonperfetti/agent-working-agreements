@@ -17,8 +17,10 @@ gh label list --repo brandonperfetti/agent-working-agreements
 
 A skill that needs a role whose label is not on that list asks Brandon, who owns the tracker, to
 create it. Creating a label definition is a write to the tracker that no rule gives an agent.
-Applying a label that exists when filing an issue is an agent's: the agreement's B2 has agents
-file findings labelled `agent-filed`. Relabelling an existing issue stays the orchestrator's (B2).
+On a filing, an agent applies `agent-filed`, as B2 requires, and may apply a label that says what
+kind of issue it is, such as `documentation`. A triage-state role's label is not an agent's to
+apply on a filing; after one, it goes on only by relabelling an existing issue, which stays the
+orchestrator's (B2).
 
 ## Telling a role from the other labels
 
