@@ -63,3 +63,9 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   is the check — its scope and its handling of inherited commits included.
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]
+- **Kody tool names (A7):** in Cowork the server segment of a Kody tool's name is the connector's
+  display name; Claude Code's desktop Code tab names the same connector by its id, and the
+  terminal CLI lists the connector by its display name [measured 2026-10-03, all three]. The tool
+  names a terminal session reports are read there, not inferred from that listing. A permission
+  rule or a reference to a Kody tool uses the name the session reports, read before it is
+  written, because a name taken from another client matches nothing here.
