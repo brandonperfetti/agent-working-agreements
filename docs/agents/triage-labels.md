@@ -1,32 +1,27 @@
 # Triage Labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the
-label strings this repository's issue tracker uses, or will use.
+Skills name an issue's triage state by role, one of five. This file gives the label string each
+role carries on this repository's tracker, and tells a role's label from the others.
 
-| Label in mattpocock/skills | Label in our tracker | Meaning                                  | On GitHub   |
-| -------------------------- | -------------------- | ---------------------------------------- | ----------- |
-| `needs-triage`             | `needs-triage`       | Maintainer needs to evaluate this issue  | not created |
-| `needs-info`               | `needs-info`         | Waiting on reporter for more information | not created |
-| `ready-for-agent`          | `ready-for-agent`    | Fully specified, ready for an AFK agent  | not created |
-| `ready-for-human`          | `ready-for-human`    | Requires human implementation            | not created |
-| `wontfix`                  | `wontfix`            | Will not be actioned                     | exists      |
+## The roles' labels
 
-When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding
-label string from this table. Where the last column says **not created**, create the label
-with `gh label create <name> --repo brandonperfetti/agent-working-agreements` the first time a
-skill needs it, rather than assuming it is there.
+Each of the five roles is labelled by its own name: `needs-triage`, `needs-info`,
+`ready-for-agent`, `ready-for-human` and `wontfix`. A skill that describes a role in other words
+means the label named for that role.
 
-## The labels the tracker has
+Which of these labels exist is the tracker's to say. Read it there, not from a copy:
 
-[measured 2026-10-13, `gh label list`] Eleven labels, in three groups. None but `wontfix` is a
-triage role, and none stands in for one:
+```bash
+gh label list --repo brandonperfetti/agent-working-agreements
+```
 
-| Group | Labels |
-| --- | --- |
-| Canonical triage | `wontfix` |
-| Agent marker | `agent-filed`: an issue an agent filed, so Brandon can sweep them (the agreement's B2) |
-| General-purpose | `accessibility`, `bug`, `documentation`, `duplicate`, `enhancement`, `good first issue`, `help wanted`, `invalid`, `question` |
+A skill that needs a role whose label is not on that list asks Brandon, who owns the tracker, to
+create it. Adding a label is a write to the tracker that no rule gives an agent: the agreement's
+B2 lets agents file issues and keeps relabelling for the orchestrator.
 
-[measured 2026-10-13, `gh issue list --state all`] In use on issues: `agent-filed`,
-`documentation` and `question` (on issues that ask for a decision or a spike). A label already
-on an issue says who filed it or what kind of issue it is, and nothing about its triage state.
+## Telling a role from the other labels
+
+A role's label on an issue is its triage state; `wontfix` is one. A label the first section does
+not name is not a triage-state role. `documentation` and `question` say what kind of issue it is,
+and `agent-filed` that an agent filed it, so Brandon can sweep them (B2); none of the three says
+anything about its triage state.
