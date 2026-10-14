@@ -1,7 +1,7 @@
 # Triage Labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the
-label strings this repository's issue tracker uses.
+Skills name an issue's triage state by role, one of five. This file gives the label string each
+role carries on this repository's tracker, and tells a role's label from the others.
 
 ## The roles' labels
 

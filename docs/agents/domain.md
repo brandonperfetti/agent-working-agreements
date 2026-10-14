@@ -1,6 +1,7 @@
 # Domain Docs
 
-How the engineering skills should consume this repo's domain documentation when exploring it.
+What a skill reads for this repository's vocabulary before it explores, and where a term goes
+once it is resolved.
 
 **Layout: single-context.** This repository is documents, not an application: the agreement
 ([`AGENT-WORKING-AGREEMENTS.md`](../../AGENT-WORKING-AGREEMENTS.md)), one appendix per client
@@ -9,15 +10,14 @@ monorepo signal, so there is no `GLOSSARY-MAP.md` and no per-context layout.
 
 ## Before exploring, read these
 
-- **`GLOSSARY.md`** at the repo root, where resolved terms go. It does not exist yet.
+- **`GLOSSARY.md`** at the repository root, where resolved terms go, once the first is written.
 - **`AGENT-WORKING-AGREEMENTS.md`**, which defines every term below in the section named
   beside it. Read the section before using the term; the table only points at it.
 - **`CHANGELOG.md`**, newest first: why each rule changed. This repository keeps no
   `docs/adr/`; the changelog is its record of decisions and their reasons.
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest
-creating them upfront. The `/domain-modeling` skill creates `GLOSSARY.md` lazily, when a term
-actually gets resolved.
+Read whichever of these exist and carry on. An unwritten `GLOSSARY.md` is the expected state,
+not a finding: `/domain-modeling` writes it when it resolves the first term, and not before.
 
 ## The domain's terms
 
@@ -50,17 +50,17 @@ becomes the first place to look.
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a rule's wording, a changelog entry),
-use the term as defined in `GLOSSARY.md`, or in the agreement's section the table names. Don't
-drift to synonyms the glossary explicitly avoids.
+Name a concept by the term `GLOSSARY.md` gives it, or the agreement's section the table names —
+in an issue's title, a rule's wording, a changelog entry — and keep to that term; a synonym the
+glossary has ruled out reads as a second concept.
 
-If the concept you need isn't in the glossary or the agreement yet, that's a signal: either you're
-inventing language the project doesn't use (reconsider) or there's a real gap (note it for
-`/domain-modeling`).
+A concept with no term in either place means one of two things. The word may be new to this
+repository: find the one it already uses. Or the vocabulary has a gap: leave a note for
+`/domain-modeling`.
 
 ## Flag decision conflicts
 
-If your output contradicts a reason the changelog records, surface it explicitly rather than
-silently overriding:
+Output that goes against a reason the changelog records says so where it is read, names the
+entry, and makes the case for reopening it:
 
-> _Contradicts the changelog's entry for #N, but worth reopening because…_
+> _This departs from the changelog's entry for #N; it is worth reopening because…_
