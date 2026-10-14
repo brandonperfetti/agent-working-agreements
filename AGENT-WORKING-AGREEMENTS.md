@@ -114,7 +114,12 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   [learnings: 2026-08-30 §5]
 - **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** Agents add no
   `Co-Authored-By`, no session trailer, no generated-by footer — a commit carries Brandon's author
-  identity and ends with its own content. What an agent posts under his name on a PR thread, a PR
+  identity and ends with its own content. That identity rule governs commits made by agents
+  working on Brandon's behalf inside this fleet: a contribution from anyone else carries its
+  author's own identity, and a pull request whose commits carry Brandon's identity from another
+  account is not merged until re-authored, because a pull request from a fork needs no write
+  access and the merge is then the only guard (Brandon, 2026-10-13). What an agent posts under his
+  name on a PR thread, a PR
   or an issue carries no credit line either; a provenance line is not one: it names the initiative,
   the role (e.g. wave orchestrator, lane) and the mode the filing agent worked in — never the client
   or the product — and says who read the evidence, which A2 wants.
@@ -145,6 +150,13 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   included, no size exemption.** The lane's own report is never the review; the verdict is
   recorded under the initiative's `reviews/`.
   [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
+  **An orchestrator's hand-back is never the review of its wave either:** the hand-back names the
+  claims to re-measure, and before a merge a reader outside the wave reads them against the
+  repository, because the party that produced the work does not attest to it, and rotation changes
+  who orchestrates the next wave without adding a reader before the merge. That reader's seat is
+  set by the situation — a session supervising dispatched agents — not by the client, because most
+  sessions own their work, as they should, and Genesis builds the MPD with Brandon by design. In
+  attended mode Brandon's per-batch review is already that reader (Brandon, 2026-10-12).
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.
@@ -181,8 +193,8 @@ the hooks the repo installs.
 
 ## A6. Where things go
 
-The `sansfaux/` root holds `_agent/`, project checkouts, the `agent-working-agreements/` clone, and
-`organize.sh` — nothing else.
+The `sansfaux/` root holds `_agent/`, project checkouts, the lane worktrees a client file places
+beside them, the `agent-working-agreements/` clone, and `organize.sh` — nothing else.
 
 An **on-fleet workspace** is one where walking upward from the working directory finds an
 `_agent/` directory; the directory containing its first occurrence is the **agent root**, and
@@ -239,6 +251,18 @@ each client file's to name. (Brandon, 2026-10-12)
 - **`gh` CLI** — what the skills use (issues, sub-issues, PRs). Primary for skill-driven work.
 - **GitHub MCP** — the read/access layer and PR orchestration. **Its write tools (`push_files`,
   `create_or_update_file`) never author commits** — they bypass the local clone in both modes.
+- **Kody's `@brandonperfetti/github` package** — the GitHub REST/GraphQL API for issues, PRs,
+  checks, PR status and merge previews, for any client with Kody connected. **It never authors
+  commits**, in both modes, for the GitHub MCP's reason: it bypasses the local clone. **Its
+  `confirm: true` is per call and is not B1's per-batch approval** — it is the agent confirming
+  its own call, not Brandon reviewing a batch — so in attended mode a Kody write is one of the
+  API writes B1 allows no routing around. **The token it uses is fine-grained and scoped per
+  repository, with one `secretName` per organisation**, because a call's reach is its token's, so
+  the owner a call names matters as much as its `confirm: true`; **every call passes
+  `secretName`**, because the package otherwise defaults to an OAuth lane, which may not be
+  connected and, where it is, would leave two credentials able to serve one call with nothing
+  showing which did. Where Kody is not connected, use `gh` or the GitHub MCP. How a client names
+  the Kody tools is its client file's to record (Brandon, 2026-10-12).
 - **On any create-then-link error, read the current state before retrying** — the create may have
   landed. GitHub's sub-issue cap errors *after* creating and parenting; blind retries burn issue
   numbers and mint duplicates. [learnings: 2026-09-12 wave-8 §3]
@@ -344,8 +368,14 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    straight to `develop`, or merging its own PR into `master` once the gate is green `[inference —
    untested, since testing it means merging into a protected branch]`. **Feature work never lands
    on a base branch, and only Brandon merges** are therefore rules of this agreement, not repo settings.
-   Making either mechanical needs a separate agent identity (machine user or App token) — an
-   identity change, open, not decided.
+   Making either mechanical needs a separate agent identity (machine user or App token), and that
+   is decided not now (Brandon, 2026-10-12): the two stay rules of this agreement because one
+   account has write access to each repository, every change reaches `master` through a pull
+   request Brandon merges by hand, the CI gate is a required check on `master`, and feature work
+   goes through a wave branch and a PR into `develop`; a separate identity costs a secret, a
+   token-switch step in every client and a new PR author, a cost not paid while those conditions
+   hold. It reopens on a second account with write access to a repository this agreement governs,
+   or on one measured breach of either rule, with a GitHub App as the recommended shape.
 5. Brandon has not overridden it for this session.
 
 By environment: **Claude Code → autonomous** (1 passes by construction but for its hook probe,
@@ -407,7 +437,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 - **What decides is review, not the branch name.** `develop` accepts pushes by design; the question
   for any commit is whether it will be **reviewed before it reaches `master`**.
   - **Release-cut work pushes straight to `develop`** — the version bump, the CHANGELOG section
-    rename, the `dist/` rebuild, and every fix commit answering the release PR's review. All of it
+    rename, any built artifact the repository commits, and every fix commit answering the
+    release PR's review. All of it
     is reviewed *on the `develop → master` PR itself*, whose head is `develop`; there is no other
     branch to push and no second review to wait for. Same gate, same two-axis review before the
     push, never a force-push.
@@ -430,7 +461,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   where the lane is no longer available does the orchestrator resolve, and its resolution gets a
   scoped two-axis review before the push. A resolution is new work, and no work reaches the wave
   branch unreviewed (Brandon, 2026-10-12). Inside a resolution, whoever resolves:
-  - **One fix round on a red gate, then stop and report** (stop-list item 4), with the branch
+  - **One fix round when the gate shows a red of the resolution's own — one absent from both
+    sides' pre-merge gate records — then stop and report** (stop-list item 4), with the branch
     back at its pre-merge tip. The merge is committed only once the gate shows no red of its own,
     so stopping is: save the resolution's diff and the red gate's output under `evidence/`, then
     `git merge --abort`. A branch left mid-merge holds unreviewed work where the next reader may
@@ -465,8 +497,9 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 3. Anything destructive or irreversible — data migrations against shared infra, deletions outside
    the repo, secrets, third-party writes (CMS, DNS, billing).
    A billing prompt holds the paid review, never the push (A4).
-4. The CI gate still red after one fix round — inside a merge-conflict resolution too, which
-   leaves the branch at its pre-merge tip (Git contract above).
+4. The CI gate still red after one fix round — inside a merge-conflict resolution too, where
+   only a red of the resolution's own counts (one absent from both sides' pre-merge gate
+   records) and stopping leaves the branch at its pre-merge tip (Git contract above).
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
 
