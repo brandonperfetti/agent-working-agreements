@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-14 (#1) — OpenClaw: row 1's bound points at the paragraph carrying its citation.**
+  Issue #137: the paragraph "**Row 1's bound is the command's, not Gateway's.**" sent the reader to
+  a paragraph below beginning "**Test runs deliberately have no route.**" for the measurement behind
+  its `workdir` claim. The 2026-10-07 (#2) amendment replaced that paragraph with "**Executable
+  checks are classified by behavior, not by name.**", which carries #67's canary and Camina's
+  inference from it, and the pointer was not updated, so it led nowhere. It now names that opening,
+  so a reader following the bound reaches the measurement it rests on. No rule changes.
+
 - **2026-10-13 (#8) — A4: RULE ZERO's identity rule names whose commits it governs.** Issue
   #132: RULE ZERO said a commit carries Brandon's author identity, with no scope. Inside the fleet
   that names the identity an agent's commit carries when it works for him; read from outside, by a
@@ -187,7 +195,8 @@ being retrofitted onto the other.
   each of the three questions.** A new Git-contract bullet in B2 says: the lane brings the wave
   branch into its own branch as a merge commit in its own worktree (not a rebase, which would
   rewrite commits it has already reported), resolves, re-runs the gate, and the resolution gets a
-  scoped review; the orchestrator's merge is then clean. Where the lane is no longer available, the
+  scoped review; the orchestrator's merge is clean against the tip the lane merged. Where the lane is
+  no longer available, the
   orchestrator resolves and the resolution gets a scoped two-axis review before the push. The
   reason: a resolution is new work, and no work reaches the wave branch unreviewed. Inside a
   resolution the bound is the general one — one fix round on a red of the resolution's own, one

@@ -1,6 +1,7 @@
 # Domain Docs
 
-How the engineering skills should consume this repo's domain documentation when exploring it.
+What a skill reads for this repository's vocabulary before it explores, and where a term goes
+once it is resolved.
 
 **Layout: single-context.** This repository is documents, not an application: the agreement
 ([`AGENT-WORKING-AGREEMENTS.md`](../../AGENT-WORKING-AGREEMENTS.md)), one appendix per client
@@ -9,15 +10,16 @@ monorepo signal, so there is no `GLOSSARY-MAP.md` and no per-context layout.
 
 ## Before exploring, read these
 
-- **`GLOSSARY.md`** at the repo root, where resolved terms go. It does not exist yet.
+- **`GLOSSARY.md`** at the repository root, where resolved terms go.
 - **`AGENT-WORKING-AGREEMENTS.md`**, which defines every term below in the section named
   beside it. Read the section before using the term; the table only points at it.
 - **`CHANGELOG.md`**, newest first: why each rule changed. This repository keeps no
   `docs/adr/`; the changelog is its record of decisions and their reasons.
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest
-creating them upfront. The `/domain-modeling` skill creates `GLOSSARY.md` lazily, when a term
-actually gets resolved.
+The agreement and the changelog are in every clone: read the agreement before working, as
+`AGENTS.md` says, and the changelog before taking a rule for original, as the agreement's header
+says. Only `GLOSSARY.md` may not exist yet. An unwritten one is the expected state, not a
+finding; `/domain-modeling` writes it when it resolves the first term, and not before.
 
 ## The domain's terms
 
@@ -31,7 +33,7 @@ actually gets resolved.
 | wave | A4 and B2: one phase of an initiative, run by one orchestrator on one branch off `develop` |
 | orchestrator | A4: the lead agent; runs one wave, then rotates to a fresh one through a packet |
 | lane | A4 and B2: one sub-agent's work on named files, in its own worktree |
-| RULE ZERO | A4: no attribution on any commit, PR body, reply or comment |
+| RULE ZERO | A4: no attribution on any commit, PR body, reply or comment; an agent's commits on Brandon's behalf carry his identity, anyone else's carry their own, and a PR carrying his identity from another account is not merged until re-authored |
 | evidence labels | A2: `[measured]`, `[source]`, `[inference]` on every claim |
 | stop-list | B2: what an agent in autonomous mode stops and asks about |
 
@@ -42,25 +44,27 @@ becomes the first place to look.
 
 ```text
 /
+├── AGENTS.md                      ← this repository's agent instructions, its CI gate among them
 ├── GLOSSARY.md                    ← resolved terms (created when the first one is)
 ├── AGENT-WORKING-AGREEMENTS.md    ← the agreement: Parts A and B, the Part C index
 ├── CHANGELOG.md                   ← why each rule changed
-└── clients/
+├── clients/
+└── docs/agents/                   ← agent docs, this file among them; README.md's layout lists each
 ```
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a rule's wording, a changelog entry),
-use the term as defined in `GLOSSARY.md`, or in the agreement's section the table names. Don't
-drift to synonyms the glossary explicitly avoids.
+Name a concept by the term `GLOSSARY.md` gives it, or the agreement's section the table names —
+in an issue's title, a rule's wording, a changelog entry — and keep to that term; a synonym the
+glossary has ruled out reads as a second concept.
 
-If the concept you need isn't in the glossary or the agreement yet, that's a signal: either you're
-inventing language the project doesn't use (reconsider) or there's a real gap (note it for
-`/domain-modeling`).
+A concept with no term in either place means one of two things. The word may be new to this
+repository: find the one it already uses. Or the vocabulary has a gap: leave a note for
+`/domain-modeling`.
 
 ## Flag decision conflicts
 
-If your output contradicts a reason the changelog records, surface it explicitly rather than
-silently overriding:
+When your output goes against a reason the changelog records, the output itself says so, names
+the entry and makes the case for reopening it:
 
-> _Contradicts the changelog's entry for #N, but worth reopening because…_
+> _This departs from the changelog's entry for #N; it is worth reopening because…_
