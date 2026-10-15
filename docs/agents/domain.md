@@ -16,8 +16,10 @@ monorepo signal, so there is no `GLOSSARY-MAP.md` and no per-context layout.
 - **`CHANGELOG.md`**, newest first: why each rule changed. This repository keeps no
   `docs/adr/`; the changelog is its record of decisions and their reasons.
 
-Read whichever of these exist and carry on. An unwritten `GLOSSARY.md` is the expected state,
-not a finding: `/domain-modeling` writes it when it resolves the first term, and not before.
+The agreement and the changelog are in every clone: read the agreement before working, as
+`AGENTS.md` says, and the changelog before taking a rule for original, as the agreement's header
+says. Only `GLOSSARY.md` may not exist yet. An unwritten one is the expected state, not a
+finding; `/domain-modeling` writes it when it resolves the first term, and not before.
 
 ## The domain's terms
 
