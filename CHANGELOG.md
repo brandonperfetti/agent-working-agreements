@@ -58,11 +58,11 @@ being retrofitted onto the other.
   `develop`" among the conditions Brandon's 2026-10-12 decision rests on; it now says "through its
   branch (B2)". That is a conforming wording change, not a change to the decision: the condition
   always meant a branch and a PR into `develop`, never a push straight to a base branch, and that
-  holds for both kinds of branch; the decision and its reopening conditions are unchanged. **Decision (the wave
-  orchestrator, 2026-10-16, under B2's decide and record, reviewed on the wave's PR): the branch
-  wording as it now stands in B0 item 3, B2's first Git-contract bullet, B0 item 4's condition and
-  A4's author check.** No naming scheme is added, and who merges, what may be pushed to `develop`
-  and the rest of B2 are unchanged.
+  holds for both kinds of branch; the decision and its reopening conditions are unchanged.
+  **Decision (the wave orchestrator, 2026-10-16, under B2's decide and record, reviewed on the
+  wave's PR): the branch wording as it now stands in B0 item 3, B2's first Git-contract bullet, B0
+  item 4's condition and A4's author check.** No naming scheme is added, and who merges, what may
+  be pushed to `develop` and the rest of B2 are unchanged.
 
 - **2026-10-16 (#1) — B0: a failed guard check downgrades the delivery, not the session.** Issue
   #141: B0 said a failed capability-guard check "downgrades that session to attended", and
