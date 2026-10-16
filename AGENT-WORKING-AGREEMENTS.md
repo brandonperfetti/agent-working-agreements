@@ -317,12 +317,12 @@ Claude Code → autonomous. Cowork → attended. The agent then **verifies the c
 silently at pickup**, scored **for each checkout and repository delivery path**, not for the session
 as a whole: a failed check downgrades **only that delivery** to attended, with a one-line reason
 ("attended: `develop` is unprotected"), never a question, so a session working two repositories is
-not moved to attended by a check that failed in one. The reason is the items themselves: they are
-already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — and a
-check that failed for one delivery says nothing of another. Brandon can override in either direction
-by saying so in the prompt, and that wins over the default. An initiative's MPD §0 *records* the
-mode its waves run in (so a rotation packet carries it); it does not gate it, and work with no MPD
-has its mode picked the same way.
+not moved to attended by a check that failed in one. The reason is in the items: items 1, 2 and 4
+are already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so
+one of them failing for one delivery says nothing of another. Brandon can override in either
+direction by saying so in the prompt, and that wins over the default. An initiative's MPD §0
+*records* the mode its waves run in (so a rotation packet carries it); it does not gate it, and work
+with no MPD has its mode picked the same way.
 
 **Capability guard (every item that applies must hold):**
 

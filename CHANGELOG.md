@@ -63,14 +63,16 @@ being retrofitted onto the other.
   reading.** B0 now says the guard is scored for each checkout and repository delivery path, not
   for the session as a whole, and that a failed check downgrades only that delivery to attended,
   with its one-line reason, so a session working two repositories is not moved to attended by a
-  check that failed in one. It gives the reason where it states the unit: the items are already
-  scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — and a check
-  that failed for one delivery says nothing of another. `clients/openclaw.md`'s "Default mode" and
-  "Staff operating model" sentences now point at B0 in place of stating the unit, keeping what is
-  that client's own (Camina coordinating several deliveries, the specialist route); its "Lane
-  capability" decision applies B0's unit to a lane and is unchanged. `clients/codex.md`'s "a failure
-  downgrades this session" now points at B0 the same way. Item 5, Brandon's override for the
-  session, is unchanged, and the Claude Code and Cowork appendices state no unit and are unchanged.
+  check that failed in one. It gives the reason where it states the unit: items 1, 2 and 4 are
+  already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so one
+  of them failing for one delivery says nothing of another. Item 3 is scored per commit, inside a
+  delivery, and item 5 is Brandon's override, which reaches the whole session.
+  `clients/openclaw.md`'s "Default mode" and "Staff operating model" sentences now point at B0 in
+  place of stating the unit, keeping what is that client's own (Camina coordinating several
+  deliveries, the specialist route); its "Lane capability" decision applies B0's unit to a lane
+  and is unchanged. `clients/codex.md`'s "a failure downgrades this session" now points at B0 the
+  same way. Item 5, Brandon's override for the session, is unchanged, and the Claude Code and
+  Cowork appendices state no unit and are unchanged.
 
 - **2026-10-14 (#1) — OpenClaw: row 1's bound points at the paragraph carrying its citation.**
   Issue #137: the paragraph "**Row 1's bound is the command's, not Gateway's.**" sent the reader to
