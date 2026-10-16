@@ -39,7 +39,7 @@ and never overrides Parts A–B. **Neither does a skill: where a skill's instruc
 disagree, the agreement holds, and you say that you met the disagreement** rather than choosing
 silently — a disagreement never reported is never fixed at its source (Brandon, 2026-10-12).
 Initiatives (`_agent/initiatives/`) are how *orchestrated* work is
-organised, not a gate on whether these rules apply: with no MPD, you are in **attended mode** (B1).
+organised, not a gate on whether these rules apply, nor on the mode: B0 picks the mode, MPD or not.
 Skills come from the `brandonperfetti-skills` plugin (mirror of `mattpocock/skills` plus
 Brandon's own); read the relevant skill *before* that kind of work — `orchestrate`, `deep-grill`,
 `handoff`, `code-review`, `writing-tickets`, `writing-pull-requests`, `coderabbit-preflight`,
@@ -321,7 +321,8 @@ not moved to attended by a check that failed in one. The reason is the items the
 already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — and a
 check that failed for one delivery says nothing of another. Brandon can override in either direction
 by saying so in the prompt, and that wins over the default. An initiative's MPD §0 *records* the
-mode its waves run in (so a rotation packet carries it); it does not gate it.
+mode its waves run in (so a rotation packet carries it); it does not gate it, and work with no MPD
+has its mode picked the same way.
 
 **Capability guard (every item that applies must hold):**
 
@@ -352,9 +353,11 @@ mode its waves run in (so a rotation packet carries it); it does not gate it.
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
    **This probe is always permitted**, in either mode: it is how the mode gets decided, so B1's
    "Brandon runs the suites" governs routine runs afterward, not this one.
-3. Feature work lands on an initiative branch no other initiative is using, never on a base
-   branch. Scored when a commit would land, not by the checkout's current branch: a session that
-   commits none does not fail it. What may be pushed to `develop` is B2's, not this item's.
+3. Feature work lands on a branch off `develop` that no other work is using — an initiative's wave
+   branch, or, for work with no initiative, a branch of its own for that piece of work (B2) —
+   never on a base branch. Scored when a commit would land, not by the checkout's current branch:
+   a session that commits none does not fail it. What may be pushed to `develop` is B2's, not this
+   item's.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
      **deliberately no pull-request rule and no required check**. `develop` is the *head* of the
@@ -433,11 +436,13 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 
 **Git contract**
 
-- The wave orchestrator cuts **one branch per wave off `develop`** (`<initiative>/wave-<n>`), and
-  that is the **only** branch an agent pushes to land **feature** work. **Never `master`, never a
-  force-push, and never feature work pushed onto `develop`.** Protection enforces this only on
-  `master`; `develop` blocks force-pushes and deletions but accepts pushes by design (step 4 of the
-  ritual), so it is a rule you keep, not a wall you hit.
+- The wave orchestrator cuts **one branch per wave off `develop`** (`<initiative>/wave-<n>`).
+  Feature work with no initiative has no wave: it gets **one branch of its own off `develop`** for
+  that piece of work (the ritual's step 1), with no other work on it. That branch is the **only**
+  branch an agent pushes to land **feature** work. **Never `master`, never a force-push, and never
+  feature work pushed onto `develop`.** Protection enforces this only on `master`; `develop` blocks
+  force-pushes and deletions but accepts pushes by design (step 4 of the ritual), so it is a rule
+  you keep, not a wall you hit.
 - **What decides is review, not the branch name.** `develop` accepts pushes by design; the question
   for any commit is whether it will be **reviewed before it reaches `master`**.
   - **Release-cut work pushes straight to `develop`** — the version bump, the CHANGELOG section
@@ -446,8 +451,9 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
     is reviewed *on the `develop → master` PR itself*, whose head is `develop`; there is no other
     branch to push and no second review to wait for. Same gate, same two-axis review before the
     push, never a force-push.
-  - **Feature work always goes through a wave branch and a PR into `develop`** — pushed straight,
-    it would reach `master` having been reviewed by nobody. That, not the branch, is the reason.
+  - **Feature work always goes through its branch (above) and a PR into `develop`** — pushed
+    straight, it would reach `master` having been reviewed by nobody. That, not the branch, is the
+    reason.
   In **attended** mode the shape is unchanged: the lane delivers an mbox, Brandon applies and pushes.
 - **Each lane works in its own git worktree on a branch off the wave branch** and commits there
   with the repo's hooks firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO

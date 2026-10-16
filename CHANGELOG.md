@@ -10,6 +10,26 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-16 (#2) — A1 and B0: B0 picks the mode with or without an MPD, and feature work with
+  no initiative has a branch.** Issue #142: A1 said "with no MPD, you are in **attended mode**
+  (B1)", while B0 says the environment picks the mode and an MPD records it without gating it, so
+  an agent doing one-off work in a client whose default is autonomous read two answers. **Decision
+  (Brandon, 2026-10-16, on the ticket): A1's clause goes; B0 decides, with or without an MPD**, as
+  the 2026-09-11 entry intended ("initiatives organise orchestrated work, they do not gate
+  applicability"). A1 keeps the sentence's true half — initiatives organise orchestrated work and
+  do not gate whether these rules apply — and now says they do not gate the mode either; B0's MPD
+  sentence says work with no MPD has its mode picked the same way. The decision also asked which
+  branch feature work with no initiative lands on, because B0 item 3 said "an initiative branch"
+  and B2 named only `<initiative>/wave-<n>` as the branch an agent pushes, which left such work,
+  now possibly autonomous, with no branch it could push. B0 item 3 and B2's Git contract now give
+  it one branch of its own off `develop` for that piece of work, with no other work on it — the
+  ritual's step 1, "one branch per wave or piece of work" — and B2's feature-work sub-bullet sends
+  it through that branch and a PR into `develop`, for the reason it already gives: pushed
+  straight, it would reach `master` reviewed by nobody. **Decision (the wave orchestrator,
+  2026-10-16, under B2's decide and record, reviewed on the wave's PR): the branch wording as
+  above.** No naming scheme is added, and who merges, what may be pushed to `develop` and the
+  rest of B2 are unchanged.
+
 - **2026-10-16 (#1) — B0: a failed guard check downgrades the delivery, not the session.** Issue
   #141: B0 said a failed capability-guard check "downgrades that session to attended", and
   `clients/codex.md` repeated "this session", while `clients/openclaw.md` said the guard decides
