@@ -10,6 +10,25 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-16 (#1) — B0: a failed guard check downgrades the delivery, not the session.** Issue
+  #141: B0 said a failed capability-guard check "downgrades that session to attended", and
+  `clients/codex.md` repeated "this session", while `clients/openclaw.md` said the guard decides
+  for each exact checkout and repository delivery path, not the conversation as a whole, and that
+  a failure moves only the affected delivery to B1. One rule had two units, and the narrower one
+  lived in a client file, which adds only what is specific to its client.
+  **Decision (Brandon, 2026-10-16, on the ticket): option (a), the per-checkout, per-delivery-path
+  reading.** B0 now says the guard is scored for each checkout and repository delivery path, not
+  for the session as a whole, and that a failed check downgrades only that delivery to attended,
+  with its one-line reason, so a session working two repositories is not moved to attended by a
+  check that failed in one. It gives the reason where it states the unit: the items are already
+  scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — and a check
+  that failed for one delivery says nothing of another. `clients/openclaw.md`'s "Default mode" and
+  "Staff operating model" sentences now point at B0 in place of stating the unit, keeping what is
+  that client's own (Camina coordinating several deliveries, the specialist route); its "Lane
+  capability" decision applies B0's unit to a lane and is unchanged. `clients/codex.md`'s "a failure
+  downgrades this session" now points at B0 the same way. Item 5, Brandon's override for the
+  session, is unchanged, and the Claude Code and Cowork appendices state no unit and are unchanged.
+
 - **2026-10-14 (#1) — OpenClaw: row 1's bound points at the paragraph carrying its citation.**
   Issue #137: the paragraph "**Row 1's bound is the command's, not Gateway's.**" sent the reader to
   a paragraph below beginning "**Test runs deliberately have no route.**" for the measurement behind

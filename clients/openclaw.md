@@ -23,8 +23,8 @@ downgrade to attended. After
 changing the pointer, require a fresh-session observation before declaring it effective; do not
 assume arbitrary external-file injection or automatic refresh.
 
-**Default mode: attended.** The capability guard (B0) still decides, for each exact checkout and
-repository delivery path — not for the conversation as a whole or every action Camina coordinates.
+**Default mode: attended.** The capability guard (B0) still decides, for the unit B0 names; that
+Camina coordinates several deliveries in one conversation does not widen it.
 The accepted target is `OpenClaw → autonomous`, in a separate amendment supported by fresh main-
 and specialist-session evidence. Any retained workspace-local layer adds client mechanics only; it
 never copies or overrides Parts A–B. B2 still reserves merging to Brandon alone.
@@ -57,8 +57,8 @@ Administration outside that boundary retains its existing authorization and stop
 When available, an authorized B2-qualified specialist lane is the default delivery path for
 routine, reversible repository work. Progress and status updates are informational and
 non-blocking: sending one neither requests owner approval nor creates an approval checkpoint.
-If no qualified safe route is available, apply B1 only to that affected delivery or stop with the
-precise capability boundary; do not convert the whole conversation or unrelated deliveries to B1.
+If no qualified safe route is available, the affected delivery follows B1, as B0 says of a failed
+check, or stops with the precise capability boundary.
 
 Keep five decisions separate:
 

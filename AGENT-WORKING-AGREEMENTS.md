@@ -314,8 +314,12 @@ went wrong.
 
 Two modes. **The environment picks the mode; nobody asks Brandon at the start of a session.**
 Claude Code → autonomous. Cowork → attended. The agent then **verifies the capability guard
-silently at pickup**; a failed check downgrades that session to attended with a one-line reason
-("attended: `develop` is unprotected"), never a question. Brandon can override in either direction
+silently at pickup**, scored **for each checkout and repository delivery path**, not for the session
+as a whole: a failed check downgrades **only that delivery** to attended, with a one-line reason
+("attended: `develop` is unprotected"), never a question, so a session working two repositories is
+not moved to attended by a check that failed in one. The reason is the items themselves: they are
+already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — and a
+check that failed for one delivery says nothing of another. Brandon can override in either direction
 by saying so in the prompt, and that wins over the default. An initiative's MPD §0 *records* the
 mode its waves run in (so a rotation packet carries it); it does not gate it.
 
