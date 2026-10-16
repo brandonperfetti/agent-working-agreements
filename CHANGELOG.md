@@ -10,6 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-16 (#4) — Changelog: the 2026-10-12 (#2) entry claims no more than the Claude Code
+  scratchpad measurement.** Issue #143: that entry said a Claude Code scratch clone takes "one
+  subdirectory per sub-agent because sub-agents share it", while `clients/claude-code.md`, the
+  file it describes, says two measured dispatches shared the directory and whether every dispatch
+  does is unmeasured. The client file's sentence had been narrowed to its measurements in review
+  and the entry kept the first wording, so the changelog carried a measurement past its boundary,
+  which A2 keeps inside the claim. The entry's clause now says what the client file says,
+  corrected in place, marked and dated there with the old text quoted, what was observed and what
+  was concluded (A2), in the shape of the in-place notes this file already carries (the 2026-09-29
+  and 2026-09-26 (#2) entries). The rule, one subdirectory per sub-agent, and the client file are
+  unchanged.
+
 - **2026-10-16 (#3) — B2: a wave branch that has moved since the lane merged is the same rule
   again.** Issue #140: B2's bullet "A lane merge that conflicts goes back to the lane" said the
   orchestrator's merge is clean against the tip the lane merged, and stopped there, so a reader
@@ -282,12 +294,19 @@ being retrofitted onto the other.
   — never a clone or worktree — so the "if nothing fits: `experiments/`" rule stays true, and the
   sentence that sends every product under `_agent/` points at the rule. Each client file names where
   a scratch clone goes or records it unmeasured: Claude Code, the scratchpad directory the session's
-  environment names, one subdirectory per sub-agent because sub-agents share it; Codex and Cowork,
-  unmeasured; OpenClaw, unmeasured, with its Gateway check's scratch root ruled out because it
-  exists for one check and is removed after it. **Decision (Brandon, 2026-10-12): the rule as
+  environment names, one subdirectory per sub-agent because the two dispatches measured shared it
+  and whether every dispatch does is unmeasured; Codex and Cowork, unmeasured; OpenClaw,
+  unmeasured, with its Gateway check's scratch root ruled out because it exists for one check and
+  is removed after it. **Decision (Brandon, 2026-10-12): the rule as
   proposed.** Lane worktrees stay where they are, scratch repositories outside `_agent/` are not
   banned, and nothing is deleted by this amendment; what is already under `_agent/` is decided on
-  the issue, not here.
+  the issue, not here. *(Corrected 2026-10-16, issue #143: the Claude Code clause read "one
+  subdirectory per sub-agent because sub-agents share it", which should not be relied on. What was
+  observed: two dispatches, a lane and its Spec reviewer, shared the directory [measured
+  2026-10-12, as `clients/claude-code.md` records]. What was concluded from them, not measured:
+  that every dispatch shares it. The client file had been narrowed to its two measurements in
+  review, and this entry kept the first wording; the clause now says what the client file says.
+  The rule, one subdirectory per sub-agent, is unchanged. The 2026-10-16 (#4) entry above.)*
 
 - **2026-10-12 (#1) — A skill never overrides Parts A–B.** Issue #119: A1 said a repository's
   own `AGENTS.md` / `CLAUDE.md` never overrides Parts A–B, and A4 said RULE ZERO overrides any
