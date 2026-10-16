@@ -30,8 +30,8 @@ being retrofitted onto the other.
   The clause now says it: a wave branch that has moved since is the same rule again — a merge that
   conflicts goes back to the lane. The 2026-10-12 (#3) entry carried the same clause and was
   amended in place to match, marked and dated there (A2). No other rule changes: the rule held
-  without the clause, which writes down a case the reader had to derive, as the issue that
-  introduced the clause had asked.
+  without the clause, which writes down a case the reader had to derive, as issue #123, which
+  introduced the clause, had asked.
 
 - **2026-10-16 (#2) — A1 and B0: B0 picks the mode with or without an MPD, and feature work with
   no initiative has a branch.** Issue #142: A1 said "with no MPD, you are in **attended mode**
