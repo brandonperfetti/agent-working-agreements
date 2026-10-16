@@ -319,7 +319,9 @@ as a whole: a failed check downgrades **only that delivery** to attended, with a
 ("attended: `develop` is unprotected"), never a question, so a session working two repositories is
 not moved to attended by a check that failed in one. The reason is in the items: items 1, 2 and 4
 are already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so
-one of them failing for one delivery says nothing of another. Brandon can override in either
+item 1's hook probe failing says nothing of a delivery from a checkout that probe does not cover —
+another clone, or another worktree where `core.hooksPath` is relative — and item 2 or 4 failing for
+one repository says nothing of a delivery to another repository. Brandon can override in either
 direction by saying so in the prompt, and that wins over the default. An initiative's MPD §0
 *records* the mode its waves run in (so a rotation packet carries it); it does not gate it, and work
 with no MPD has its mode picked the same way.

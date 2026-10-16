@@ -75,9 +75,11 @@ being retrofitted onto the other.
   for the session as a whole, and that a failed check downgrades only that delivery to attended,
   with its one-line reason, so a session working two repositories is not moved to attended by a
   check that failed in one. It gives the reason where it states the unit: items 1, 2 and 4 are
-  already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so one
-  of them failing for one delivery says nothing of another. Item 3 is scored per commit, inside a
-  delivery, and item 5 is Brandon's override, which reaches the whole session.
+  already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so
+  item 1's hook probe failing says nothing of a delivery from a checkout that probe does not cover
+  — another clone, or another worktree where `core.hooksPath` is relative — and item 2 or 4 failing
+  for one repository says nothing of a delivery to another repository. Item 3 is scored per commit,
+  inside a delivery, and item 5 is Brandon's override, which reaches the whole session.
   `clients/openclaw.md`'s "Default mode" and "Staff operating model" sentences now point at B0 in
   place of stating the unit, keeping what is that client's own (Camina coordinating several
   deliveries, the specialist route); its "Lane capability" decision applies B0's unit to a lane
