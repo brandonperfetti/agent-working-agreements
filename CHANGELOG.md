@@ -10,6 +10,17 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-16 (#3) — B2: a wave branch that has moved since the lane merged is the same rule
+  again.** Issue #140: B2's bullet "A lane merge that conflicts goes back to the lane" said the
+  orchestrator's merge is clean against the tip the lane merged, and stopped there, so a reader
+  whose wave branch had moved since — another lane landed in between — had to derive from the
+  bullet's first sentence that a merge that conflicts on the new tip goes back to the lane too.
+  The clause now says it: a wave branch that has moved since is the same rule again — a merge that
+  conflicts goes back to the lane. The 2026-10-12 (#3) entry carried the same clause and was
+  amended in place to match, marked and dated there (A2). No other rule changes: the rule held
+  without the clause, which writes down a case the reader had to derive, as the issue that
+  introduced the clause had asked.
+
 - **2026-10-16 (#2) — A1 and B0: B0 picks the mode with or without an MPD, and feature work with
   no initiative has a branch.** Issue #142: A1 said "with no MPD, you are in **attended mode**
   (B1)", while B0 says the environment picks the mode and an MPD records it without gating it, so
@@ -234,8 +245,9 @@ being retrofitted onto the other.
   each of the three questions.** A new Git-contract bullet in B2 says: the lane brings the wave
   branch into its own branch as a merge commit in its own worktree (not a rebase, which would
   rewrite commits it has already reported), resolves, re-runs the gate, and the resolution gets a
-  scoped review; the orchestrator's merge is clean against the tip the lane merged. Where the lane is
-  no longer available, the
+  scoped review; the orchestrator's merge is clean against the tip the lane merged, and a wave branch
+  that has moved since is the same rule again — a merge that conflicts goes back to the lane. Where
+  the lane is no longer available, the
   orchestrator resolves and the resolution gets a scoped two-axis review before the push. The
   reason: a resolution is new work, and no work reaches the wave branch unreviewed. Inside a
   resolution the bound is the general one — one fix round on a red of the resolution's own, one
@@ -250,7 +262,12 @@ being retrofitted onto the other.
   handoff, and a fix to it inside the merge would be an unreviewed change to that side's work — and
   the orchestrator's merged-tree gate before the push is unchanged. A4's worktree and two-axis
   bullets and B2's Addenda point at the rule. What an agent does when `git am` of an approved series
-  conflicts on the attended path is not decided here and has no rule.
+  conflicts on the attended path is not decided here and has no rule. *(Amended 2026-10-16, issue
+  #140: the clause "and a wave branch that has moved since is the same rule again — a merge that
+  conflicts goes back to the lane" was added after "the orchestrator's merge is clean against the
+  tip the lane merged", which until then ended the sentence; the earlier wording was not wrong,
+  since the bullet's first sentence already sent any conflicting merge back to the lane, but left
+  the moved-tip case for the reader to derive. The 2026-10-16 (#3) entry above.)*
 
 - **2026-10-12 (#2) — No clone or worktree under `_agent/`.** Issue #114: A6 sent everything an
   agent produces under `_agent/` and named `experiments/` for scratch harnesses, saying nothing
