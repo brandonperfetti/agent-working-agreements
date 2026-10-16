@@ -137,11 +137,11 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   reject or regenerate, since `git am` preserves
   the patch author (B1). **Added** means not on `origin/develop` or `origin/master`,
   fetched and read
-  **before** the delivery is pushed or merged — a lane or wave branch, or release-cut work pushed
-  straight to `develop` (B2), each push its own delivery — so a lane's own earlier commits still
-  count. Forward-only: commits that already carry a
-  trailer stay as they are, and a match on an inherited one goes in the delivery's review record,
-  never back to the lane.
+  **before** the delivery is pushed or merged — a lane or wave branch, the branch of feature work
+  with no initiative, or release-cut work pushed straight to `develop` (B2), each push its own
+  delivery — so a lane's own earlier commits still count. Forward-only: commits that already
+  carry a trailer stay as they are, and a match on an inherited one goes in the delivery's review
+  record, never back to the lane.
   [learnings: 2026-09-06 wave-6 §7; 2026-09-04 wave-5 §6]
   **A trailer never established that a commit came through a reviewed lane.** The two-axis review
   record under `reviews/`, the gate evidence under `evidence/` and the PR trail do; report those.
@@ -353,11 +353,11 @@ with no MPD has its mode picked the same way.
    local shell is not the CI runner, and the project's agent docs name the exports it needs.
    **This probe is always permitted**, in either mode: it is how the mode gets decided, so B1's
    "Brandon runs the suites" governs routine runs afterward, not this one.
-3. Feature work lands on a branch off `develop` that no other work is using — an initiative's wave
-   branch, or, for work with no initiative, a branch of its own for that piece of work (B2) —
-   never on a base branch. Scored when a commit would land, not by the checkout's current branch:
-   a session that commits none does not fail it. What may be pushed to `develop` is B2's, not this
-   item's.
+3. Feature work lands on an initiative branch no other initiative is using — its wave branch or a
+   lane branch off it — or, for work with no initiative, on a branch of its own off `develop` for
+   that piece of work (B2), with no other work on it; never on a base branch. Scored when a commit
+   would land, not by the checkout's current branch: a session that commits none does not fail it.
+   What may be pushed to `develop` is B2's, not this item's.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
      **deliberately no pull-request rule and no required check**. `develop` is the *head* of the
@@ -379,7 +379,7 @@ with no MPD has its mode picked the same way.
    is decided not now (Brandon, 2026-10-12): the two stay rules of this agreement because one
    account has write access to each repository, every change reaches `master` through a pull
    request Brandon merges by hand, the CI gate is a required check on `master`, and feature work
-   goes through a wave branch and a PR into `develop`; a separate identity costs a secret, a
+   goes through its branch (B2) and a PR into `develop`; a separate identity costs a secret, a
    token-switch step in every client and a new PR author, a cost not paid while those conditions
    hold. It reopens on a second account with write access to a repository this agreement governs,
    or on one measured breach of either rule, with a GitHub App as the recommended shape.
@@ -436,13 +436,14 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 
 **Git contract**
 
-- The wave orchestrator cuts **one branch per wave off `develop`** (`<initiative>/wave-<n>`).
-  Feature work with no initiative has no wave: it gets **one branch of its own off `develop`** for
-  that piece of work (the ritual's step 1), with no other work on it. That branch is the **only**
-  branch an agent pushes to land **feature** work. **Never `master`, never a force-push, and never
-  feature work pushed onto `develop`.** Protection enforces this only on `master`; `develop` blocks
-  force-pushes and deletions but accepts pushes by design (step 4 of the ritual), so it is a rule
-  you keep, not a wall you hit.
+- The wave orchestrator cuts **one branch per wave off `develop`** (`<initiative>/wave-<n>`), and
+  that is the **only** branch an agent pushes to land an initiative's **feature** work. Feature
+  work with no initiative has no wave: it gets **one branch of its own off `develop`** for that
+  piece of work (the ritual's step 1), with no other work on it, and that is the **only** branch an
+  agent pushes to land it. **Never `master`, never a force-push, and never feature work pushed
+  onto `develop`.** Protection enforces this only on `master`; `develop` blocks force-pushes and
+  deletions but accepts pushes by design (step 4 of the ritual), so it is a rule you keep, not a
+  wall you hit.
 - **What decides is review, not the branch name.** `develop` accepts pushes by design; the question
   for any commit is whether it will be **reviewed before it reaches `master`**.
   - **Release-cut work pushes straight to `develop`** — the version bump, the CHANGELOG section
