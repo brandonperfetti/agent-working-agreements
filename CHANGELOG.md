@@ -10,6 +10,81 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-16 (#4) — Changelog: the 2026-10-12 (#2) entry claims no more than the Claude Code
+  scratchpad measurement.** Issue #143: that entry said a Claude Code scratch clone takes "one
+  subdirectory per sub-agent because sub-agents share it", while `clients/claude-code.md`, the
+  file it describes, says two measured dispatches shared the directory and whether every dispatch
+  does is unmeasured. The client file's sentence had been narrowed to its measurements in review
+  and the entry kept the first wording, so the changelog carried a measurement past its boundary,
+  which A2 keeps inside the claim. The entry's clause now says what the client file says,
+  corrected in place, marked and dated there with the old text quoted, what was observed and what
+  was concluded (A2), in the shape of the in-place notes this file already carries (the 2026-09-29
+  and 2026-09-26 (#2) entries). The rule, one subdirectory per sub-agent, and the client file are
+  unchanged.
+
+- **2026-10-16 (#3) — B2: a wave branch that has moved since the lane merged is the same rule
+  again.** Issue #140: B2's bullet "A lane merge that conflicts goes back to the lane" said the
+  orchestrator's merge is clean against the tip the lane merged, and stopped there, so a reader
+  whose wave branch had moved since — another lane landed in between — had to derive from the
+  bullet's first sentence that a merge that conflicts on the new tip goes back to the lane too.
+  The clause now says it: a wave branch that has moved since is the same rule again — a merge that
+  conflicts goes back to the lane. The 2026-10-12 (#3) entry carried the same clause and was
+  amended in place to match, marked and dated there (A2). No other rule changes: the rule held
+  without the clause, which writes down a case the reader had to derive, as issue #123, which
+  introduced the clause, had asked.
+
+- **2026-10-16 (#2) — A1 and B0: B0 picks the mode with or without an MPD, and feature work with
+  no initiative has a branch.** Issue #142: A1 said "with no MPD, you are in **attended mode**
+  (B1)", while B0 says the environment picks the mode and an MPD records it without gating it, so
+  an agent doing one-off work in a client whose default is autonomous read two answers. **Decision
+  (Brandon, 2026-10-16, on the ticket): A1's clause goes; B0 decides, with or without an MPD**, as
+  the "2026-09-11 — Brandon (3)" entry intended ("initiatives organise orchestrated work, they do
+  not gate applicability"). A1 keeps the sentence's true half — initiatives organise orchestrated
+  work and do not gate whether these rules apply — and now says they do not gate the mode either;
+  B0's MPD sentence says work with no MPD has its mode picked the same way. The decision also asked
+  which branch feature work with no initiative lands on, because B0 item 3 said "an initiative
+  branch" and B2 named only `<initiative>/wave-<n>` as the branch an agent pushes, which left such
+  work, now possibly autonomous, with no branch it could push. B0 item 3 keeps initiative work as
+  it was — an initiative branch no other initiative is using, now named as its wave branch or a
+  lane branch off it — and adds the other kind: feature work with no initiative lands on a branch
+  of its own off `develop` for that piece of work, with no other work on it, the ritual's step 1
+  ("one branch per wave or piece of work"). B2's first Git-contract bullet names each kind's only
+  push branch — the wave branch for an initiative's feature work, the work's own branch for work
+  with no initiative — and its feature-work sub-bullet sends feature work through its branch and a
+  PR into `develop`, for the reason it already gives: pushed straight, it would reach `master`
+  reviewed by nobody. A4's author check names the new branch among the deliveries whose added
+  commits it reads, since each push of that branch is a delivery like the others. B0 item 4's
+  decided-not-now paragraph listed "feature work goes through a wave branch and a PR into
+  `develop`" among the conditions Brandon's 2026-10-12 decision rests on; it now says "through its
+  branch (B2)". That is a conforming wording change, not a change to the decision: the condition
+  always meant a branch and a PR into `develop`, never a push straight to a base branch, and that
+  holds for both kinds of branch; the decision and its reopening conditions are unchanged.
+  **Decision (the wave orchestrator, 2026-10-16, under B2's decide and record, reviewed on the
+  wave's PR): the branch wording as it now stands in B0 item 3, B2's first Git-contract bullet, B0
+  item 4's condition and A4's author check.** No naming scheme is added, and who merges, what may
+  be pushed to `develop` and the rest of B2 are unchanged.
+
+- **2026-10-16 (#1) — B0: a failed guard check downgrades the delivery, not the session.** Issue
+  #141: B0 said a failed capability-guard check "downgrades that session to attended", and
+  `clients/codex.md` repeated "this session", while `clients/openclaw.md` said the guard decides
+  for each exact checkout and repository delivery path, not the conversation as a whole, and that
+  a failure moves only the affected delivery to B1. One rule had two units, and the narrower one
+  lived in a client file, which adds only what is specific to its client.
+  **Decision (Brandon, 2026-10-16, on the ticket): option (a), the per-checkout, per-delivery-path
+  reading.** B0 now says the guard is scored for each checkout and repository delivery path, not
+  for the session as a whole, and that a failed check downgrades only that delivery to attended,
+  with its one-line reason, so a session working two repositories is not moved to attended by a
+  check that failed in one. It gives the reason where it states the unit: items 1, 2 and 4 are
+  already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so one
+  of them failing for one delivery says nothing of another. Item 3 is scored per commit, inside a
+  delivery, and item 5 is Brandon's override, which reaches the whole session.
+  `clients/openclaw.md`'s "Default mode" and "Staff operating model" sentences now point at B0 in
+  place of stating the unit, keeping what is that client's own (Camina coordinating several
+  deliveries, the specialist route); its "Lane capability" decision applies B0's unit to a lane
+  and is unchanged. `clients/codex.md`'s "a failure downgrades this session" now points at B0 the
+  same way. Item 5, Brandon's override for the session, is unchanged, and the Claude Code and
+  Cowork appendices state no unit and are unchanged.
+
 - **2026-10-14 (#1) — OpenClaw: row 1's bound points at the paragraph carrying its citation.**
   Issue #137: the paragraph "**Row 1's bound is the command's, not Gateway's.**" sent the reader to
   a paragraph below beginning "**Test runs deliberately have no route.**" for the measurement behind
@@ -195,8 +270,9 @@ being retrofitted onto the other.
   each of the three questions.** A new Git-contract bullet in B2 says: the lane brings the wave
   branch into its own branch as a merge commit in its own worktree (not a rebase, which would
   rewrite commits it has already reported), resolves, re-runs the gate, and the resolution gets a
-  scoped review; the orchestrator's merge is clean against the tip the lane merged. Where the lane is
-  no longer available, the
+  scoped review; the orchestrator's merge is clean against the tip the lane merged, and a wave branch
+  that has moved since is the same rule again — a merge that conflicts goes back to the lane. Where
+  the lane is no longer available, the
   orchestrator resolves and the resolution gets a scoped two-axis review before the push. The
   reason: a resolution is new work, and no work reaches the wave branch unreviewed. Inside a
   resolution the bound is the general one — one fix round on a red of the resolution's own, one
@@ -211,7 +287,12 @@ being retrofitted onto the other.
   handoff, and a fix to it inside the merge would be an unreviewed change to that side's work — and
   the orchestrator's merged-tree gate before the push is unchanged. A4's worktree and two-axis
   bullets and B2's Addenda point at the rule. What an agent does when `git am` of an approved series
-  conflicts on the attended path is not decided here and has no rule.
+  conflicts on the attended path is not decided here and has no rule. *(Amended 2026-10-16, issue
+  #140: the clause "and a wave branch that has moved since is the same rule again — a merge that
+  conflicts goes back to the lane" was added after "the orchestrator's merge is clean against the
+  tip the lane merged", which until then ended the sentence; the earlier wording was not wrong,
+  since the bullet's first sentence already sent any conflicting merge back to the lane, but left
+  the moved-tip case for the reader to derive. The 2026-10-16 (#3) entry above.)*
 
 - **2026-10-12 (#2) — No clone or worktree under `_agent/`.** Issue #114: A6 sent everything an
   agent produces under `_agent/` and named `experiments/` for scratch harnesses, saying nothing
@@ -226,12 +307,19 @@ being retrofitted onto the other.
   — never a clone or worktree — so the "if nothing fits: `experiments/`" rule stays true, and the
   sentence that sends every product under `_agent/` points at the rule. Each client file names where
   a scratch clone goes or records it unmeasured: Claude Code, the scratchpad directory the session's
-  environment names, one subdirectory per sub-agent because sub-agents share it; Codex and Cowork,
-  unmeasured; OpenClaw, unmeasured, with its Gateway check's scratch root ruled out because it
-  exists for one check and is removed after it. **Decision (Brandon, 2026-10-12): the rule as
+  environment names, one subdirectory per sub-agent because the two dispatches measured shared it
+  and whether every dispatch does is unmeasured; Codex and Cowork, unmeasured; OpenClaw,
+  unmeasured, with its Gateway check's scratch root ruled out because it exists for one check and
+  is removed after it. **Decision (Brandon, 2026-10-12): the rule as
   proposed.** Lane worktrees stay where they are, scratch repositories outside `_agent/` are not
   banned, and nothing is deleted by this amendment; what is already under `_agent/` is decided on
-  the issue, not here.
+  the issue, not here. *(Corrected 2026-10-16, issue #143: the Claude Code clause read "one
+  subdirectory per sub-agent because sub-agents share it", which should not be relied on. What was
+  observed: two dispatches, a lane and its Spec reviewer, shared the directory [measured
+  2026-10-12, as `clients/claude-code.md` records]. What was concluded from them, not measured:
+  that every dispatch shares it. The client file had been narrowed to its two measurements in
+  review, and this entry kept the first wording; the clause now says what the client file says.
+  The rule, one subdirectory per sub-agent, is unchanged. The 2026-10-16 (#4) entry above.)*
 
 - **2026-10-12 (#1) — A skill never overrides Parts A–B.** Issue #119: A1 said a repository's
   own `AGENTS.md` / `CLAUDE.md` never overrides Parts A–B, and A4 said RULE ZERO overrides any
