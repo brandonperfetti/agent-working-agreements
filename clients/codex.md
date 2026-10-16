@@ -47,8 +47,8 @@ conversation.
 - **Default mode is autonomous** — Brandon lifted the standing attended instruction on 2026-09-13,
   so mode here is decided by the guard alone, exactly as in `claude-code.md`. Items 1 and 4 pass as
   measured above, item 1's hook probe excepted; **that probe and item 2 are still yours to run at
-  pickup**, and a failure downgrades this session to attended with a one-line reason, same as
-  anywhere else.
+  pickup**, and a failure downgrades what B0 says a failed check downgrades, with a one-line
+  reason.
 - **Scope, because this client's instruction field is wider than the others.** The Codex
   instructions field applies to *every* ChatGPT and Codex chat, including ones with no shell and no
   repo; this appendix — and Part B — apply only to a session that has a local shell and is working
