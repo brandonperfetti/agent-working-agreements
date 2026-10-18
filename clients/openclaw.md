@@ -30,7 +30,7 @@ unavailable capability is evidence about its affected operation: it does not swi
 team to B1, and the team stops at that operation with the exact missing safe route. This is a
 canonical policy decision, not a claim that every capability has been measured. Any retained
 workspace-local layer adds client mechanics only; it never copies or overrides Parts A–B. B2 still
-reserves merging to Brandon alone.
+reserves merging to Brandon alone. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 
 ## Runtime and workspace
 
@@ -64,7 +64,7 @@ specialist lane is the default delivery path. Progress and status updates are in
 non-blocking: sending one neither requests owner approval nor creates an approval checkpoint.
 If a required safe route is unavailable, the team records that capability evidence and stops at the
 affected operation with the precise missing route. It does not fall back to B1 or make Brandon the
-command runner.
+command runner. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 
 Keep five decisions separate:
 
