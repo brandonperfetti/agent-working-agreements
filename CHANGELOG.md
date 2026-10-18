@@ -21,7 +21,7 @@ being retrofitted onto the other.
   improvement. B2 points wave close at the A6 record. Capture is non-blocking unless the underlying
   condition independently reaches an existing gate, authority or stop boundary. `_agent/` is also
   stated as the artifact-location class selected once per session; client discovery stays in the
-  appendices and Agent Workspace owns synchronization, reconciliation and cutover mechanics.
+  appendices.
   In response to CodeRabbit, A6 now also gives no-initiative friction records a canonical
   delivery identifier (PR URL, otherwise origin plus full HEAD, otherwise branch plus full HEAD),
   a closing-agent writer, and a date-prefixed deterministic `_agent/friction/` filename mapping;
