@@ -27,7 +27,7 @@ finding; `/domain-modeling` writes it when it resolves the first term, and not b
 | --- | --- |
 | attended mode | B1: Brandon is the verification step; no commit without his approval, per batch |
 | autonomous mode | B2: Brandon's review moves to the pull request |
-| capability guard | B0: the checks, verified at pickup for each checkout and repository delivery path, that a delivery must pass to run autonomous |
+| capability guard | B0: the checks, verified at pickup for each checkout and repository delivery path, that a delivery must pass to run autonomous; a failed item 4 is recorded instead, until protection exists |
 | the ritual | Part B, "The ritual both modes serve": the branch, PR and merge steps |
 | MPD (master priority document) | A4: an initiative's spine; its §0 records the mode |
 | wave | A4 and B2: one phase of an initiative, run by one orchestrator on one branch off `develop` |
