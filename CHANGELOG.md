@@ -29,9 +29,10 @@ being retrofitted onto the other.
   the PR body alone; B0 item 3 adds a lane branch off the work's own branch, matching the
   initiative case's "or a lane branch off it", and B2's lane bullet names the same branch;
   `clients/claude-code.md`'s pickup check reads "item 5 (the override in the prompt, recorded
-  with the delivery's decisions: MPD §0 for initiative work, the PR body for work with none, B2)",
-  which records the override wherever the delivery's decisions are recorded and adds nothing to
-  B2's paragraph; and the `orchestrator` row in `docs/agents/domain.md`, which named only an
+  in MPD §0 for initiative work, or with the delivery's decisions in the PR body for work with
+  none, B2)", which keeps an initiative's override with the mode MPD §0 records, puts it in the PR
+  body with the delivery's decisions for work with no initiative, and adds nothing to B2's
+  paragraph; and the `orchestrator` row in `docs/agents/domain.md`, which named only an
   initiative's orchestrator, now reads "A4 and B2: the lead agent; for an initiative it runs one
   wave, then rotates to a fresh one through a packet; for work with no initiative, the session
   doing the work". A6 **Friction** said the agent
