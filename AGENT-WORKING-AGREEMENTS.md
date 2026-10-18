@@ -404,6 +404,7 @@ reachable at all, attended rules apply, except in OpenClaw: stop the affected wo
 instruction-source capability recorded; do not automatically convert it to B1.** Any client that
 passes the guard may run autonomous — the
 guard is the contract, not the client name.
+[learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 
 ## B1. Attended mode
 
@@ -497,7 +498,7 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
     scoped two-axis review remains required. A branch left mid-merge holds unreviewed work where
     the next reader may not know a merge is in progress, and on the wave branch it blocks every
     other lane's merge; the pre-merge tip was reviewed, and the record keeps what the attempt
-    learned.
+    learned. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
   - **A red that a side's own gate record already shows is that side's, not the merge's:**
     reported with that record, not fixed inside the merge — a lane may hand back with a gate step
     red by design, named in its handoff, and a fix to it inside the merge would be an unreviewed
@@ -530,7 +531,7 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 4. A CI gate remains red after bounded evidence-led recovery reaches its declared budget — inside a
    merge-conflict resolution, this applies only to a red of the resolution's own, one absent from
    both sides' pre-merge gate records; unresolved recovery leaves the branch at its pre-merge tip
-   (Git contract above).
+   (Git contract above). [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
 
@@ -564,11 +565,11 @@ Each states its own default mode, but the capability guard in B0 is what actuall
 | Claude Code | [`clients/claude-code.md`](clients/claude-code.md) | autonomous |
 | Cowork (Claude desktop, over the device bridge) | [`clients/cowork.md`](clients/cowork.md) | attended |
 | Codex (ChatGPT desktop, local shell) | [`clients/codex.md`](clients/codex.md) | autonomous |
-| OpenClaw (Camina) | [`clients/openclaw.md`](clients/openclaw.md) | autonomous |
+| OpenClaw (Camina) | [`clients/openclaw.md`](clients/openclaw.md) | autonomous [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3] |
 
 **Where this file is not reachable at all, attended rules apply. For OpenClaw, instead stop the
 affected work with the missing instruction-source capability recorded; do not automatically convert
-it to B1.** Where your client is not listed, read the closest match, say that you did, and record
+it to B1.** [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3] Where your client is not listed, read the closest match, say that you did, and record
 what differed — a new client earns a file once its guard items are measured, not before.
 
 ---
