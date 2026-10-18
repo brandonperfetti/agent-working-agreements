@@ -19,22 +19,26 @@ host's `_agent/` store, not a change this repository makes. The complete machine
 the stub replaced stays preserved intact for rollback. The cutover steps this appendix carried until
 the 2026-09-24 amendment for issue #54 remain readable at `29b6360:clients/openclaw.md`, lines
 104–130. If the pointer, Parts A–B, or this appendix is unreachable in the active session,
-downgrade to attended. After
+stop the affected work with the missing instruction-source capability recorded; do not automatically
+downgrade it to B1. After
 changing the pointer, require a fresh-session observation before declaring it effective; do not
 assume arbitrary external-file injection or automatic refresh.
 
-**Default mode: attended.** The capability guard (B0) still decides, for the unit B0 names; that
-Camina coordinates several deliveries in one conversation does not widen it.
-The accepted target is `OpenClaw → autonomous`, in a separate amendment supported by fresh main-
-and specialist-session evidence. Any retained workspace-local layer adds client mechanics only; it
-never copies or overrides Parts A–B. B2 still reserves merging to Brandon alone.
+**Default mode: autonomous.** The capability guard (B0) is still evaluated for the unit B0 names;
+that Camina coordinates several deliveries in one conversation does not widen it. In OpenClaw, an
+unavailable capability is evidence about its affected operation: it does not switch the delivery or
+team to B1, and the team stops at that operation with the exact missing safe route. This is a
+canonical policy decision, not a claim that every capability has been measured. Any retained
+workspace-local layer adds client mechanics only; it never copies or overrides Parts A–B. B2 still
+reserves merging to Brandon alone. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 
 ## Runtime and workspace
 
 Resolve the active workspace and target checkout from live inventory; do not assume every specialist
-shares main's CWD. When delegation is needed, use canonical role IDs and an explicit
-`sessions_spawn` brief. Put A4's RULE ZERO first. Then include only the role, deliverable, mode,
-file fence, role-based model tier, and OpenClaw selector that resolves that tier.
+shares main's CWD. When delegation is needed, use canonical role IDs and the supported native or
+OpenClaw delegation mechanism available to that session; `sessions_spawn` is one available
+OpenClaw mechanism, not a universal requirement. Put A4's RULE ZERO first. Then include only the
+role, deliverable, mode, file fence, role-based model tier, and selector that resolves that tier.
 
 OpenClaw does not relax either mode's topology: attended sessions use B1's isolated-clone and mbox
 shape; autonomous specialists use B2's dedicated-worktree shape. For this agreement repository,
@@ -54,11 +58,13 @@ selected specialist unless the work's boundary requires escalation. The orchestr
 A4 two-axis review cycle; a specialist's own report is never that independent review.
 Administration outside that boundary retains its existing authorization and stop conditions.
 
-When available, an authorized B2-qualified specialist lane is the default delivery path for
-routine, reversible repository work. Progress and status updates are informational and
+The OpenClaw agent team owns installs, builds, test suites, and verification for authorized,
+routine, reversible repository work through a ready B2 pull request; an authorized B2-qualified
+specialist lane is the default delivery path. Progress and status updates are informational and
 non-blocking: sending one neither requests owner approval nor creates an approval checkpoint.
-If no qualified safe route is available, the affected delivery follows B1, as B0 says of a failed
-check, or stops with the precise capability boundary.
+If a required safe route is unavailable, the team records that capability evidence and stops at the
+affected operation with the precise missing route. It does not fall back to B1 or make Brandon the
+command runner. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 
 Keep five decisions separate:
 
@@ -67,15 +73,15 @@ Keep five decisions separate:
    a parent session unable to use that path does not downgrade the lane.
 3. **Risk and reversibility** — only routine, reversible repository work may proceed on that
    authority.
-4. **Delivery topology** — the lane uses B1's isolated-clone shape or B2's dedicated-worktree
-   shape, as its own mode requires.
+4. **Delivery topology** — OpenClaw's autonomous default uses B2's dedicated-worktree shape;
+   B1's isolated-clone shape applies only when Brandon explicitly selects attended delivery.
 5. **Human approval** — Brandon alone merges into `develop`, `master`, or `main`.
 
-An authorized, B0-qualified specialist owns authorized routine, reversible repository work only
-through the ready B1/B2 delivery handoff. Brandon alone merges into `develop`, `master`, or `main`.
-Every existing stop remains in force, including destructive, irreversible, production,
-credentialed, financial, and externally published actions; those stops are not delegated with the
-lane.
+An authorized autonomous specialist owns authorized routine, reversible repository work through
+the ready B2 delivery handoff. Brandon alone reviews and merges into `develop`, `master`, or
+`main`; he is not the command runner for that delivery. Every existing stop remains in force,
+including destructive, irreversible, production, credentialed, financial, and externally published
+actions; those stops are not delegated with the lane.
 
 Within an authorized B2 delivery, commits, pushes, pull-request creation or updates, review
 responses, and reviewed child-branch integration are routine delivery work and require no
@@ -339,19 +345,22 @@ observed exit and output to match the recorded expectation, removal of the scrat
 bounded Git readback's SHA-256 to equal the pre-run candidate-diff SHA-256. CI remains the arbiter
 and must pass before handoff.
 
-If any condition cannot be established, the command is an unbounded test and has no Gateway route:
-**attended**, Brandon runs it under B1; **autonomous**, stop and name the exact missing route. This
-repository's unchanged `./scripts/check-index.sh && ./scripts/check-index.test.sh` is the
-motivating example, not a permanent exception; establish the conditions for each delivery, and a
-delivery that changes either script fails condition 1.
+If any condition cannot be established, the command is an unbounded test and has no Gateway route.
+For OpenClaw's autonomous default, stop and name the exact missing route; do not convert the
+operation into B1 or make Brandon the command runner. This repository's unchanged
+`./scripts/check-index.sh && ./scripts/check-index.test.sh` is the motivating example, not a
+permanent exception; establish the conditions for each delivery, and a delivery that changes either
+script fails condition 1.
 
-**A confirmed strike does not change the session's mode:** it marks the native sandbox unavailable
-(rule 1) and leaves the mode as B0 selected it, so the session carries on by bounded routes and
-stops at the first required operation that has none — attended, giving Brandon the exact command;
-autonomous, stopping and reporting it — and only Brandon's explicit override changes the mode after
-pickup, while a strike during the pickup guard that stops the gate being demonstrated is an
-ordinary B0 attended start (Brandon's decision of 2026-10-01, on Camina's recommendation; see
-issue #94).
+**A confirmed strike does not change the selected mode** [decision 2026-10-01, Brandon, on
+Camina's recommendation; see issue #94]: it marks the native sandbox unavailable (rule 1) and
+leaves unchanged the mode B0 selected, including an explicit owner-selected attended override. For
+OpenClaw's autonomous default, Brandon's 2026-10-17 direction is that the team carries on by
+bounded routes and stops at the first required operation that has none, reporting the precise
+unavailable route; it does not turn that operation into B1 or ask Brandon to run it. An explicitly
+owner-selected B1 delivery remains attended. Only a later explicit owner override changes the mode
+after pickup; a strike during the pickup guard records that the specific operation lacks a safe
+route.
 
 The breaker is **not** a global switch to Gateway execution, a weakening of sandbox controls, or a
 generic rule for failures that occur after the target program starts. [source, issue #58,
@@ -426,12 +435,14 @@ record. Never under `_agent/`.
 The complete machine-local agreement that preceded the canonical route carried rules that Parts
 A–B now supersede. They are deliberately **not carried forward**, for these reasons:
 
-- **A — autonomy:** the local autonomous default is superseded by B0's per-checkout mode decision
-  and B2's Brandon-only merge boundary.
+- **A — autonomy:** the local autonomous default is superseded by the canonical OpenClaw
+  autonomous default, B0's per-checkout capability evidence, and B2's Brandon-only merge boundary;
+  an unavailable operation stops at its missing safe route rather than downgrading the team to B1.
 - **B — specialist commits:** shared-checkout delivery is not carried forward. Attended sessions
   use B1's isolated-clone and mbox shape; autonomous sessions use B2's dedicated-worktree shape.
-- **C — builds and tests:** the local unconditional rule is superseded by the selected mode: B1 in
-  attended sessions and B2 in autonomous sessions.
+- **C — builds and tests:** OpenClaw's autonomous team owns installs, builds, tests, and
+  verification through the ready B2 PR; an unavailable safe route stops that operation with its
+  evidence, while B1 applies only when Brandon explicitly selects attended delivery.
 - **D — evidence:** the local requirement to retain raw capture for every measured claim is
   superseded by A2's classification. Only the OpenClaw evidence-store mapping above remains.
 - **E — remote commit APIs:** the local permission is removed; A7's checkout-Git-only rule remains

@@ -10,6 +10,47 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 — Receipt correction for the 2026-10-17 OpenClaw amendment.** Independent release
+  review found that the original amendment's receipt trail did not give the new B0 OpenClaw
+  autonomy/default and B2 bounded-recovery rules their required learning receipt, leaving the Part
+  C index and `clients/openclaw.md` citation mirrors without a durable source to follow. The new
+  learning receipt records the issue, PR, CodeRabbit review-thread, and commit representations with
+  locators, SHA-256 values, and relevant excerpts; it adds no policy. It also makes the status
+  boundary explicit: merge into `develop` is integration, a later `develop` → `master` release may
+  make the policy binding, and neither proves observed adoption until fresh canonical-main and
+  specialist-pickup evidence exists. The 2026-10-17 entry below retains that integration,
+  release, and adoption distinction as the record of the original amendment.
+
+- **2026-10-17 (#149; effective with this release; observed adoption pending) — Bounded recovery,
+  OpenClaw delegation, and autonomous delivery.** This amendment replaces the single fix round in a
+  merge-conflict resolution with an explicitly budgeted, evidence-led recovery
+  for a red of the resolution's own, absent from both sides' pre-merge gate
+  records: every in-scope action is recorded with its evidence and relevant
+  re-check, which demonstrates recovery progress only; it stops at an exhausted
+  budget, a disproved premise, no evidenced progress, or a
+  scope/destructive/security/credential/merge boundary; unresolved recovery
+  aborts; only a successful full CI gate on the resolved merged tree permits the
+  merge commit; and scoped two-axis review remains required. It also lets
+  OpenClaw use the supported native or OpenClaw delegation mechanism available
+  to the session: `sessions_spawn` is one available OpenClaw mechanism, not a
+  universal requirement. It also makes OpenClaw autonomous by default: the agent
+  team owns installs, builds, tests, verification, and routine delivery through
+  a ready B2 PR, while Brandon reviews and merges rather than running commands.
+  A failed or unavailable OpenClaw capability is evidence about the affected
+  operation only; under Brandon's 2026-10-17 direction, it stops there with the
+  exact missing safe route and does not downgrade the delivery to B1 or make
+  Brandon the command runner. The OpenClaw exception also applies when the
+  instruction source is unreachable: stop the affected work and record that
+  missing capability rather than automatically selecting B1. A confirmed
+  breaker strike preserves the B0-selected mode, including an explicit
+  owner-selected attended override; the historical no-mode-change rule remains
+  the 2026-10-01/#94 decision. The existing feature-branch rules remain
+  unchanged; the breaker still does not weaken sandbox controls or broaden
+  system writes. This amendment was canonically reviewed in #149 and becomes
+  binding when this release reaches `master`; fresh canonical-main and
+  specialist-pickup verification remains pending, so #148 stays open and no
+  deployed adoption is claimed. The instruction-source clone remains read-only.
+
 - **2026-10-16 (#4) — Changelog: the 2026-10-12 (#2) entry claims no more than the Claude Code
   scratchpad measurement.** Issue #143: that entry said a Claude Code scratch clone takes "one
   subdirectory per sub-agent because sub-agents share it", while `clients/claude-code.md`, the

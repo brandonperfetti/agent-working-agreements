@@ -315,9 +315,10 @@ went wrong.
 Two modes. **The environment picks the mode; nobody asks Brandon at the start of a session.**
 Claude Code → autonomous. Cowork → attended. The agent then **verifies the capability guard
 silently at pickup**, scored **for each checkout and repository delivery path**, not for the session
-as a whole: a failed check downgrades **only that delivery** to attended, with a one-line reason
-("attended: `develop` is unprotected"), never a question, so a session working two repositories is
-not moved to attended by a check that failed in one. The reason is in the items: items 1, 2 and 4
+as a whole: outside the specific OpenClaw rule below, a failed check downgrades **only that
+delivery** to attended, with a one-line reason ("attended: `develop` is unprotected"), never a
+question, so a session working two repositories is not moved to attended by a check that failed in
+one. The reason is in the items: items 1, 2 and 4
 are already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so
 item 1's hook probe failing says nothing of a delivery from a checkout that probe does not cover —
 another clone, or another worktree where `core.hooksPath` is relative — and item 2 or 4 failing for
@@ -394,9 +395,16 @@ never assumed** — on 2026-09-10 neither `develop` nor `master` on claude-skill
 or rulesets [measured]); **Cowork over the device bridge → attended** (fails 1 and usually 2);
 **ChatGPT desktop Codex with a local shell → autonomous** (1 measured 2026-09-13 but for its hook
 probe, which is per checkout and unmeasured there; 4 readable there
-but still checked per repo; see `clients/codex.md`); **OpenClaw → attended** unless it demonstrably
-passes 1–4. **Where this file is not reachable at all, attended rules apply.** Any client that
-passes the guard may run autonomous — the guard is the contract, not the client name.
+but still checked per repo; see `clients/codex.md`); **OpenClaw → autonomous.**
+In OpenClaw, a failed or unavailable capability
+check is evidence about the affected operation, not a B1 downgrade: the autonomous team continues
+within its supported routes and stops at the first operation that has no safe route, recording the
+exact missing capability. It does not make Brandon the command runner. **Where this file is not
+reachable at all, attended rules apply, except in OpenClaw: stop the affected work with the missing
+instruction-source capability recorded; do not automatically convert it to B1.** Any client that
+passes the guard may run autonomous — the
+guard is the contract, not the client name.
+[learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 
 ## B1. Attended mode
 
@@ -476,13 +484,21 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   where the lane is no longer available does the orchestrator resolve, and its resolution gets a
   scoped two-axis review before the push. A resolution is new work, and no work reaches the wave
   branch unreviewed (Brandon, 2026-10-12). Inside a resolution, whoever resolves:
-  - **One fix round when the gate shows a red of the resolution's own — one absent from both
-    sides' pre-merge gate records — then stop and report** (stop-list item 4), with the branch
-    back at its pre-merge tip. The merge is committed only once the gate shows no red of its own,
-    so stopping is: save the resolution's diff and the red gate's output under `evidence/`, then
-    `git merge --abort`. A branch left mid-merge holds unreviewed work where the next reader may
-    not know a merge is in progress, and on the wave branch it blocks every other lane's merge;
-    the pre-merge tip was reviewed, and the record keeps what the attempt learned.
+  - **Bounded evidence-led recovery when the gate shows a red of the resolution's own — one absent
+    from both sides' pre-merge gate records:** take multiple causally supported, in-scope corrective
+    actions only within a finite recovery budget recorded before the first corrective action and
+    left unchanged throughout recovery. After each action, save the action, its evidence, and a
+    relevant re-check under `evidence/`; the re-check demonstrates recovery
+    progress only and does not permit the merge commit. Continue only while the trail shows
+    evidenced progress. Stop and reassess when the budget is exhausted, the premise is disproved,
+    the next action expands scope or crosses a destructive, security, credential, or merge
+    boundary, or a re-check makes no evidenced progress. If recovery ends unresolved, save the
+    resolution diff and gate output, then `git merge --abort` back to the pre-merge tip. Only a
+    successful full CI gate on the resolved merged tree permits the merge commit; the resolution's
+    scoped two-axis review remains required. A branch left mid-merge holds unreviewed work where
+    the next reader may not know a merge is in progress, and on the wave branch it blocks every
+    other lane's merge; the pre-merge tip was reviewed, and the record keeps what the attempt
+    learned. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
   - **A red that a side's own gate record already shows is that side's, not the merge's:**
     reported with that record, not fixed inside the merge — a lane may hand back with a gate step
     red by design, named in its handoff, and a fix to it inside the merge would be an unreviewed
@@ -512,9 +528,10 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
 3. Anything destructive or irreversible — data migrations against shared infra, deletions outside
    the repo, secrets, third-party writes (CMS, DNS, billing).
    A billing prompt holds the paid review, never the push (A4).
-4. The CI gate still red after one fix round — inside a merge-conflict resolution too, where
-   only a red of the resolution's own counts (one absent from both sides' pre-merge gate
-   records) and stopping leaves the branch at its pre-merge tip (Git contract above).
+4. A CI gate remains red after bounded evidence-led recovery reaches its declared budget — inside a
+   merge-conflict resolution, this applies only to a red of the resolution's own, one absent from
+   both sides' pre-merge gate records; unresolved recovery leaves the branch at its pre-merge tip
+   (Git contract above). [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
 
@@ -548,11 +565,15 @@ Each states its own default mode, but the capability guard in B0 is what actuall
 | Claude Code | [`clients/claude-code.md`](clients/claude-code.md) | autonomous |
 | Cowork (Claude desktop, over the device bridge) | [`clients/cowork.md`](clients/cowork.md) | attended |
 | Codex (ChatGPT desktop, local shell) | [`clients/codex.md`](clients/codex.md) | autonomous |
-| OpenClaw (Camina) | [`clients/openclaw.md`](clients/openclaw.md) | attended |
+| OpenClaw (Camina) | [`clients/openclaw.md`](clients/openclaw.md) | autonomous |
 
-**Where this file is not reachable at all, attended rules apply.** Where your client is not listed,
-read the closest match, say that you did, and record what differed — a new client earns a file once
-its guard items are measured, not before.
+**OpenClaw's mapping and exception follow B0's autonomous-default rule.**
+[learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
+**Where this file is not reachable at all, attended rules apply. For OpenClaw, instead stop the
+affected work with the missing instruction-source capability recorded; do not automatically convert
+it to B1.** [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
+Where your client is not listed, read the closest match, say that you did, and record what differed
+— a new client earns a file once its guard items are measured, not before.
 
 ---
 
