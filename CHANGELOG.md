@@ -19,10 +19,10 @@ being retrofitted onto the other.
   about the affected operation rather than a B1 downgrade. The sentence now says that future
   OpenClaw work re-evaluates B0 for its exact checkout and path as capability evidence, not as the
   B1/B2 mode selector. [measured 2026-09-20, current Gateway host] The historical receipt records
-  that the session was attended because Ruby and `zip` were missing. [source, current
-  `clients/openclaw.md`] It links `claude-skills` #111 for the durable install and complete
-  remeasurement. [source, this amendment] Those historical lines, B0, and every other client's
-  mode are unchanged.
+  that the gate could not pass because Ruby and `zip` were required, and that the session was
+  attended. [source, current `clients/openclaw.md`] It links `claude-skills` #111 for the
+  durable install and complete remeasurement. [source, this amendment] Those historical lines,
+  B0, and every other client's mode are unchanged.
 
 - **2026-10-18 — Receipt correction for the 2026-10-17 OpenClaw amendment.** Independent release
   review found that the original amendment's receipt trail did not give the new B0 OpenClaw
