@@ -76,8 +76,9 @@ being retrofitted onto the other.
   unit, "the checks, verified at pickup, that a session must pass to run autonomous", and the same
   file tells writers to word issues, rules and changelog entries in that table's terms, so the old
   unit could come back into new text; it now reads "the checks, verified at pickup for each
-  checkout and repository delivery path, that a delivery must pass to run autonomous", B0's unit
-  since the 2026-10-16 (#1) entry.
+  checkout and repository delivery path, that a delivery must pass to run autonomous; a failed
+  item 4 is recorded instead, until protection exists", which carries B0's unit since the
+  2026-10-16 (#1) entry and the same exception as B0's opening, so the row says no more than B0.
 
 - **2026-10-18 (#3) — B0 item 5 names the override it guards against.** Issue #158: B0 says
   Brandon can override the mode in either direction by saying so in the prompt, and that the
