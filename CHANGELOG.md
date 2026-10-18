@@ -10,6 +10,22 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 (#5) — A6 Clones: a clone's remote and captured output lose their secrets before
+  they reach `evidence/`.** Issue #154: A6 **Clones** says what persists from a scratch clone is
+  the commands run and their output, under `evidence/`, with the remote and the commit needed to
+  rebuild the clone. A remote URL can carry credentials, and the plain ways of reading a remote
+  print them verbatim [measured 2026-10-17, git 2.46.0, a scratch repository with a fake
+  credentialed remote: `git remote -v`, `git remote get-url origin` and `git config --get
+  remote.origin.url` each printed the URL's userinfo], so following the rule as written could
+  write a secret into the evidence store, a leak by A4's harm list. One clause now says that before
+  the remote or a command's output is written under `evidence/`, the secret comes out, by the
+  remote's form: an http(s) URL loses its whole userinfo, since a token can stand where a user
+  name does and the two cannot be told apart; an ssh remote keeps its user name and loses any
+  password; a remote of any other form loses its whole userinfo; and any token is stripped from
+  captured output. Keeping a bare user name on an http(s) URL was rejected because it can keep a
+  token. The sentence keeps "the remote and the commit needed to rebuild the clone"; this is not a
+  general secrets policy, and the rest of **Clones** is unchanged.
+
 - **2026-10-18 (#4) — B0: a failed check downgrades where its item says so, and the example names
   one that does.** Issue #147: B0's opening said a failed capability-guard check downgrades the
   delivery to attended, with a one-line reason, and gave "attended: `develop` is unprotected" as

@@ -292,8 +292,13 @@ independently reaches an existing gate failure, authority boundary, or B2 stop-l
 **Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
 lives in the client's own scratch directory, outside `_agent/` — your client file names that
 directory, or records that it is unmeasured. What persists is the evidence: the commands run and
-their output, under `evidence/`, with the remote and the commit needed to rebuild the clone. That
-is how this sits beside the `experiments/` line's "never /tmp": a transcript has to survive the
+their output, under `evidence/`, with the remote and the commit needed to rebuild the clone.
+Before the remote or a command's output is written under `evidence/`, the secret comes out, by the
+remote's form, because a remote can carry credentials and the plain ways of reading one print them
+verbatim: an http(s) URL loses its whole userinfo, since a token can stand where a user name does
+and the two cannot be told apart; an ssh remote keeps its user name and loses any password; a
+remote of any other form loses its whole userinfo; and any token is stripped from captured output.
+That is how this sits beside the `experiments/` line's "never /tmp": a transcript has to survive the
 session, a clone can be made again. The reason: a clone under `_agent/` is a nested repository in a
 store meant to replicate, a second copy of a project's source with its licence, and the one thing
 in `_agent/` that is rebuildable. This moves no lane worktree: where those live is unchanged and is
