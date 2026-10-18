@@ -10,6 +10,17 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 — Receipt correction for the 2026-10-17 OpenClaw amendment.** Independent release
+  review found that the original amendment's receipt trail did not give the new B0 OpenClaw
+  autonomy/default and B2 bounded-recovery rules their required learning receipt, leaving the Part
+  C index and `clients/openclaw.md` citation mirrors without a durable source to follow. The new
+  learning receipt records the issue, PR, CodeRabbit review-thread, and commit representations with
+  locators, SHA-256 values, and relevant excerpts; it adds no policy. It also makes the status
+  boundary explicit: merge into `develop` is integration, a later `develop` → `master` release may
+  make the policy binding, and neither proves observed adoption until fresh canonical-main and
+  specialist-pickup evidence exists. The 2026-10-17 entry below retains that integration,
+  release, and adoption distinction as the record of the original amendment.
+
 - **2026-10-17 (merged to `develop`; release and observed adoption pending) — Bounded recovery, OpenClaw
   delegation, and autonomous delivery.** The proposed amendment replaces the single fix round in a
   merge-conflict resolution with an explicitly budgeted, evidence-led recovery
