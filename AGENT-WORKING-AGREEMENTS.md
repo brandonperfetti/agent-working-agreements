@@ -485,8 +485,9 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   branch unreviewed (Brandon, 2026-10-12). Inside a resolution, whoever resolves:
   - **Bounded evidence-led recovery when the gate shows a red of the resolution's own — one absent
     from both sides' pre-merge gate records:** take multiple causally supported, in-scope corrective
-    actions only within an explicitly recorded recovery budget. After each action, save the action,
-    its evidence, and a relevant re-check under `evidence/`; the re-check demonstrates recovery
+    actions only within a finite recovery budget recorded before the first corrective action and
+    left unchanged throughout recovery. After each action, save the action, its evidence, and a
+    relevant re-check under `evidence/`; the re-check demonstrates recovery
     progress only and does not permit the merge commit. Continue only while the trail shows
     evidenced progress. Stop and reassess when the budget is exhausted, the premise is disproved,
     the next action expands scope or crosses a destructive, security, credential, or merge
