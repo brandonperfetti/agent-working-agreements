@@ -10,6 +10,43 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 (#1) — Friction capture is a raw, non-blocking delivery artifact.** Issue #155:
+  A6 now names `friction/` inside an initiative and at the one-off artifact location, defines the
+  bounded close record (`friction: none` or a dated entry with the delivery, affected step,
+  labelled observation and locator where available, measured-only cost, workaround, recurrence and
+  reproduction status, and proposed fix or `unknown`), and keeps that raw record distinct from A2
+  evidence, independent-review findings, promoted learnings and GitHub issues. The record is
+  corrected in place under A2 and promotes only through triage and deduplication to recurring,
+  reproducible, repository-owned issue work, then to a resolved learning, rule, skill or software
+  improvement. B2 points wave close at the A6 record. Capture is non-blocking unless the underlying
+  condition independently reaches an existing gate, authority or stop boundary. `_agent/` is also
+  stated as the artifact-location class selected once per session; client discovery stays in the
+  appendices.
+  In response to CodeRabbit, A6 now also gives no-initiative friction records a canonical
+  delivery identifier (PR URL, otherwise origin plus full HEAD, otherwise branch plus full HEAD),
+  a closing-agent writer, and a date-prefixed deterministic `_agent/friction/` filename mapping;
+  the record starts with that exact identifier. Review correction: the initial mapping's lossy
+  repository and branch slug normalization could collide. Each filename now includes a mandatory,
+  full lowercase hexadecimal SHA-256 suffix over the UTF-8 bytes of the exact pre-normalization
+  repository identity and, for branch-form records, the exact full branch ref. This is limited to
+  friction capture: #145's unresolved broader no-initiative ownership boundaries, and #110's
+  store, synchronization and cutover boundaries, remain unchanged. No B0, B1, B2 authority,
+  branch, merge or stop boundary changes.
+
+- **2026-10-18 — OpenClaw: B0 re-evaluation is capability evidence, not the mode selector.**
+  Issue #152: [source, prior `clients/openclaw.md`] the Pickup guard's historical
+  `claude-skills` receipt ended by saying “a future session's mode is still decided only by
+  rerunning B0 for its exact checkout and path.” That sentence should not be relied on after the
+  released OpenClaw autonomous-default amendment: [source, B0 and `clients/openclaw.md`, Startup
+  and mode] OpenClaw defaults to autonomous, and a failed or unavailable B0 capability is evidence
+  about the affected operation rather than a B1 downgrade. The sentence now says that future
+  OpenClaw work re-evaluates B0 for its exact checkout and path as capability evidence, not as the
+  B1/B2 mode selector. [measured 2026-09-20, current Gateway host] The historical receipt records
+  that the gate could not pass because Ruby and `zip` were required, and that the session was
+  attended. [source, current `clients/openclaw.md`] It links `claude-skills` #111 for the
+  durable install and complete remeasurement. [source, this amendment] Those historical lines,
+  B0, and every other client's mode are unchanged.
+
 - **2026-10-18 — Receipt correction for the 2026-10-17 OpenClaw amendment.** Independent release
   review found that the original amendment's receipt trail did not give the new B0 OpenClaw
   autonomy/default and B2 bounded-recovery rules their required learning receipt, leaving the Part
