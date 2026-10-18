@@ -247,13 +247,17 @@ writing its close record: use its GitHub pull-request URL when it has one; other
 checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
 that full SHA. The agent closing that delivery owns and writes its one-off close record; this does
 not assign any broader no-initiative delivery role. In `_agent/friction/`, that record is exactly
-`YYYY-MM-DD-<repository-slug>--pr-<number>.md` for the pull-request form, or
-`YYYY-MM-DD-<repository-slug>--branch-<branch-slug>--<full-head-sha>.md` otherwise;
-`repository-slug` is the lowercase remote host and path with non-alphanumerics replaced by `-`, or
-the checkout basename when there is no remote, and `branch-slug` is the same normalization of the
-full branch ref. The record starts with the exact canonical identifier, so the filename maps to
-that delivery without ambiguity. Initiative deliveries keep their initiative `friction/` location
-and existing semantics.
+`YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--pr-<number>.md` for the pull-request form,
+or `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--branch-<branch-slug>--ref-<branch-hash>--<full-head-sha>.md`
+otherwise. `repository-identity` is the exact remote host and path before normalization, or the
+exact checkout basename when there is no remote; `repository-slug` is that identity lowercased with
+non-alphanumerics replaced by `-`. `repository-hash` is the full lowercase hexadecimal SHA-256
+digest of the UTF-8 bytes of `repository-identity`. `branch-slug` is the same normalization of the
+full branch ref, and `branch-hash` is the full lowercase hexadecimal SHA-256 digest of the UTF-8
+bytes of that exact full branch ref. The hashes are mandatory stable suffixes, so distinct inputs
+that normalize to the same slug still produce distinct filenames. The record starts with the exact
+canonical identifier, so the filename maps to that delivery without ambiguity. Initiative
+deliveries keep their initiative `friction/` location and existing semantics.
 
 At delivery close — and at each wave close for an initiative — record either `friction: none` or
 one or more dated entries in that delivery's `friction/` location. An entry names the delivery and

@@ -25,10 +25,13 @@ being retrofitted onto the other.
   In response to CodeRabbit, A6 now also gives no-initiative friction records a canonical
   delivery identifier (PR URL, otherwise origin plus full HEAD, otherwise branch plus full HEAD),
   a closing-agent writer, and a date-prefixed deterministic `_agent/friction/` filename mapping;
-  the record starts with that exact identifier. This is limited to friction capture: #145's
-  unresolved broader no-initiative ownership boundaries, and #110's store, synchronization and
-  cutover boundaries, remain unchanged. No B0, B1, B2 authority, branch, merge or stop boundary
-  changes.
+  the record starts with that exact identifier. Review correction: the initial mapping's lossy
+  repository and branch slug normalization could collide. Each filename now includes a mandatory,
+  full lowercase hexadecimal SHA-256 suffix over the UTF-8 bytes of the exact pre-normalization
+  repository identity and, for branch-form records, the exact full branch ref. This is limited to
+  friction capture: #145's unresolved broader no-initiative ownership boundaries, and #110's
+  store, synchronization and cutover boundaries, remain unchanged. No B0, B1, B2 authority,
+  branch, merge or stop boundary changes.
 
 - **2026-10-18 — OpenClaw: B0 re-evaluation is capability evidence, not the mode selector.**
   Issue #152: [source, prior `clients/openclaw.md`] the Pickup guard's historical
