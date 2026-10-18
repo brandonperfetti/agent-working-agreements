@@ -11,16 +11,18 @@ of amendments in that batch**, not an ordinal; the two notations predate each ot
 being retrofitted onto the other.
 
 - **2026-10-18 — OpenClaw: B0 re-evaluation is capability evidence, not the mode selector.**
-  Issue #152: the Pickup guard's historical `claude-skills` receipt ended by saying “a future
-  session's mode is still decided only by rerunning B0 for its exact checkout and path.” That
-  sentence should not be relied on after the released OpenClaw autonomous-default amendment:
-  [source, B0 and `clients/openclaw.md`, Startup and mode] OpenClaw defaults to autonomous, and
-  a failed or unavailable B0 capability is evidence about the affected operation rather than a
-  B1 downgrade. The sentence now says that future OpenClaw work re-evaluates B0 for its exact
-  checkout and path as capability evidence, not as the B1/B2 mode selector. [measured
-  2026-09-20, current Gateway host] The session, its attended outcome, the missing Ruby and `zip`
-  capabilities, and `claude-skills` #111 remain unchanged. [source, this amendment] B0 and every
-  other client's mode are unchanged.
+  Issue #152: [source, prior `clients/openclaw.md`] the Pickup guard's historical
+  `claude-skills` receipt ended by saying “a future session's mode is still decided only by
+  rerunning B0 for its exact checkout and path.” That sentence should not be relied on after the
+  released OpenClaw autonomous-default amendment: [source, B0 and `clients/openclaw.md`, Startup
+  and mode] OpenClaw defaults to autonomous, and a failed or unavailable B0 capability is evidence
+  about the affected operation rather than a B1 downgrade. The sentence now says that future
+  OpenClaw work re-evaluates B0 for its exact checkout and path as capability evidence, not as the
+  B1/B2 mode selector. [measured 2026-09-20, current Gateway host] The historical receipt records
+  that the session was attended because Ruby and `zip` were missing. [source, current
+  `clients/openclaw.md`] It links `claude-skills` #111 for the durable install and complete
+  remeasurement. [source, this amendment] Those historical lines, B0, and every other client's
+  mode are unchanged.
 
 - **2026-10-17 (proposal; not effective) — Bounded recovery, OpenClaw
   delegation, and autonomous delivery.** The proposed amendment replaces the single fix round in a
