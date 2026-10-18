@@ -21,8 +21,8 @@ being retrofitted onto the other.
   specialist-pickup evidence exists. The 2026-10-17 entry below retains that integration,
   release, and adoption distinction as the record of the original amendment.
 
-- **2026-10-17 (merged to `develop`; release and observed adoption pending) — Bounded recovery, OpenClaw
-  delegation, and autonomous delivery.** The proposed amendment replaces the single fix round in a
+- **2026-10-17 (#149; effective with this release; observed adoption pending) — Bounded recovery,
+  OpenClaw delegation, and autonomous delivery.** This amendment replaces the single fix round in a
   merge-conflict resolution with an explicitly budgeted, evidence-led recovery
   for a red of the resolution's own, absent from both sides' pre-merge gate
   records: every in-scope action is recorded with its evidence and relevant
@@ -46,10 +46,10 @@ being retrofitted onto the other.
   owner-selected attended override; the historical no-mode-change rule remains
   the 2026-10-01/#94 decision. The existing feature-branch rules remain
   unchanged; the breaker still does not weaken sandbox controls or broaden
-  system writes. This amendment is merged to `develop`; release may make the
-  policy binding, but fresh canonical-main and specialist-pickup verification
-  remains pending, so #148 stays open and no deployed adoption is claimed. The
-  instruction-source clone remains read-only.
+  system writes. This amendment was canonically reviewed in #149 and becomes
+  binding when this release reaches `master`; fresh canonical-main and
+  specialist-pickup verification remains pending, so #148 stays open and no
+  deployed adoption is claimed. The instruction-source clone remains read-only.
 
 - **2026-10-16 (#4) — Changelog: the 2026-10-12 (#2) entry claims no more than the Claude Code
   scratchpad measurement.** Issue #143: that entry said a Claude Code scratch clone takes "one
