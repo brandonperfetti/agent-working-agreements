@@ -27,7 +27,8 @@ being retrofitted onto the other.
   A4's two-axis bullet names the `_agent/` root's one-off `reviews/` for such work; B0 item 4
   records a failed item 4 in the PR body for it; the stop-list heading records its decisions in
   the PR body alone; B0 item 3 adds a lane branch off the work's own branch, matching the
-  initiative case's "or a lane branch off it", and B2's lane bullet names the same branch;
+  initiative case's "or a lane branch off it"; B2's lane bullet names the same branch, and its
+  merge bullet names that work's own branch as the one the lane merges into;
   `clients/claude-code.md`'s pickup check reads "item 5 (the override in the prompt, recorded
   in MPD §0 for initiative work, or with the delivery's decisions in the PR body for work with
   none, B2)", which keeps an initiative's override with the mode MPD §0 records, puts it in the PR
