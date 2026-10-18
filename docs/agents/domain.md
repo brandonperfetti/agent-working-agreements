@@ -31,7 +31,7 @@ finding; `/domain-modeling` writes it when it resolves the first term, and not b
 | the ritual | Part B, "The ritual both modes serve": the branch, PR and merge steps |
 | MPD (master priority document) | A4: an initiative's spine; its §0 records the mode |
 | wave | A4 and B2: one phase of an initiative, run by one orchestrator on one branch off `develop` |
-| orchestrator | A4: the lead agent; runs one wave, then rotates to a fresh one through a packet |
+| orchestrator | A4 and B2: the lead agent; for an initiative it runs one wave, then rotates to a fresh one through a packet; for work with no initiative, the session doing the work |
 | lane | A4 and B2: one sub-agent's work on named files, in its own worktree |
 | RULE ZERO | A4: no attribution on any commit, PR body, reply or comment; an agent's commits on Brandon's behalf carry his identity, anyone else's carry their own, and a PR carrying his identity from another account is not merged until re-authored |
 | evidence labels | A2: `[measured]`, `[source]`, `[inference]` on every claim |

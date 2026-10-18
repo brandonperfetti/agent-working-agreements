@@ -28,8 +28,13 @@ being retrofitted onto the other.
   records a failed item 4 in the PR body for it; the stop-list heading records its decisions in
   the PR body alone; B0 item 3 adds a lane branch off the work's own branch, matching the
   initiative case's "or a lane branch off it", and B2's lane bullet names the same branch;
-  `clients/claude-code.md`'s pickup check reads "item 5 (the override in the prompt, recorded in
-  MPD §0, or in the PR body for work with no initiative, B2)". A6 **Friction** said the agent
+  `clients/claude-code.md`'s pickup check reads "item 5 (the override in the prompt, recorded
+  with the delivery's decisions: MPD §0 for initiative work, the PR body for work with none, B2)",
+  which records the override wherever the delivery's decisions are recorded and adds nothing to
+  B2's paragraph; and the `orchestrator` row in `docs/agents/domain.md`, which named only an
+  initiative's orchestrator, now reads "A4 and B2: the lead agent; for an initiative it runs one
+  wave, then rotates to a fresh one through a packet; for work with no initiative, the session
+  doing the work". A6 **Friction** said the agent
   closing a no-initiative delivery writes its close record and that "this does not assign any
   broader no-initiative delivery role"; with the role now assigned, that clause reads "the
   delivery's other orchestrator duties are B2's to assign", and the close-record writer is
