@@ -565,12 +565,15 @@ Each states its own default mode, but the capability guard in B0 is what actuall
 | Claude Code | [`clients/claude-code.md`](clients/claude-code.md) | autonomous |
 | Cowork (Claude desktop, over the device bridge) | [`clients/cowork.md`](clients/cowork.md) | attended |
 | Codex (ChatGPT desktop, local shell) | [`clients/codex.md`](clients/codex.md) | autonomous |
-| OpenClaw (Camina) | [`clients/openclaw.md`](clients/openclaw.md) | autonomous [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3] |
+| OpenClaw (Camina) | [`clients/openclaw.md`](clients/openclaw.md) | autonomous |
 
+**OpenClaw's mapping and exception follow B0's autonomous-default rule.**
+[learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 **Where this file is not reachable at all, attended rules apply. For OpenClaw, instead stop the
 affected work with the missing instruction-source capability recorded; do not automatically convert
-it to B1.** [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3] Where your client is not listed, read the closest match, say that you did, and record
-what differed — a new client earns a file once its guard items are measured, not before.
+it to B1.** [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
+Where your client is not listed, read the closest match, say that you did, and record what differed
+— a new client earns a file once its guard items are measured, not before.
 
 ---
 
