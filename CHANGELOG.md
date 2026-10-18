@@ -10,6 +10,16 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 (#3) — B0 item 5 names the override it guards against.** Issue #158: B0 says
+  Brandon can override the mode in either direction by saying so in the prompt, and that the
+  override wins over the default, while item 5, which every autonomous delivery must pass, read
+  "Brandon has not overridden it for this session". Read literally, an override toward autonomous
+  failed item 5, so the override B0 promises in that direction could not select autonomous. Item 5
+  now reads "Brandon has not overridden the mode to attended for this session": an override toward
+  autonomous passes it, and one toward attended fails it, as B0's opening promises. **Decision
+  (Brandon, 2026-10-18): item 5 names the override it guards against.** Items 1–4 and who may
+  override are unchanged.
+
 - **2026-10-18 (#2) — A4, B1 and B2: a verified finding that does no harm is fixed in the PR,
   noted, or ticketed, by size.** Issue #157: A4 sent every verified review-bot finding that does
   no harm to a ticket, B2's Addenda sent any fix to work already merged into the wave branch to a

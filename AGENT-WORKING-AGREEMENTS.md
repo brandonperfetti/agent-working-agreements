@@ -439,7 +439,7 @@ with no MPD has its mode picked the same way.
    token-switch step in every client and a new PR author, a cost not paid while those conditions
    hold. It reopens on a second account with write access to a repository this agreement governs,
    or on one measured breach of either rule, with a GitHub App as the recommended shape.
-5. Brandon has not overridden it for this session.
+5. Brandon has not overridden the mode to attended for this session.
 
 By environment: **Claude Code → autonomous** (1 passes by construction but for its hook probe,
 which is per checkout; 2 is a per-repo probe run at
