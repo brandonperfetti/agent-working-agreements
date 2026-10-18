@@ -10,7 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-10-17 (proposal; not effective) — Bounded recovery, OpenClaw
+- **2026-10-18 — Receipt correction for the 2026-10-17 OpenClaw amendment.** Independent release
+  review found that the original amendment's receipt trail did not give the new B0 OpenClaw
+  autonomy/default and B2 bounded-recovery rules their required learning receipt, leaving the Part
+  C index and `clients/openclaw.md` citation mirrors without a durable source to follow. The new
+  learning receipt records the issue, PR, CodeRabbit review-thread, and commit representations with
+  locators, SHA-256 values, and relevant excerpts; it adds no policy. It also makes the status
+  boundary explicit: merge into `develop` is integration, a later `develop` → `master` release may
+  make the policy binding, and neither proves observed adoption until fresh canonical-main and
+  specialist-pickup evidence exists. The 2026-10-17 entry below retains that integration,
+  release, and adoption distinction as the record of the original amendment.
+
+- **2026-10-17 (merged to `develop`; release and observed adoption pending) — Bounded recovery, OpenClaw
   delegation, and autonomous delivery.** The proposed amendment replaces the single fix round in a
   merge-conflict resolution with an explicitly budgeted, evidence-led recovery
   for a red of the resolution's own, absent from both sides' pre-merge gate
@@ -35,9 +46,10 @@ being retrofitted onto the other.
   owner-selected attended override; the historical no-mode-change rule remains
   the 2026-10-01/#94 decision. The existing feature-branch rules remain
   unchanged; the breaker still does not weaken sandbox controls or broaden
-  system writes. This is a proposal only and requires ordinary canonical review
-  and release before it becomes effective; the instruction-source clone remains
-  read-only.
+  system writes. This amendment is merged to `develop`; release may make the
+  policy binding, but fresh canonical-main and specialist-pickup verification
+  remains pending, so #148 stays open and no deployed adoption is claimed. The
+  instruction-source clone remains read-only.
 
 - **2026-10-16 (#4) — Changelog: the 2026-10-12 (#2) entry claims no more than the Claude Code
   scratchpad measurement.** Issue #143: that entry said a Claude Code scratch clone takes "one
