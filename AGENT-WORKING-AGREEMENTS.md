@@ -206,18 +206,24 @@ A–B: on an on-fleet workspace, where agent artifacts are written is this secti
 `agent-workspace` convention carries it out), not a skill's default; off-fleet fallbacks remain
 the skill's to define.
 
+**Artifact store.** `_agent/` names an artifact-location class, not a synchronization or cutover
+mechanism. At session start, the applicable store policy selects one concrete artifact store; the
+session records that location and does not switch stores or write the same artifact to another
+store mid-session. Client appendices resolve discovery and client limits.
+
 On an on-fleet workspace, everything an agent produces goes under `_agent/` — a clone is not a
 product (**Clones**, below):
 
 ```text
 _agent/
 ├── initiatives/<project>-<slug>/   one self-contained folder per orchestrated initiative:
-│     MASTER-PRIORITY-DOCUMENT.md   + nested handoffs/ analysis/ reviews/ evidence/ learnings/
-│                                   mboxes/ pull-requests/ rationale/ (as needed)
+│     MASTER-PRIORITY-DOCUMENT.md   + nested handoffs/ analysis/ reviews/ evidence/ friction/
+│                                   learnings/ mboxes/ pull-requests/ rationale/ (as needed)
 ├── learnings/     cross-initiative lessons promoted from initiatives' learnings/ — cited, durable
 ├── plans/         execution plans, initiative briefs, grill records
 ├── analysis/      cross-repo findings that belong to no initiative
 ├── evidence/      raw captures for cross-initiative claims
+├── friction/      one-off delivery friction records — raw workflow cost before promotion
 ├── experiments/   harnesses, scripts, and files you write that fit nowhere else (never /tmp —
 │                  the next session can't see it); never a clone or worktree
 ├── notes/         session scratch, decisions-in-progress
@@ -235,6 +241,41 @@ updated at wave close. Date-prefix files
 `YYYY-MM-DD-`. Never a loose file at `_agent/` root or `sansfaux/` root; never a new top-level
 folder (if nothing fits: `experiments/`, and say so). `./organize.sh` (dry-run by default) tidies
 loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's command, not an agent's**.
+
+**Friction.** For a delivery with no initiative, define its canonical delivery identifier before
+writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
+checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
+that full SHA. The agent closing that delivery owns and writes its one-off close record; this does
+not assign any broader no-initiative delivery role. In `_agent/friction/`, that record is exactly
+`YYYY-MM-DD-<repository-slug>--pr-<number>.md` for the pull-request form, or
+`YYYY-MM-DD-<repository-slug>--branch-<branch-slug>--<full-head-sha>.md` otherwise;
+`repository-slug` is the lowercase remote host and path with non-alphanumerics replaced by `-`, or
+the checkout basename when there is no remote, and `branch-slug` is the same normalization of the
+full branch ref. The record starts with the exact canonical identifier, so the filename maps to
+that delivery without ambiguity. Initiative deliveries keep their initiative `friction/` location
+and existing semantics.
+
+At delivery close — and at each wave close for an initiative — record either `friction: none` or
+one or more dated entries in that delivery's `friction/` location. An entry names the delivery and
+affected workflow step; the observed behaviour, with A2 labels and evidence
+locators where available; the cost or impact (human interruption, retries, rework, or elapsed time
+only when measured); the workaround, if any; whether it is first-seen or recurring and how to
+reproduce it; and the proposed durable fix, or `unknown`.
+
+Friction is an observed workflow cost or obstacle while following the agreement. It is not
+evidence: A2 evidence supports a labelled claim and keeps its own locator or preserved capture. It
+is not a review finding: a review finding is a concern from the independent review that still needs
+verification and its verdict belongs in `reviews/`. It is not a learning: a learning is a resolved,
+cited durable lesson promoted through `what-did-we-learn`. It is not a GitHub issue: an issue is
+repository-owned tracker work filed only after triage and deduplication. A friction record may link
+to any of them without replacing its record.
+
+Preserve the raw record. Correct it in place under A2: quote the old text, mark and date the
+correction, and distinguish what was observed from what was concluded. The promotion path is raw
+friction record → triage and deduplication → recurring, reproducible, repository-owned GitHub
+issue → resolved durable learning, rule, skill or software improvement. Capture is non-blocking:
+it creates no approval checkpoint and stops no delivery unless the underlying condition
+independently reaches an existing gate failure, authority boundary, or B2 stop-list item.
 
 **Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
 lives in the client's own scratch directory, outside `_agent/` — your client file names that
@@ -553,7 +594,8 @@ A lane merge that conflicts goes back to the lane the same way (Git contract abo
 4. **Brandon alone merges, manually, in the GitHub UI** — wave PRs into `develop`, and the release
    PR `develop → master`, which the orchestrator may open as a draft with a changelog. Closing
    keywords fire on the default branch; the orchestrator moves issues to In Review at PR time.
-5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`.
+5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`. The
+   wave-close record also meets A6's friction-close requirement.
 
 # Part C — Environment appendices (read only yours)
 
