@@ -10,6 +10,33 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 (#6) — B2: for feature work with no initiative, the session doing the work holds
+  the orchestrator's duties, and the PR body holds its decisions.** Issue #145: since the
+  2026-10-16 (#2) entry, feature work with no initiative has its own branch off `develop` and a PR
+  into `develop`, while the rules around that path named only an initiative's seats and folders —
+  B2's loop "the orchestrator", its stop-list "MPD §6 + PR body", B0 item 4 a failed item "in MPD
+  §0", and A4's two-axis bullet the verdict "under the initiative's `reviews/`" — so an agent doing
+  such work could follow each only by analogy. Two more places assumed an initiative: B0 item 3
+  named a lane branch only for initiative work, so a lane's commit in a no-initiative session that
+  dispatches lanes had no stated place, and `clients/claude-code.md` sent a session to "item 5
+  (MPD §0)", a file such work does not have. **Decision (Brandon, 2026-10-18): for feature work
+  with no initiative, the session doing the work holds B2's orchestrator duties; its review
+  verdicts and other records go under the `_agent/` root's one-off folders (A6), and its decisions
+  and a failed item 4 are recorded in the PR body.** B2 now says so once, under its opening, with
+  the reason: such work has no wave orchestrator, MPD or initiative folder, and it always has a PR.
+  A4's two-axis bullet names the `_agent/` root's one-off `reviews/` for such work; B0 item 4
+  records a failed item 4 in the PR body for it; the stop-list heading records its decisions in
+  the PR body alone; B0 item 3 adds a lane branch off the work's own branch, matching the
+  initiative case's "or a lane branch off it", and B2's lane bullet names the same branch;
+  `clients/claude-code.md`'s pickup check reads "item 5 (the override in the prompt, recorded in
+  MPD §0, or in the PR body for work with no initiative, B2)". A6 **Friction** said the agent
+  closing a no-initiative delivery writes its close record and that "this does not assign any
+  broader no-initiative delivery role"; with the role now assigned, that clause reads "the
+  delivery's other orchestrator duties are B2's to assign", and the close-record writer is
+  unchanged. This settles the ownership question the 2026-10-18 (#1) entry left open for #145;
+  that entry stays as written. Who merges, the mode, the two-axis review and the stop-list's items
+  are unchanged.
+
 - **2026-10-18 (#5) — A6 Clones: a clone's remote and captured output lose their secrets before
   they reach `evidence/`.** Issue #154: A6 **Clones** says what persists from a scratch clone is
   the commands run and their output, under `evidence/`, with the remote and the commit needed to

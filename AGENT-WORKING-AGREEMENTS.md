@@ -148,7 +148,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance —
   riders, review-fix lanes and merge-conflict resolutions (scoped to the resolution, B2)
   included, no size exemption.** The lane's own report is never the review; the verdict is
-  recorded under the initiative's `reviews/`.
+  recorded under the initiative's `reviews/`, or for work with no initiative under the `_agent/`
+  root's one-off `reviews/` (B2).
   [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
   **An orchestrator's hand-back is never the review of its wave either:** the hand-back names the
   claims to re-measure, and before a merge a reader outside the wave reads them against the
@@ -253,8 +254,8 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
 **Friction.** For a delivery with no initiative, define its canonical delivery identifier before
 writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
 checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
-that full SHA. The agent closing that delivery owns and writes its one-off close record; this does
-not assign any broader no-initiative delivery role. In `_agent/friction/`, that record is exactly
+that full SHA. The agent closing that delivery owns and writes its one-off close record; the
+delivery's other orchestrator duties are B2's to assign. In `_agent/friction/`, that record is exactly
 `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--pr-<number>.md` for the pull-request form,
 or `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--branch-<branch-slug>--ref-<branch-hash>--<full-head-sha>.md`
 otherwise. `repository-identity` is the exact remote host and path before normalization, or the
@@ -417,8 +418,9 @@ with no MPD has its mode picked the same way.
    "Brandon runs the suites" governs routine runs afterward, not this one.
 3. Feature work lands on an initiative branch no other initiative is using — its wave branch or a
    lane branch off it — or, for work with no initiative, on a branch of its own off `develop` for
-   that piece of work (B2), with no other work on it; never on a base branch. Scored when a commit
-   would land, not by the checkout's current branch: a session that commits none does not fail it.
+   that piece of work (B2), with no other work on it, or a lane branch off that branch; never on a
+   base branch. Scored when a commit would land, not by the checkout's current branch: a session
+   that commits none does not fail it.
    What may be pushed to `develop` is B2's, not this item's.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
@@ -431,8 +433,8 @@ with no MPD has its mode picked the same way.
    forbids approving your own PR, and no bot here submits approvals, so a required approval enforces
    "nobody merges", never "only Brandon merges". Audit with the `branch-protection` skill, not by
    reading a settings page; a 404 on the classic endpoint is not "unprotected" when a ruleset covers
-   the branch. **Until protection exists on a repo, a failed item 4 is *recorded* in MPD §0, not a
-   downgrade.**
+   the branch. **Until protection exists on a repo, a failed item 4 is *recorded* in MPD §0, or
+   in the PR body for work with no initiative (B2), not a downgrade.**
    **What protection cannot enforce here.** Nothing in the repo settings stops an agent pushing
    straight to `develop`, or merging its own PR into `master` once the gate is green `[inference —
    untested, since testing it means merging into a protected branch]`. **Feature work never lands
@@ -505,6 +507,11 @@ Brandon is the verification step, on purpose.
 
 Brandon's review moves to the pull request. The orchestrator owns the branch until then.
 
+**Feature work with no initiative** has no wave orchestrator, MPD or initiative folder, so the
+session doing the work holds this section's orchestrator duties; its review verdicts and other
+records go under the `_agent/` root's one-off folders (A6's tree), and its decisions and a failed
+item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 2026-10-18).
+
 **Git contract**
 
 - The wave orchestrator cuts **one branch per wave off `develop`** (`<initiative>/wave-<n>`), and
@@ -527,8 +534,9 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
     straight, it would reach `master` having been reviewed by nobody. That, not the branch, is the
     reason.
   In **attended** mode the shape is unchanged: the lane delivers an mbox, Brandon applies and pushes.
-- **Each lane works in its own git worktree on a branch off the wave branch** and commits there
-  with the repo's hooks firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
+- **Each lane works in its own git worktree on a branch off the wave branch** (for work with no
+  initiative, off that work's own branch, B0 item 3) and commits there with the repo's hooks
+  firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
   (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
 - **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
@@ -582,7 +590,8 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   labelled **`agent-filed`**, so Brandon can sweep them. Closing or relabelling existing issues is
   orchestrator-only and cited. Board intake stays Auto-add.
 
-**The stop-list — stop and ask; everything else proceed, decide, record (MPD §6 + PR body):**
+**The stop-list — stop and ask; everything else proceed, decide, record (MPD §6 + PR body; the
+PR body alone for work with no initiative):**
 
 1. A premise conflict with the MPD or a ticket.
 2. A scope decision the MPD does not cover.
