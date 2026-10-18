@@ -412,9 +412,9 @@ authority.
 gate step 6 requires Ruby to validate `agents/openai.yaml`, and step 7 requires `zip` to rebuild and
 compare the `.plugin` distribution. That measured session was therefore attended. OpenClaw may
 deliver there, and claude-skills #111
-tracks a durable install and complete remeasurement; a future session's mode is still decided only
-by rerunning B0 for its exact checkout and path. It did not block agreement adoption or the
-pointer cutover.
+tracks a durable install and complete remeasurement; future OpenClaw work still re-evaluates B0
+for its exact checkout and path as capability evidence, not as the B1/B2 mode selector. It did not
+block agreement adoption or the pointer cutover.
 
 ## Evidence store
 
