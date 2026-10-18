@@ -10,6 +10,30 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 (#2) — A4, B1 and B2: a verified finding that does no harm is fixed in the PR,
+  noted, or ticketed, by size.** Issue #157: A4 sent every verified review-bot finding that does
+  no harm to a ticket, B2's Addenda sent any fix to work already merged into the wave branch to a
+  fresh ticket, B1's Addenda did the same for anything already committed, and B2's Issues bullet
+  had agents file findings freely. A one-clause fix then cost a ticket and a later wave instead of
+  a commit, and the backlog refilled about as fast as waves cleared it. A4's review-bot bullet
+  keeps its two ends — what is verified and does real harm is fixed before the merge, and what the
+  code disproves is declined — and drops the "only" that would have barred any other fix. Its
+  middle case now has three outcomes: **small**, fixed in the PR, when the fix stays inside the
+  files the PR already changes and needs no new decision, through the lane that owns the file with
+  a scoped review, its thread getting "Fixed in `<sha>`"; **not worth a change**, noted in the
+  review record with a one-line reason that its thread gets too, and no ticket; **real work** —
+  outside the PR's files, a new decision, or more than a small fix — a ticket, as before. The same
+  outcomes govern a reviewer's notes. B2's Addenda now lets a small fix to work already merged
+  into the wave branch ride the open wave PR, through the owning lane, a scoped review and a push,
+  and keeps a fresh ticket for real work and for work found after the wave PR has merged; B1's
+  Addenda says the same in attended mode's shape, a new commit approved per batch until the PR
+  that carries the work merges; B2's Issues bullet now files the findings that are real work; and
+  B2's review loop redispatches "the fixes A4 calls for" in place of "the fixes A4's threshold
+  calls for", since A4 now calls for small fixes as well as harmful ones. **Decision (Brandon,
+  2026-10-18): quick fixes are done in the PR as they arise, and the backlog is not clogged with
+  tickets to get a PR out faster.** The harm list, who merges, the two-axis review and the
+  stop-list are unchanged, and no client file sent harmless findings to a ticket.
+
 - **2026-10-18 (#1) — Friction capture is a raw, non-blocking delivery artifact.** Issue #155:
   A6 now names `friction/` inside an initiative and at the one-off artifact location, defines the
   bounded close record (`friction: none` or a dated entry with the delivery, affected step,

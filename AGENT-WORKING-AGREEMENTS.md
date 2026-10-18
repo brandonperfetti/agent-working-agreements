@@ -160,11 +160,19 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.
-- **A review-bot finding, the CodeRabbit CLI's or the PR bot's, is fixed before the merge only
-  when it is verified and does real harm:** wrong behaviour, a result reported as clean that was
-  not, a leak, a signal or write to something not identified, a held push or a hang. One that holds
-  but does no such harm becomes a ticket, with a short reply on its thread where it has one; one
-  the code disproves is declined.
+- **A review-bot finding, the CodeRabbit CLI's or the PR bot's, is fixed before the merge when it
+  is verified and does real harm:** wrong behaviour, a result reported as clean that was not, a
+  leak, a signal or write to something not identified, a held push or a hang. One the code
+  disproves is declined. One that holds but does no such harm has three outcomes, by size.
+  **Small, it is fixed in the PR:** the fix stays inside the files the PR already changes and
+  needs no new decision (a clause, a word, a test pin); it goes back to the lane that owns the
+  file, with a two-axis review scoped to the fix (above), and its thread gets "Fixed in `<sha>`".
+  **Not worth a change, it is noted:** recorded in the review record with a one-line reason, which
+  its thread gets too, and no ticket. **Real work, it becomes a ticket** — outside the PR's files,
+  a new decision, or more than a small fix — with a short reply on its thread where it has one.
+  The same three outcomes govern a reviewer's notes, not only the bot's findings, because a ticket
+  for a one-clause fix costs a later wave what a commit in the PR would have done, and a backlog
+  that takes every harmless finding refills as fast as waves clear it (Brandon, 2026-10-18).
   The verdict rests on verification, not on the bot's severity label, and the same
   threshold holds on release PRs, which CodeRabbit keeps reviewing (Brandon, 2026-09-29).
   **Declines are argued per thread, where there is one, with cited receipts** (file, test name,
@@ -483,7 +491,9 @@ Brandon is the verification step, on purpose.
   bandwidth, not agent capacity. (Whether lanes run concurrently is an environment fact — see your
   appendix.)
 - **Addenda go back to the same warm lane**, never to a fresh session and never done by the
-  orchestrator's own hands. Anything already committed goes through a fresh ticket.
+  orchestrator's own hands. Until the PR that carries it merges, a small fix (A4) to work already
+  committed is a new commit from that lane, approved per batch like any other; a fresh ticket is
+  for real work (A4), and for work found after that PR has merged.
 
 ## B2. Autonomous mode
 
@@ -562,9 +572,9 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   its own Agent tool before assuming concurrency and records the number in the MPD.
 - **Agents run the full CI gate themselves** — every lane before handing back; the orchestrator on
   every merged tree before every push. CI on the PR is the arbiter for flakes.
-- **Issues:** agents file findings freely via `writing-tickets`, labelled **`agent-filed`**, so
-  Brandon can sweep them. Closing or relabelling existing issues is orchestrator-only and cited.
-  Board intake stays Auto-add.
+- **Issues:** agents file the findings that are real work (A4) freely via `writing-tickets`,
+  labelled **`agent-filed`**, so Brandon can sweep them. Closing or relabelling existing issues is
+  orchestrator-only and cited. Board intake stays Auto-add.
 
 **The stop-list — stop and ask; everything else proceed, decide, record (MPD §6 + PR body):**
 
@@ -582,7 +592,9 @@ Non-blocking questions batch at the wave boundary. Rotation stays per wave with 
 
 **Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new
 commit**, and is re-reviewed (scoped to the fix) before merge — never a fresh session, never the
-orchestrator's own hands. Work already merged into the wave branch goes through a fresh ticket.
+orchestrator's own hands. While the wave PR is open, a small fix (A4) to work already merged into
+the wave branch rides it, through the owning lane, a scoped review and a push; a fresh ticket is
+for real work (A4), and for work found after the wave PR has merged.
 A lane merge that conflicts goes back to the lane the same way (Git contract above).
 
 **The review loop (Brandon + the orchestrator)**
@@ -592,7 +604,7 @@ A lane merge that conflicts goes back to the lane the same way (Git contract abo
 2. **The agent opens the feature PR ready for review; CodeRabbit runs; the orchestrator completes
    the round before hand-back.**
 3. The orchestrator works the review end-to-end with `coderabbit-response`: verifies every finding,
-   redispatches the fixes A4's threshold calls for to lanes (worktrees, review, merge, push as
+   redispatches the fixes A4 calls for to lanes (worktrees, review, merge, push as
    above), replies per thread with receipts, monitors re-reviews to clean. Brandon's review is the
    PR's final state, not the threads.
 4. **Brandon alone merges, manually, in the GitHub UI** — wave PRs into `develop`, and the release
