@@ -369,7 +369,8 @@ Two modes. **The environment picks the mode; nobody asks Brandon at the start of
 Claude Code → autonomous. Cowork → attended. The agent then **verifies the capability guard
 silently at pickup**, scored **for each checkout and repository delivery path**, not for the session
 as a whole: outside the specific OpenClaw rule below, a failed check downgrades **only that
-delivery** to attended, with a one-line reason ("attended: `develop` is unprotected"), never a
+delivery** to attended where the item calls for it — item 4 records a failure instead, until
+protection exists — with a one-line reason ("attended: the CI gate does not run locally"), never a
 question, so a session working two repositories is not moved to attended by a check that failed in
 one. The reason is in the items: items 1, 2 and 4
 are already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so

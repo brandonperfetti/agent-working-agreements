@@ -10,6 +10,21 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 (#4) — B0: a failed check downgrades where its item says so, and the example names
+  one that does.** Issue #147: B0's opening said a failed capability-guard check downgrades the
+  delivery to attended, with a one-line reason, and gave "attended: `develop` is unprotected" as
+  the example, while item 4 says that, until protection exists on a repository, a failed item 4 is
+  recorded, not a downgrade. The example named the one case the item excludes, and the tension
+  predates the 2026-10-16 (#1) change of unit from session to delivery. The opening now says a
+  failed check downgrades the delivery where the item calls for it, item 4 recording a failure
+  instead until protection exists, and its example reason is an item 2 failure, which does
+  downgrade: "attended: the CI gate does not run locally". No item's own rule changes. The
+  "capability guard" row in `docs/agents/domain.md` still named the session as the unit, "the
+  checks, verified at pickup, that a session must pass to run autonomous", and the same file has
+  tickets and rules worded in that table's terms, so the old unit could come back into new text;
+  it now reads "the checks, verified at pickup for each checkout and repository delivery path,
+  that a delivery must pass to run autonomous", B0's unit since the 2026-10-16 (#1) entry.
+
 - **2026-10-18 (#3) — B0 item 5 names the override it guards against.** Issue #158: B0 says
   Brandon can override the mode in either direction by saying so in the prompt, and that the
   override wins over the default, while item 5, which every autonomous delivery must pass, read
