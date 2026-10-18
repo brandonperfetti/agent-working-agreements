@@ -22,8 +22,13 @@ being retrofitted onto the other.
   condition independently reaches an existing gate, authority or stop boundary. `_agent/` is also
   stated as the artifact-location class selected once per session; client discovery stays in the
   appendices and Agent Workspace owns synchronization, reconciliation and cutover mechanics.
-  #145's unresolved no-initiative delivery ownership and record mapping are unchanged. No B0, B1,
-  B2 authority, branch, merge or stop boundary changes.
+  In response to CodeRabbit, A6 now also gives no-initiative friction records a canonical
+  delivery identifier (PR URL, otherwise origin plus full HEAD, otherwise branch plus full HEAD),
+  a closing-agent writer, and a date-prefixed deterministic `_agent/friction/` filename mapping;
+  the record starts with that exact identifier. This is limited to friction capture: #145's
+  unresolved broader no-initiative ownership boundaries, and #110's store, synchronization and
+  cutover boundaries, remain unchanged. No B0, B1, B2 authority, branch, merge or stop boundary
+  changes.
 
 - **2026-10-18 — OpenClaw: B0 re-evaluation is capability evidence, not the mode selector.**
   Issue #152: [source, prior `clients/openclaw.md`] the Pickup guard's historical

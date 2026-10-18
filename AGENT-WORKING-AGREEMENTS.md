@@ -243,9 +243,22 @@ updated at wave close. Date-prefix files
 folder (if nothing fits: `experiments/`, and say so). `./organize.sh` (dry-run by default) tidies
 loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's command, not an agent's**.
 
-**Friction.** At delivery close — and at each wave close for an initiative — record either
-`friction: none` or one or more dated entries in that delivery's `friction/` location. An entry
-names the delivery and affected workflow step; the observed behaviour, with A2 labels and evidence
+**Friction.** For a delivery with no initiative, define its canonical delivery identifier before
+writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
+checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
+that full SHA. The agent closing that delivery owns and writes its one-off close record; this does
+not assign any broader no-initiative delivery role. In `_agent/friction/`, that record is exactly
+`YYYY-MM-DD-<repository-slug>--pr-<number>.md` for the pull-request form, or
+`YYYY-MM-DD-<repository-slug>--branch-<branch-slug>--<full-head-sha>.md` otherwise;
+`repository-slug` is the lowercase remote host and path with non-alphanumerics replaced by `-`, or
+the checkout basename when there is no remote, and `branch-slug` is the same normalization of the
+full branch ref. The record starts with the exact canonical identifier, so the filename maps to
+that delivery without ambiguity. Initiative deliveries keep their initiative `friction/` location
+and existing semantics.
+
+At delivery close — and at each wave close for an initiative — record either `friction: none` or
+one or more dated entries in that delivery's `friction/` location. An entry names the delivery and
+affected workflow step; the observed behaviour, with A2 labels and evidence
 locators where available; the cost or impact (human interruption, retries, rework, or elapsed time
 only when measured); the workaround, if any; whether it is first-seen or recurring and how to
 reproduce it; and the proposed durable fix, or `unknown`.
