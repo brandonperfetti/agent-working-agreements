@@ -539,10 +539,11 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
   firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
   (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
-- **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
-  records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, runs
-  `coderabbit-preflight` when the push carries new work (below) and the CodeRabbit CLI is
-  available to that client, then pushes.**
+- **The orchestrator merges a lane into the wave branch** (for work with no initiative, into that
+  work's own branch) **only after two-axis review passes** (A4), records the verdict in
+  `reviews/`, **re-runs the full CI gate on the merged branch, runs `coderabbit-preflight` when the
+  push carries new work (below) and the CodeRabbit CLI is available to that client, then
+  pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
 - **A lane merge that conflicts goes back to the lane.** The lane merges the wave
   branch into its own branch in its own worktree — a merge commit, never a rebase, which would
