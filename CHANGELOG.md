@@ -50,8 +50,10 @@ being retrofitted onto the other.
   name does and the two cannot be told apart; an ssh remote keeps its user name and loses any
   password; a remote of any other form loses its whole userinfo; and any token is stripped from
   captured output. Keeping a bare user name on an http(s) URL was rejected because it can keep a
-  token. The sentence keeps "the remote and the commit needed to rebuild the clone"; this is not a
-  general secrets policy, and the rest of **Clones** is unchanged.
+  token. The sentence keeps "the remote and the commit needed to rebuild the clone". The next
+  sentence, which had read "That is how this sits beside the `experiments/` line's …" and would
+  now have pointed at the new clause, opens "Keeping that evidence is how …", so it still means the
+  kept evidence. This is not a general secrets policy, and the rest of **Clones** is unchanged.
 
 - **2026-10-18 (#4) — B0: a failed check downgrades unless its item says otherwise, and the
   example names one that does.** Issue #147: B0's opening said a failed capability-guard check
