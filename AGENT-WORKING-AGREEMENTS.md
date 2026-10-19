@@ -148,7 +148,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance —
   riders, review-fix lanes and merge-conflict resolutions (scoped to the resolution, B2)
   included, no size exemption.** The lane's own report is never the review; the verdict is
-  recorded under the initiative's `reviews/`.
+  recorded under the initiative's `reviews/`, or for work with no initiative under the `_agent/`
+  root's one-off `reviews/` (B2).
   [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
   **An orchestrator's hand-back is never the review of its wave either:** the hand-back names the
   claims to re-measure, and before a merge a reader outside the wave reads them against the
@@ -160,11 +161,19 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.
-- **A review-bot finding, the CodeRabbit CLI's or the PR bot's, is fixed before the merge only
-  when it is verified and does real harm:** wrong behaviour, a result reported as clean that was
-  not, a leak, a signal or write to something not identified, a held push or a hang. One that holds
-  but does no such harm becomes a ticket, with a short reply on its thread where it has one; one
-  the code disproves is declined.
+- **A review-bot finding, the CodeRabbit CLI's or the PR bot's, is fixed before the merge when it
+  is verified and does real harm:** wrong behaviour, a result reported as clean that was not, a
+  leak, a signal or write to something not identified, a held push or a hang. One the code
+  disproves is declined. One that holds but does no such harm has three outcomes, by size.
+  **Small, it is fixed in the PR:** the fix stays inside the files the PR already changes and
+  needs no new decision (a clause, a word, a test pin); it goes back to the lane that owns the
+  file, with a two-axis review scoped to the fix (above), and its thread gets "Fixed in `<sha>`".
+  **Not worth a change, it is noted:** recorded in the review record with a one-line reason, which
+  its thread gets too, and no ticket. **Real work, it becomes a ticket** — outside the PR's files,
+  a new decision, or more than a small fix — with a short reply on its thread where it has one.
+  The same three outcomes govern a reviewer's notes, not only the bot's findings, because a ticket
+  for a one-clause fix costs a later wave what a commit in the PR would have done, and a backlog
+  that takes every harmless finding refills as fast as waves clear it (Brandon, 2026-10-18).
   The verdict rests on verification, not on the bot's severity label, and the same
   threshold holds on release PRs, which CodeRabbit keeps reviewing (Brandon, 2026-09-29).
   **Declines are argued per thread, where there is one, with cited receipts** (file, test name,
@@ -245,8 +254,8 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
 **Friction.** For a delivery with no initiative, define its canonical delivery identifier before
 writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
 checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
-that full SHA. The agent closing that delivery owns and writes its one-off close record; this does
-not assign any broader no-initiative delivery role. In `_agent/friction/`, that record is exactly
+that full SHA. The agent closing that delivery owns and writes its one-off close record; the
+delivery's other orchestrator duties are B2's to assign. In `_agent/friction/`, that record is exactly
 `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--pr-<number>.md` for the pull-request form,
 or `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--branch-<branch-slug>--ref-<branch-hash>--<full-head-sha>.md`
 otherwise. `repository-identity` is the exact remote host and path before normalization, or the
@@ -284,12 +293,17 @@ independently reaches an existing gate failure, authority boundary, or B2 stop-l
 **Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
 lives in the client's own scratch directory, outside `_agent/` — your client file names that
 directory, or records that it is unmeasured. What persists is the evidence: the commands run and
-their output, under `evidence/`, with the remote and the commit needed to rebuild the clone. That
-is how this sits beside the `experiments/` line's "never /tmp": a transcript has to survive the
-session, a clone can be made again. The reason: a clone under `_agent/` is a nested repository in a
-store meant to replicate, a second copy of a project's source with its licence, and the one thing
-in `_agent/` that is rebuildable. This moves no lane worktree: where those live is unchanged and is
-each client file's to name. (Brandon, 2026-10-12)
+their output, under `evidence/`, with the remote and the commit needed to rebuild the clone.
+Before the remote or a command's output is written under `evidence/`, the secret comes out, by the
+remote's form, because a remote can carry credentials and the plain ways of reading one print them
+verbatim: an http(s) URL loses its whole userinfo, since a token can stand where a user name does
+and the two cannot be told apart; an ssh remote keeps its user name and loses any password; a
+remote of any other form loses its whole userinfo; and any token is stripped from captured output.
+Keeping that evidence is how this sits beside the `experiments/` line's "never /tmp": a
+transcript has to survive the session, a clone can be made again. The reason: a clone under
+`_agent/` is a nested repository in a store meant to replicate, a second copy of a project's
+source with its licence, and the one thing in `_agent/` that is rebuildable. This moves no lane
+worktree: where those live is unchanged and is each client file's to name. (Brandon, 2026-10-12)
 
 ## A7. GitHub paths
 
@@ -361,9 +375,10 @@ Two modes. **The environment picks the mode; nobody asks Brandon at the start of
 Claude Code → autonomous. Cowork → attended. The agent then **verifies the capability guard
 silently at pickup**, scored **for each checkout and repository delivery path**, not for the session
 as a whole: outside the specific OpenClaw rule below, a failed check downgrades **only that
-delivery** to attended, with a one-line reason ("attended: `develop` is unprotected"), never a
-question, so a session working two repositories is not moved to attended by a check that failed in
-one. The reason is in the items: items 1, 2 and 4
+delivery** to attended, with a one-line reason ("attended: the CI gate does not run locally"),
+never a question, unless its item says otherwise — a failed item 4 is recorded instead, until
+protection exists — so a session working two repositories is not moved to attended by a check
+that failed in one. The reason is in the items: items 1, 2 and 4
 are already scored that way — item 1's hook probe per checkout, items 2 and 4 per repository — so
 item 1's hook probe failing says nothing of a delivery from a checkout that probe does not cover —
 another clone, or another worktree where `core.hooksPath` is relative — and item 2 or 4 failing for
@@ -403,8 +418,9 @@ with no MPD has its mode picked the same way.
    "Brandon runs the suites" governs routine runs afterward, not this one.
 3. Feature work lands on an initiative branch no other initiative is using — its wave branch or a
    lane branch off it — or, for work with no initiative, on a branch of its own off `develop` for
-   that piece of work (B2), with no other work on it; never on a base branch. Scored when a commit
-   would land, not by the checkout's current branch: a session that commits none does not fail it.
+   that piece of work (B2), with no other work on it, or a lane branch off that branch; never on a
+   base branch. Scored when a commit would land, not by the checkout's current branch: a session
+   that commits none does not fail it.
    What may be pushed to `develop` is B2's, not this item's.
 4. The base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
@@ -417,8 +433,8 @@ with no MPD has its mode picked the same way.
    forbids approving your own PR, and no bot here submits approvals, so a required approval enforces
    "nobody merges", never "only Brandon merges". Audit with the `branch-protection` skill, not by
    reading a settings page; a 404 on the classic endpoint is not "unprotected" when a ruleset covers
-   the branch. **Until protection exists on a repo, a failed item 4 is *recorded* in MPD §0, not a
-   downgrade.**
+   the branch. **Until protection exists on a repo, a failed item 4 is *recorded* in MPD §0, or
+   in the PR body for work with no initiative (B2), not a downgrade.**
    **What protection cannot enforce here.** Nothing in the repo settings stops an agent pushing
    straight to `develop`, or merging its own PR into `master` once the gate is green `[inference —
    untested, since testing it means merging into a protected branch]`. **Feature work never lands
@@ -431,7 +447,7 @@ with no MPD has its mode picked the same way.
    token-switch step in every client and a new PR author, a cost not paid while those conditions
    hold. It reopens on a second account with write access to a repository this agreement governs,
    or on one measured breach of either rule, with a GitHub App as the recommended shape.
-5. Brandon has not overridden it for this session.
+5. Brandon has not overridden the mode to attended for this session.
 
 By environment: **Claude Code → autonomous** (1 passes by construction but for its hook probe,
 which is per checkout; 2 is a per-repo probe run at
@@ -483,11 +499,18 @@ Brandon is the verification step, on purpose.
   bandwidth, not agent capacity. (Whether lanes run concurrently is an environment fact — see your
   appendix.)
 - **Addenda go back to the same warm lane**, never to a fresh session and never done by the
-  orchestrator's own hands. Anything already committed goes through a fresh ticket.
+  orchestrator's own hands. Until the PR that carries it merges, a small fix (A4) to work already
+  committed is a new commit from that lane, approved per batch like any other; a fresh ticket is
+  for real work (A4), and for work found after that PR has merged.
 
 ## B2. Autonomous mode
 
 Brandon's review moves to the pull request. The orchestrator owns the branch until then.
+
+**Feature work with no initiative** has no wave orchestrator, MPD or initiative folder, so the
+session doing the work holds this section's orchestrator duties; its review verdicts and other
+records go under the `_agent/` root's one-off folders (A6's tree), and its decisions and a failed
+item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 2026-10-18).
 
 **Git contract**
 
@@ -511,14 +534,16 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
     straight, it would reach `master` having been reviewed by nobody. That, not the branch, is the
     reason.
   In **attended** mode the shape is unchanged: the lane delivers an mbox, Brandon applies and pushes.
-- **Each lane works in its own git worktree on a branch off the wave branch** and commits there
-  with the repo's hooks firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
+- **Each lane works in its own git worktree on a branch off the wave branch** (for work with no
+  initiative, off that work's own branch, B0 item 3) and commits there with the repo's hooks
+  firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
   (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
-- **The orchestrator merges a lane into the wave branch only after two-axis review passes** (A4),
-  records the verdict in `reviews/`, **re-runs the full CI gate on the merged branch, runs
-  `coderabbit-preflight` when the push carries new work (below) and the CodeRabbit CLI is
-  available to that client, then pushes.**
+- **The orchestrator merges a lane into the wave branch** (for work with no initiative, into that
+  work's own branch) **only after two-axis review passes** (A4), records the verdict in
+  `reviews/`, **re-runs the full CI gate on the merged branch, runs `coderabbit-preflight` when the
+  push carries new work (below) and the CodeRabbit CLI is available to that client, then
+  pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
 - **A lane merge that conflicts goes back to the lane.** The lane merges the wave
   branch into its own branch in its own worktree — a merge commit, never a rebase, which would
@@ -562,11 +587,12 @@ Brandon's review moves to the pull request. The orchestrator owns the branch unt
   its own Agent tool before assuming concurrency and records the number in the MPD.
 - **Agents run the full CI gate themselves** — every lane before handing back; the orchestrator on
   every merged tree before every push. CI on the PR is the arbiter for flakes.
-- **Issues:** agents file findings freely via `writing-tickets`, labelled **`agent-filed`**, so
-  Brandon can sweep them. Closing or relabelling existing issues is orchestrator-only and cited.
-  Board intake stays Auto-add.
+- **Issues:** agents file the findings that are real work (A4) freely via `writing-tickets`,
+  labelled **`agent-filed`**, so Brandon can sweep them. Closing or relabelling existing issues is
+  orchestrator-only and cited. Board intake stays Auto-add.
 
-**The stop-list — stop and ask; everything else proceed, decide, record (MPD §6 + PR body):**
+**The stop-list — stop and ask; everything else proceed, decide, record (MPD §6 + PR body; the
+PR body alone for work with no initiative):**
 
 1. A premise conflict with the MPD or a ticket.
 2. A scope decision the MPD does not cover.
@@ -582,7 +608,9 @@ Non-blocking questions batch at the wave boundary. Rotation stays per wave with 
 
 **Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new
 commit**, and is re-reviewed (scoped to the fix) before merge — never a fresh session, never the
-orchestrator's own hands. Work already merged into the wave branch goes through a fresh ticket.
+orchestrator's own hands. While the wave PR is open, a small fix (A4) to work already merged into
+the wave branch rides it, through the owning lane, a scoped review and a push; a fresh ticket is
+for real work (A4), and for work found after the wave PR has merged.
 A lane merge that conflicts goes back to the lane the same way (Git contract above).
 
 **The review loop (Brandon + the orchestrator)**
@@ -592,7 +620,7 @@ A lane merge that conflicts goes back to the lane the same way (Git contract abo
 2. **The agent opens the feature PR ready for review; CodeRabbit runs; the orchestrator completes
    the round before hand-back.**
 3. The orchestrator works the review end-to-end with `coderabbit-response`: verifies every finding,
-   redispatches the fixes A4's threshold calls for to lanes (worktrees, review, merge, push as
+   redispatches the fixes A4 calls for to lanes (worktrees, review, merge, push as
    above), replies per thread with receipts, monitors re-reviews to clean. Brandon's review is the
    PR's final state, not the threads.
 4. **Brandon alone merges, manually, in the GitHub UI** — wave PRs into `develop`, and the release
