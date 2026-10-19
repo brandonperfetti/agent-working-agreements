@@ -53,17 +53,20 @@ being retrofitted onto the other.
   remote.origin.url` each printed the URL's userinfo], so following the rule as written could write
   a secret into the evidence store, a leak by A4's harm list. The commands run persist too, and a
   recorded command keeps a credential as typed (a `git clone` of a URL with a token in it), so the
-  clause covers the command text as well as the remote and the output. One clause now says that
-  before the remote, a command or its output is written under `evidence/`, the secret comes out, by
-  the remote's form, wherever a remote appears: an http(s) URL loses its whole userinfo, since a
-  token can stand where a user name does and the two cannot be told apart; an ssh remote keeps its
-  user name and loses any password; a remote of any other form loses its whole userinfo; and any
-  token is stripped from a captured command and its output. Keeping a bare user name on an http(s)
-  URL was rejected because it can keep a token. The sentence keeps "the remote and the commit needed
-  to rebuild the clone". The next sentence, which had read "That is how this sits beside the
-  `experiments/` line's …" and would now have pointed at the new clause, opens "Keeping that
-  evidence is how …", so it still means the kept evidence. This is not a general secrets policy, and
-  the rest of **Clones** is unchanged.
+  clause covers the command text as well as the remote and the output. A clone can also carry a
+  credential that is neither userinfo nor a token — an authentication header set through
+  `http.extraHeader` on the clone puts one in the recorded command — so the last part names any
+  credential the clone uses, not only a token. One clause now says that before the remote, a command
+  or its output is written under `evidence/`, the secret comes out, by the remote's form, wherever a
+  remote appears: an http(s) URL loses its whole userinfo, since a token can stand where a user name
+  does and the two cannot be told apart; an ssh remote keeps its user name and loses any password; a
+  remote of any other form loses its whole userinfo; and any credential the clone uses, a token or
+  an authentication header among them, is stripped from a captured command and its output. Keeping a
+  bare user name on an http(s) URL was rejected because it can keep a token. The sentence keeps "the
+  remote and the commit needed to rebuild the clone". The next sentence, which had read "That is how
+  this sits beside the `experiments/` line's …" and would now have pointed at the new clause, opens
+  "Keeping that evidence is how …", so it still means the kept evidence. This is not a general
+  secrets policy, and the rest of **Clones** is unchanged.
 
 - **2026-10-18 (#4) — B0: a failed check downgrades unless its item says otherwise, and the
   example names one that does.** Issue #147: B0's opening said a failed capability-guard check

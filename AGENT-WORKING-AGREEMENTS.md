@@ -299,8 +299,9 @@ the remote's form, wherever a remote appears, because a remote can carry credent
 records one as typed (a `git clone` of a URL with a token in it), and the plain ways of reading a
 remote print them verbatim: an http(s) URL loses its whole userinfo, since a token can stand where
 a user name does and the two cannot be told apart; an ssh remote keeps its user name and loses any
-password; a remote of any other form loses its whole userinfo; and any token is stripped from a
-captured command and its output.
+password; a remote of any other form loses its whole userinfo; and any credential the clone uses,
+a token or an authentication header among them, is stripped from a captured command and its
+output.
 Keeping that evidence is how this sits beside the `experiments/` line's "never /tmp": a
 transcript has to survive the session, a clone can be made again. The reason: a clone under
 `_agent/` is a nested repository in a store meant to replicate, a second copy of a project's
