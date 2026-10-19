@@ -22,8 +22,9 @@ check at pickup:** item 1's hook probe (`git push --dry-run origin HEAD` from th
 push from),
 item 2 (run the gate once — the local shell's locale/env differs from the CI runner; the project
 docs name the exports), item 4 (branch protection — query it, it has been
-absent), item 5 (MPD §0). Whether the repo carries any hooks at all is a repo fact, not a Claude
-Code fact.
+absent), item 5 (the override in the prompt, recorded in MPD §0 for initiative work, or with the
+delivery's decisions in the PR body for work with none, B2). Whether the repo carries any hooks at
+all is a repo fact, not a Claude Code fact.
 
 - Lane isolation: `git worktree add ../<repo>-<lane> -b <initiative>/wave-<n>-<lane>` from the wave
   branch (flat form — git refuses a ref that is a path prefix of another, so `wave-<n>/<lane>`

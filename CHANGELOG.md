@@ -10,6 +10,116 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-18 (#6) — B2: for feature work with no initiative, the session doing the work holds
+  the orchestrator's duties, and the PR body holds its decisions.** Issue #145: since the
+  2026-10-16 (#2) entry, feature work with no initiative has its own branch off `develop` and a PR
+  into `develop`, while the rules around that path named only an initiative's seats and folders —
+  B2's loop "the orchestrator", its stop-list "MPD §6 + PR body", B0 item 4 a failed item "in MPD
+  §0", and A4's two-axis bullet the verdict "under the initiative's `reviews/`" — so an agent doing
+  such work could follow each only by analogy. Two more places assumed an initiative: B0 item 3
+  named a lane branch only for initiative work, so a lane's commit in a no-initiative session that
+  dispatches lanes had no stated place, and `clients/claude-code.md` sent a session to "item 5
+  (MPD §0)", a file such work does not have. **Decision (Brandon, 2026-10-18): for feature work
+  with no initiative, the session doing the work holds B2's orchestrator duties; its review
+  verdicts and other records go under the `_agent/` root's one-off folders (A6), and its decisions
+  and a failed item 4 are recorded in the PR body.** B2 now says so once, under its opening, with
+  the reason: such work has no wave orchestrator, MPD or initiative folder, and it always has a PR.
+  A4's two-axis bullet names the `_agent/` root's one-off `reviews/` for such work; B0 item 4
+  records a failed item 4 in the PR body for it; the stop-list heading records its decisions in
+  the PR body alone; B0 item 3 adds a lane branch off the work's own branch, matching the
+  initiative case's "or a lane branch off it"; B2's lane bullet names the same branch, and its
+  merge bullet names that work's own branch as the one the lane merges into;
+  `clients/claude-code.md`'s pickup check reads "item 5 (the override in the prompt, recorded
+  in MPD §0 for initiative work, or with the delivery's decisions in the PR body for work with
+  none, B2)", which keeps an initiative's override with the mode MPD §0 records, puts it in the PR
+  body with the delivery's decisions for work with no initiative, and adds nothing to B2's
+  paragraph; and the `orchestrator` row in `docs/agents/domain.md`, which named only an
+  initiative's orchestrator, now reads "A4 and B2: the lead agent; for an initiative it runs one
+  wave, then rotates to a fresh one through a packet; for work with no initiative, the session
+  doing the work". A6 **Friction** said the agent
+  closing a no-initiative delivery writes its close record and that "this does not assign any
+  broader no-initiative delivery role"; with the role now assigned, that clause reads "the
+  delivery's other orchestrator duties are B2's to assign", and the close-record writer is
+  unchanged. This settles the ownership question the 2026-10-18 (#1) entry left open for #145;
+  that entry stays as written. Who merges, the mode, the two-axis review and the stop-list's items
+  are unchanged.
+
+- **2026-10-18 (#5) — A6 Clones: a clone's remote, recorded commands and captured output lose their
+  secrets before they reach `evidence/`.** Issue #154: A6 **Clones** says what persists from a
+  scratch clone is the commands run and their output, under `evidence/`, with the remote and the
+  commit needed to rebuild the clone. A remote URL can carry credentials, and the plain ways of
+  reading a remote print them verbatim [measured 2026-10-17, git 2.46.0, a scratch repository with a
+  fake credentialed remote: `git remote -v`, `git remote get-url origin` and `git config --get
+  remote.origin.url` each printed the URL's userinfo], so following the rule as written could write
+  a secret into the evidence store, a leak by A4's harm list. The commands run persist too, and a
+  recorded command keeps a credential as typed (a `git clone` of a URL with a token in it), so the
+  clause covers the command text as well as the remote and the output. A clone can also carry a
+  credential that is neither userinfo nor a token — an authentication header set through
+  `http.extraHeader` on the clone puts one in the recorded command — so the last part names any
+  credential the clone uses, not only a token. One clause now says that before the remote, a command
+  or its output is written under `evidence/`, the secret comes out, by the remote's form, wherever a
+  remote appears: an http(s) URL loses its whole userinfo, since a token can stand where a user name
+  does and the two cannot be told apart; an ssh remote keeps its user name and loses any password; a
+  remote of any other form loses its whole userinfo; and any credential the clone uses, a token or
+  an authentication header among them, is stripped from a captured command and its output. Keeping a
+  bare user name on an http(s) URL was rejected because it can keep a token. The sentence keeps "the
+  remote and the commit needed to rebuild the clone". The next sentence, which had read "That is how
+  this sits beside the `experiments/` line's …" and would now have pointed at the new clause, opens
+  "Keeping that evidence is how …", so it still means the kept evidence. This is not a general
+  secrets policy, and the rest of **Clones** is unchanged.
+
+- **2026-10-18 (#4) — B0: a failed check downgrades unless its item says otherwise, and the
+  example names one that does.** Issue #147: B0's opening said a failed capability-guard check
+  downgrades the delivery to attended, with a one-line reason, and gave "attended: `develop` is
+  unprotected" as the example, while item 4 says that, until protection exists on a repository, a
+  failed item 4 is recorded, not a downgrade. The example named the one case the item excludes,
+  and the tension predates the 2026-10-16 (#1) change of unit from session to delivery. The
+  opening now keeps the downgrade as the rule and names the exception: a failed check downgrades
+  the delivery, with a one-line reason, never a question, unless its item says otherwise — a
+  failed item 4 is recorded instead, until protection exists. Its example reason is an item 2
+  failure, which does downgrade: "attended: the CI gate does not run locally". No item's own rule
+  changes. The "capability guard" row in `docs/agents/domain.md` still named the session as the
+  unit, "the checks, verified at pickup, that a session must pass to run autonomous", and the same
+  file tells writers to word issues, rules and changelog entries in that table's terms, so the old
+  unit could come back into new text; it now reads "the checks, verified at pickup for each
+  checkout and repository delivery path, that a delivery must pass to run autonomous; a failed
+  item 4 is recorded instead, until protection exists", which carries B0's unit since the
+  2026-10-16 (#1) entry and the same exception as B0's opening, so the row says no more than B0.
+
+- **2026-10-18 (#3) — B0 item 5 names the override it guards against.** Issue #158: B0 says
+  Brandon can override the mode in either direction by saying so in the prompt, and that the
+  override wins over the default, while item 5, which every autonomous delivery must pass, read
+  "Brandon has not overridden it for this session". Read literally, an override toward autonomous
+  failed item 5, so the override B0 promises in that direction could not select autonomous. Item 5
+  now reads "Brandon has not overridden the mode to attended for this session": an override toward
+  autonomous passes it, and one toward attended fails it, as B0's opening promises. **Decision
+  (Brandon, 2026-10-18): item 5 names the override it guards against.** Items 1–4 and who may
+  override are unchanged.
+
+- **2026-10-18 (#2) — A4, B1 and B2: a verified finding that does no harm is fixed in the PR,
+  noted, or ticketed, by size.** Issue #157: A4 sent every verified review-bot finding that does
+  no harm to a ticket, B2's Addenda sent any fix to work already merged into the wave branch to a
+  fresh ticket, B1's Addenda did the same for anything already committed, and B2's Issues bullet
+  had agents file findings freely. A one-clause fix then cost a ticket and a later wave instead of
+  a commit, and the backlog refilled about as fast as waves cleared it. A4's review-bot bullet
+  keeps its two ends — what is verified and does real harm is fixed before the merge, and what the
+  code disproves is declined — and drops the "only" that would have barred any other fix. Its
+  middle case now has three outcomes: **small**, fixed in the PR, when the fix stays inside the
+  files the PR already changes and needs no new decision, through the lane that owns the file with
+  a scoped review, its thread getting "Fixed in `<sha>`"; **not worth a change**, noted in the
+  review record with a one-line reason that its thread gets too, and no ticket; **real work** —
+  outside the PR's files, a new decision, or more than a small fix — a ticket, as before. The same
+  outcomes govern a reviewer's notes. B2's Addenda now lets a small fix to work already merged
+  into the wave branch ride the open wave PR, through the owning lane, a scoped review and a push,
+  and keeps a fresh ticket for real work and for work found after the wave PR has merged; B1's
+  Addenda says the same in attended mode's shape, a new commit approved per batch until the PR
+  that carries the work merges; B2's Issues bullet now files the findings that are real work; and
+  B2's review loop redispatches "the fixes A4 calls for" in place of "the fixes A4's threshold
+  calls for", since A4 now calls for small fixes as well as harmful ones. **Decision (Brandon,
+  2026-10-18): quick fixes are done in the PR as they arise, and the backlog is not clogged with
+  tickets to get a PR out faster.** The harm list, who merges, the two-axis review and the
+  stop-list are unchanged, and no client file sent harmless findings to a ticket.
+
 - **2026-10-18 (#1) — Friction capture is a raw, non-blocking delivery artifact.** Issue #155:
   A6 now names `friction/` inside an initiative and at the one-off artifact location, defines the
   bounded close record (`friction: none` or a dated entry with the delivery, affected step,
