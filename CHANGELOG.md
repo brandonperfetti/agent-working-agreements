@@ -44,23 +44,26 @@ being retrofitted onto the other.
   that entry stays as written. Who merges, the mode, the two-axis review and the stop-list's items
   are unchanged.
 
-- **2026-10-18 (#5) — A6 Clones: a clone's remote and captured output lose their secrets before
-  they reach `evidence/`.** Issue #154: A6 **Clones** says what persists from a scratch clone is
-  the commands run and their output, under `evidence/`, with the remote and the commit needed to
-  rebuild the clone. A remote URL can carry credentials, and the plain ways of reading a remote
-  print them verbatim [measured 2026-10-17, git 2.46.0, a scratch repository with a fake
-  credentialed remote: `git remote -v`, `git remote get-url origin` and `git config --get
-  remote.origin.url` each printed the URL's userinfo], so following the rule as written could
-  write a secret into the evidence store, a leak by A4's harm list. One clause now says that before
-  the remote or a command's output is written under `evidence/`, the secret comes out, by the
-  remote's form: an http(s) URL loses its whole userinfo, since a token can stand where a user
-  name does and the two cannot be told apart; an ssh remote keeps its user name and loses any
-  password; a remote of any other form loses its whole userinfo; and any token is stripped from
-  captured output. Keeping a bare user name on an http(s) URL was rejected because it can keep a
-  token. The sentence keeps "the remote and the commit needed to rebuild the clone". The next
-  sentence, which had read "That is how this sits beside the `experiments/` line's …" and would
-  now have pointed at the new clause, opens "Keeping that evidence is how …", so it still means the
-  kept evidence. This is not a general secrets policy, and the rest of **Clones** is unchanged.
+- **2026-10-18 (#5) — A6 Clones: a clone's remote, recorded commands and captured output lose their
+  secrets before they reach `evidence/`.** Issue #154: A6 **Clones** says what persists from a
+  scratch clone is the commands run and their output, under `evidence/`, with the remote and the
+  commit needed to rebuild the clone. A remote URL can carry credentials, and the plain ways of
+  reading a remote print them verbatim [measured 2026-10-17, git 2.46.0, a scratch repository with a
+  fake credentialed remote: `git remote -v`, `git remote get-url origin` and `git config --get
+  remote.origin.url` each printed the URL's userinfo], so following the rule as written could write
+  a secret into the evidence store, a leak by A4's harm list. The commands run persist too, and a
+  recorded command keeps a credential as typed (a `git clone` of a URL with a token in it), so the
+  clause covers the command text as well as the remote and the output. One clause now says that
+  before the remote, a command or its output is written under `evidence/`, the secret comes out, by
+  the remote's form, wherever a remote appears: an http(s) URL loses its whole userinfo, since a
+  token can stand where a user name does and the two cannot be told apart; an ssh remote keeps its
+  user name and loses any password; a remote of any other form loses its whole userinfo; and any
+  token is stripped from a captured command and its output. Keeping a bare user name on an http(s)
+  URL was rejected because it can keep a token. The sentence keeps "the remote and the commit needed
+  to rebuild the clone". The next sentence, which had read "That is how this sits beside the
+  `experiments/` line's …" and would now have pointed at the new clause, opens "Keeping that
+  evidence is how …", so it still means the kept evidence. This is not a general secrets policy, and
+  the rest of **Clones** is unchanged.
 
 - **2026-10-18 (#4) — B0: a failed check downgrades unless its item says otherwise, and the
   example names one that does.** Issue #147: B0's opening said a failed capability-guard check
