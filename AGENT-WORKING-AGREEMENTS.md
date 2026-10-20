@@ -614,7 +614,7 @@ PR body alone for work with no initiative):**
 
 For work with no initiative, item 1 reads "A premise conflict with the ticket or the prompt" and
 item 2 reads "A scope decision neither the ticket nor the prompt covers": both exist for every
-piece of work, and with no MPD, item 2 read literally would stop every scope decision (Brandon,
+piece of work, and with no MPD, item 2 as written would stop every scope decision (Brandon,
 2026-10-20).
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
