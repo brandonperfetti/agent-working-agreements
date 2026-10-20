@@ -10,6 +10,21 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-20 (#6) — B1: for feature work with no initiative, the session doing the work holds
+  the orchestrator's duties, and its one-off review record holds its decisions until a PR
+  exists.** Issue #165, from the review of the (#5) change: A6 **Friction** and
+  `clients/claude-code.md`'s item 5 pointer now send attended work with no initiative to B1,
+  which said nothing of it, and in attended mode no PR exists when a batch is reviewed (A7), so
+  B2's "the PR body" had no counterpart. Under the (#4) entry's size test, that is a line the PR's
+  own change makes untrue. B1 now opens with a paragraph mirroring B2's: the session holds the
+  orchestrator's duties, its records go under the `_agent/` root's one-off folders, and its
+  decisions and a failed item 4 go in its one-off review record under `_agent/reviews/` until a PR
+  exists, then into the PR body. B0 item 4 and the item 5 pointer, which named the PR body alone
+  for such work, now say so too. **Decision (Brandon, 2026-10-20): "Decisions are recorded in the
+  delivery's one-off review record under `_agent/reviews/`, which Brandon reads at each batch
+  approval, and copied into the PR body once a PR exists."** Folded into the change for #165
+  rather than ticketed. The per-batch approval, and who commits or pushes, are unchanged.
+
 - **2026-10-20 (#5) — B1, A6 and the Claude Code appendix: attended work with no lanes gets the
   same fix owner as autonomous work, and no-initiative pointers name both modes.** Issue #165 (its
   first comment): B2's Addenda carry an exception for a session that dispatches no lanes, while

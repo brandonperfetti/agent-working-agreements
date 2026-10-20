@@ -453,7 +453,8 @@ with no MPD has its mode picked the same way.
    "nobody merges", never "only Brandon merges". Audit with the `branch-protection` skill, not by
    reading a settings page; a 404 on the classic endpoint is not "unprotected" when a ruleset covers
    the branch. **Until protection exists on a repo, a failed item 4 is *recorded* in MPD §0, or
-   in the PR body for work with no initiative (B2), not a downgrade.**
+   in the PR body for work with no initiative (B2; in attended mode, its one-off review record
+   until a PR exists, B1), not a downgrade.**
    **What protection cannot enforce here.** Nothing in the repo settings stops an agent pushing
    straight to `develop`, or merging its own PR into `master` once the gate is green `[inference —
    untested, since testing it means merging into a protected branch]`. **Feature work never lands
@@ -489,6 +490,14 @@ guard is the contract, not the client name.
 ## B1. Attended mode
 
 Brandon is the verification step, on purpose.
+
+**Feature work with no initiative** has no wave orchestrator, MPD or initiative folder, so the
+session doing the work holds this section's orchestrator duties; its review verdicts and other
+records go under the `_agent/` root's one-off folders (A6's tree), and its decisions and a failed
+item 4 (B0) are recorded in its one-off review record under `_agent/reviews/`, which Brandon reads
+at each batch approval, and copied into the PR body once a PR exists. A6 and the client files point
+such work here, and in attended mode no PR exists when a batch is reviewed (A7), so without this
+the pointers would land on nothing and the decisions would have no place (Brandon, 2026-10-20).
 
 - **You never commit or push without explicit approval, per batch, every single time.** Approval
   never carries to the next batch; no `--amend`; no routing around it with API/MCP writes or
