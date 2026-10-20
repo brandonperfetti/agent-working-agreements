@@ -621,11 +621,11 @@ Non-blocking questions batch at the wave boundary. Rotation stays per wave with 
 
 **Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new
 commit**, and is re-reviewed (scoped to the fix) before merge — never a fresh session, never the
-orchestrator's own hands. A session that dispatches no lanes counts as that lane, the scoped
-two-axis review still required (A4). While the wave PR is open, a small fix (A4) to work already
-merged into the wave branch rides it, through the owning lane, a scoped review and a push; a fresh
-ticket is for real work (A4), and for work found after the wave PR has merged. On a release PR, A4
-names who makes a small fix.
+orchestrator's own hands, except where the session dispatches no lanes: that session counts as
+that lane, the scoped two-axis review still required (A4). While the wave PR is open, a small
+fix (A4) to work already merged into the wave branch rides it, through the owning lane, a scoped
+review and a push; a fresh ticket is for real work (A4), and for work found after the wave PR has
+merged. On a release PR, A4 names who makes a small fix.
 A lane merge that conflicts goes back to the lane the same way (Git contract above).
 
 **The review loop (Brandon + the orchestrator)**
