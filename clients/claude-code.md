@@ -23,7 +23,7 @@ push from),
 item 2 (run the gate once — the local shell's locale/env differs from the CI runner; the project
 docs name the exports), item 4 (branch protection — query it, it has been
 absent), item 5 (the override in the prompt, recorded in MPD §0 for initiative work, or with the
-delivery's decisions for work with none, B1 or B2, by mode). Whether the repo
+delivery's decisions for work with no initiative, B1 or B2, by mode). Whether the repo
 carries any hooks at all is a repo fact, not a Claude Code fact.
 
 - Lane isolation: `git worktree add ../<repo>-<lane> -b <initiative>/wave-<n>-<lane>` from the wave
