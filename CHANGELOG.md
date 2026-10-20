@@ -10,6 +10,27 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-20 (#1) — A4 and B2: a session that dispatches no lanes counts as the file's lane for
+  a fix, and a release PR's small fix goes to the owning lane or a review-fix lane.** Issue #161:
+  since the 2026-10-18 (#6) entry, the session doing feature work with no initiative holds B2's
+  orchestrator duties, while A4's small-fix outcome sent the fix "back to the lane that owns the
+  file" and B2's Addenda said a fix is "never the orchestrator's own hands". A session that
+  dispatches no lanes is both orchestrator and only author, so read together the two left its own
+  small fix with no one allowed to make it. A4 applies the same threshold to release PRs, whose fix
+  commits B2 pushes straight to `develop`, and the small-fix route named no owner there either.
+  A4's small-fix sentence now says that a session that dispatches no lanes counts as the file's
+  lane, the scoped review still required, and that on a release PR the fix goes to the lane that
+  owns the file or to a review-fix lane the orchestrator dispatches for it, with the reason: the
+  route assumes a lane exists. B2's Addenda say the same of a session with no lanes and point to
+  A4 for a release PR. B2's release-cut bullet, which says where a release PR's fix commits are
+  pushed, is unchanged: it covers every fix commit, not only a small one, and B2's review loop
+  already sends the fixes A4 calls for to lanes. B1's Addenda are unchanged. **Decision (Brandon,
+  2026-10-20): a session that dispatches no lanes counts as the file's lane for A4's small-fix
+  route and B2's Addenda, with the scoped two-axis review still required; on a release PR, the fix
+  goes to the lane that owns the file, or to a review-fix lane the orchestrator dispatches for
+  it.** Chosen over always dispatching a lane and over letting the orchestrator fix with a scoped
+  review. The harm list, the three outcomes, who merges and the two-axis review are unchanged.
+
 - **2026-10-18 (#6) — B2: for feature work with no initiative, the session doing the work holds
   the orchestrator's duties, and the PR body holds its decisions.** Issue #145: since the
   2026-10-16 (#2) entry, feature work with no initiative has its own branch off `develop` and a PR
