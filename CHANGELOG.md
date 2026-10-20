@@ -10,6 +10,43 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-20 (#5) — B1, A6 and the Claude Code appendix: attended work with no lanes gets the
+  same fix owner as autonomous work, and no-initiative pointers name both modes.** Issue #165 (its
+  first comment): B2's Addenda carry an exception for a session that dispatches no lanes, while
+  B1's said a fix is "never done by the orchestrator's own hands" with none. A6 **Friction** said
+  a no-initiative delivery's other orchestrator duties "are B2's to assign", and
+  `clients/claude-code.md`'s item 5 pointer ended "for work with none, B2" — both the autonomous
+  section, for work that may be attended. B1's Addenda now carry the same exception, approved per
+  batch, and the two pointers say "B1 or B2, by mode", with the reason: both modes then say the
+  same thing, and attended work with no initiative is not pointed at the autonomous section. **Decision
+  (Brandon, 2026-10-20): "B1's Addenda gain the exception B2's have: a session that dispatches no
+  lanes counts as that lane, approved per batch as every attended fix is. A6 *Friction* and the
+  Claude Code appendix's item 5 pointer name 'B1 or B2, by mode' where they name B2."**
+
+- **2026-10-20 (#4) — A4: a line elsewhere that the PR's own change makes untrue counts as a
+  small fix.** Issue #165: A4's size test kept a small fix "inside the files the PR already
+  changes", so a line in another file that the PR's change contradicts was real work and a ticket.
+  The size test now reads "inside the files the PR already changes, or a line elsewhere that the
+  PR's own change makes untrue", and the real-work outcome's "outside the PR's files" now excludes
+  those lines too, since this change makes the old wording untrue. The reason is in the rule:
+  otherwise a PR ships text that contradicts itself and leaves a ticket to fix it later, which is
+  what the small-fix outcome exists to prevent. **Decision (Brandon, 2026-10-20): "A line
+  elsewhere that the PR's own change makes untrue counts as small."**
+
+- **2026-10-20 (#3) — A4 and B2: where the session dispatches lanes and none owns the file, the
+  orchestrator extends one lane's fence for the fix.** Issue #165: after the (#1) entry, a small
+  fix had an owner when the session dispatches no lanes and on a release PR, but not when the
+  session dispatches lanes, on a wave or feature PR, and the file belongs to no lane: A4 sent the
+  fix "back to the lane that owns the file" and B2's Addenda kept it out of "the orchestrator's own
+  hands". A4's small-fix route and B2's Addenda now name the route, with the reason: a lane already
+  working the change has its context, so this is the cheapest route that keeps the fix out of the
+  orchestrator's own hands. B2's Addenda also name that lane beside the owning lane for a fix that
+  rides an open wave PR. **Decision (Brandon, 2026-10-20): "The orchestrator extends one lane's
+  fence to that file for one addendum, and that lane makes the fix, with the two-axis review
+  scoped to the fix still required and the extension recorded."** Chosen over dispatching a
+  review-fix lane, the ticket's other route. The harm list, the three outcomes, who merges, the
+  two-axis review, and the no-lane and release-PR owners the (#1) entry set are unchanged.
+
 - **2026-10-20 (#2) — B2: for work with no initiative, the stop-list's first two items name the
   ticket and the prompt in place of the MPD.** Issue #161: B2's stop-list stops on "A premise
   conflict with the MPD or a ticket" and on "A scope decision the MPD does not cover". Feature work
