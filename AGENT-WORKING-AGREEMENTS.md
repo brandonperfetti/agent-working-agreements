@@ -149,7 +149,7 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   riders, review-fix lanes and merge-conflict resolutions (scoped to the resolution, B2)
   included, no size exemption.** The lane's own report is never the review; the verdict is
   recorded under the initiative's `reviews/`, or for work with no initiative under the `_agent/`
-  root's one-off `reviews/` (B2).
+  root's one-off `reviews/` (B1 or B2, by mode).
   [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
   **An orchestrator's hand-back is never the review of its wave either:** the hand-back names the
   claims to re-measure, and before a merge a reader outside the wave reads them against the
@@ -495,9 +495,10 @@ Brandon is the verification step, on purpose.
 session doing the work holds this section's orchestrator duties; its review verdicts and other
 records go under the `_agent/` root's one-off folders (A6's tree), and its decisions and a failed
 item 4 (B0) are recorded in its one-off review record under `_agent/reviews/`, which Brandon reads
-at each batch approval, and copied into the PR body once a PR exists. A6 and the client files point
-such work here, and in attended mode no PR exists when a batch is reviewed (A7), so without this
-the pointers would land on nothing and the decisions would have no place (Brandon, 2026-10-20).
+at each batch approval, and copied into the PR body once a PR exists. A6 and
+`clients/claude-code.md` point such work here, and in attended mode no PR exists when a batch is
+reviewed (A7), so without this the pointers would land on nothing and the decisions would have no
+place (Brandon, 2026-10-20).
 
 - **You never commit or push without explicit approval, per batch, every single time.** Approval
   never carries to the next batch; no `--amend`; no routing around it with API/MCP writes or

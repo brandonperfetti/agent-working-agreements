@@ -20,7 +20,8 @@ being retrofitted onto the other.
   orchestrator's duties, its records go under the `_agent/` root's one-off folders, and its
   decisions and a failed item 4 go in its one-off review record under `_agent/reviews/` until a PR
   exists, then into the PR body. B0 item 4 and the item 5 pointer, which named the PR body alone
-  for such work, now say so too. **Decision (Brandon, 2026-10-20): "Decisions are recorded in the
+  for such work, now say so too, and A4's two-axis bullet names "B1 or B2, by mode" for the
+  one-off `reviews/` location. **Decision (Brandon, 2026-10-20): "Decisions are recorded in the
   delivery's one-off review record under `_agent/reviews/`, which Brandon reads at each batch
   approval, and copied into the PR body once a PR exists."** Folded into the change for #165
   rather than ticketed. The per-batch approval, and who commits or pushes, are unchanged.
