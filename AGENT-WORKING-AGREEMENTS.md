@@ -519,10 +519,10 @@ Brandon is the verification step, on purpose.
   appendix.)
 - **Addenda go back to the same warm lane**, never to a fresh session and never done by the
   orchestrator's own hands, except where the session dispatches no lanes: that session counts as
-  that lane, approved per batch as every attended fix is (A4), so both modes say the same thing
-  (Brandon, 2026-10-20). Until the PR that carries it merges, a small fix (A4) to work already
-  committed is a new commit from that lane, approved per batch like any other; a fresh ticket is
-  for real work (A4), and for work found after that PR has merged.
+  that lane (A4), approved per batch as every attended fix is, so both modes say the same thing of
+  a session with no lanes (Brandon, 2026-10-20). Until the PR that carries it merges, a small fix
+  (A4) to work already committed is a new commit from that lane, approved per batch like any
+  other; a fresh ticket is for real work (A4), and for work found after that PR has merged.
 
 ## B2. Autonomous mode
 
