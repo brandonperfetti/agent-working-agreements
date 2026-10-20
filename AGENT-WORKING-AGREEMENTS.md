@@ -612,6 +612,10 @@ PR body alone for work with no initiative):**
    both sides' pre-merge gate records; unresolved recovery leaves the branch at its pre-merge tip
    (Git contract above). [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
 
+For work with no initiative, items 1 and 2 read "the ticket and the prompt" where they say "the
+MPD": both exist for every piece of work, and read literally, the MPD's absence would stop every
+scope decision (Brandon, 2026-10-20).
+
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
 
 **Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new

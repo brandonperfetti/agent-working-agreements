@@ -10,6 +10,19 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-20 (#2) — B2: for work with no initiative, the stop-list's first two items read the
+  ticket and the prompt where they say the MPD.** Issue #161: B2's stop-list stops on "A premise
+  conflict with the MPD or a ticket" and on "A scope decision the MPD does not cover". Feature work
+  with no initiative has no MPD, so read literally, item 2 stopped on every scope decision. One
+  sentence under the list now says that, for such work, items 1 and 2 read "the ticket and the
+  prompt" where they say "the MPD", with the reason: both exist for every piece of work. The items
+  themselves are unchanged, so an initiative reads them as before. One sentence beside the list was
+  chosen over a clause on each item, which would say the same rule twice, and over B2's opening
+  paragraph, which is out of view where the list is read. **Decision (Brandon, 2026-10-20): for
+  work with no initiative, stop-list items 1 and 2 read "the ticket and the prompt" where they say
+  "the MPD".** Chosen over the ticket alone and over the PR body's decisions. The stop-list's
+  heading and its other items are unchanged.
+
 - **2026-10-20 (#1) — A4 and B2: a session that dispatches no lanes counts as the file's lane for
   a fix, and a release PR's small fix goes to the owning lane or a review-fix lane.** Issue #161:
   since the 2026-10-18 (#6) entry, the session doing feature work with no initiative holds B2's
