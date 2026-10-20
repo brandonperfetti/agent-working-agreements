@@ -149,7 +149,7 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   riders, review-fix lanes and merge-conflict resolutions (scoped to the resolution, B2)
   included, no size exemption.** The lane's own report is never the review; the verdict is
   recorded under the initiative's `reviews/`, or for work with no initiative under the `_agent/`
-  root's one-off `reviews/` (B2).
+  root's one-off `reviews/` (B1 or B2, by mode).
   [learnings: 2026-09-06 wave-6 §5; 2026-09-04 wave-5 §7]
   **An orchestrator's hand-back is never the review of its wave either:** the hand-back names the
   claims to re-measure, and before a merge a reader outside the wave reads them against the
@@ -165,17 +165,26 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   is verified and does real harm:** wrong behaviour, a result reported as clean that was not, a
   leak, a signal or write to something not identified, a held push or a hang. One the code
   disproves is declined. One that holds but does no such harm has three outcomes, by size.
-  **Small, it is fixed in the PR:** the fix stays inside the files the PR already changes and
-  needs no new decision (a clause, a word, a test pin); it goes back to the lane that owns the
-  file, with a two-axis review scoped to the fix (above), and its thread gets "Fixed in `<sha>`".
+  **Small, it is fixed in the PR:** the fix stays inside the files the PR already changes, or a
+  line elsewhere that the PR's own change makes untrue, and needs no new decision (a clause, a
+  word, a test pin); it goes back to the lane that owns the file, with a two-axis review scoped to
+  the fix (above), and its thread gets "Fixed in `<sha>`". The line elsewhere counts because
+  otherwise a PR ships text that contradicts itself and leaves a ticket to fix it later, which is
+  what the small-fix outcome exists to prevent (Brandon, 2026-10-20).
   A session that dispatches no lanes counts as the file's lane, the scoped review still required;
   on a release PR, the fix goes to the lane that owns the file or to a review-fix lane the
   orchestrator dispatches for it. The route assumes a lane exists, and without this a session that
   is both orchestrator and only author has no one allowed to make its own small fix, and a release
   PR's fix has no named owner (Brandon, 2026-10-20).
+  Where the session dispatches lanes and none owns the file, on a wave or feature PR, the
+  orchestrator extends one lane's fence to that file for one addendum, and that lane makes the
+  fix, with the two-axis review scoped to the fix still required and the extension recorded: a
+  lane already working the change has its context, so this is the cheapest route that keeps the
+  fix out of the orchestrator's own hands (Brandon, 2026-10-20).
   **Not worth a change, it is noted:** recorded in the review record with a one-line reason, which
-  its thread gets too, and no ticket. **Real work, it becomes a ticket** — outside the PR's files,
-  a new decision, or more than a small fix — with a short reply on its thread where it has one.
+  its thread gets too, and no ticket. **Real work, it becomes a ticket** — outside both the PR's
+  files and the lines its change makes untrue, a new decision, or more than a small fix — with a
+  short reply on its thread where it has one.
   The same three outcomes govern a reviewer's notes, not only the bot's findings, because a ticket
   for a one-clause fix costs a later wave what a commit in the PR would have done, and a backlog
   that takes every harmless finding refills as fast as waves clear it (Brandon, 2026-10-18).
@@ -260,7 +269,9 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
 writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
 checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
 that full SHA. The agent closing that delivery owns and writes its one-off close record; the
-delivery's other orchestrator duties are B2's to assign. In `_agent/friction/`, that record is exactly
+delivery's other orchestrator duties are B1's or B2's to assign, by mode, so that attended work
+with no initiative is not pointed at the autonomous section (Brandon, 2026-10-20). In
+`_agent/friction/`, that record is exactly
 `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--pr-<number>.md` for the pull-request form,
 or `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--branch-<branch-slug>--ref-<branch-hash>--<full-head-sha>.md`
 otherwise. `repository-identity` is the exact remote host and path before normalization, or the
@@ -442,7 +453,8 @@ with no MPD has its mode picked the same way.
    "nobody merges", never "only Brandon merges". Audit with the `branch-protection` skill, not by
    reading a settings page; a 404 on the classic endpoint is not "unprotected" when a ruleset covers
    the branch. **Until protection exists on a repo, a failed item 4 is *recorded* in MPD §0, or
-   in the PR body for work with no initiative (B2), not a downgrade.**
+   in the PR body for work with no initiative (B2; in attended mode, its one-off review record
+   until a PR exists, B1), not a downgrade.**
    **What protection cannot enforce here.** Nothing in the repo settings stops an agent pushing
    straight to `develop`, or merging its own PR into `master` once the gate is green `[inference —
    untested, since testing it means merging into a protected branch]`. **Feature work never lands
@@ -479,6 +491,15 @@ guard is the contract, not the client name.
 
 Brandon is the verification step, on purpose.
 
+**Feature work with no initiative** has no wave orchestrator, MPD or initiative folder, so the
+session doing the work holds this section's orchestrator duties; its review verdicts and other
+records go under the `_agent/` root's one-off folders (A6's tree), and its decisions and a failed
+item 4 (B0) are recorded in its one-off review record under `_agent/reviews/`, which Brandon reads
+at each batch approval, and copied into the PR body once a PR exists. A6 and
+`clients/claude-code.md` point such work here, and in attended mode no PR exists when a batch is
+reviewed (A7), so without this the pointers would land on nothing and the decisions would have no
+place (Brandon, 2026-10-20).
+
 - **You never commit or push without explicit approval, per batch, every single time.** Approval
   never carries to the next batch; no `--amend`; no routing around it with API/MCP writes or
   another client. Shape: write the change → show the **staged diff** → Brandon reviews in his IDE →
@@ -507,9 +528,11 @@ Brandon is the verification step, on purpose.
   bandwidth, not agent capacity. (Whether lanes run concurrently is an environment fact — see your
   appendix.)
 - **Addenda go back to the same warm lane**, never to a fresh session and never done by the
-  orchestrator's own hands. Until the PR that carries it merges, a small fix (A4) to work already
-  committed is a new commit from that lane, approved per batch like any other; a fresh ticket is
-  for real work (A4), and for work found after that PR has merged.
+  orchestrator's own hands, except where the session dispatches no lanes: that session counts as
+  that lane (A4), approved per batch as every attended fix is, so both modes say the same thing of
+  a session with no lanes (Brandon, 2026-10-20). Until the PR that carries it merges, a small fix
+  (A4) to work already committed is a new commit from that lane, approved per batch like any
+  other; a fresh ticket is for real work (A4), and for work found after that PR has merged.
 
 ## B2. Autonomous mode
 
@@ -622,9 +645,12 @@ Non-blocking questions batch at the wave boundary. Rotation stays per wave with 
 **Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new
 commit**, and is re-reviewed (scoped to the fix) before merge — never a fresh session, never the
 orchestrator's own hands, except where the session dispatches no lanes: that session counts as
-that lane, the scoped two-axis review still required (A4). While the wave PR is open, a small
-fix (A4) to work already merged into the wave branch rides it, through the owning lane, a scoped
-review and a push; a fresh ticket is for real work (A4), and for work found after the wave PR has
+that lane, the scoped two-axis review still required (A4). Where the session dispatches lanes and
+none owns the file, the orchestrator extends one lane's fence to that file for one addendum, and
+that lane makes the fix, the scoped review still required and the extension recorded (A4). While
+the wave PR is open, a small fix (A4) to work already merged into the wave branch rides it,
+through the owning lane or the lane whose fence was extended to the file, a scoped review and a
+push; a fresh ticket is for real work (A4), and for work found after the wave PR has
 merged. On a release PR, A4 names who makes a small fix.
 A lane merge that conflicts goes back to the lane the same way (Git contract above).
 
