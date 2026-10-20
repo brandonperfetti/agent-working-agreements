@@ -168,6 +168,11 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   **Small, it is fixed in the PR:** the fix stays inside the files the PR already changes and
   needs no new decision (a clause, a word, a test pin); it goes back to the lane that owns the
   file, with a two-axis review scoped to the fix (above), and its thread gets "Fixed in `<sha>`".
+  A session that dispatches no lanes counts as the file's lane, the scoped review still required;
+  on a release PR, the fix goes to the lane that owns the file or to a review-fix lane the
+  orchestrator dispatches for it. The route assumes a lane exists, and without this a session that
+  is both orchestrator and only author has no one allowed to make its own small fix, and a release
+  PR's fix has no named owner (Brandon, 2026-10-20).
   **Not worth a change, it is noted:** recorded in the review record with a one-line reason, which
   its thread gets too, and no ticket. **Real work, it becomes a ticket** — outside the PR's files,
   a new decision, or more than a small fix — with a short reply on its thread where it has one.
@@ -607,13 +612,20 @@ PR body alone for work with no initiative):**
    both sides' pre-merge gate records; unresolved recovery leaves the branch at its pre-merge tip
    (Git contract above). [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
 
+For work with no initiative, item 1 reads "A premise conflict with the ticket or the prompt" and
+item 2 reads "A scope decision neither the ticket nor the prompt covers": both exist for every
+piece of work, and with no MPD, item 2 as written would stop every scope decision (Brandon,
+2026-10-20).
+
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
 
 **Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new
 commit**, and is re-reviewed (scoped to the fix) before merge — never a fresh session, never the
-orchestrator's own hands. While the wave PR is open, a small fix (A4) to work already merged into
-the wave branch rides it, through the owning lane, a scoped review and a push; a fresh ticket is
-for real work (A4), and for work found after the wave PR has merged.
+orchestrator's own hands. A session that dispatches no lanes counts as that lane, the scoped
+two-axis review still required (A4). While the wave PR is open, a small fix (A4) to work already
+merged into the wave branch rides it, through the owning lane, a scoped review and a push; a fresh
+ticket is for real work (A4), and for work found after the wave PR has merged. On a release PR, A4
+names who makes a small fix.
 A lane merge that conflicts goes back to the lane the same way (Git contract above).
 
 **The review loop (Brandon + the orchestrator)**

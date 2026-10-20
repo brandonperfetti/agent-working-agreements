@@ -10,6 +10,45 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-20 (#2) — B2: for work with no initiative, the stop-list's first two items name the
+  ticket and the prompt in place of the MPD.** Issue #161: B2's stop-list stops on "A premise
+  conflict with the MPD or a ticket" and on "A scope decision the MPD does not cover". Feature work
+  with no initiative has no MPD, so read literally, item 2 stopped on every scope decision. One
+  sentence under the list now gives both items as such work reads them — item 1 "A premise conflict
+  with the ticket or the prompt" and item 2 "A scope decision neither the ticket nor the prompt
+  covers" — with the reason: both exist for every piece of work. The items themselves are
+  unchanged, so an initiative reads them as before. Writing the two readings out was chosen over a
+  rule to put "the ticket and the prompt" where the items say "the MPD", which, substituted
+  literally, makes item 2 "a scope decision the ticket and the prompt does not cover" and has item
+  1 name the ticket twice. One sentence under the list was chosen over a second numbered list,
+  which would read as more stop-list items, and over B2's opening paragraph, which is out of view
+  where the list is read. **Decision (Brandon, 2026-10-20): for work with no initiative, stop-list
+  items 1 and 2 read "the ticket and the prompt" where they say "the MPD"; read out, a conflict
+  with either is a premise conflict, and a scope decision stops when neither covers it.** Chosen
+  over the ticket alone and over the PR body's decisions. The stop-list's heading and its other
+  items are unchanged.
+
+- **2026-10-20 (#1) — A4 and B2: a session that dispatches no lanes counts as the file's lane for
+  a fix, and a release PR's small fix goes to the owning lane or a review-fix lane.** Issue #161:
+  since the 2026-10-18 (#6) entry, the session doing feature work with no initiative holds B2's
+  orchestrator duties, while A4's small-fix outcome sent the fix "back to the lane that owns the
+  file" and B2's Addenda said a fix is "never the orchestrator's own hands". A session that
+  dispatches no lanes is both orchestrator and only author, so read together the two left its own
+  small fix with no one allowed to make it. A4 applies the same threshold to release PRs, whose fix
+  commits B2 pushes straight to `develop`, and the small-fix route named no owner there either.
+  A4's small-fix sentence now says that a session that dispatches no lanes counts as the file's
+  lane, the scoped review still required, and that on a release PR the fix goes to the lane that
+  owns the file or to a review-fix lane the orchestrator dispatches for it, with the reason: the
+  route assumes a lane exists. B2's Addenda say the same of a session with no lanes and point to
+  A4 for a release PR. B2's release-cut bullet, which says where a release PR's fix commits are
+  pushed, is unchanged: it covers every fix commit, not only a small one, and B2's review loop
+  already sends the fixes A4 calls for to lanes. B1's Addenda are unchanged. **Decision (Brandon,
+  2026-10-20): a session that dispatches no lanes counts as the file's lane for A4's small-fix
+  route and B2's Addenda, with the scoped two-axis review still required; on a release PR, the fix
+  goes to the lane that owns the file, or to a review-fix lane the orchestrator dispatches for
+  it.** Chosen over always dispatching a lane and over letting the orchestrator fix with a scoped
+  review. The harm list, the three outcomes, who merges and the two-axis review are unchanged.
+
 - **2026-10-18 (#6) — B2: for feature work with no initiative, the session doing the work holds
   the orchestrator's duties, and the PR body holds its decisions.** Issue #145: since the
   2026-10-16 (#2) entry, feature work with no initiative has its own branch off `develop` and a PR
