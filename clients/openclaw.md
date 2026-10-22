@@ -8,21 +8,31 @@ when you acknowledge your reading** — "read the agreements and
 
 ## Startup and mode
 
-[measured 2026-09-22, issue #44] The workspace-root `AGENTS.md` routes Parts A–B and this appendix
-to the canonical instruction-source clone, and the former workspace-root agreement path is a
-non-authoritative stale-reader stub. That clone is the read-only instruction source, kept current
-with released `master` per
+**Configured native agent root.** On Brandon's native macOS OpenClaw installation, the configured
+agent root is `~/dev/sansfaux`, currently resolving for the live account to
+`/Users/brandonperfetti/dev/sansfaux`. Its authoritative instruction checkout is
+`$AGENT_ROOT/agent-working-agreements/`; its artifact store is `$AGENT_ROOT/_agent/`. The
+instruction checkout is read-only and kept current with released `master` per
 [Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness) below.
-The stub stays in place until the OpenClaw session on that host removes it in a reviewed cleanup,
-once every configured route has demonstrated the new pointer — a host-side step recorded in that
-host's `_agent/` store, not a change this repository makes. The complete machine-local agreement
-the stub replaced stays preserved intact for rollback. The cutover steps this appendix carried until
-the 2026-09-24 amendment for issue #54 remain readable at `29b6360:clients/openclaw.md`, lines
-104–130. If the pointer, Parts A–B, or this appendix is unreachable in the active session,
-stop the affected work with the missing instruction-source capability recorded; do not automatically
-downgrade it to B1. After
-changing the pointer, require a fresh-session observation before declaring it effective; do not
-assume arbitrary external-file injection or automatic refresh.
+
+After a workspace's reviewed `AGENTS.md` pointer is replaced, the first approved acceptance session
+for that role selects `$AGENT_ROOT/_agent/` at startup on a provisional basis so it can execute the
+ordinary create/readback canary. This startup selection is independent of the later acceptance
+verdict and remains fixed for that session under A6. Declare the mapping operationally accepted for
+the role only after the session reports the exact instruction path and hashes, names that selected
+store, and passes the canary through its supported tool route. A partial pointer application affects
+only fresh sessions started from the changed subset. Existing sessions remain bound to the concrete
+artifact store they selected at startup; they do not switch or dual-write mid-session.
+
+The former workspace instruction-source checkout and the prior workspace artifact store remain
+preserved as independent rollback roots. Do not merge, mirror, symlink, move, delete, or rewrite
+either history as part of this mapping. The complete machine-local agreement replaced by the older
+workspace pointer also remains preserved intact. The cutover steps this appendix carried until the
+2026-09-24 amendment for issue #54 remain readable at `29b6360:clients/openclaw.md`, lines 104–130.
+If the pointer, Parts A–B, or this appendix is unreachable in the active session, stop the affected
+work with the missing instruction-source capability recorded; do not automatically downgrade it to
+B1. After changing a pointer, require the fresh-session observation above before declaring it
+effective; do not assume arbitrary external-file injection or automatic refresh.
 
 **Default mode: autonomous.** The capability guard (B0) is still evaluated for the unit B0 names;
 that Camina coordinates several deliveries in one conversation does not widen it. In OpenClaw, an
@@ -420,11 +430,17 @@ checkout and path as capability evidence, not as the B1/B2 mode selector.
 
 ## Evidence store
 
-[measured 2026-09-22, current OpenClaw instance] This instance's per-machine `_agent` store resolves
-to `/data/.openclaw/workspace/_agent/`; use its `evidence/` and `analysis/` subdirectories per A2
-and A6. Date-name artifacts and label claims `[measured]`, `[source]`, or `[inference]`. Do not
-assume that path is reachable from every OpenClaw workspace: use the active workspace's durable
-`_agent/` store and record its concrete location with the capture.
+**Configured native store.** For a fresh role started from a replaced pointer under the approved
+acceptance procedure in [Startup and mode](#startup-and-mode), the native artifact store resolves
+provisionally at session startup to `/Users/brandonperfetti/dev/sansfaux/_agent/`; that same store is
+retained whether the later role verdict passes or fails. For a role whose pointer is still unchanged,
+and on any other host, use the concrete durable `_agent/` store selected by the active workspace
+policy and record its location with the capture; do not infer this Mac path across hosts. An active
+session remains bound to the store it selected at startup even if a workspace pointer changes later.
+Never switch stores or write the same artifact to both stores mid-session.
+
+Use the selected store's `evidence/` and `analysis/` subdirectories per A2 and A6. Date-name
+artifacts and label claims `[measured]`, `[source]`, or `[inference]`.
 
 **Scratch clones (A6, "Clones").** The task-authorized scratch root in the Gateway
 executable-check conditions above is not a place for a scratch clone: it exists for one eligible
