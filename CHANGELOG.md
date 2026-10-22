@@ -10,6 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-22 — OpenClaw: name the native agent root, session-stable artifact-store selection,
+  and fresh-session acceptance boundary.** The reviewed native-root P3 cutover package replaces
+  the former host-specific workspace-store description with the configured native macOS mapping:
+  `~/dev/sansfaux/agent-working-agreements` for instructions and `~/dev/sansfaux/_agent` for
+  artifacts. A fresh role whose pointer has changed selects the target store provisionally at
+  startup, keeps that store for the session whether acceptance later passes or fails, and declares
+  the mapping operational only after exact instruction reporting and its ordinary create/readback
+  canary pass. Existing sessions never switch or dual-write, partial pointer application affects
+  only the changed subset's fresh sessions, and both former instruction/artifact roots remain
+  independent rollback roots. Brandon approved the exact reviewed P3 package on 2026-10-22; the
+  repository amendment changes policy text only and does not itself update a pointer or store.
+
 - **2026-10-20 (#6) — B1: for feature work with no initiative, the session doing the work holds
   the orchestrator's duties, and its one-off review record holds its decisions until a PR
   exists.** Issue #165, from the review of the (#5) change: A6 **Friction** and
