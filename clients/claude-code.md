@@ -48,8 +48,9 @@ Claude Code fact.
   subdirectory of it per sub-agent.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
-- **Model selectors (A4's tiers):** `opus` for lane work; `sonnet` only for a trivially
-  mechanical dispatch. [learnings: 2026-08-30 §5]
+- **Model selectors (A4's tiers):** workhorse → `opus` for lane work. Careful
+  (verify/aggregate) → **unmeasured**; no selector is recorded for it. `sonnet` is only the
+  selector for a trivially mechanical dispatch, never the careful tier. [learnings: 2026-08-30 §5]
 - **CodeRabbit CLI, for B2's preflight:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti`
   [measured 2026-09-29, Brandon's desktop]. A record, not a guarantee: `coderabbit-preflight`
   re-checks the CLI on every run.

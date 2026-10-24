@@ -52,8 +52,9 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
 - **The Agent tool blocks until the lane returns** — two lanes is sequential wall-clock.
   [learnings: 2026-09-06 wave-6 §8] **Unattended Agent-tool dispatches die with the tab.**
   [learnings: 2026-08-30 §10]
-- **Model selectors (A4's tiers):** `opus` for lane work; `sonnet` only for a trivially
-  mechanical dispatch. [learnings: 2026-08-30 §5]
+- **Model selectors (A4's tiers):** workhorse → `opus` for lane work. Careful
+  (verify/aggregate) → **unmeasured**; no selector is recorded for it. `sonnet` is only the
+  selector for a trivially mechanical dispatch, never the careful tier. [learnings: 2026-08-30 §5]
 - **Scratch clones (A6, "Clones"):** where a scratch clone goes here, and whether sub-agents
   share a scratch space, is **unmeasured** — measure and record. The session scratch named under
   "Evidence store" is discarded [source 2026-09-22, as there], which costs a rebuildable clone

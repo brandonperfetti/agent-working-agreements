@@ -300,9 +300,10 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
 **Friction.** For a delivery with no initiative, define its canonical delivery identifier before
 writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
 checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
-that full SHA. The agent closing that delivery owns and writes its one-off close record; the
-delivery's other orchestrator duties are B1's or B2's to assign, by mode, so that attended work
-with no initiative is not pointed at the autonomous section (Brandon, 2026-10-20). In
+that full SHA. The agent closing that delivery owns and writes its one-off close record; every
+other seat duty for that delivery is A4's to assign, and B1 or B2, by mode, carries only its
+procedure, so that attended work with no initiative is not pointed at the autonomous section
+(Brandon, 2026-10-20). In
 `_agent/friction/`, that record is exactly
 `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--pr-<number>.md` for the pull-request form,
 or `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--branch-<branch-slug>--ref-<branch-hash>--<full-head-sha>.md`
