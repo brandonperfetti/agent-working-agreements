@@ -48,10 +48,25 @@ Resolve the active workspace and target checkout from live inventory; do not ass
 shares main's CWD. When delegation is needed, use canonical role IDs and the supported native or
 OpenClaw delegation mechanism available to that session; `sessions_spawn` is one available
 OpenClaw mechanism, not a universal requirement. Put A4's RULE ZERO first. Then include only the
-role, deliverable, mode, file fence, role-based model tier, and selector that resolves that tier.
+role, deliverable, mode, file fence and role-based model tier, and the selector that resolves that
+tier where the mechanism accepts a caller's selection.
 
-OpenClaw does not relax either mode's topology: attended sessions use B1's isolated-clone and mbox
-shape; autonomous specialists use B2's dedicated-worktree shape. For this agreement repository,
+**Model selectors (A4's tiers).** Which selector resolves each A4 role tier for an OpenClaw
+specialist is not recorded here — **unmeasured**; measure and record. The shared Claude Code
+wrapper takes no caller selector and pins its own exact model [source:
+`~/.openclaw/workspace/docs/team-operating-model.md` lines 195–196, read 2026-10-23, SHA-256
+`afd5812b86094920f41dc869673d09c9d59a0d0a8ca577cd6e3ddea8f04c1389`, which reads: "Invoke the
+wrapper without `--model` or `--fallback-model`; the wrapper pins the exact model and rejects
+caller-supplied model selection."], so a dispatch through it names its role tier, passes no
+selector, and records the model the wrapper pins (A4).
+
+OpenClaw does not relax either mode's topology. Attended lanes use one of B1's two shapes: an
+mbox lane runs git only in its isolated clone, and a lane delivering uncommitted edits may edit its
+named files in the shared checkout but runs no git there. The delivery owner, a specialist
+dispatched as a sub-agent included, alone controls the shared checkout's git state: it stages a
+batch and commits after Brandon's batch approval, and applies an mbox series with `git am` only
+after that approval, since `git am` is the commit (A4, B1). Autonomous specialists use B2's
+dedicated-worktree shape. For this agreement repository,
 the amendment exemption in its README means an autonomous amendment uses one isolated feature
 worktree branched from `develop`, rather than a wave branch; do not invent a wave merely to obtain
 isolation.
@@ -61,12 +76,25 @@ isolation.
 This is an OpenClaw-only operating model. It does not change B0's guard, B1/B2's delivery rules,
 the Part B ritual, or another client's appendix.
 
-Camina's default is coordination: brief the selected lane, enforce its boundaries, preserve
-continuity, coordinate review evidence, and synthesize a decision-ready handoff. Specialist
-implementation and diagnostics of authorized routine, reversible repository work stay with the
-selected specialist unless the work's boundary requires escalation. The orchestrator handles the
-A4 two-axis review cycle; a specialist's own report is never that independent review.
-Administration outside that boundary retains its existing authorization and stop conditions.
+OpenClaw fills A4's three seats, and Brandon's, with distinct roles [decision 2026-10-23, Brandon,
+issue #173]:
+
+- **Camina — orchestrator.** Holds A4's orchestrator duties, preserves continuity across the
+  conversation, and synthesizes the decision-ready hand-back. While a delivery specialist is
+  assigned, Camina does not execute that delivery's repository mechanics; the orchestrating session
+  fills the delivery-owner seat only when no specialist is assigned.
+- **Judy (coder), or the assigned delivery specialist — delivery owner.** Holds A4's
+  delivery-owner duties, and implementation and diagnostics of the delivery's authorized routine,
+  reversible repository work.
+- **Amos (reviewer), or the assigned reviewer — independent reviewer.** Holds A4's
+  independent-reviewer duties; neither a lane's nor the delivery owner's own report is that review.
+- **Brandon — merge.** Brandon alone merges into `develop`, `master`, or `main`.
+
+A4 is the authority for each seat's complete duties, but for A6's one-off close record, which A6
+assigns to the agent closing a delivery with no initiative; this list binds OpenClaw roles to them.
+
+Work outside the authorized routine, reversible boundary escalates rather than staying with the
+specialist, and administration outside it retains its existing authorization and stop conditions.
 
 The OpenClaw agent team owns installs, builds, test suites, and verification for authorized,
 routine, reversible repository work through a ready B2 pull request; an authorized B2-qualified
@@ -84,26 +112,26 @@ Keep five decisions separate:
 3. **Risk and reversibility** — only routine, reversible repository work may proceed on that
    authority.
 4. **Delivery topology** — OpenClaw's autonomous default uses B2's dedicated-worktree shape;
-   B1's isolated-clone shape applies only when Brandon explicitly selects attended delivery.
+   B1's lane shapes apply only when Brandon explicitly selects attended delivery.
 5. **Human approval** — Brandon alone merges into `develop`, `master`, or `main`.
 
 An authorized autonomous specialist owns authorized routine, reversible repository work through
-the ready B2 delivery handoff. Brandon alone reviews and merges into `develop`, `master`, or
+the ready B2 pull request. Brandon alone accepts and merges into `develop`, `master`, or
 `main`; he is not the command runner for that delivery. Every existing stop remains in force,
 including destructive, irreversible, production, credentialed, financial, and externally published
 actions; those stops are not delegated with the lane.
 
 Within an authorized B2 delivery, commits, pushes, pull-request creation or updates, review
-responses, and reviewed child-branch integration are routine delivery work and require no
+responses, and integration of reviewed lane work are routine delivery work and require no
 per-batch owner approval. This is not authority for a B2 stop-list action or for a merge into
-`develop`, `master`, or `main`; Brandon's ready-PR review and manual merge remain the human
+`develop`, `master`, or `main`; Brandon's ready-PR acceptance and manual merge remain the human
 acceptance boundary.
 
-Within an assigned B2 feature branch, an authorized lane may create a child branch from that
-feature branch. The assigned feature-branch owner may integrate the child's reviewed work back into
-that feature branch only after a completed A4 two-axis review. B1 deliveries retain B1's mbox
-shape. Neither child-branch composition nor feature-branch ownership permits an agent merge into
-`develop`, `master`, or `main`.
+Within an assigned B2 feature branch, an authorized lane may create a lane branch from that
+feature branch. The delivery owner may integrate the lane's reviewed work back into that feature
+branch only after a completed A4 two-axis review. B1 deliveries retain B1's lane shapes (mbox or
+uncommitted edits). Neither lane-branch composition nor feature-branch ownership permits an agent
+merge into `develop`, `master`, or `main`.
 
 Every delivery retains a completed A4 two-axis verdict, the relevant diff and gate evidence, and
 Brandon's decision context. Routine reversible work may present those required items in the
@@ -353,7 +381,7 @@ Gateway only when every condition below is established before the run:
 Run the eligible command with the literal scratch-root environment value. Completion requires the
 observed exit and output to match the recorded expectation, removal of the scratch root, and the
 bounded Git readback's SHA-256 to equal the pre-run candidate-diff SHA-256. CI remains the arbiter
-and must pass before handoff.
+and must pass before hand-back.
 
 If any condition cannot be established, the command is an unbounded test and has no Gateway route.
 For OpenClaw's autonomous default, stop and name the exact missing route; do not convert the
@@ -456,8 +484,13 @@ A–B now supersede. They are deliberately **not carried forward**, for these re
 - **A — autonomy:** the local autonomous default is superseded by the canonical OpenClaw
   autonomous default, B0's per-checkout capability evidence, and B2's Brandon-only merge boundary;
   an unavailable operation stops at its missing safe route rather than downgrading the team to B1.
-- **B — specialist commits:** shared-checkout delivery is not carried forward. Attended sessions
-  use B1's isolated-clone and mbox shape; autonomous sessions use B2's dedicated-worktree shape.
+- **B — specialist commits:** a dispatched lane specialist committing, staging or running any
+  other git in the shared checkout is not carried forward. Attended sessions use B1's two lane
+  shapes — an mbox series committed in the lane's isolated clone, or uncommitted edits to named
+  files in the shared checkout with no git run there — and the delivery owner (A4) alone keeps the
+  shared checkout's git state, staging, committing and applying with `git am` per B1; autonomous
+  sessions use B2's dedicated-worktree shape. A delivery owner dispatched as a sub-agent is not a
+  lane and keeps those A4 shared-checkout git-state duties.
 - **C — builds and tests:** OpenClaw's autonomous team owns installs, builds, tests, and
   verification through the ready B2 PR; an unavailable safe route stops that operation with its
   evidence, while B1 applies only when Brandon explicitly selects attended delivery.

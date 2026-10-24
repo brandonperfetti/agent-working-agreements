@@ -26,11 +26,11 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   between sweep and commit re-blocks it. `./organize.sh --git-locks --apply` sweeps every repo into
   `.git/_agent_trash/` keeping filenames. `tmp_obj_*` unlink warnings during `git add` are noise.
 - **Git hooks fire over the bridge** [measured 2026-09-13, a `pre-commit` sentinel]: item 1 fails
-  here for `rm`, worktrees and `branch -d`, not for hooks firing. Whether a hook that itself needs
-  those, or a truncating write, also *passes* is unmeasured. That is not item 1's `pre-push`
-  probe, which is unmeasured here. Brandon pushes from his clone (B1: "He pushes himself"), so the
-  probe is about his checkout and, like any install it calls for, his to run — tell him exactly
-  what to run (B1).
+  here for `rm`, worktrees and `branch -d`, not for hooks firing; item 2 usually fails too.
+  Whether a hook that itself needs those, or a truncating write, also *passes* is unmeasured.
+  That is not item 1's `pre-push` probe, which is unmeasured here. Brandon pushes from his clone
+  (B1: "He pushes himself"), so the probe is about his checkout and, like any install it calls
+  for, his to run — tell him exactly what to run (B1).
 - **Merge-state files linger** after a bridge merge (`MERGE_HEAD`, `MERGE_MSG`, `MERGE_MODE`) —
   `mv` them to `.git/_agent_trash/`. `git checkout -- <file>` and `git branch -d` fail; restore with
   `git show HEAD:<file> > <file>`; leave dead branches for Brandon to `-D`.
@@ -52,6 +52,9 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
 - **The Agent tool blocks until the lane returns** — two lanes is sequential wall-clock.
   [learnings: 2026-09-06 wave-6 §8] **Unattended Agent-tool dispatches die with the tab.**
   [learnings: 2026-08-30 §10]
+- **Model selectors (A4's tiers):** workhorse → `opus` for lane work. Careful
+  (verify/aggregate) → **unmeasured**; no selector is recorded for it. `sonnet` is only the
+  selector for a trivially mechanical dispatch, never the careful tier. [learnings: 2026-08-30 §5]
 - **Scratch clones (A6, "Clones"):** where a scratch clone goes here, and whether sub-agents
   share a scratch space, is **unmeasured** — measure and record. The session scratch named under
   "Evidence store" is discarded [source 2026-09-22, as there], which costs a rebuildable clone
