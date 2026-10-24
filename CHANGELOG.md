@@ -60,8 +60,8 @@ being retrofitted onto the other.
   lane shapes and gives the delivery owner, not Brandon, the staging, commit and `git am`
   mechanics in B1's approval order; the OpenClaw appendix's B1 deliveries sentence and its
   migration disposition B name both shapes too, disposition B now dropping only specialist
-  committing in the shared checkout and keeping the delivery owner's git control. The OpenClaw appendix's acceptance boundary is
-  now Brandon's ready-PR acceptance and manual merge. The README,
+  committing in the shared checkout and keeping the delivery owner's git control. The OpenClaw
+  appendix's acceptance boundary is now Brandon's ready-PR acceptance and manual merge. The README,
   `docs/agents/domain.md` and `clients/openclaw.md` point at A4 rather than restating its duty
   lists; the OpenClaw appendix keeps what is its own — which role fills each seat, Camina's
   continuity and decision-ready hand-back, and Judy's implementation and diagnostics — and drops
