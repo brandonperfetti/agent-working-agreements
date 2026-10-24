@@ -43,18 +43,21 @@ conversation.
   contacts the remote [measured 2026-09-17, Claude Code, an https remote] — see the sandbox-denial hazard
   below. 2 is **measure and record** per repo: node, pnpm and python3 are present, but the
   gate also wants `zip`/`unzip`/`mktemp` and a vendor CLI — run it once. 4 is queryable (`gh` is
-  authenticated; scopes include `repo` and `workflow`).
+  authenticated; scopes include `repo` and `workflow`), and is **still checked per repository**:
+  an earlier measurement records what one repository carried then, never this one's protection.
 - **Default mode is autonomous** — Brandon lifted the standing attended instruction on 2026-09-13,
-  so mode here is decided by the guard alone, exactly as in `claude-code.md`. Items 1 and 4 pass as
-  measured above, item 1's hook probe excepted; **that probe and item 2 are still yours to run at
-  pickup**, and a failure downgrades what B0 says a failed check downgrades, with a one-line
-  reason.
+  so mode here is decided by the guard alone, exactly as in `claude-code.md`. Item 1 passes as
+  measured above, its hook probe excepted; **that probe and item 2 are still yours to run at
+  pickup, and item 4 is checked per repository** even though it has been measured before. A
+  failure downgrades what B0 says a failed check downgrades, with a one-line reason; a failed
+  item 4 is recorded, as B0 says.
 - **Scope, because this client's instruction field is wider than the others.** The Codex
   instructions field applies to *every* ChatGPT and Codex chat, including ones with no shell and no
   repo; this appendix — and Part B — apply only to a session that has a local shell and is working
   a repo under `~/dev/sansfaux`. Elsewhere only Part A's honesty rules carry.
 - **Sub-agents:** ≥ 2 workers ran concurrently alongside the parent (4 slots advertised, 3 workers
-  unverified). Model selectors are **GPT tiers only** — A4's role-named tiers map to those; a
+  unverified). Model selectors are **GPT tiers only** — A4's role-named tiers map to those, and
+  which GPT selector serves each tier is **unmeasured** — measure and record; a
   full-history fork **inherits the parent's model and cannot override**, and config is not
   attestation (A4).
 - **Hazards:**

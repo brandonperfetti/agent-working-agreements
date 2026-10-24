@@ -52,10 +52,9 @@ because a rule moved without a destination is broken silently by whoever did not
 Repository gates and conventions stay in each repository's own `AGENTS.md`, and workflow
 procedures in the skills Part A names (#173).
 
-**Who does what in a delivery** is A4's three seats: the orchestrator coordinates and
-synthesizes, the delivery owner — the assigned specialist, or the orchestrator when none is
-assigned — owns the branch, integration, pushes and the pull request, and an independent reviewer
-reviews the whole branch at its exact head. Brandon alone merges.
+**Who does what in a delivery** is A4's to say, in its three seats — the orchestrator, the
+delivery owner and the independent reviewer — and only Brandon merges. A client appendix may name
+who fills each seat there.
 
 ## How this reaches each client
 

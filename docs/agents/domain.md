@@ -31,9 +31,9 @@ finding; `/domain-modeling` writes it when it resolves the first term, and not b
 | the ritual | Part B, "The ritual both modes serve": the branch, PR and merge steps |
 | MPD (master priority document) | A4: an initiative's spine; its §0 records the mode |
 | wave | A4 and B2: one phase of an initiative, run by one orchestrator on one branch off `develop` |
-| orchestrator | A4 and B2: the seat that coordinates and synthesizes, tracker coordination included; for an initiative it runs one wave, then rotates to a fresh one through a packet; for work with no initiative, the session doing the work |
-| delivery owner | A4 and B2: the assigned qualified specialist, or the orchestrator when none is assigned; owns the branch, reviewed lane integration, the merged-tree gate, conflict resolution, pushes, the pull request and its CodeRabbit round |
-| independent reviewer | A4: the seat, separate from whoever produced the work, that runs the two-axis review, and reviews the whole branch at its exact head before the pull request is created and again at each new head a later fix or push makes |
+| orchestrator | A4 and B2: the seat that coordinates and synthesizes, A4 listing its duties; for an initiative it runs one wave, then rotates to a fresh one through a packet; for work with no initiative, the session doing the work |
+| delivery owner | A4 and B2: the seat that owns a delivery's repository mechanics — the assigned qualified specialist, or the orchestrator when none is assigned; A4 lists its duties |
+| independent reviewer | A4: the seat, separate from whoever produced the work, that runs the two-axis review, including the whole-branch review at the exact final head before a delivery is presented for merge |
 | lane | A4 and B2: one sub-agent's work on named files, in its own worktree |
 | RULE ZERO | A4: no attribution on any commit, PR body, reply or comment; an agent's commits on Brandon's behalf carry his identity, anyone else's carry their own, and a PR carrying his identity from another account is not merged until re-authored |
 | evidence labels | A2: `[measured]`, `[source]`, `[inference]` on every claim |

@@ -48,7 +48,14 @@ Resolve the active workspace and target checkout from live inventory; do not ass
 shares main's CWD. When delegation is needed, use canonical role IDs and the supported native or
 OpenClaw delegation mechanism available to that session; `sessions_spawn` is one available
 OpenClaw mechanism, not a universal requirement. Put A4's RULE ZERO first. Then include only the
-role, deliverable, mode, file fence, role-based model tier, and selector that resolves that tier.
+role, deliverable, mode, file fence and role-based model tier, and the selector that resolves that
+tier where the mechanism accepts a caller's selection.
+
+**Model selectors (A4's tiers).** Which selector resolves each A4 role tier for an OpenClaw
+specialist is not recorded here — **unmeasured**; measure and record. The shared Claude Code
+wrapper takes no caller selector and pins its own exact model [source:
+`docs/team-operating-model.md` on the OpenClaw host], so a dispatch through it names its role tier,
+passes no selector, and records the model the wrapper pins (A4).
 
 OpenClaw does not relax either mode's topology: attended sessions use B1's isolated-clone and mbox
 shape; autonomous specialists use B2's dedicated-worktree shape. For this agreement repository,
@@ -64,21 +71,18 @@ the Part B ritual, or another client's appendix.
 OpenClaw fills A4's three seats, and Brandon's, with distinct roles [decision 2026-10-23, Brandon,
 issue #173]:
 
-- **Camina — orchestrator.** Coordinates and synthesizes: briefs the selected lane, enforces its
-  boundaries, preserves continuity, keeps tracker coordination, routes review evidence, and
-  synthesizes a decision-ready handoff; dispatching and redispatching lanes and extending a lane's
-  file fence stay coordination (A4). While a delivery specialist is assigned, Camina does not
-  execute that delivery's repository mechanics; the orchestrating session fills the delivery-owner
-  seat only when no specialist is assigned.
-- **Judy (coder), or the assigned delivery specialist — delivery owner.** Owns implementation and
-  diagnostics, the feature branch, reviewed child-branch integration, the full CI gate on the
-  merged tree, conflict-resolution mechanics, pushes, pull-request creation and updates, and the
-  `coderabbit-preflight` and `coderabbit-response` mechanics.
-- **Amos (reviewer), or the assigned reviewer — independent reviewer.** Performs the A4
-  Standards + Spec review, whole-branch at the exact delivery head and renewed at the new head
-  after any later fix or push; neither a lane's nor the delivery owner's own report is that
-  review.
+- **Camina — orchestrator.** Holds A4's orchestrator duties, preserves continuity across the
+  conversation, and synthesizes the decision-ready hand-back. While a delivery specialist is
+  assigned, Camina does not execute that delivery's repository mechanics; the orchestrating session
+  fills the delivery-owner seat only when no specialist is assigned.
+- **Judy (coder), or the assigned delivery specialist — delivery owner.** Holds A4's
+  delivery-owner duties, and implementation and diagnostics of the delivery's authorized routine,
+  reversible repository work.
+- **Amos (reviewer), or the assigned reviewer — independent reviewer.** Holds A4's
+  independent-reviewer duties; neither a lane's nor the delivery owner's own report is that review.
 - **Brandon — merge.** Brandon alone merges into `develop`, `master`, or `main`.
+
+A4 is the authority for each seat's complete duties; this list binds OpenClaw roles to them.
 
 Work outside the authorized routine, reversible boundary escalates rather than staying with the
 specialist, and administration outside it retains its existing authorization and stop conditions.
@@ -103,21 +107,21 @@ Keep five decisions separate:
 5. **Human approval** — Brandon alone merges into `develop`, `master`, or `main`.
 
 An authorized autonomous specialist owns authorized routine, reversible repository work through
-the ready B2 delivery handoff. Brandon alone reviews and merges into `develop`, `master`, or
+the ready B2 pull request. Brandon alone reviews and merges into `develop`, `master`, or
 `main`; he is not the command runner for that delivery. Every existing stop remains in force,
 including destructive, irreversible, production, credentialed, financial, and externally published
 actions; those stops are not delegated with the lane.
 
 Within an authorized B2 delivery, commits, pushes, pull-request creation or updates, review
-responses, and reviewed child-branch integration are routine delivery work and require no
+responses, and reviewed lane integration are routine delivery work and require no
 per-batch owner approval. This is not authority for a B2 stop-list action or for a merge into
 `develop`, `master`, or `main`; Brandon's ready-PR review and manual merge remain the human
 acceptance boundary.
 
-Within an assigned B2 feature branch, an authorized lane may create a child branch from that
-feature branch. The delivery owner may integrate the child's reviewed work back into that feature
+Within an assigned B2 feature branch, an authorized lane may create a lane branch from that
+feature branch. The delivery owner may integrate the lane's reviewed work back into that feature
 branch only after a completed A4 two-axis review. B1 deliveries retain B1's mbox
-shape. Neither child-branch composition nor feature-branch ownership permits an agent merge into
+shape. Neither lane-branch composition nor feature-branch ownership permits an agent merge into
 `develop`, `master`, or `main`.
 
 Every delivery retains a completed A4 two-axis verdict, the relevant diff and gate evidence, and
@@ -368,7 +372,7 @@ Gateway only when every condition below is established before the run:
 Run the eligible command with the literal scratch-root environment value. Completion requires the
 observed exit and output to match the recorded expectation, removal of the scratch root, and the
 bounded Git readback's SHA-256 to equal the pre-run candidate-diff SHA-256. CI remains the arbiter
-and must pass before handoff.
+and must pass before hand-back.
 
 If any condition cannot be established, the command is an unbounded test and has no Gateway route.
 For OpenClaw's autonomous default, stop and name the exact missing route; do not convert the
