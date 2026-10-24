@@ -20,11 +20,11 @@ being retrofitted onto the other.
   orchestrator, while the team model has the coordinating layer coordinate and a qualified
   specialist deliver. **Decision (Brandon, 2026-10-23,
   [#173 comment](https://github.com/brandonperfetti/agent-working-agreements/issues/173#issuecomment-6378320284)):
-  four distinct seats — Camina coordinates and synthesizes; Judy, or the assigned delivery
+  three distinct seats — Camina coordinates and synthesizes; Judy, or the assigned delivery
   specialist, owns branch, reviewed child integration, pull-request and CodeRabbit mechanics, with
-  the orchestrating session in that seat only when no specialist is assigned; Amos, or the assigned
-  independent reviewer, performs the Standards + Spec review against the exact delivery head; and
-  Brandon alone merges base branches.** The matrix records `NO_UNRESOLVED_POLICY_CHOICE`.
+  the orchestrating session in that seat only when no specialist is assigned; and Amos, or the
+  assigned independent reviewer, performs the Standards + Spec review against the exact delivery
+  head. Brandon alone merges base branches.** The matrix records `NO_UNRESOLVED_POLICY_CHOICE`.
   **A4 is the one authority for the seats' duties:** it opens with the orchestrator, the delivery
   owner and the independent reviewer, lists every delivery-owner duty — but for the one-off close
   record, which A6 assigns to the agent closing a delivery with no initiative — and each seat's
