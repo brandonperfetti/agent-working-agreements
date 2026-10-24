@@ -25,7 +25,7 @@ being retrofitted onto the other.
   and the 2026-10-24 memory record (lines 121 and 131). `assistant` has only conditional
   future-wrapper text (`SOUL.md` lines 113–115); `finance`, `marketing` and `openclaw-admin` have
   none within the boundary and their `SOUL.md` files do not name `claude-with-max.sh`, though
-  `openclaw-admin`'s unsearched `_agent/` does contain matches. Each role entry records its measured
+  `openclaw-admin`'s unsearched `_agent/` does contain matches. Each role entry records its [source]
   config: primary model, listed or allowed models (all `openai/`), and for all four a
   `tools.alsoAllow` of `memory_write` only. `finance` is an intentional GPT-only pilot; the
   `finance` and `marketing` sender rules cover the same two Slack senders and each both denies
@@ -33,9 +33,10 @@ being retrofitted onto the other.
   allow as stale and its authenticated Slack canary as exposing no executable tools and making zero
   Claude calls; memory line 131 records that the class has no supported Claude route. The
   missing-route stop is marked [inference] from the stop rule at lines 204–206 applied to that
-  source, not from the configured grants. Route status stays **unmeasured** for `assistant`, for
-  `marketing` outside the Slack class, and for `openclaw-admin`; no route is inferred from absence
-  alone, and the list is not a census of roles outside the role-local wrapper contract.
+  source, not from the configured grants, with the canary that would verify it. Route status stays
+  **unmeasured** for `assistant`, for `marketing` outside the Slack class, for `openclaw-admin`,
+  and for any role outside the role-local wrapper contract beyond those four; no route is inferred
+  from absence alone, and the list is not a census.
 - **2026-10-23 — A4, A6, B0, B1, B2, Part C, the split rule and the client appendices: three distinct
   delivery seats, exact-final-head whole-branch review, and client detail moved to its
   appendices.** Issue #173; the clause-level reconciliation matrix is #173's existing comment at
