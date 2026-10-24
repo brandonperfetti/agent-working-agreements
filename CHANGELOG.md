@@ -10,6 +10,118 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-23 — A4, A6, B0, B1, B2, Part C, the split rule and the client appendices: three distinct
+  delivery seats, exact-final-head whole-branch review, and client detail moved to its
+  appendices.** Issue #173; the clause-level reconciliation matrix is #173's existing comment at
+  [this permalink](https://github.com/brandonperfetti/agent-working-agreements/issues/173#issuecomment-6378577766),
+  and that comment, not this entry, records the exact reconciled head the matrix covers.
+  Parts A–B had come to mix portable rules with client selectors, runtime measurements and
+  roster names, and assigned branch, integration, pull-request and review-bot mechanics to the
+  orchestrator, while the team model has the coordinating layer coordinate and a qualified
+  specialist deliver. **Decision (Brandon, 2026-10-23,
+  [#173 comment](https://github.com/brandonperfetti/agent-working-agreements/issues/173#issuecomment-6378320284)):
+  three distinct seats — Camina coordinates and synthesizes; Judy, or the assigned delivery
+  specialist, owns branch, reviewed child integration, pull-request and CodeRabbit mechanics, with
+  the orchestrating session in that seat only when no specialist is assigned; and Amos, or the
+  assigned independent reviewer, performs the Standards + Spec review against the exact delivery
+  head. Brandon alone merges base branches.** The matrix records `NO_UNRESOLVED_POLICY_CHOICE`.
+  **A4 is the one authority for the seats' duties:** it opens with the orchestrator, the delivery
+  owner and the independent reviewer, lists every delivery-owner duty — but for the one-off close
+  record, which A6 assigns to the agent closing a delivery with no initiative — and each seat's
+  core boundary, and assigns supplemental orchestration and review duties in its other bullets,
+  with "reviewed child integration" written as integration of reviewed lane work, in the glossary's
+  term "lane". The orchestrator
+  briefs, fences, dispatches and redispatches lanes, extends a lane's fence, holds tracker
+  coordination (closing, relabelling and moving issues to In Review among it), owns attended
+  live/browser verification, routes review evidence and writes the hand-back. The delivery owner
+  alone controls the shared checkout's git state, even when it is a specialist dispatched as a
+  sub-agent, and cuts the delivery branch; in B1 stages a batch and shows the staged diff, commits
+  after Brandon's batch approval, and applies the reviewed mbox series that lanes delivered from
+  their isolated clones with `git am` only after that approval, since `git am` is the commit, and
+  Brandon pushes; in B2 integrates reviewed lanes and records their verdicts, runs the merged-tree
+  gate, owns conflict-resolution mechanics, pushes, runs the `coderabbit-preflight` and
+  `coderabbit-response` routines, opens and updates the feature pull request, and may draft the
+  `develop → master` release pull request. B1 and B2 now say their no-initiative session holds
+  those A4 duties and carry each duty's procedure, not a further duty list; B1's sub-agent bullet
+  now binds dispatched lane sub-agents only and keeps both attended lane shapes — an mbox lane
+  runs git only in its isolated clone, and a lane delivering uncommitted edits may edit its named
+  files in the shared checkout but runs no git there — so a delivery-owner specialist dispatched as
+  a sub-agent, and a delivery owner that dispatches no lanes and so counts as that lane, keep their
+  A4 duties in the shared checkout. A4's lane-git bullet now gives the delivery owner the shared
+  checkout's git state, not the checkout itself. A6's no-initiative friction paragraph now says A6
+  itself assigns
+  the one-off close record to the agent closing the delivery, and that all remaining seat authority
+  for that delivery comes from A4, B1 or B2 carrying only its procedure; the 2026-10-20 provenance
+  stays on the close-record and mode-pointer rule. Part C's OpenClaw line no longer points at a B0
+  "autonomous-default rule" B0 no longer states: the default is the index's and the appendix's, the
+  exception B0's. The glossary's "wave" is coordinated by the orchestrator on a branch its
+  delivery owner cuts, its "delivery owner" alone controls the shared checkout's git state, and its
+  "lane" names the autonomous lane's own worktree and both of B1's attended lane shapes and
+  excludes a delivery owner dispatched as a sub-agent, which keeps its A4 git-state duties. B2's
+  attended-mode sentence now names both B1 lane shapes and gives the delivery owner, not Brandon,
+  the staging, commit and `git am` mechanics in B1's approval order; the OpenClaw appendix's B1
+  deliveries sentence, its delivery-topology item and its migration disposition B name both
+  shapes too, disposition B now dropping only a dispatched lane specialist's committing, staging
+  or other git in the shared checkout and keeping the delivery owner's git control, a delivery
+  owner dispatched as a sub-agent being no lane. The OpenClaw
+  appendix's acceptance boundary is now Brandon's ready-PR acceptance and manual merge. The README,
+  `docs/agents/domain.md` and `clients/openclaw.md` point at A4 rather than restating its duty
+  lists; the OpenClaw appendix keeps what is its own — which role fills each seat, Camina's
+  continuity and decision-ready hand-back, and Judy's implementation and diagnostics — and drops
+  "The orchestrator handles the A4 two-axis review cycle", which contradicted the decision. Its
+  "child branch" and "handoff" wording becomes "lane branch" and "hand-back"; "handoff" stays only
+  for the handoff-file artifact. **Review timing:** A4's two-axis rule adds the decided invariant
+  only — the independent reviewer reviews the whole branch at its exact final head SHA before the
+  delivery is presented for Brandon's merge, and any later repository-changing change to the head —
+  a fix, a lane merge, a base merge — needs its scoped review and a renewed whole-branch verdict at
+  the new exact head before presentation. The draft's "before the pull request is created" is
+  removed: the decision and the issue's acceptance criterion name presentation for merge, and B2
+  opens the pull request at the first push, so a generic pre-creation review would contradict B2.
+  Stricter timing a client's own authority already established — its appendix or the client's own
+  operating policy, as OpenClaw's operating documents do for a simple single-branch delivery — still
+  applies for that client; it is not made portable and not set by #173. **This departs from the
+  split rule as the agreement's header stated it** — "Nothing load-bearing is ever moved out of
+  Parts A and B" — and clarifies it: Parts A and B keep every portable rule, and a client's own
+  selectors and mechanics move to its appendix only once that destination carries them, is linked
+  and has been reviewed. Moved under that test: A4's Claude model selectors (`opus`, `sonnet`) to
+  `clients/claude-code.md` and `clients/cowork.md`, which now carry the selectors alone, the role
+  routing staying in A4 — workhorse is `opus`, the careful tier is recorded there as unmeasured,
+  and `sonnet` is only for a trivially mechanical dispatch, never the careful tier;
+  `clients/codex.md` and `clients/openclaw.md` record their tier-to-selector
+  mapping as unmeasured, OpenClaw's with its shared Claude Code wrapper, which takes no caller
+  selector and pins its own model [source: `~/.openclaw/workspace/docs/team-operating-model.md`
+  lines 195–196, read 2026-10-23, SHA-256
+  `afd5812b86094920f41dc869673d09c9d59a0d0a8ca577cd6e3ddea8f04c1389`, which reads: "Invoke the
+  wrapper without `--model` or `--fallback-model`; the wrapper pins the exact model and rejects
+  caller-supplied model selection."], and a dispatch naming a
+  selector only where the
+  mechanism accepts one; B2's Claude Code concurrency measurement, which `clients/claude-code.md`
+  already carried; B0's per-client default modes, which Part C's index and each appendix carry; B0
+  item 1's "Claude Code on claude-skills" measurement label, and B0's per-client guard scoring —
+  Claude Code's item 1, 3 and 4 notes, the claude-skills protection measurement among them, to
+  `clients/claude-code.md`, Cowork's "fails 1 and usually 2" to `clients/cowork.md`, Codex's already
+  in `clients/codex.md`, which now says outright that B0 item 4 is still checked per repository
+  despite earlier measurements; the roster name Camina, from the agreement's opening paragraph (Part
+  C's index and the appendix keep it); and A4's machine-specific author-name example, whose
+  measurement the 2026-09-29 entry on #79 already records. **Retained, with the portability
+  reason:** B0's
+  OpenClaw exception — no downgrade to B1, stop at the first operation with no safe route, and stop
+  rather than fall back to attended where this file is unreachable — stays in B0, because it
+  modifies B0's portable downgrade rule and an appendix that contradicts Parts A–B is, by every
+  appendix's own opener, the rule that is wrong; and A7's Kody bullet stays, because Kody serves
+  more than one client and its rules are authority and credential boundaries — it never authors
+  commits, its `confirm: true` is not B1's approval, and every call names its scoped token — that
+  B1's no-routing-around rule relies on, while each client file already records how it names the
+  tools. A6's `sansfaux/` root and `_agent/` tree and A7's tracker board stay too: they are
+  root-relative fleet layout and the one board every client and repository shares, with each
+  machine's absolute paths in its appendix. Rules whose replacement lives outside this repository
+  stay in place until it exists; that work is linked follow-up:
+  [claude-skills #342](https://github.com/brandonperfetti/claude-skills/issues/342) for the
+  `orchestrate`, `coderabbit-preflight`, `coderabbit-response` and `writing-pull-requests` skills,
+  to be reconciled with the three seats, and
+  [#174](https://github.com/brandonperfetti/agent-working-agreements/issues/174) for the OpenClaw
+  team operating documentation, CodeRabbit review workflow and role configuration.
+
 - **2026-10-22 — OpenClaw: name the native agent root, session-stable artifact-store selection,
   and fresh-session acceptance boundary.** The reviewed native-root P3 cutover package replaces
   the former host-specific workspace-store description with the configured native macOS mapping:

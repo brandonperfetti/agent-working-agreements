@@ -17,14 +17,17 @@ store is working state, not repository content. A cloud checkout uses its active
 durable `_agent/` store and records that location with the capture.
 
 Native shell on Brandon's machine (or a cloud checkout): `rm`, worktrees, `git branch -d`, and hook
-execution all work [measured 2026-09-10]; none of the Cowork hazards (`cowork.md`) apply. **Still
+execution all work [measured 2026-09-10, on claude-skills]; none of the Cowork hazards
+(`cowork.md`) apply. So B0 item 1 passes by construction but for its hook probe. **Still
 check at pickup:** item 1's hook probe (`git push --dry-run origin HEAD` from the checkout you will
 push from),
 item 2 (run the gate once — the local shell's locale/env differs from the CI runner; the project
-docs name the exports), item 4 (branch protection — query it, it has been
-absent), item 5 (the override in the prompt, recorded in MPD §0 for initiative work, or with the
-delivery's decisions for work with no initiative, B1 or B2, by mode). Whether the repo
-carries any hooks at all is a repo fact, not a Claude Code fact.
+docs name the exports), item 3 before **every** feature commit, not only the first, item 4 (branch
+protection — query it, never assume it: on 2026-09-10 neither `develop` nor `master` on
+claude-skills carried protection or rulesets [measured]), item 5 (the override in the prompt,
+recorded in MPD §0 for initiative work, or with the delivery's decisions for work with no
+initiative, B1 or B2, by mode). Whether the repo carries any hooks at all is a repo fact, not a
+Claude Code fact.
 
 - Lane isolation: `git worktree add ../<repo>-<lane> -b <initiative>/wave-<n>-<lane>` from the wave
   branch (flat form — git refuses a ref that is a path prefix of another, so `wave-<n>/<lane>`
@@ -45,6 +48,9 @@ carries any hooks at all is a repo fact, not a Claude Code fact.
   subdirectory of it per sub-agent.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
+- **Model selectors (A4's tiers):** workhorse → `opus` for lane work. Careful
+  (verify/aggregate) → **unmeasured**; no selector is recorded for it. `sonnet` is only the
+  selector for a trivially mechanical dispatch, never the careful tier. [learnings: 2026-08-30 §5]
 - **CodeRabbit CLI, for B2's preflight:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti`
   [measured 2026-09-29, Brandon's desktop]. A record, not a guarantee: `coderabbit-preflight`
   re-checks the CLI on every run.

@@ -30,9 +30,11 @@ finding; `/domain-modeling` writes it when it resolves the first term, and not b
 | capability guard | B0: the checks, verified at pickup for each checkout and repository delivery path, that a delivery must pass to run autonomous; a failed item 4 is recorded instead, until protection exists |
 | the ritual | Part B, "The ritual both modes serve": the branch, PR and merge steps |
 | MPD (master priority document) | A4: an initiative's spine; its §0 records the mode |
-| wave | A4 and B2: one phase of an initiative, run by one orchestrator on one branch off `develop` |
-| orchestrator | A4 and B2: the lead agent; for an initiative it runs one wave, then rotates to a fresh one through a packet; for work with no initiative, the session doing the work |
-| lane | A4 and B2: one sub-agent's work on named files, in its own worktree |
+| wave | A4 and B2: one phase of an initiative, coordinated by one orchestrator on one branch off `develop` that the wave's delivery owner cuts |
+| orchestrator | A4 and B2: the seat that coordinates and synthesizes, A4 listing its duties; for an initiative it runs one wave, then rotates to a fresh one through a packet; for work with no initiative, the session doing the work |
+| delivery owner | A4 and B2: the seat that owns a delivery's repository mechanics — the assigned qualified specialist, or the orchestrator when none is assigned, and alone controls the shared checkout's git state, a specialist dispatched as a sub-agent included; A4 lists its duties |
+| independent reviewer | A4: the seat, separate from whoever produced the work, that runs the two-axis review, including the whole-branch review at the exact final head before a delivery is presented for merge |
+| lane | A4, B1 and B2: one dispatched sub-agent's work on named files — autonomous (B2), running git only in its own worktree; attended (B1), either an mbox lane running git only in its own isolated clone, or an uncommitted lane editing its named files in the shared checkout and delivering them uncommitted, running no git in the shared checkout; a delivery owner dispatched as a sub-agent is not a lane and keeps its A4 duties for the shared checkout's git state |
 | RULE ZERO | A4: no attribution on any commit, PR body, reply or comment; an agent's commits on Brandon's behalf carry his identity, anyone else's carry their own, and a PR carrying his identity from another account is not merged until re-authored |
 | evidence labels | A2: `[measured]`, `[source]`, `[inference]` on every claim |
 | stop-list | B2: what an agent in autonomous mode stops and asks about |
