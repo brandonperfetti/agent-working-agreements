@@ -83,9 +83,9 @@ come from `~/.openclaw/workspace/memory/2026-10-24.md` lines 121 and 131 [source
 lines 1–137 SHA-256 `267584c20d41942f872ecff7aed128158e2d16e8aa5baf4906afad40b3eb4459`]. Each
 entry covers only the role it names:
 
-- **`assistant` (Cortana):** the only wrapper text is `SOUL.md` lines 113–115 [measured; SHA-256
-  `1d96e6b2ebdb047194e14a3ad73c90d9a9830d967edc7a549ba3ed8e95b625a8`], which say the role does not
-  currently use Claude Code and that any future capability goes only through
+- **`assistant` (Cortana):** the only wrapper text is `SOUL.md` lines 113–115 [measured; file
+  SHA-256 `1d96e6b2ebdb047194e14a3ad73c90d9a9830d967edc7a549ba3ed8e95b625a8`], which say the role
+  does not currently use Claude Code and that any future capability goes only through
   `scripts/agent/claude-with-max.sh`, never bare `claude` [source]. Its config entry, lines
   211–242, sets primary `openai/gpt-5.6-luna`, lists only `openai/gpt-5.6-luna` (runtime `codex`)
   and `openai/gpt-5.6-terra` (runtime `openclaw`), and has `tools.alsoAllow` of `memory_write`
