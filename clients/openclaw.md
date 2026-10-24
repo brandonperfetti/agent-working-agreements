@@ -54,11 +54,41 @@ tier where the mechanism accepts a caller's selection.
 **Model selectors (A4's tiers).** Which selector resolves each A4 role tier for an OpenClaw
 specialist is not recorded here — **unmeasured**; measure and record. The shared Claude Code
 wrapper takes no caller selector and pins its own exact model [source:
-`~/.openclaw/workspace/docs/team-operating-model.md` lines 195–196, read 2026-10-23, SHA-256
-`afd5812b86094920f41dc869673d09c9d59a0d0a8ca577cd6e3ddea8f04c1389`, which reads: "Invoke the
-wrapper without `--model` or `--fallback-model`; the wrapper pins the exact model and rejects
-caller-supplied model selection."], so a dispatch through it names its role tier, passes no
-selector, and records the model the wrapper pins (A4).
+`~/.openclaw/workspace/docs/team-operating-model.md` lines 198–199, read 2026-10-24, SHA-256
+`1bf9bcef0f5f2b17273c9d14f3062f19ae51a5ffa5e0c017621055fa6b84f163`, quoted below], so a dispatch
+through it names its role tier, passes no selector, and records the model the wrapper pins (A4).
+Those two lines read exactly, line break kept:
+
+```text
+Invoke the wrapper without `--model` or `--fallback-model`; the wrapper pins the exact
+model and rejects caller-supplied model selection. Transmitting relevant in-scope local
+```
+
+**Claude routes and intentional exceptions.** The same source applies its wrapper rule only where
+a role has a supported Claude route; without one, the affected substantive operation stops and
+reports the missing route, which is not a failed Claude invocation [source: same file, lines
+204–206, same read and SHA-256]. The 2026-10-23 role-local normalization covered Camina and ten
+specialist role sources, not the four roles below [source, issue #177]. Each entry covers only the
+role it names:
+
+- **`assistant` (Cortana):** does not currently use Claude Code; its only wrapper text is a
+  conditional instruction that any future Claude Code capability be invoked only through
+  `scripts/agent/claude-with-max.sh`, never bare `claude` [source:
+  `~/.openclaw/workspace-assistant/SOUL.md` lines 113–115, read 2026-10-24, SHA-256
+  `1d96e6b2ebdb047194e14a3ad73c90d9a9830d967edc7a549ba3ed8e95b625a8`]. That instruction grants no
+  route; whether the runtime would admit one is **unmeasured**.
+- **`finance` (Graham):** an intentional GPT-only pilot, with no supported Claude route [source,
+  issue #177].
+- **`finance` and `marketing` (Sloane):** they share a sender-conditioned Slack policy class, and
+  that class has no supported Claude execution route [source, issue #177]. Substantive
+  filesystem-grounded work arriving through that class therefore stops at the missing route
+  [inference, from the stop rule above].
+- **`openclaw-admin` (Ashford):** its route status is **unmeasured**; measure and record. Do not
+  infer it from the other entries.
+
+The `finance` and Slack-class entries were not re-read against a role-local source or the runtime
+configuration for this record; the runtime route of every role is **unmeasured** here. This list is
+not a census: other roles outside the role-local wrapper contract may exist and are not covered.
 
 OpenClaw does not relax either mode's topology. Attended lanes use one of B1's two shapes: an
 mbox lane runs git only in its isolated clone, and a lane delivering uncommitted edits may edit its

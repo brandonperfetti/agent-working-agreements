@@ -10,6 +10,19 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
+  exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of
+  `~/.openclaw/workspace/docs/team-operating-model.md` under a SHA-256 the reviewed, expanded file
+  no longer has. It now cites lines 198–199 at SHA-256
+  `1bf9bcef0f5f2b17273c9d14f3062f19ae51a5ffa5e0c017621055fa6b84f163`, read 2026-10-24, and quotes
+  both lines exactly with their line break. A new **Claude routes and intentional exceptions**
+  paragraph labels each claim [source], [inference] or **unmeasured**: `assistant` does not
+  currently use Claude Code and carries only a conditional future-wrapper instruction; `finance` is
+  an intentional GPT-only pilot; `finance` and `marketing` share a sender-conditioned Slack policy
+  class with no supported Claude execution route; and `openclaw-admin`'s route status is left
+  **unmeasured** rather than inferred. It says the list is not a census of roles outside the
+  role-local wrapper contract, so a missing-route stop on a named role is read as intended, not as a
+  defect.
 - **2026-10-23 — A4, A6, B0, B1, B2, Part C, the split rule and the client appendices: three distinct
   delivery seats, exact-final-head whole-branch review, and client detail moved to its
   appendices.** Issue #173; the clause-level reconciliation matrix is #173's existing comment at
