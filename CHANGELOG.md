@@ -10,10 +10,11 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-10-23 — A4, B0, B1, B2, the split rule and the client appendices: three distinct
+- **2026-10-23 — A4, A6, B0, B1, B2, Part C, the split rule and the client appendices: three distinct
   delivery seats, exact-final-head whole-branch review, and client detail moved to its
-  appendices.** Issue #173; the clause-level reconciliation matrix is
-  [#173's matrix comment](https://github.com/brandonperfetti/agent-working-agreements/issues/173#issuecomment-6378577766).
+  appendices.** Issue #173; the clause-level reconciliation matrix is #173's existing comment at
+  [this permalink](https://github.com/brandonperfetti/agent-working-agreements/issues/173#issuecomment-6378577766),
+  and that comment, not this entry, records the exact reconciled head the matrix covers.
   Parts A–B had come to mix portable rules with client selectors, runtime measurements and
   roster names, and assigned branch, integration, pull-request and review-bot mechanics to the
   orchestrator, while the team model has the coordinating layer coordinate and a qualified
@@ -25,18 +26,42 @@ being retrofitted onto the other.
   independent reviewer, performs the Standards + Spec review against the exact delivery head; and
   Brandon alone merges base branches.** The matrix records `NO_UNRESOLVED_POLICY_CHOICE`.
   **A4 is the one authority for the seats' duties:** it opens with the orchestrator, the delivery
-  owner and the independent reviewer, lists every delivery-owner duty and each seat's core
-  boundary, and assigns supplemental orchestration and review duties in its other bullets, with
-  "reviewed child integration" written in the glossary's term, reviewed lane integration. The orchestrator
+  owner and the independent reviewer, lists every delivery-owner duty — but for the one-off close
+  record, which A6 assigns to the agent closing a delivery with no initiative — and each seat's
+  core boundary, and assigns supplemental orchestration and review duties in its other bullets,
+  with "reviewed child integration" written as integration of reviewed lane work, in the glossary's
+  term "lane". The orchestrator
   briefs, fences, dispatches and redispatches lanes, extends a lane's fence, holds tracker
   coordination (closing, relabelling and moving issues to In Review among it), owns attended
   live/browser verification, routes review evidence and writes the hand-back. The delivery owner
-  cuts the delivery branch; in B1 applies reviewed mboxes with `git am` and stages and commits
-  after approval; in B2 integrates reviewed lanes and records their verdicts, runs the merged-tree
+  alone controls the shared checkout's git state, even when it is a specialist dispatched as a
+  sub-agent, and cuts the delivery branch; in B1 stages a batch and shows the staged diff, commits
+  after Brandon's batch approval, and applies the reviewed mbox series that lanes delivered from
+  their isolated clones with `git am` only after that approval, since `git am` is the commit, and
+  Brandon pushes; in B2 integrates reviewed lanes and records their verdicts, runs the merged-tree
   gate, owns conflict-resolution mechanics, pushes, runs the `coderabbit-preflight` and
   `coderabbit-response` routines, opens and updates the feature pull request, and may draft the
   `develop → master` release pull request. B1 and B2 now say their no-initiative session holds
-  those A4 duties and carry each duty's procedure, not a further duty list. The README,
+  those A4 duties and carry each duty's procedure, not a further duty list; B1's sub-agent bullet
+  now binds dispatched lane sub-agents only and keeps both attended lane shapes — an mbox lane
+  runs git only in its isolated clone, and a lane delivering uncommitted edits may edit its named
+  files in the shared checkout but runs no git there — so a delivery-owner specialist dispatched as
+  a sub-agent, and a delivery owner that dispatches no lanes and so counts as that lane, keep their
+  A4 duties in the shared checkout. A4's lane-git bullet now gives the delivery owner the shared
+  checkout's git state, not the checkout itself. A6's no-initiative friction paragraph now says A6
+  itself assigns
+  the one-off close record to the agent closing the delivery, and that all remaining seat authority
+  for that delivery comes from A4, B1 or B2 carrying only its procedure; the 2026-10-20 provenance
+  stays on the close-record and mode-pointer rule. Part C's OpenClaw line no longer points at a B0
+  "autonomous-default rule" B0 no longer states: the default is the index's and the appendix's, the
+  exception B0's. The glossary's "wave" is coordinated by the orchestrator on a branch its
+  delivery owner cuts, its "delivery owner" alone controls the shared checkout's git state, and its
+  "lane" names both of B1's attended lane shapes. B2's attended-mode sentence now names both B1
+  lane shapes and gives the delivery owner, not Brandon, the staging, commit and `git am`
+  mechanics in B1's approval order; the OpenClaw appendix's B1 deliveries sentence and its
+  migration disposition B name both shapes too, disposition B now dropping only specialist
+  committing in the shared checkout and keeping the delivery owner's git control. The OpenClaw appendix's acceptance boundary is
+  now Brandon's ready-PR acceptance and manual merge. The README,
   `docs/agents/domain.md` and `clients/openclaw.md` point at A4 rather than restating its duty
   lists; the OpenClaw appendix keeps what is its own — which role fills each seat, Camina's
   continuity and decision-ready hand-back, and Judy's implementation and diagnostics — and drops
@@ -57,9 +82,16 @@ being retrofitted onto the other.
   selectors and mechanics move to its appendix only once that destination carries them, is linked
   and has been reviewed. Moved under that test: A4's Claude model selectors (`opus`, `sonnet`) to
   `clients/claude-code.md` and `clients/cowork.md`, which now carry the selectors alone, the role
-  routing staying in A4; `clients/codex.md` and `clients/openclaw.md` record their tier-to-selector
+  routing staying in A4 — workhorse is `opus`, the careful tier is recorded there as unmeasured,
+  and `sonnet` is only for a trivially mechanical dispatch, never the careful tier;
+  `clients/codex.md` and `clients/openclaw.md` record their tier-to-selector
   mapping as unmeasured, OpenClaw's with its shared Claude Code wrapper, which takes no caller
-  selector and pins its own model [source], and a dispatch naming a selector only where the
+  selector and pins its own model [source: `~/.openclaw/workspace/docs/team-operating-model.md`
+  lines 195–196, read 2026-10-23, SHA-256
+  `afd5812b86094920f41dc869673d09c9d59a0d0a8ca577cd6e3ddea8f04c1389`, which reads: "Invoke the
+  wrapper without `--model` or `--fallback-model`; the wrapper pins the exact model and rejects
+  caller-supplied model selection."], and a dispatch naming a
+  selector only where the
   mechanism accepts one; B2's Claude Code concurrency measurement, which `clients/claude-code.md`
   already carried; B0's per-client default modes, which Part C's index and each appendix carry; B0
   item 1's "Claude Code on claude-skills" measurement label, and B0's per-client guard scoring —
@@ -68,7 +100,8 @@ being retrofitted onto the other.
   in `clients/codex.md`, which now says outright that B0 item 4 is still checked per repository
   despite earlier measurements; the roster name Camina, from the agreement's opening paragraph (Part
   C's index and the appendix keep it); and A4's machine-specific author-name example, whose
-  measurement the 2026-09-29 entry already records. **Retained, with the portability reason:** B0's
+  measurement the 2026-09-29 entry on #79 already records. **Retained, with the portability
+  reason:** B0's
   OpenClaw exception — no downgrade to B1, stop at the first operation with no safe route, and stop
   rather than fall back to attended where this file is unreachable — stays in B0, because it
   modifies B0's portable downgrade rule and an appendix that contradicts Parts A–B is, by every

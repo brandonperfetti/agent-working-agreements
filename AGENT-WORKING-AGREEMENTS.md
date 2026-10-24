@@ -86,7 +86,8 @@ you may announce; changes you make and show.
 These hold in both modes; the `orchestrate` skill carries the loop, this file carries the law.
 
 - **Three seats, kept distinct.** This list is the authoritative, complete list of the delivery
-  owner's duties and sets the core boundary of each seat; other bullets of A4 assign supplemental
+  owner's duties, but for the one-off close record A6 assigns to the agent closing a delivery with
+  no initiative, and sets the core boundary of each seat; other bullets of A4 assign supplemental
   portable orchestration and review duties (the rotation packet, the reading outside the wave), and
   B1 and B2 carry procedure only, not further duties.
   - The **orchestrator** coordinates and synthesizes: it briefs, fences, dispatches and
@@ -95,10 +96,14 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
     A7), owns any attended live/browser verification (B1), routes review evidence, and writes the
     decision-ready hand-back.
   - The **delivery owner** is the qualified specialist assigned to the delivery, or the
-    orchestrator when no specialist is assigned. It cuts the delivery branch; in attended mode
-    (B1) it applies reviewed mboxes with `git am` and stages and commits after Brandon's approval;
-    in autonomous mode (B2) it integrates reviewed lane work and records each verdict in
-    `reviews/`, runs the full CI gate on the merged tree, owns conflict-resolution mechanics,
+    orchestrator when no specialist is assigned, and alone controls the shared checkout's git
+    state, so too when it is a specialist dispatched as a sub-agent; a lane delivering uncommitted
+    edits may still edit its named files there (B1). It cuts the delivery branch; in attended mode
+    (B1) it stages a batch and shows the staged diff, commits after Brandon's batch approval, and
+    applies the reviewed mbox series that lanes delivered from their isolated clones with `git am`
+    only after that approval, since `git am` is the commit; Brandon pushes. In autonomous mode (B2)
+    it integrates reviewed lane work and records each verdict in `reviews/`, runs the full CI gate
+    on the merged tree, owns conflict-resolution mechanics,
     pushes, runs the routine `coderabbit-preflight` and `coderabbit-response` mechanics, opens and
     updates the feature pull request and completes its review round, and may draft the
     `develop → master` release pull request.
@@ -122,11 +127,12 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   fence or smoothing it over. [learnings: 2026-09-06 wave-6 §4]
 - **Lanes keep their git in their own worktree.** The file fence says which files a lane edits;
   this says which working tree a lane may run git in. A lane runs git only in its own worktree
-  (on the attended mbox path, its own isolated clone), and the delivery owner's checkout is the
+  (on the attended mbox path, its own isolated clone), and the shared checkout's git state is the
   delivery owner's alone — no lane runs git against it, changes its branch, or alters its git
   state — because that isolation is what makes concurrent lanes safe at all, and a lane that has
   run git in the shared checkout has left that isolation, whatever files it edited. B1's attended
-  delivery of uncommitted edits to named files runs no git there and crosses neither fence.
+  lane delivering uncommitted edits edits its named files in the shared checkout, runs no git
+  there, and so crosses neither fence.
   A lane whose merge into the wave branch conflicts resolves it in its own worktree too (B2).
   [learnings: 2026-09-23 sfs-wave-1 §1]
 - **Every lane report states the model it ran on, and how it knows.** Requested, inherited,
@@ -158,8 +164,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   patch's `From:` line for an mbox series — before approval on the attended mbox path, before merge
   on the autonomous path. Both compare the **author email alone** against
   `brandon@brandonperfetti.com`, exactly. The name is not compared: it varies by machine and clone
-  (the changelog's 2026-09-29 entry records the measurement). A commit at any other email is a
-  send-back like a trailer match: reject or regenerate, since `git am` preserves
+  (the changelog's 2026-09-29 entry on #79 records the measurement). A commit at any other email
+  is a send-back like a trailer match: reject or regenerate, since `git am` preserves
   the patch author (B1). **Added** means not on `origin/develop` or `origin/master`,
   fetched and read
   **before** the delivery is pushed or merged — a lane or wave branch, the branch of feature work
@@ -303,9 +309,9 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
 writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
 checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
 that full SHA. A6 itself assigns the one-off close record: the agent closing that delivery owns and
-writes it; all remaining seat authority for that delivery comes from A4, and B1 or B2, by mode,
-carries only its procedure, so that attended work with no initiative is not pointed at the
-autonomous section (Brandon, 2026-10-20). In
+writes it, and B1 or B2, by mode, carries the delivery's procedure, so that attended work with no
+initiative is not pointed at the autonomous section (Brandon, 2026-10-20); all remaining seat
+authority for that delivery comes from A4, not from B1 or B2 (Brandon, 2026-10-23, #173). In
 `_agent/friction/`, that record is exactly
 `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--pr-<number>.md` for the pull-request form,
 or `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--branch-<branch-slug>--ref-<branch-hash>--<full-head-sha>.md`
@@ -536,12 +542,17 @@ place (Brandon, 2026-10-20).
   never carries to the next batch; no `--amend`; no routing around it with API/MCP writes or
   another client. Shape: write the change → show the **staged diff** → Brandon reviews in his IDE →
   he says commit → you commit. He pushes himself.
-- **Sub-agents never commit, stage, or push in the shared checkout.** Their deliverable is a
-  **written report** plus either uncommitted code or an mbox / format-patch series in the
-  initiative's `mboxes/` (committed only in the lane's own isolated clone, applied by the
-  delivery owner (A4) with `git am` after review). **Sub-agents never write tickets, and never
-  touch git in the shared checkout; the orchestrator owns tickets and any live/browser
-  verification, and the delivery owner staging and commits (post-approval).**
+- **Dispatched lane sub-agents never commit, stage, push, or run any other git in the shared
+  checkout.** A lane takes one of two shapes: it commits only in its own isolated clone and
+  delivers an mbox / format-patch series in the initiative's `mboxes/`, or it edits its named files
+  in the shared checkout and delivers them uncommitted, running no git there; either way it also
+  delivers a **written report**. The delivery owner (A4) alone controls the shared checkout's git
+  state — so too where it is a specialist dispatched as a sub-agent, which is not a lane: it stages
+  uncommitted work, shows the staged diff, and commits after Brandon's batch approval; an mbox
+  series it applies with `git am` only after that approval, since `git am` is the commit (below).
+  Brandon pushes. This binds dispatched lanes only: a delivery owner that dispatches no lanes, and
+  so counts as that lane (below), keeps its A4 duties in the shared checkout. **Lanes never write
+  tickets; the orchestrator owns tickets and any live/browser verification.**
   Review compounds; a report can be argued with, a commit has to be reverted; a wrong premise gets
   faithfully implemented unless a human reads first.
 - **Brandon runs all builds, test suites, and installs.** Tell him exactly what to run. Type-checks,
@@ -599,7 +610,11 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
   - **Feature work always goes through its branch (above) and a PR into `develop`** — pushed
     straight, it would reach `master` having been reviewed by nobody. That, not the branch, is the
     reason.
-  In **attended** mode the shape is unchanged: the lane delivers an mbox, Brandon applies and pushes.
+  In **attended** mode the shape is B1's: a lane delivers either an mbox series from its isolated
+  clone or uncommitted edits to its named files in the shared checkout. For uncommitted edits the
+  delivery owner (A4) stages them and shows the staged diff before Brandon's batch approval, then
+  commits after it; an mbox series the delivery owner applies with `git am` only after that
+  approval, since `git am` is the commit. Brandon pushes.
 - **Each lane works in its own git worktree on a branch off the wave branch** (for work with no
   initiative, off that work's own branch, B0 item 3) and commits there with the repo's hooks
   firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
@@ -718,7 +733,8 @@ Each states its own default mode, but the capability guard in B0 is what actuall
 | Codex (ChatGPT desktop, local shell) | [`clients/codex.md`](clients/codex.md) | autonomous |
 | OpenClaw (Camina) | [`clients/openclaw.md`](clients/openclaw.md) | autonomous |
 
-**OpenClaw's mapping and exception follow B0's autonomous-default rule.**
+**OpenClaw's autonomous default is this index's and its appendix's; its exception to the
+downgrade is B0's.**
 [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 **Where this file is not reachable at all, attended rules apply. For OpenClaw, instead stop the
 affected work with the missing instruction-source capability recorded; do not automatically convert
