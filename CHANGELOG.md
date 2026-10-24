@@ -24,9 +24,10 @@ being retrofitted onto the other.
   the orchestrating session in that seat only when no specialist is assigned; Amos, or the assigned
   independent reviewer, performs the Standards + Spec review against the exact delivery head; and
   Brandon alone merges base branches.** The matrix records `NO_UNRESOLVED_POLICY_CHOICE`.
-  **A4 is the one authority for the seats' complete duties:** it opens with the orchestrator, the
-  delivery owner and the independent reviewer, and lists every duty of each, with "reviewed child
-  integration" written in the glossary's term, reviewed lane integration. The orchestrator
+  **A4 is the one authority for the seats' duties:** it opens with the orchestrator, the delivery
+  owner and the independent reviewer, lists every delivery-owner duty and each seat's core
+  boundary, and assigns supplemental orchestration and review duties in its other bullets, with
+  "reviewed child integration" written in the glossary's term, reviewed lane integration. The orchestrator
   briefs, fences, dispatches and redispatches lanes, extends a lane's fence, holds tracker
   coordination (closing, relabelling and moving issues to In Review among it), owns attended
   live/browser verification, routes review evidence and writes the hand-back. The delivery owner

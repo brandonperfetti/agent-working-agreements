@@ -85,8 +85,10 @@ you may announce; changes you make and show.
 
 These hold in both modes; the `orchestrate` skill carries the loop, this file carries the law.
 
-- **Three seats, kept distinct.** This list is each seat's complete duties; B1 and B2 carry the
-  procedure for each, not further duties.
+- **Three seats, kept distinct.** This list is the authoritative, complete list of the delivery
+  owner's duties and sets the core boundary of each seat; other bullets of A4 assign supplemental
+  portable orchestration and review duties (the rotation packet, the reading outside the wave), and
+  B1 and B2 carry procedure only, not further duties.
   - The **orchestrator** coordinates and synthesizes: it briefs, fences, dispatches and
     redispatches lanes, extends a lane's fence where a fix needs it (below), holds tracker
     coordination (issues, closing and relabelling, board Status and moving issues to In Review,
@@ -300,10 +302,10 @@ loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's c
 **Friction.** For a delivery with no initiative, define its canonical delivery identifier before
 writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
 checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
-that full SHA. The agent closing that delivery owns and writes its one-off close record; every
-other seat duty for that delivery is A4's to assign, and B1 or B2, by mode, carries only its
-procedure, so that attended work with no initiative is not pointed at the autonomous section
-(Brandon, 2026-10-20). In
+that full SHA. A6 itself assigns the one-off close record: the agent closing that delivery owns and
+writes it; all remaining seat authority for that delivery comes from A4, and B1 or B2, by mode,
+carries only its procedure, so that attended work with no initiative is not pointed at the
+autonomous section (Brandon, 2026-10-20). In
 `_agent/friction/`, that record is exactly
 `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--pr-<number>.md` for the pull-request form,
 or `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--branch-<branch-slug>--ref-<branch-hash>--<full-head-sha>.md`
