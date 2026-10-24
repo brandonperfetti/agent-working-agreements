@@ -56,10 +56,11 @@ being retrofitted onto the other.
   "autonomous-default rule" B0 no longer states: the default is the index's and the appendix's, the
   exception B0's. The glossary's "wave" is coordinated by the orchestrator on a branch its
   delivery owner cuts, its "delivery owner" alone controls the shared checkout's git state, and its
-  "lane" names both of B1's attended lane shapes. B2's attended-mode sentence now names both B1
-  lane shapes and gives the delivery owner, not Brandon, the staging, commit and `git am`
-  mechanics in B1's approval order; the OpenClaw appendix's B1 deliveries sentence and its
-  migration disposition B name both shapes too, disposition B now dropping only specialist
+  "lane" names the autonomous lane's own worktree and both of B1's attended lane shapes. B2's
+  attended-mode sentence now names both B1 lane shapes and gives the delivery owner, not Brandon,
+  the staging, commit and `git am` mechanics in B1's approval order; the OpenClaw appendix's B1
+  deliveries sentence, its delivery-topology item and its migration disposition B name both
+  shapes too, disposition B now dropping only specialist
   committing in the shared checkout and keeping the delivery owner's git control. The OpenClaw
   appendix's acceptance boundary is now Brandon's ready-PR acceptance and manual merge. The README,
   `docs/agents/domain.md` and `clients/openclaw.md` point at A4 rather than restating its duty

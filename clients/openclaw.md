@@ -112,7 +112,7 @@ Keep five decisions separate:
 3. **Risk and reversibility** — only routine, reversible repository work may proceed on that
    authority.
 4. **Delivery topology** — OpenClaw's autonomous default uses B2's dedicated-worktree shape;
-   B1's isolated-clone shape applies only when Brandon explicitly selects attended delivery.
+   B1's lane shapes apply only when Brandon explicitly selects attended delivery.
 5. **Human approval** — Brandon alone merges into `develop`, `master`, or `main`.
 
 An authorized autonomous specialist owns authorized routine, reversible repository work through
