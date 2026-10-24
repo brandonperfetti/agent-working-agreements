@@ -484,11 +484,13 @@ A–B now supersede. They are deliberately **not carried forward**, for these re
 - **A — autonomy:** the local autonomous default is superseded by the canonical OpenClaw
   autonomous default, B0's per-checkout capability evidence, and B2's Brandon-only merge boundary;
   an unavailable operation stops at its missing safe route rather than downgrading the team to B1.
-- **B — specialist commits:** specialist committing in the shared checkout is not carried
-  forward. Attended sessions use B1's two lane shapes — an mbox series committed in the lane's
-  isolated clone, or uncommitted edits to named files in the shared checkout with no git run there
-  — and the delivery owner (A4) alone keeps the shared checkout's git state, staging, committing
-  and applying with `git am` per B1; autonomous sessions use B2's dedicated-worktree shape.
+- **B — specialist commits:** a dispatched lane specialist committing, staging or running any
+  other git in the shared checkout is not carried forward. Attended sessions use B1's two lane
+  shapes — an mbox series committed in the lane's isolated clone, or uncommitted edits to named
+  files in the shared checkout with no git run there — and the delivery owner (A4) alone keeps the
+  shared checkout's git state, staging, committing and applying with `git am` per B1; autonomous
+  sessions use B2's dedicated-worktree shape. A delivery owner dispatched as a sub-agent is not a
+  lane and keeps those A4 shared-checkout git-state duties.
 - **C — builds and tests:** OpenClaw's autonomous team owns installs, builds, tests, and
   verification through the ready B2 PR; an unavailable safe route stops that operation with its
   evidence, while B1 applies only when Brandon explicitly selects attended delivery.
