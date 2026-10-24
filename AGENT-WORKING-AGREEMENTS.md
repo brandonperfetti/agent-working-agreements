@@ -16,7 +16,10 @@ working style never percolates down into project docs.
 so they live here, in full, in one file: a rule you did not read is a rule you break silently. The
 appendices are the opposite — exactly one is ever relevant to you — so each is its own file under
 `clients/`, free to be as detailed as that environment needs without costing every other reader a
-line. **Nothing load-bearing is ever moved out of Parts A and B.**
+line. **Parts A and B keep every rule that is portable across clients.** A client's own selectors
+and mechanics belong in its appendix; one moves out of Parts A and B only once its destination
+carries it, is linked from the rule it served, and has been reviewed, and nothing load-bearing is
+removed before then (#173).
 
 **Paths.** `_agent/` and `organize.sh` are at the root of the `sansfaux/` checkout tree — the parent
 of this clone, when it is cloned there. Paths in this file are written relative to that root, not to
@@ -82,6 +85,19 @@ you may announce; changes you make and show.
 
 These hold in both modes; the `orchestrate` skill carries the loop, this file carries the law.
 
+- **Three seats, kept distinct.** The **orchestrator** coordinates and synthesizes: it briefs,
+  fences, dispatches and redispatches lanes, extends a lane's fence where a fix needs it (below),
+  holds tracker coordination (issues, board Status, A7), routes review evidence, and writes the
+  decision-ready hand-back. The **delivery owner** is the qualified specialist assigned
+  to the delivery, or the orchestrator when no specialist is assigned; it owns the delivery branch,
+  the integration of reviewed child (lane) work, the full CI gate on the merged tree,
+  conflict-resolution mechanics, pushes, pull-request creation and updates, and the routine
+  `coderabbit-preflight` and `coderabbit-response` mechanics. The **independent reviewer** is a
+  separate seat, independent of whoever produced the work under review, delivery owner included;
+  it runs the two-axis review below. A session holding both the orchestrator and delivery-owner
+  seats holds both sets of duties; neither seat makes it the reviewer of its own work, and neither
+  merges a base branch — only Brandon does (Part B ritual, step 6). A client appendix may name who
+  fills each seat there (Brandon, 2026-10-23, #173).
 - **The MPD is the spine.** Every initiative has a `MASTER-PRIORITY-DOCUMENT.md` born from an
   attended Genesis (deep-grill → research → agreed plan → tickets → waves). Its §0 declares the
   **mode** (Part B) the wave orchestrators run in. One orchestrator runs **one wave, then rotates**
@@ -95,8 +111,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   fence or smoothing it over. [learnings: 2026-09-06 wave-6 §4]
 - **Lanes keep their git in their own worktree.** The file fence says which files a lane edits;
   this says which working tree a lane may run git in. A lane runs git only in its own worktree
-  (on the attended mbox path, its own isolated clone), and the orchestrator's checkout is the
-  orchestrator's alone — no lane runs git against it, changes its branch, or alters its git
+  (on the attended mbox path, its own isolated clone), and the delivery owner's checkout is the
+  delivery owner's alone — no lane runs git against it, changes its branch, or alters its git
   state — because that isolation is what makes concurrent lanes safe at all, and a lane that has
   run git in the shared checkout has left that isolation, whatever files it edited. B1's attended
   delivery of uncommitted edits to named files runs no git there and crosses neither fence.
@@ -107,10 +123,9 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   the account serves, and config is not attestation. Say which you have. [learnings: 2026-08-30 §5]
 - **Explicit model tier on every dispatch — never omitted, never the orchestrator's premium tier.**
   Tiers are named by *role* (workhorse for lanes, careful for verify/aggregate); each client maps
-  them to its own selectors, and a client whose dispatch tool cannot select records that instead of
-  pretending.
-  `opus` for lane work; `sonnet` only for trivially mechanical dispatches; this applies to skills
-  that fan out their own sub-agents. Route by role per `agent-workspace/references/subagent-model-routing.md`.
+  them to its own selectors in its client file, and a client whose dispatch tool cannot select
+  records that instead of pretending. This applies to skills that fan out their own sub-agents.
+  Route by role per `agent-workspace/references/subagent-model-routing.md`.
   [learnings: 2026-08-30 §5]
 - **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** Agents add no
   `Co-Authored-By`, no session trailer, no generated-by footer — a commit carries Brandon's author
@@ -158,6 +173,13 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   set by the situation — a session supervising dispatched agents — not by the client, because most
   sessions own their work, as they should, and Genesis builds the MPD with Brandon by design. In
   attended mode Brandon's per-batch review is already that reader (Brandon, 2026-10-12).
+  **Before the pull request is created, the independent reviewer runs the two-axis review over the
+  whole branch** — its full diff against the base, not only the latest change — **at the exact
+  head SHA**, and the verdict names that SHA. **Any later fix or push needs its scoped review
+  (above) and then a renewed whole-branch verdict from the independent reviewer at the new exact
+  head before the delivery is handed back for Brandon's merge**, because per-delivery reviews each
+  saw a part, and a verdict on another head attests to different bytes (Brandon, 2026-10-23,
+  #173).
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.
@@ -492,7 +514,8 @@ guard is the contract, not the client name.
 Brandon is the verification step, on purpose.
 
 **Feature work with no initiative** has no wave orchestrator, MPD or initiative folder, so the
-session doing the work holds this section's orchestrator duties; its review verdicts and other
+session doing the work holds this section's orchestrator duties, and the delivery owner's where no
+specialist is assigned (A4); its review verdicts and other
 records go under the `_agent/` root's one-off folders (A6's tree), and its decisions and a failed
 item 4 (B0) are recorded in its one-off review record under `_agent/reviews/`, which Brandon reads
 at each batch approval, and copied into the PR body once a PR exists. A6 and
@@ -507,9 +530,9 @@ place (Brandon, 2026-10-20).
 - **Sub-agents never commit, stage, or push in the shared checkout.** Their deliverable is a
   **written report** plus either uncommitted code or an mbox / format-patch series in the
   initiative's `mboxes/` (committed only in the lane's own isolated clone, applied by the
-  orchestrator with `git am` after review). **Sub-agents never write tickets, and never touch git
-  in the shared checkout; the orchestrator owns tickets, staging, commits (post-approval), and
-  any live/browser verification.**
+  delivery owner (A4) with `git am` after review). **Sub-agents never write tickets, and never
+  touch git in the shared checkout; the orchestrator owns tickets and any live/browser
+  verification, and the delivery owner staging and commits (post-approval).**
   Review compounds; a report can be argued with, a commit has to be reverted; a wrong premise gets
   faithfully implemented unless a human reads first.
 - **Brandon runs all builds, test suites, and installs.** Tell him exactly what to run. Type-checks,
@@ -536,17 +559,19 @@ place (Brandon, 2026-10-20).
 
 ## B2. Autonomous mode
 
-Brandon's review moves to the pull request. The orchestrator owns the branch until then.
+Brandon's review moves to the pull request. The delivery owner (A4) owns the branch until then.
 
 **Feature work with no initiative** has no wave orchestrator, MPD or initiative folder, so the
-session doing the work holds this section's orchestrator duties; its review verdicts and other
+session doing the work holds this section's orchestrator duties, and the delivery owner's where no
+specialist is assigned (A4); its review verdicts and other
 records go under the `_agent/` root's one-off folders (A6's tree), and its decisions and a failed
 item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 2026-10-18).
 
 **Git contract**
 
-- The wave orchestrator cuts **one branch per wave off `develop`** (`<initiative>/wave-<n>`), and
-  that is the **only** branch an agent pushes to land an initiative's **feature** work. Feature
+- The wave's delivery owner cuts **one branch per wave off `develop`**
+  (`<initiative>/wave-<n>`), and that is the **only** branch an agent pushes to land an
+  initiative's **feature** work. Feature
   work with no initiative has no wave: it gets **one branch of its own off `develop`** for that
   piece of work (the ritual's step 1), with no other work on it, and that is the **only** branch an
   agent pushes to land it. **Never `master`, never a force-push, and never feature work pushed
@@ -570,7 +595,7 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
   firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
   (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
-- **The orchestrator merges a lane into the wave branch** (for work with no initiative, into that
+- **The delivery owner merges a lane into the wave branch** (for work with no initiative, into that
   work's own branch) **only after two-axis review passes** (A4), records the verdict in
   `reviews/`, **re-runs the full CI gate on the merged branch, runs `coderabbit-preflight` when the
   push carries new work (below) and the CodeRabbit CLI is available to that client, then
@@ -579,10 +604,11 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
 - **A lane merge that conflicts goes back to the lane.** The lane merges the wave
   branch into its own branch in its own worktree — a merge commit, never a rebase, which would
   rewrite commits it has already reported — resolves there and re-runs the gate; the resolution
-  gets a scoped review, as an addendum's fix does; the orchestrator's merge is clean against the tip
-  the lane merged, and a wave branch that has moved since is the same rule again — a merge that
+  gets a scoped review, as an addendum's fix does; the delivery owner's merge is clean against
+  the tip the lane merged, and a wave branch that has moved since is the same rule again — a
+  merge that
   conflicts goes back to the lane. Only
-  where the lane is no longer available does the orchestrator resolve, and its resolution gets a
+  where the lane is no longer available does the delivery owner resolve, and its resolution gets a
   scoped two-axis review before the push. A resolution is new work, and no work reaches the wave
   branch unreviewed (Brandon, 2026-10-12). Inside a resolution, whoever resolves:
   - **Bounded evidence-led recovery when the gate shows a red of the resolution's own — one absent
@@ -603,21 +629,21 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
   - **A red that a side's own gate record already shows is that side's, not the merge's:**
     reported with that record, not fixed inside the merge — a lane may hand back with a gate step
     red by design, named in its handoff, and a fix to it inside the merge would be an unreviewed
-    change to that side's work. The orchestrator's merged-tree gate before the push is unchanged.
+    change to that side's work. The delivery owner's merged-tree gate before the push is unchanged.
 - **The preflight runs once before each push that carries new work** — a lane landing, a release
   cut — and never before a push that only answers review findings, which the PR's own review
   covers; there is no re-run. An unavailable CLI never holds a push and never downgrades the mode:
   the round is recorded as not run, and the PR round is the review. The skill carries the rules of
   a run, the checks that decide whether the CLI is available among them.
 - **Open the ready-for-review PR against `develop` at the first push. CodeRabbit runs on that ready
-  PR, and the orchestrator completes the round before hand-back.** The PR uses the
+  PR, and the delivery owner completes the round before hand-back.** The PR uses the
   `writing-pull-requests` shape; its body is seeded under the initiative's `pull-requests/` and
   grown as lanes land.
-- **File-disjoint lanes may run in parallel up to the measured cap.** Claude Code: **≥ 3 concurrent**
-  [measured 2026-09-10, three lanes in one message, floor not ceiling]. Any other client measures
-  its own Agent tool before assuming concurrency and records the number in the MPD.
-- **Agents run the full CI gate themselves** — every lane before handing back; the orchestrator on
-  every merged tree before every push. CI on the PR is the arbiter for flakes.
+- **File-disjoint lanes may run in parallel up to the measured cap**, which each client file
+  records where it has been measured. A client without one measures its own Agent tool before
+  assuming concurrency and records the number in the MPD.
+- **Agents run the full CI gate themselves** — every lane before handing back; the delivery owner
+  on every merged tree before every push. CI on the PR is the arbiter for flakes.
 - **Issues:** agents file the findings that are real work (A4) freely via `writing-tickets`,
   labelled **`agent-filed`**, so Brandon can sweep them. Closing or relabelling existing issues is
   orchestrator-only and cited. Board intake stays Auto-add.
@@ -654,18 +680,18 @@ push; a fresh ticket is for real work (A4), and for work found after the wave PR
 merged. On a release PR, A4 names who makes a small fix.
 A lane merge that conflicts goes back to the lane the same way (Git contract above).
 
-**The review loop (Brandon + the orchestrator)**
+**The review loop (Brandon, the delivery owner and the orchestrator)**
 
-1. **Before each push that carries new work, the orchestrator runs `coderabbit-preflight`** where the
-   CodeRabbit CLI is available (Git contract above).
-2. **The agent opens the feature PR ready for review; CodeRabbit runs; the orchestrator completes
-   the round before hand-back.**
-3. The orchestrator works the review end-to-end with `coderabbit-response`: verifies every finding,
-   redispatches the fixes A4 calls for to lanes (worktrees, review, merge, push as
-   above), replies per thread with receipts, monitors re-reviews to clean. Brandon's review is the
-   PR's final state, not the threads.
+1. **Before each push that carries new work, the delivery owner runs `coderabbit-preflight`** where
+   the CodeRabbit CLI is available (Git contract above).
+2. **The delivery owner opens the feature PR ready for review; CodeRabbit runs; the delivery owner
+   completes the round before hand-back.**
+3. The delivery owner works the review end-to-end with `coderabbit-response`: verifies every
+   finding, has the orchestrator redispatch the fixes A4 calls for to lanes (worktrees, review,
+   merge, push as above), replies per thread with receipts, monitors re-reviews to clean.
+   Brandon's review is the PR's final state, not the threads.
 4. **Brandon alone merges, manually, in the GitHub UI** — wave PRs into `develop`, and the release
-   PR `develop → master`, which the orchestrator may open as a draft with a changelog. Closing
+   PR `develop → master`, which the delivery owner may open as a draft with a changelog. Closing
    keywords fire on the default branch; the orchestrator moves issues to In Review at PR time.
 5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`. The
    wave-close record also meets A6's friction-close requirement.

@@ -41,9 +41,21 @@ scripts/check-index.sh               CI: the index and clients/ must correspond
 .markdownlint-cli2.jsonc             CI: markdown lint rules, each exception with its reason
 ```
 
-**The split rule:** anything every client is judged against stays in the root file, in full.
-Only the environment appendices are disclosed progressively. A rule moved out of Parts A or B is a
-rule that gets broken silently by whoever did not follow the link.
+**The split rule:** anything every client is judged against stays in the root file, in full —
+evidence discipline, authority boundaries, stop conditions, the delivery states, the review
+invariants and skill routing among it. What is specific to one client — its selectors, its
+measured limits, who fills which seat — is disclosed progressively, in that client's appendix:
+an agent reads Parts A and B, then the one appendix [Part C](AGENT-WORKING-AGREEMENTS.md#part-c--environment-appendices-read-only-yours)
+indexes for its environment, and no other. A rule moves out of Parts A or B only once its
+destination carries it, is linked from where it stood and has been reviewed; until then it stays,
+because a rule moved without a destination is broken silently by whoever did not follow the link.
+Repository gates and conventions stay in each repository's own `AGENTS.md`, and workflow
+procedures in the skills Part A names (#173).
+
+**Who does what in a delivery** is A4's three seats: the orchestrator coordinates and
+synthesizes, the delivery owner — the assigned specialist, or the orchestrator when none is
+assigned — owns the branch, integration, pushes and the pull request, and an independent reviewer
+reviews the whole branch at its exact head. Brandon alone merges.
 
 ## How this reaches each client
 

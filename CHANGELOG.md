@@ -10,6 +10,43 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-23 — A4, B1, B2, the split rule and the client appendices: three distinct delivery
+  seats, exact-head whole-branch review, and client selectors moved to their appendices.** Issue
+  #173. Parts A–B had come to mix portable rules with client selectors, and assigned branch,
+  integration, pull-request and review-bot mechanics to the orchestrator, while the team model has
+  the coordinating layer coordinate and a qualified specialist deliver. **Decision (Brandon,
+  2026-10-23,
+  [#173 comment](https://github.com/brandonperfetti/agent-working-agreements/issues/173#issuecomment-6378320284)):
+  four distinct seats — Camina coordinates and synthesizes; Judy, or the assigned delivery
+  specialist, owns branch, reviewed child integration, pull-request and CodeRabbit mechanics, with
+  the orchestrating session in that seat only when no specialist is assigned; Amos, or the assigned
+  independent reviewer, performs the Standards + Spec review against the exact delivery head; and
+  Brandon alone merges base branches.** A4 now opens with the portable form of that decision: the
+  orchestrator, the delivery owner and the independent reviewer, with tracker coordination kept by
+  the orchestrator. B1 and B2 bind branch ownership, reviewed lane integration, the merged-tree
+  gate, conflict-resolution mechanics, pushes, pull-request creation and updates, and the
+  `coderabbit-preflight` and `coderabbit-response` routines to the delivery owner, while
+  dispatching and redispatching lanes, extending a lane's fence, tickets and B1's live/browser
+  verification stay with the orchestrator; A4's two-axis rule adds that the independent reviewer
+  reviews the whole branch at its exact head SHA before the pull request is created, and that any
+  later fix or push needs its scoped review and a renewed whole-branch verdict at the new exact
+  head before hand-back. `clients/openclaw.md` names who fills each seat and drops "The
+  orchestrator handles the A4 two-axis review cycle", which contradicted the decision. **This
+  departs from the split rule as the agreement's header stated it** — "Nothing load-bearing is
+  ever moved out of Parts A and B" — and clarifies it: Parts A and B keep every portable rule, and
+  a client's own selectors and mechanics move to its appendix only once that destination carries
+  them, is linked and has been reviewed. Two move under that test: A4's
+  Claude model selectors (`opus`, `sonnet`) now sit in
+  `clients/claude-code.md` and `clients/cowork.md`, and B2's Claude Code concurrency measurement,
+  which `clients/claude-code.md` already carried, is now cited there alone. The README's split
+  rule and `docs/agents/domain.md`'s terms follow. Rules whose replacement lives outside this
+  repository stay in place until it exists; that work is linked follow-up:
+  [claude-skills #342](https://github.com/brandonperfetti/claude-skills/issues/342) for the
+  `orchestrate`, `coderabbit-preflight`, `coderabbit-response` and `writing-pull-requests`
+  skills, to be reconciled with the three seats, and
+  [#174](https://github.com/brandonperfetti/agent-working-agreements/issues/174) for the OpenClaw
+  team operating documentation and role configuration.
+
 - **2026-10-22 — OpenClaw: name the native agent root, session-stable artifact-store selection,
   and fresh-session acceptance boundary.** The reviewed native-root P3 cutover package replaces
   the former host-specific workspace-store description with the configured native macOS mapping:

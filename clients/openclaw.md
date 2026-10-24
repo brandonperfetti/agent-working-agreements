@@ -61,12 +61,27 @@ isolation.
 This is an OpenClaw-only operating model. It does not change B0's guard, B1/B2's delivery rules,
 the Part B ritual, or another client's appendix.
 
-Camina's default is coordination: brief the selected lane, enforce its boundaries, preserve
-continuity, coordinate review evidence, and synthesize a decision-ready handoff. Specialist
-implementation and diagnostics of authorized routine, reversible repository work stay with the
-selected specialist unless the work's boundary requires escalation. The orchestrator handles the
-A4 two-axis review cycle; a specialist's own report is never that independent review.
-Administration outside that boundary retains its existing authorization and stop conditions.
+OpenClaw fills A4's three seats, and Brandon's, with distinct roles [decision 2026-10-23, Brandon,
+issue #173]:
+
+- **Camina — orchestrator.** Coordinates and synthesizes: briefs the selected lane, enforces its
+  boundaries, preserves continuity, keeps tracker coordination, routes review evidence, and
+  synthesizes a decision-ready handoff; dispatching and redispatching lanes and extending a lane's
+  file fence stay coordination (A4). While a delivery specialist is assigned, Camina does not
+  execute that delivery's repository mechanics; the orchestrating session fills the delivery-owner
+  seat only when no specialist is assigned.
+- **Judy (coder), or the assigned delivery specialist — delivery owner.** Owns implementation and
+  diagnostics, the feature branch, reviewed child-branch integration, the full CI gate on the
+  merged tree, conflict-resolution mechanics, pushes, pull-request creation and updates, and the
+  `coderabbit-preflight` and `coderabbit-response` mechanics.
+- **Amos (reviewer), or the assigned reviewer — independent reviewer.** Performs the A4
+  Standards + Spec review, whole-branch at the exact delivery head and renewed at the new head
+  after any later fix or push; neither a lane's nor the delivery owner's own report is that
+  review.
+- **Brandon — merge.** Brandon alone merges into `develop`, `master`, or `main`.
+
+Work outside the authorized routine, reversible boundary escalates rather than staying with the
+specialist, and administration outside it retains its existing authorization and stop conditions.
 
 The OpenClaw agent team owns installs, builds, test suites, and verification for authorized,
 routine, reversible repository work through a ready B2 pull request; an authorized B2-qualified
@@ -100,8 +115,8 @@ per-batch owner approval. This is not authority for a B2 stop-list action or for
 acceptance boundary.
 
 Within an assigned B2 feature branch, an authorized lane may create a child branch from that
-feature branch. The assigned feature-branch owner may integrate the child's reviewed work back into
-that feature branch only after a completed A4 two-axis review. B1 deliveries retain B1's mbox
+feature branch. The delivery owner may integrate the child's reviewed work back into that feature
+branch only after a completed A4 two-axis review. B1 deliveries retain B1's mbox
 shape. Neither child-branch composition nor feature-branch ownership permits an agent merge into
 `develop`, `master`, or `main`.
 

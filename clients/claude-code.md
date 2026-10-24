@@ -45,6 +45,9 @@ carries any hooks at all is a repo fact, not a Claude Code fact.
   subdirectory of it per sub-agent.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
+- **Model tiers (A4):** `opus` for lane work; `sonnet` only for trivially mechanical dispatches;
+  this applies to skills that fan out their own sub-agents. Route by role per
+  `agent-workspace/references/subagent-model-routing.md`. [learnings: 2026-08-30 §5]
 - **CodeRabbit CLI, for B2's preflight:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti`
   [measured 2026-09-29, Brandon's desktop]. A record, not a guarantee: `coderabbit-preflight`
   re-checks the CLI on every run.
