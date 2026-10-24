@@ -16,13 +16,26 @@ being retrofitted onto the other.
   no longer has. It now cites lines 198–199 at SHA-256
   `1bf9bcef0f5f2b17273c9d14f3062f19ae51a5ffa5e0c017621055fa6b84f163`, read 2026-10-24, and quotes
   both lines exactly with their line break. A new **Claude routes and intentional exceptions**
-  paragraph labels each claim [source], [inference] or **unmeasured**: `assistant` does not
-  currently use Claude Code and carries only a conditional future-wrapper instruction; `finance` is
-  an intentional GPT-only pilot; `finance` and `marketing` share a sender-conditioned Slack policy
-  class with no supported Claude execution route; and `openclaw-admin`'s route status is left
-  **unmeasured** rather than inferred. It says the list is not a census of roles outside the
-  role-local wrapper contract, so a missing-route stop on a named role is read as intended, not as a
-  defect.
+  paragraph states its search boundary first — a case-insensitive `claude|wrapper` search of only
+  each role's six top-level files `AGENTS.md`, `SOUL.md`, `IDENTITY.md`, `USER.md`, `HEARTBEAT.md`
+  and `MEMORY.md`, with all other files and subdirectories excluded, among them `DREAMS.md`,
+  `memory/`, `media/`, `avatars/`, `drafts/` and `_agent/` — then labels each claim [measured],
+  [source], [inference] or **unmeasured**, re-verified 2026-10-24 against the role sources,
+  `~/.openclaw/openclaw.json` (agent-entry and `toolsBySender` line ranges, under its read SHA-256)
+  and the 2026-10-24 memory record (lines 121 and 131). `assistant` has only conditional
+  future-wrapper text (`SOUL.md` lines 113–115); `finance`, `marketing` and `openclaw-admin` have
+  none within the boundary and their `SOUL.md` files do not name `claude-with-max.sh`, though
+  `openclaw-admin`'s unsearched `_agent/` does contain matches. Each role entry records its measured
+  config: primary model, listed or allowed models (all `openai/`), and for all four a
+  `tools.alsoAllow` of `memory_write` only. `finance` is an intentional GPT-only pilot; the
+  `finance` and `marketing` sender rules cover the same two Slack senders and each both denies
+  `group:runtime` and allows `gateway_exec`. Memory line 121 records `finance`'s `gateway_exec`
+  allow as stale and its authenticated Slack canary as exposing no executable tools and making zero
+  Claude calls; memory line 131 records that the class has no supported Claude route. The
+  missing-route stop is marked [inference] from the stop rule at lines 204–206 applied to that
+  source, not from the configured grants. Route status stays **unmeasured** for `assistant`, for
+  `marketing` outside the Slack class, and for `openclaw-admin`; no route is inferred from absence
+  alone, and the list is not a census of roles outside the role-local wrapper contract.
 - **2026-10-23 — A4, A6, B0, B1, B2, Part C, the split rule and the client appendices: three distinct
   delivery seats, exact-final-head whole-branch review, and client detail moved to its
   appendices.** Issue #173; the clause-level reconciliation matrix is #173's existing comment at

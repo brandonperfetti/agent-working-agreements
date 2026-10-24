@@ -68,27 +68,55 @@ model and rejects caller-supplied model selection. Transmitting relevant in-scop
 a role has a supported Claude route; without one, the affected substantive operation stops and
 reports the missing route, which is not a failed Claude invocation [source: same file, lines
 204–206, same read and SHA-256]. The 2026-10-23 role-local normalization covered Camina and ten
-specialist role sources, not the four roles below [source, issue #177]. Each entry covers only the
-role it names:
+specialist role sources, not the four roles below [source, issue #177].
 
-- **`assistant` (Cortana):** does not currently use Claude Code; its only wrapper text is a
-  conditional instruction that any future Claude Code capability be invoked only through
-  `scripts/agent/claude-with-max.sh`, never bare `claude` [source:
-  `~/.openclaw/workspace-assistant/SOUL.md` lines 113–115, read 2026-10-24, SHA-256
-  `1d96e6b2ebdb047194e14a3ad73c90d9a9830d967edc7a549ba3ed8e95b625a8`]. That instruction grants no
-  route; whether the runtime would admit one is **unmeasured**.
-- **`finance` (Graham):** an intentional GPT-only pilot, with no supported Claude route [source,
-  issue #177].
-- **`finance` and `marketing` (Sloane):** they share a sender-conditioned Slack policy class, and
-  that class has no supported Claude execution route [source, issue #177]. Substantive
-  filesystem-grounded work arriving through that class therefore stops at the missing route
-  [inference, from the stop rule above].
-- **`openclaw-admin` (Ashford):** its route status is **unmeasured**; measure and record. Do not
-  infer it from the other entries.
+Search boundary [measured, 2026-10-24]: a case-insensitive `claude|wrapper` search of only six
+top-level files in each `~/.openclaw/workspace-<role>/`: `AGENTS.md`, `SOUL.md`, `IDENTITY.md`,
+`USER.md`, `HEARTBEAT.md` and `MEMORY.md`. All other files and subdirectories were excluded, among
+them `DREAMS.md`, `memory/`, `media/`, `avatars/`, `avatar-candidates*/`, `drafts/` and `_agent/`.
+"Only" and "no" about wrapper text below mean within that boundary, not across the workspace. Of
+the 14 `workspace-*/SOUL.md` files, those of `finance`, `marketing` and `openclaw-admin` do not
+name `claude-with-max.sh`, and `assistant`'s names it only conditionally [measured]. Configuration
+facts come from `~/.openclaw/openclaw.json` [measured: read 2026-10-24, SHA-256
+`bf567245857808ffeef414e2904ee5b5873948eacde98ff639df54bba2b62ec6`]. Pilot and Slack-class facts
+come from `~/.openclaw/workspace/memory/2026-10-24.md` lines 121 and 131 [source: read 2026-10-24;
+lines 1–137 SHA-256 `267584c20d41942f872ecff7aed128158e2d16e8aa5baf4906afad40b3eb4459`]. Each
+entry covers only the role it names:
 
-The `finance` and Slack-class entries were not re-read against a role-local source or the runtime
-configuration for this record; the runtime route of every role is **unmeasured** here. This list is
-not a census: other roles outside the role-local wrapper contract may exist and are not covered.
+- **`assistant` (Cortana):** the only wrapper text is `SOUL.md` lines 113–115 [measured; SHA-256
+  `1d96e6b2ebdb047194e14a3ad73c90d9a9830d967edc7a549ba3ed8e95b625a8`], which say the role does not
+  currently use Claude Code and that any future capability goes only through
+  `scripts/agent/claude-with-max.sh`, never bare `claude` [source]. Its config entry, lines
+  211–242, sets primary `openai/gpt-5.6-luna`, lists only `openai/gpt-5.6-luna` (runtime `codex`)
+  and `openai/gpt-5.6-terra` (runtime `openclaw`), and has `tools.alsoAllow` of `memory_write`
+  only [measured]. That text grants no route; the role's runtime route is **unmeasured**.
+- **`finance` (Graham):** no wrapper text; the only `claude` match is `AGENTS.md` line 20's pointer
+  to a repository's `CLAUDE.md` [measured]. Its config entry, lines 628–695, sets primary
+  `openai/gpt-5.6-sol`, its `modelPolicy.allow` is only `openai/gpt-6-astra` and
+  `openai/gpt-5.6-sol`, and it has `tools.alsoAllow` of `memory_write` only [measured]. The role
+  is an intentional GPT-only pilot [source: memory lines 121 and 131].
+- **`marketing` (Sloane):** no wrapper text; the only `claude` match is the same `AGENTS.md`
+  line 20 pointer [measured]. Its config entry, lines 696–763, sets primary `openai/gpt-5.6-sol`,
+  its `modelPolicy.allow` is only `openai/gpt-5.6-sol` and `openai/gpt-6-astra`, and it has
+  `tools.alsoAllow` of `memory_write` only [measured].
+- **`finance` and `marketing` Slack class:** their `toolsBySender` rules, lines 676–693 and
+  744–761, cover the same two Slack senders, and each sender rule both denies `group:runtime` and
+  allows `gateway_exec` through its own `alsoAllow` [measured]. For `finance`, that `gateway_exec`
+  allow is stale, and its authenticated Slack canary exposed no executable tools and made zero
+  Claude calls [source: memory line 121]. That class has no supported Claude route [source: memory
+  line 131]. Substantive filesystem-grounded work arriving through it therefore stops at the
+  missing route [inference, from the stop rule at lines 204–206 above applied to that source; not
+  inferred from the configured grants]. `marketing`'s route outside that class is **unmeasured**.
+- **`openclaw-admin` (Ashford):** no match for either term in the six searched files [measured].
+  Its unsearched `_agent/` does contain `claude` or `wrapper` matches [measured], so that no-match
+  statement holds only within the stated boundary. Its config entry, lines 588–627, sets primary
+  `openai/gpt-5.6-sol`, lists only `openai/gpt-5.6-*` models, and has `tools.alsoAllow` of
+  `memory_write` only [measured]. Its route status remains **unmeasured**; measure and record. Do
+  not infer it from the other entries.
+
+No runtime route, present or absent, is inferred here from missing wrapper text or configuration
+alone. This list is not a census: other roles outside the role-local wrapper contract may exist and
+are not covered.
 
 OpenClaw does not relax either mode's topology. Attended lanes use one of B1's two shapes: an
 mbox lane runs git only in its isolated clone, and a lane delivering uncommitted edits may edit its
