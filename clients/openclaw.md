@@ -469,10 +469,20 @@ patch paths after the same prelaunch error; the bounded Gateway equivalents reac
 
 ## Instruction-source isolation and freshness
 
-**Cut every delivery worktree from the delivery checkout host, never from the instruction-source
-clone.** [measured 2026-09-23, issue #24] Three delivery worktrees were created by commands that
-explicitly selected the instruction-source clone with `git -C`; their presence violated that
-clone's one-worktree contract even though the commands ran from the workspace root.
+**The root instruction working tree is protected.** It remains clean, checked out on `master`, and
+equal to `origin/master` after the verified fast-forward following each `develop → master` release.
+Its Git administration may host isolated delivery worktrees under OpenClaw's managed worktree root;
+each delivery branch starts at `origin/develop`. Worktree administration may update shared Git
+metadata, but never the protected root's branch, index, or checked-out files. Delivery edits,
+commits, branch switches, and cleanup never target that root working tree; the release refresh below
+is the only operation that changes its branch, index, or checked-out files. Worktree administration
+that changes only shared Git metadata may run from the root without targeting its working tree.
+
+[measured 2026-09-23, issue #24] Three delivery worktrees were created by commands that explicitly
+selected the instruction-source clone with `git -C`; their presence violated its then one-worktree
+contract even though the commands ran from the workspace root. Issue #180 supersedes only that
+topology assumption: the containment remains that no delivery operation alters the protected root
+working tree. It does not change runtime project bindings or delete or migrate existing clones.
 
 **After every `develop → master` merge, fetch and fast-forward the instruction-source clone before
 any further work.** Run `git switch master`, then `git fetch origin`, then
@@ -482,14 +492,15 @@ next report names the exact SHA the clone serves.
 2026-09-22T20:18:10Z, but the clone remained six commits behind until the next day.
 
 **Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
-Run it from the delivery checkout host, never the instruction-source clone: `git fetch origin`
-— if the fetch fails, stop, and retain and report the worktree and branch — then
+Run it from the Git administration host, which may be the protected root only for administration and
+never against its working tree: `git fetch origin` — if the fetch fails, stop, and retain and report
+the worktree and branch — then
 `git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
-not by itself enough: a protected base worktree (the delivery checkout host itself, and any other
-the host reserves, such as its release-review worktree), a dirty worktree, and a branch that is
-not an ancestor of `origin/develop` are all retained and reported. On exit 0 and outside those
-exclusions, `git worktree remove <path>` without `--force`; then, only if that removal succeeded,
-`git branch -d <branch>`.
+not by itself enough: the protected root working tree, a delivery checkout host, another protected
+base worktree such as its release-review worktree, a dirty delivery worktree, and a branch that is
+not an ancestor of `origin/develop` are all retained and reported. The protected root is never
+eligible for cleanup. On exit 0 and outside those exclusions, `git worktree remove <path>` without
+`--force`; then, only if that removal succeeded, `git branch -d <branch>`.
 Any refusal from either command is left as it is and reported, never overridden.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
