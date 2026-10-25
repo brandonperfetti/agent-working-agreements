@@ -514,6 +514,12 @@ Installed runtime source, all in `<runtime>/lib/node_modules/openclaw/dist/`:
 `f18c1153a532214e9efb50e1f4b99a5a6af2c41229292c4895c328747093c3e1`),
 `profile-D1GpjMFM.mjs` (SHA-256
 `fcf1469bb3923ec0e0bda20aa7317710827f9dc536282ab407e5aa97deb83224`),
+`argv-invocation-BHqD0obO.mjs` (SHA-256
+`3d2d71e1932e07791f918c94d1e6a997d32bfa9c794148dd5f503b81bc57aec9`),
+`help-CRbQOEKD.mjs` (SHA-256
+`1c0d1eaf0682cc773797b483888fda3b6c180f231243f62c0f08e3e67e4d7cd2`),
+`run-command-CrXOzzsc.mjs` (SHA-256
+`b252fb2a80021189666fd3ff8a3808e6d35a5efc94c77473a5ea846a7b91a71a`),
 `entry.js` (SHA-256
 `84d9ae4527bb46be0eece8f95cafefa40559cba8bd921e1358998b331cea0d08`), and
 `paths-BP0DYpE8.mjs` (SHA-256
@@ -530,11 +536,19 @@ whose generated filenames and line references identify this exact installed buil
   resolution itself returns `OPENCLAW_STATE_DIR` when set and otherwise `<home>/.openclaw`; it does
   not read `OPENCLAW_PROFILE` [source: `state-dir-CYkBUd_G.mjs` lines 16–28;
   `paths-BP0DYpE8.mjs` lines 115 and 121–142]. A profile-specific root `~/.openclaw-<profile>`
-  arises only when the command line carries `--profile <name>` or `--dev`: `entry.js` then calls
+  arises only when the command line carries `--profile <name>` or a root/profile-selecting `--dev`,
+  which selects profile `dev`: `entry.js` then calls
   `applyCliProfileEnv`, which computes the root with `resolveProfileStateDir` and exports
   `OPENCLAW_PROFILE`, `OPENCLAW_STATE_DIR`, and `OPENCLAW_CONFIG_PATH` before paths are resolved
   [source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 10–65 and 66–102;
-  `profile-utils-BsmgdpgZ.mjs` lines 17–21; `paths-BP0DYpE8.mjs` lines 143–158]. A service
+  `profile-utils-BsmgdpgZ.mjs` lines 17–21; `paths-BP0DYpE8.mjs` lines 143–158]. A `--dev` is
+  root/profile-selecting only when no `gateway` command precedes it: `parseCliProfileArgs` passes a
+  `--dev` through unchanged, selecting no profile, when `resolveCliArgvInvocation` finds `gateway`
+  as the primary command among the arguments before it, so `openclaw gateway --dev` uses the
+  Gateway command's own `--dev` ("Create a dev config + workspace if missing") and selects no
+  profile, while `openclaw --dev gateway` selects `dev` [source: `profile-D1GpjMFM.mjs`
+  lines 14–25; `argv-invocation-BHqD0obO.mjs` lines 4–11; `help-CRbQOEKD.mjs` line 48 (root
+  `--dev`, "Dev profile"); `run-command-CrXOzzsc.mjs` line 36 (Gateway `--dev`)]. A service
   environment's `OPENCLAW_PROFILE` alone does not select `~/.openclaw-<profile>`, although
   `uninstall.md` line 88 describes profile defaults for both `--profile` and `OPENCLAW_PROFILE`.
 - `openclaw gateway status` human output includes the CLI's and service's config paths and their
@@ -561,26 +575,32 @@ and record each result with its source:
 
 1. The service's effective state directory. Its home is the service's `OPENCLAW_HOME` when set,
    or else the service user's home directory [source: `environment.md` lines 50 and 346]. When the
-   service's recorded command arguments carry no `--profile` or `--dev`, the state directory is
+   service's recorded command arguments carry no `--profile` and no root/profile-selecting `--dev`
+   (a `--dev` after the `gateway` command, as in `openclaw gateway --dev`, does not count), the
+   state directory is
    `OPENCLAW_STATE_DIR` from the Gateway service's environment when set, otherwise that home
    followed by `/.openclaw`, whatever the service's `OPENCLAW_PROFILE` value
-   [source: `state-dir-CYkBUd_G.mjs` lines 16–28]. When they carry `--profile <name>` or `--dev`
-   (profile `dev`; a `--dev` after the `gateway` command is a Gateway option instead), the service
+   [source: `state-dir-CYkBUd_G.mjs` lines 16–28]. When they carry `--profile <name>` or a
+   root/profile-selecting `--dev` (profile `dev`; a `--dev` after the `gateway` command is the
+   Gateway command's own option and selects no profile [source: `profile-D1GpjMFM.mjs`
+   lines 14–17; `run-command-CrXOzzsc.mjs` line 36]), the service
    process applies `applyCliProfileEnv` to its environment: with no `OPENCLAW_STATE_DIR` there, the
    state directory is that home followed by `/.openclaw-<name>` (`/.openclaw` for `default`), and
    an `OPENCLAW_STATE_DIR` equal to the inherited profile's default root is replaced by it
    [source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 14–25, 71–76, 83–86
    and 94–95; `profile-utils-BsmgdpgZ.mjs` lines 17–21].
 2. The service's config: `OPENCLAW_CONFIG_PATH` from that environment when set, otherwise
-   `openclaw.json` in that state directory; with a service `--profile` or `--dev`, take it from
+   `openclaw.json` in that state directory; with a service `--profile` or root/profile-selecting
+   `--dev`, take it from
    what `applyCliProfileEnv` exports for that environment [source: `profile-D1GpjMFM.mjs`
    lines 87–92 and 96].
 3. The effective worktree root: `worktreeRoot` from that config when set, otherwise
    `<state-dir>/worktrees` for the state directory from step 1.
 
-The service's effective profile is the `--profile` or `--dev` value in its command arguments when
-present, otherwise `OPENCLAW_PROFILE` from its environment, otherwise unset [source:
-`profile-D1GpjMFM.mjs` line 93].
+The service's effective profile is the `--profile` value in its command arguments when present,
+or `dev` when they carry a root/profile-selecting `--dev`, otherwise `OPENCLAW_PROFILE` from its
+environment, otherwise unset; a Gateway `--dev` (`openclaw gateway --dev`) does not make it `dev`
+[source: `profile-D1GpjMFM.mjs` lines 14–25 and 93; `run-command-CrXOzzsc.mjs` line 36].
 
 Run every `openclaw worktrees` command — `create`, `list`, and `remove` — as a bound invocation:
 both effective Gateway values explicitly on that invocation, `OPENCLAW_PROFILE` set to the
@@ -614,7 +634,8 @@ root cannot be determined, or any of those paths overlap, stop and report the re
 not create or use the worktree. The delivery audit records the service state directory and which
 source supplied it (the service's `OPENCLAW_STATE_DIR`; with no explicit state directory, the
 service's `OPENCLAW_HOME` or service user's home plus `/.openclaw`; or, only when the service's
-command arguments carry `--profile <name>` or `--dev`, the `applyCliProfileEnv` result such as
+command arguments carry `--profile <name>` or a root/profile-selecting `--dev`, not a Gateway
+`--dev`, the `applyCliProfileEnv` result such as
 `/.openclaw-<name>`), the service's command-line profile if any and its environment
 `OPENCLAW_PROFILE` value, the config path and its source, the resolved root and whether it came
 from `worktreeRoot` or the default, and the worktree path with its registered inventory record.
@@ -708,8 +729,9 @@ dry-run probe (or N/A when the repository installs no `pre-push` hook), the full
 branch ownership, and target-protection audit. For a delivery worktree, also record the Gateway
 service's state directory with the source that supplied it (service `OPENCLAW_STATE_DIR`; with
 no explicit state directory, service `OPENCLAW_HOME` or service home plus `/.openclaw`; or, only
-when the service's command arguments carry `--profile <name>` or `--dev`, the `applyCliProfileEnv`
-result such as `/.openclaw-<name>`), its command-line profile if any and its environment
+when the service's command arguments carry `--profile <name>` or a root/profile-selecting `--dev`,
+not a Gateway `--dev`, the `applyCliProfileEnv` result such as `/.openclaw-<name>`), its
+command-line profile if any and its environment
 `OPENCLAW_PROFILE` value, its config path with its source, the resolved managed worktree root and
 its source (`worktreeRoot` or the default), the worktree path, its registered inventory record,
 each `openclaw worktrees` invocation with the explicit state directory and config path passed, the

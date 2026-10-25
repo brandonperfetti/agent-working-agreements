@@ -47,8 +47,13 @@ being retrofitted onto the other.
   service probe was measured with `openclaw gateway status --json`. Amos's follow-up review found
   two errors. The profile mechanism was wrong: installed 2026.10.6 source shows `resolveStateDir`
   returns only `OPENCLAW_STATE_DIR` or `<home>/.openclaw`, and a `/.openclaw-<profile>` root arises
-  only when a CLI `--profile` or `--dev` makes `entry.js` call `applyCliProfileEnv`; a service
-  environment's `OPENCLAW_PROFILE` alone does not select it. The verification recipe was also
+  only when a CLI `--profile` or root/profile-selecting `--dev` (profile `dev`) makes `entry.js`
+  call `applyCliProfileEnv`; a service environment's `OPENCLAW_PROFILE` alone does not select it.
+  A later correction qualified every effective-profile and profile-root statement: installed
+  `parseCliProfileArgs` (`profile-D1GpjMFM.mjs` lines 14–25) passes a `--dev` that follows the
+  `gateway` command through as the Gateway command's own option (`run-command-CrXOzzsc.mjs`
+  line 36), so `openclaw gateway --dev` selects no profile and leaves the root unchanged.
+  The verification recipe was also
   false: it passed `--profile`, which `applyCliProfileEnv` can use to replace passed state and
   config paths that equal the inherited profile's defaults, and which also changes Gateway service
   selectors and the `dev` port. Every bound invocation now prohibits `--profile` and `--dev`, sets
