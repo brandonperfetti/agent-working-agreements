@@ -486,9 +486,10 @@ the protected instruction-source root working tree. It does not change runtime p
 delete or migrate existing clones.
 
 **After every `develop → master` merge, fetch and fast-forward the protected instruction-source
-root working tree before any further work.** Run `git switch master`, then `git fetch origin`, then
-`git merge --ff-only origin/master`; verify the tree is clean and `HEAD == origin/master`. The
-next report names the exact SHA the protected instruction-source root working tree serves.
+root working tree before any further work.** Run `git switch master`, then `git fetch origin`; if
+the fetch fails, stop and report before any merge. Then run `git merge --ff-only origin/master`;
+verify the tree is clean and `HEAD == origin/master`. The next report names the exact SHA the
+protected instruction-source root working tree serves.
 [measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
 2026-09-22T20:18:10Z, but the protected instruction-source root working tree remained six commits
 behind until the next day.
@@ -501,9 +502,11 @@ may serve, but only for Git administration and never against its working tree:
 not by itself enough: the protected instruction-source root working tree, another protected base
 worktree such as a release-review worktree, a dirty delivery worktree, and a branch that is not an
 ancestor of `origin/develop` are all retained and reported. The protected instruction-source root
-working tree is never eligible for cleanup. On exit 0 and outside those exclusions,
-`git worktree remove <path>` without `--force`; then, only if that removal succeeded,
-`git branch -d <branch>`.
+working tree is never eligible for cleanup. `<path>` is the value of the `worktree` line of the
+unique record in `git worktree list --porcelain` whose `branch` line is `refs/heads/<branch>`; on
+zero or multiple matches, stop, and retain and report the branch and every candidate worktree. On
+exit 0, with one match, and outside those exclusions, `git worktree remove <path>` without
+`--force`; then, only if that removal succeeded, `git branch -d <branch>`.
 Any refusal from either command is left as it is and reported, never overridden.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
