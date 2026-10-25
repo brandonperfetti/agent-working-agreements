@@ -473,24 +473,31 @@ patch paths after the same prelaunch error; the bounded Gateway equivalents reac
 **The protected instruction-source root working tree stays protected.** It remains clean, checked
 out on `master`, and equal to `origin/master` after the verified fast-forward following each
 `develop → master` release. Its Git administration may host isolated delivery worktrees. A new AWA
-delivery worktree is created only through OpenClaw's managed worktree facility. Pass the
-Gateway context explicitly as a bound invocation, with no `--profile` or `--dev` (see
-`<profile-binding>` below):
+delivery worktree is created only through OpenClaw's managed worktree facility, from a freshly
+fetched and captured base. First run `git -C <repo-root> fetch origin`; if the fetch fails, stop and
+report, and do not create the worktree. Then capture the base OID with
+`git -C <repo-root> rev-parse --verify 'origin/develop^{commit}'`; if it fails, stop and report.
+Pass that captured `<base-oid>`, not the moving `origin/develop` name, and the Gateway context
+explicitly as a bound invocation, with no `--profile` or `--dev` (see `<profile-binding>` below):
 
 ```sh
 env <profile-binding> \
   OPENCLAW_STATE_DIR=<state-dir> \
   OPENCLAW_CONFIG_PATH=<config-path> \
-  openclaw worktrees create <repo-root> --name <name> --base-ref origin/develop
+  openclaw worktrees create <repo-root> --name <name> --base-ref <base-oid>
 ```
 
-It then lives under the managed worktree root and appears in OpenClaw's registered-path
-inventory; a plain `git worktree add` outside that inventory is not a route for new delivery.
-Each delivery branch
-starts at `origin/develop`. Worktree administration may run from the protected instruction-source
-root working tree and update shared Git metadata, but delivery edits, commits, branch switches, and
-cleanup never target it; the release refresh below is the only operation that changes its branch,
-index, or checked-out files.
+OpenClaw fetches only when no base ref is given; an explicit base must resolve to a commit and is
+never replaced by another base [source: `managed-worktrees.md` line 204], so the preceding fetch is
+what makes the captured base current. Before any delivery edit, verify that
+`git -C <path> rev-parse HEAD`, where `<path>` is the created worktree's registered inventory path,
+equals `<base-oid>`; on a mismatch, stop, and retain and report the worktree, its `HEAD`, and
+`<base-oid>`. The worktree then lives under the managed worktree root and appears in OpenClaw's
+registered-path inventory; a plain `git worktree add` outside that inventory is not a route for new
+delivery. Each delivery branch starts at that verified `<base-oid>`. Worktree administration may run
+from the protected instruction-source root working tree and update shared Git metadata, but
+delivery edits, commits, branch switches, and cleanup never target it; the release refresh below
+is the only operation that changes its branch, index, or checked-out files.
 
 OpenClaw documentation sources, all from the installed 2026.10.6 docs at
 `<runtime>/lib/node_modules/openclaw/docs/`, where `<runtime>` is
@@ -639,6 +646,9 @@ command arguments carry `--profile <name>` or a root/profile-selecting `--dev`, 
 `/.openclaw-<name>`), the service's command-line profile if any and its environment
 `OPENCLAW_PROFILE` value, the config path and its source, the resolved root and whether it came
 from `worktreeRoot` or the default, and the worktree path with its registered inventory record.
+For each creation, it also records the `git fetch origin` exit status, the captured `<base-oid>`
+and the `origin/develop` ref it was read from, and the created worktree's `HEAD` readback with its
+equality to `<base-oid>`.
 For each `openclaw worktrees` invocation, record its subcommand, the explicit state directory and
 config path passed, the `OPENCLAW_PROFILE` value set or that it was unset, the absence of
 `--profile` and `--dev`, and its result.
