@@ -21,7 +21,13 @@ being retrofitted onto the other.
   index, or checked-out files. Cleanup keeps the successful-fetch, merged-ancestry,
   clean-worktree, and non-forced-removal requirements, and the protected instruction-source root
   working tree is never eligible. This narrows only that topology assumption: it does not change
-  runtime project bindings or delete or migrate clones.
+  runtime project bindings or delete or migrate clones. PR #181 review then required new delivery
+  worktrees to come from OpenClaw's managed worktree facility and registered inventory, not plain
+  `git worktree add`; required resolving the managed root (`worktreeRoot`, else the documented
+  `<openclaw-state-dir>/worktrees`) before use, with a stop on any overlap with the `_agent/` store
+  or the protected root and the resolution recorded in the delivery audit; and cited the installed
+  OpenClaw 2026.10.6 docs by line and SHA-256 for the default and inventory behavior. Cleanup
+  safeguards still cover existing plain Git worktrees.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of

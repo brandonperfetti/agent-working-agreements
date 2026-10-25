@@ -472,11 +472,52 @@ patch paths after the same prelaunch error; the bounded Gateway equivalents reac
 
 **The protected instruction-source root working tree stays protected.** It remains clean, checked
 out on `master`, and equal to `origin/master` after the verified fast-forward following each
-`develop → master` release. Its Git administration may host isolated delivery worktrees under
-OpenClaw's managed worktree root; each delivery branch starts at `origin/develop`. Worktree
-administration may run from the protected instruction-source root working tree and update shared
-Git metadata, but delivery edits, commits, branch switches, and cleanup never target it; the release
-refresh below is the only operation that changes its branch, index, or checked-out files.
+`develop → master` release. Its Git administration may host isolated delivery worktrees. A new AWA
+delivery worktree is created only through OpenClaw's managed worktree facility, for example
+`openclaw worktrees create <repo-root> --name <name> --base-ref origin/develop`, so that it lives
+under the managed worktree root and appears in OpenClaw's registered-path inventory; a plain
+`git worktree add` outside that inventory is not a route for new delivery. Each delivery branch
+starts at `origin/develop`. Worktree administration may run from the protected instruction-source
+root working tree and update shared Git metadata, but delivery edits, commits, branch switches, and
+cleanup never target it; the release refresh below is the only operation that changes its branch,
+index, or checked-out files.
+
+OpenClaw sources, all from the installed 2026.10.6 docs at `<runtime>/lib/node_modules/openclaw/docs/`,
+where `<runtime>` is `~/.openclaw/runtime/2026.10.6-release-41c5d94f722c-2026-10-22T19-49-54.000Z`,
+read 2026-10-25: `gateway/config-runtime.md` (SHA-256
+`ee38d26c0cb37439c7c4b0ac71f826b8564a2559b6c451109cee7485568b60c8`),
+`concepts/managed-worktrees.md` (SHA-256
+`ecdbbfd79164e46e8883297680c975d13ff9d7cda149511c52be52dd6560d18d`) and
+`plugins/memory-wiki.md` (SHA-256
+`57db87ba73a5ea0ddc23caa25b56e95746adf1541c4f2e3791439f35938de19c`).
+
+- The managed worktree root is the global `worktreeRoot` key in `openclaw.json`; unset, it defaults
+  to `<openclaw-state-dir>/worktrees`, and checkouts are created at
+  `<worktreeRoot>/<repo-fingerprint>/<name>` [source: `config-runtime.md` lines 16 and 24;
+  `managed-worktrees.md` lines 67 and 199]. The state directory is `~/.openclaw` unless
+  `OPENCLAW_STATE_DIR` is set [source: `memory-wiki.md` line 427].
+- Changing `worktreeRoot` affects new allocations only; registered worktrees keep their recorded
+  paths for reuse, cleanup, and restore [source: `config-runtime.md` line 26].
+- `openclaw worktrees list --json` reports OpenClaw's registered worktrees, including those recorded
+  paths [source: `managed-worktrees.md` lines 79, 408 and 621]. It does not list plain Git
+  worktrees [inference: OpenClaw records managed worktrees in its state database (line 11); what
+  would verify it: one plain `git worktree add` in a scratch repository, absent from the list].
+  Run it while a Gateway owns the local state: offline listing can retire missing checkouts
+  [source: `managed-worktrees.md` lines 591–596].
+
+**Resolve the managed worktree root before creating or using a delivery worktree.** Take
+`worktreeRoot` from the Gateway's `openclaw.json` when set; otherwise apply the documented default.
+Canonicalize the resolved root and the delivery worktree path, and verify that neither lies inside
+or contains the selected `_agent/` artifact store or the protected instruction-source root working
+tree. If the root cannot be resolved or any of those paths overlap, stop and report the resolved
+paths; do not create or use the worktree. The delivery audit records the resolved root, whether it
+came from `worktreeRoot` or the default, and the worktree path with its registered inventory record.
+[measured 2026-10-25, this host] `~/.openclaw/openclaw.json` has no `worktreeRoot` key, the probing
+shell had `OPENCLAW_STATE_DIR` unset, and `git worktree list` showed this repository's managed
+delivery worktrees under `/Users/brandonperfetti/.openclaw/worktrees/<repo-fingerprint>/<name>`.
+[inference] The effective root here is the default `~/.openclaw/worktrees`, outside
+`$AGENT_ROOT/_agent/`; the Gateway service's environment was not probed, so resolve the root again
+for each delivery rather than reusing this value.
 
 [measured 2026-09-23, issue #24] Three delivery worktrees were created by commands that explicitly
 selected the protected instruction-source root working tree with `git -C`; their presence violated
@@ -495,6 +536,7 @@ protected instruction-source root working tree serves.
 behind until the next day.
 
 **Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
+These safeguards apply to every delivery worktree, managed or an existing plain Git worktree.
 Run it from any of the repository's worktrees; the protected instruction-source root working tree
 may serve, but only for Git administration and never against its working tree:
 `git fetch origin` — if the fetch fails, stop, and retain and report the worktree and branch — then
@@ -517,8 +559,13 @@ release-review worktree.
 
 Record the checkout and HEAD, Git author identity, `core.hooksPath` and hook presence, an explicit
 dry-run probe (or N/A when the repository installs no `pre-push` hook), the full gate result,
-branch ownership, and target-protection audit. Parts A/B remain the authority for RULE ZERO,
-no-force-push, and no-agent-merge; do not restate those rules here.
+branch ownership, and target-protection audit. For a delivery worktree, also record the resolved
+managed worktree root, its source (`worktreeRoot` or the default), the worktree path, its
+registered inventory record, and the `_agent/` and protected-root overlap check; any overlap stops
+the delivery (see
+[Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness)).
+Parts A/B remain the authority for RULE ZERO, no-force-push, and no-agent-merge; do not restate
+those rules here.
 
 Attribution injection, arbitrary external injection, and exact reset/reload behavior remain
 unmeasured. Require a delivery audit or controlled observation rather than assuming them. Record a
