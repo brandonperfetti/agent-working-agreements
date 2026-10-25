@@ -23,9 +23,11 @@ being retrofitted onto the other.
   [source], [inference] or **unmeasured**, re-verified 2026-10-24 against the role sources,
   `~/.openclaw/openclaw.json` (agent-entry and `toolsBySender` line ranges, under its read SHA-256)
   and the 2026-10-24 memory record (lines 121 and 131). `assistant` has only conditional
-  future-wrapper text (`SOUL.md` lines 113–115); `finance`, `marketing` and `openclaw-admin` have
-  none within the boundary and their `SOUL.md` files do not name `claude-with-max.sh`, though
-  `openclaw-admin`'s unsearched `_agent/` does contain matches. Each role entry records its [source]
+  future-wrapper text (`SOUL.md` lines 113–115); `finance` and `marketing` have no wrapper text
+  within the boundary, their only `claude` match there being the `AGENTS.md` pointer;
+  `openclaw-admin` has no match for either term there; and the `SOUL.md` files of all three do not
+  name `claude-with-max.sh`, though `openclaw-admin`'s unsearched `_agent/` does contain matches.
+  Each role entry records its [source]
   config: primary model, listed or allowed models (all `openai/`), and for all four a
   `tools.alsoAllow` of `memory_write` only. `finance` is an intentional GPT-only pilot; the
   `finance` and `marketing` sender rules cover the same two Slack senders and each both denies
