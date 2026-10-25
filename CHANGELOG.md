@@ -42,10 +42,18 @@ being retrofitted onto the other.
   prose. Ancestry,
   cleanliness, protected-root, uniqueness, and no-force safeguards are unchanged. Root resolution
   first determines the service's state directory: the service's `OPENCLAW_STATE_DIR`, else its
-  `OPENCLAW_HOME` or the service user's home followed by `/.openclaw` for an unset or `default`
-  profile, or `/.openclaw-<profile>` for a named profile. It records which
+  `OPENCLAW_HOME` or the service user's home followed by `/.openclaw`. It records which
   source supplied it, then its config, then `worktreeRoot` or `<state-dir>/worktrees`; this host's
-  service probe was measured with `openclaw gateway status --json`.
+  service probe was measured with `openclaw gateway status --json`. Amos's follow-up review found
+  two errors. The profile mechanism was wrong: installed 2026.10.6 source shows `resolveStateDir`
+  returns only `OPENCLAW_STATE_DIR` or `<home>/.openclaw`, and a `/.openclaw-<profile>` root arises
+  only when a CLI `--profile` or `--dev` makes `entry.js` call `applyCliProfileEnv`; a service
+  environment's `OPENCLAW_PROFILE` alone does not select it. The verification recipe was also
+  false: it passed `--profile`, which `applyCliProfileEnv` can use to replace passed state and
+  config paths that equal the inherited profile's defaults, and which also changes Gateway service
+  selectors and the `dev` port. Every bound invocation now prohibits `--profile` and `--dev`, sets
+  `OPENCLAW_PROFILE` to the service's own value or unsets it, and records that per invocation. The
+  recipe now tests a bound invocation under a different ambient profile with no CLI profile.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of

@@ -474,10 +474,12 @@ patch paths after the same prelaunch error; the bounded Gateway equivalents reac
 out on `master`, and equal to `origin/master` after the verified fast-forward following each
 `develop → master` release. Its Git administration may host isolated delivery worktrees. A new AWA
 delivery worktree is created only through OpenClaw's managed worktree facility. Pass the
-Gateway context explicitly:
+Gateway context explicitly as a bound invocation, with no `--profile` or `--dev` (see
+`<profile-binding>` below):
 
 ```sh
-OPENCLAW_STATE_DIR=<state-dir> \
+env <profile-binding> \
+  OPENCLAW_STATE_DIR=<state-dir> \
   OPENCLAW_CONFIG_PATH=<config-path> \
   openclaw worktrees create <repo-root> --name <name> --base-ref origin/develop
 ```
@@ -505,9 +507,18 @@ OpenClaw documentation sources, all from the installed 2026.10.6 docs at
 `74a52dab06de3ad3a96461b88eb51a04873f220f8a604d4abc9e2b50876be434`), and
 `cli/gateway/query.md` (SHA-256
 `2d179b4159fff0a1cef8c958ccbb96d386e5b5d1ed013c763a6211461dc33c65`).
-Installed runtime source: `<runtime>/lib/node_modules/openclaw/dist/profile-utils-BsmgdpgZ.mjs`
-(SHA-256 `99679c5ce486640d779cb56e8a64b099a49a479c76d6e691242f52f0abd6c3bd`),
-whose generated filename and line references identify this exact installed build.
+Installed runtime source, all in `<runtime>/lib/node_modules/openclaw/dist/`:
+`profile-utils-BsmgdpgZ.mjs` (SHA-256
+`99679c5ce486640d779cb56e8a64b099a49a479c76d6e691242f52f0abd6c3bd`),
+`state-dir-CYkBUd_G.mjs` (SHA-256
+`f18c1153a532214e9efb50e1f4b99a5a6af2c41229292c4895c328747093c3e1`),
+`profile-D1GpjMFM.mjs` (SHA-256
+`fcf1469bb3923ec0e0bda20aa7317710827f9dc536282ab407e5aa97deb83224`),
+`entry.js` (SHA-256
+`84d9ae4527bb46be0eece8f95cafefa40559cba8bd921e1358998b331cea0d08`), and
+`paths-BP0DYpE8.mjs` (SHA-256
+`25900721157f35508fdd0f49b65ba6be8ad50f9fe259209929543e0cf50accff`),
+whose generated filenames and line references identify this exact installed build.
 
 - The managed worktree root is the global `worktreeRoot` key in `openclaw.json`; unset, it defaults
   to `<openclaw-state-dir>/worktrees`, and checkouts are created at
@@ -515,10 +526,17 @@ whose generated filename and line references identify this exact installed build
   `managed-worktrees.md` lines 67 and 199]. The state directory is `OPENCLAW_STATE_DIR` when set,
   and the config file is `OPENCLAW_CONFIG_PATH` when set, otherwise
   `$OPENCLAW_STATE_DIR/openclaw.json`; `OPENCLAW_HOME`, when set, replaces the home directory for
-  these defaults [source: `environment.md` lines 50, 346 and 347; `nix.md` line 89]. With no
-  explicit state directory, it is `~/.openclaw` for an unset or `default` service
-  `OPENCLAW_PROFILE`, or `~/.openclaw-<profile>` for a named non-default service profile
-  [source: `uninstall.md` line 88; `profile-utils-BsmgdpgZ.mjs` lines 17–21].
+  these defaults [source: `environment.md` lines 50, 346 and 347; `nix.md` line 89]. State
+  resolution itself returns `OPENCLAW_STATE_DIR` when set and otherwise `<home>/.openclaw`; it does
+  not read `OPENCLAW_PROFILE` [source: `state-dir-CYkBUd_G.mjs` lines 16–28;
+  `paths-BP0DYpE8.mjs` lines 115 and 121–142]. A profile-specific root `~/.openclaw-<profile>`
+  arises only when the command line carries `--profile <name>` or `--dev`: `entry.js` then calls
+  `applyCliProfileEnv`, which computes the root with `resolveProfileStateDir` and exports
+  `OPENCLAW_PROFILE`, `OPENCLAW_STATE_DIR`, and `OPENCLAW_CONFIG_PATH` before paths are resolved
+  [source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 10–65 and 66–102;
+  `profile-utils-BsmgdpgZ.mjs` lines 17–21; `paths-BP0DYpE8.mjs` lines 143–158]. A service
+  environment's `OPENCLAW_PROFILE` alone does not select `~/.openclaw-<profile>`, although
+  `uninstall.md` line 88 describes profile defaults for both `--profile` and `OPENCLAW_PROFILE`.
 - `openclaw gateway status` human output includes the CLI's and service's config paths and their
   validity, to diagnose profile or state-dir drift [source: `query.md` line 281]. When a Gateway
   is running, its worktree CLI mutations use the authenticated Gateway that owns the selected local
@@ -541,27 +559,52 @@ whose generated filename and line references identify this exact installed build
 delivery worktree.** The probing shell's environment is not the service's; resolve in this order
 and record each result with its source:
 
-1. The service's effective state directory: `OPENCLAW_STATE_DIR` from the Gateway service's
-   environment when set; otherwise use the service's `OPENCLAW_HOME` when set, or else the service
-   user's home directory [source: `environment.md` lines 50 and 346], followed by `/.openclaw` for
-   an unset or `default` `OPENCLAW_PROFILE`, or `/.openclaw-<profile>` for a named non-default
-   profile [source: `uninstall.md` line 88; `profile-utils-BsmgdpgZ.mjs` lines 17–21].
+1. The service's effective state directory. Its home is the service's `OPENCLAW_HOME` when set,
+   or else the service user's home directory [source: `environment.md` lines 50 and 346]. When the
+   service's recorded command arguments carry no `--profile` or `--dev`, the state directory is
+   `OPENCLAW_STATE_DIR` from the Gateway service's environment when set, otherwise that home
+   followed by `/.openclaw`, whatever the service's `OPENCLAW_PROFILE` value
+   [source: `state-dir-CYkBUd_G.mjs` lines 16–28]. When they carry `--profile <name>` or `--dev`
+   (profile `dev`; a `--dev` after the `gateway` command is a Gateway option instead), the service
+   process applies `applyCliProfileEnv` to its environment: with no `OPENCLAW_STATE_DIR` there, the
+   state directory is that home followed by `/.openclaw-<name>` (`/.openclaw` for `default`), and
+   an `OPENCLAW_STATE_DIR` equal to the inherited profile's default root is replaced by it
+   [source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 14–25, 71–76, 83–86
+   and 94–95; `profile-utils-BsmgdpgZ.mjs` lines 17–21].
 2. The service's config: `OPENCLAW_CONFIG_PATH` from that environment when set, otherwise
-   `openclaw.json` in that state directory.
+   `openclaw.json` in that state directory; with a service `--profile` or `--dev`, take it from
+   what `applyCliProfileEnv` exports for that environment [source: `profile-D1GpjMFM.mjs`
+   lines 87–92 and 96].
 3. The effective worktree root: `worktreeRoot` from that config when set, otherwise
    `<state-dir>/worktrees` for the state directory from step 1.
 
-Run every `openclaw worktrees` command — `create`, `list`, and `remove` — with both effective
-Gateway values explicitly on that invocation:
-`OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw worktrees …`.
-[inference: `environment.md` lines 346-347; what would verify it: with a different profile that
-has its own config and a deliberately distinct worktree inventory, run `openclaw gateway status`
-in a shell whose ambient `OPENCLAW_PROFILE` names that profile, and run
-`openclaw --profile <name> worktrees list --json` naming that profile, each with both effective
-values passed in the form above, and confirm that status reports the passed config path as the CLI's
-config path and the list returns the passed state directory's inventory, not the profile's config
-path or inventory; this verifies only those two commands in those two forms] Passing both effective
-values prevents state and config selection from falling back to the probing shell's
+The service's effective profile is the `--profile` or `--dev` value in its command arguments when
+present, otherwise `OPENCLAW_PROFILE` from its environment, otherwise unset [source:
+`profile-D1GpjMFM.mjs` line 93].
+
+Run every `openclaw worktrees` command — `create`, `list`, and `remove` — as a bound invocation:
+both effective Gateway values explicitly on that invocation, `OPENCLAW_PROFILE` set to the
+service's effective profile or unset when the service has none, and never `--profile` or `--dev`:
+`env <profile-binding> OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw
+worktrees …`, where `<profile-binding>` is `OPENCLAW_PROFILE=<service-profile>` or
+`-u OPENCLAW_PROFILE`. A CLI profile is prohibited because `entry.js` applies it with
+`applyCliProfileEnv`, which replaces a passed `OPENCLAW_STATE_DIR` or `OPENCLAW_CONFIG_PATH` that
+equals the inherited profile's default root or config with the selected profile's, and also clears
+inherited Gateway service selectors and, for `dev`, sets `OPENCLAW_GATEWAY_PORT` to `19001`
+[source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 77–101]. The ambient
+profile is bound because `OPENCLAW_PROFILE` still decides whether an invocation holds the default
+install identity that owns host service management [source: `paths-BP0DYpE8.mjs` lines 26–29
+and 52–78]. [inference: `state-dir-CYkBUd_G.mjs` lines 16–28 and `paths-BP0DYpE8.mjs` lines
+121–142 read the passed values, and no CLI profile reaches `applyCliProfileEnv`; what would verify
+it: with a different profile that has its own config and a deliberately distinct worktree
+inventory, export `OPENCLAW_PROFILE` naming that profile in the probing shell, then run
+`OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw gateway status` and
+`OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw worktrees list --json`
+with no `--profile` or `--dev`, and confirm that status reports the passed config path as the CLI's
+config path and the list returns the passed state directory's inventory, not the ambient profile's
+config path or inventory; repeat the list in the full bound form and confirm the same inventory;
+this verifies only those commands in those forms] Passing both effective values and the bound
+profile prevents state, config, and profile selection from falling back to the probing shell's
 ambient values. When
 a Gateway is running, mutations use the authenticated owner of that selected local state directory.
 Canonicalize the resolved root and the delivery worktree path, and verify that neither lies inside
@@ -569,13 +612,15 @@ or contains the selected `_agent/` artifact store
 or the protected instruction-source root working tree. If the service's state directory, config, or
 root cannot be determined, or any of those paths overlap, stop and report the resolved paths; do
 not create or use the worktree. The delivery audit records the service state directory and which
-source supplied it (the service's `OPENCLAW_STATE_DIR`, or, with no explicit state directory, the
-service's `OPENCLAW_HOME` or service user's home plus `/.openclaw` for an unset or `default`
-profile, or `/.openclaw-<profile>` for a named non-default profile), the service's
+source supplied it (the service's `OPENCLAW_STATE_DIR`; with no explicit state directory, the
+service's `OPENCLAW_HOME` or service user's home plus `/.openclaw`; or, only when the service's
+command arguments carry `--profile <name>` or `--dev`, the `applyCliProfileEnv` result such as
+`/.openclaw-<name>`), the service's command-line profile if any and its environment
 `OPENCLAW_PROFILE` value, the config path and its source, the resolved root and whether it came
 from `worktreeRoot` or the default, and the worktree path with its registered inventory record.
 For each `openclaw worktrees` invocation, record its subcommand, the explicit state directory and
-config path passed, and its result.
+config path passed, the `OPENCLAW_PROFILE` value set or that it was unset, the absence of
+`--profile` and `--dev`, and its result.
 [measured 2026-10-25, this host] `openclaw gateway status --json` reported the launchd service
 `ai.openclaw.gateway` with `service.command.environment.OPENCLAW_STATE_DIR` and
 `config.daemon.path` set to `/Users/brandonperfetti/.openclaw` and
@@ -620,7 +665,8 @@ zero or multiple matches, stop, and retain and report the branch and every candi
 Then pick the removal route from OpenClaw's registered inventory. Run:
 
 ```sh
-OPENCLAW_STATE_DIR=<state-dir> \
+env <profile-binding> \
+  OPENCLAW_STATE_DIR=<state-dir> \
   OPENCLAW_CONFIG_PATH=<config-path> \
   openclaw worktrees list --json
 ```
@@ -633,7 +679,8 @@ if it cannot be read, stop, and retain and report the worktree and branch:
   explicitly bound command:
 
   ```sh
-  OPENCLAW_STATE_DIR=<state-dir> \
+  env <profile-binding> \
+    OPENCLAW_STATE_DIR=<state-dir> \
     OPENCLAW_CONFIG_PATH=<config-path> \
     openclaw worktrees remove <id> --if-lossless --json
   ```
@@ -659,13 +706,15 @@ release-review worktree.
 Record the checkout and HEAD, Git author identity, `core.hooksPath` and hook presence, an explicit
 dry-run probe (or N/A when the repository installs no `pre-push` hook), the full gate result,
 branch ownership, and target-protection audit. For a delivery worktree, also record the Gateway
-service's state directory with the source that supplied it (service `OPENCLAW_STATE_DIR`, or, with
-no explicit state directory, service `OPENCLAW_HOME` or service home plus `/.openclaw` for an unset
-or `default` profile, or `/.openclaw-<profile>` for a named non-default profile), its
+service's state directory with the source that supplied it (service `OPENCLAW_STATE_DIR`; with
+no explicit state directory, service `OPENCLAW_HOME` or service home plus `/.openclaw`; or, only
+when the service's command arguments carry `--profile <name>` or `--dev`, the `applyCliProfileEnv`
+result such as `/.openclaw-<name>`), its command-line profile if any and its environment
 `OPENCLAW_PROFILE` value, its config path with its source, the resolved managed worktree root and
 its source (`worktreeRoot` or the default), the worktree path, its registered inventory record,
-each `openclaw worktrees` invocation with the explicit state directory and config path passed and
-its result, the cleanup route with its `id` or plain Git path, and the `_agent/` and protected-root
+each `openclaw worktrees` invocation with the explicit state directory and config path passed, the
+`OPENCLAW_PROFILE` value set or that it was unset, the absence of `--profile` and `--dev`, and its
+result, the cleanup route with its `id` or plain Git path, and the `_agent/` and protected-root
 overlap check; any overlap stops the delivery (see
 [Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness)).
 Parts A/B remain the authority for RULE ZERO, no-force-push, and no-agent-merge; do not restate
