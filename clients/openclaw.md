@@ -487,9 +487,11 @@ env <profile-binding> \
   openclaw worktrees create <repo-root> --name <name> --base-ref <base-oid>
 ```
 
-OpenClaw fetches only when no base ref is given; an explicit base must resolve to a commit and is
-never replaced by another base [source: `managed-worktrees.md` line 204], so the preceding fetch is
-what makes the captured base current. Before any delivery edit, verify that
+OpenClaw's documentation says that creation without a base ref fetches origin's remote default
+branch, and that an explicit base must resolve to a commit and is never replaced by another base
+[source: `managed-worktrees.md` line 204]; it does not establish that a fetch or refresh happens
+when an explicit base is given, so the preceding fetch is what makes the captured base current.
+Before any delivery edit, verify that
 `git -C <path> rev-parse HEAD`, where `<path>` is the created worktree's registered inventory path,
 equals `<base-oid>`; on a mismatch, stop, and retain and report the worktree, its `HEAD`, and
 `<base-oid>`. The worktree then lives under the managed worktree root and appears in OpenClaw's
