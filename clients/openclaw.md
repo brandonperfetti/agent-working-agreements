@@ -487,15 +487,24 @@ where `<runtime>` is `~/.openclaw/runtime/2026.10.6-release-41c5d94f722c-2026-10
 read 2026-10-25: `gateway/config-runtime.md` (SHA-256
 `ee38d26c0cb37439c7c4b0ac71f826b8564a2559b6c451109cee7485568b60c8`),
 `concepts/managed-worktrees.md` (SHA-256
-`ecdbbfd79164e46e8883297680c975d13ff9d7cda149511c52be52dd6560d18d`) and
-`plugins/memory-wiki.md` (SHA-256
-`57db87ba73a5ea0ddc23caa25b56e95746adf1541c4f2e3791439f35938de19c`).
+`ecdbbfd79164e46e8883297680c975d13ff9d7cda149511c52be52dd6560d18d`),
+`help/environment.md` (SHA-256
+`adb51f50950f3d94814c19fd03164d0c100bf72ac749aaaa17cbd072da6411b8`),
+`install/nix.md` (SHA-256
+`db205205042c5351c47f94bb37385308706ae50f7389edd0dc175c5bc5ceeca8`) and
+`cli/gateway/query.md` (SHA-256
+`2d179b4159fff0a1cef8c958ccbb96d386e5b5d1ed013c763a6211461dc33c65`).
 
 - The managed worktree root is the global `worktreeRoot` key in `openclaw.json`; unset, it defaults
   to `<openclaw-state-dir>/worktrees`, and checkouts are created at
   `<worktreeRoot>/<repo-fingerprint>/<name>` [source: `config-runtime.md` lines 16 and 24;
-  `managed-worktrees.md` lines 67 and 199]. The state directory is `~/.openclaw` unless
-  `OPENCLAW_STATE_DIR` is set [source: `memory-wiki.md` line 427].
+  `managed-worktrees.md` lines 67 and 199]. The state directory is `OPENCLAW_STATE_DIR` when set,
+  otherwise `~/.openclaw`, where `~` is `OPENCLAW_HOME` when that is set; the config file is
+  `OPENCLAW_CONFIG_PATH` when set, otherwise `$OPENCLAW_STATE_DIR/openclaw.json`
+  [source: `environment.md` lines 50, 346 and 347; `nix.md` line 89].
+- `openclaw gateway status` compares the CLI's config path with the service's, to diagnose profile
+  or state-dir drift [source: `query.md` line 281]. Worktree CLI mutations use the Gateway that
+  owns the selected local state directory [source: `managed-worktrees.md` lines 583–584].
 - Changing `worktreeRoot` affects new allocations only; registered worktrees keep their recorded
   paths for reuse, cleanup, and restore [source: `config-runtime.md` line 26].
 - `openclaw worktrees list --json` reports OpenClaw's registered worktrees, including those recorded
@@ -504,20 +513,43 @@ read 2026-10-25: `gateway/config-runtime.md` (SHA-256
   would verify it: one plain `git worktree add` in a scratch repository, absent from the list].
   Run it while a Gateway owns the local state: offline listing can retire missing checkouts
   [source: `managed-worktrees.md` lines 591–596].
+- Ordinary `openclaw worktrees remove <id>` is archival and uses Git's forced checkout removal
+  after a snapshot; `--if-lossless` is the non-force route, retains dirty or unpublished work, never
+  retries a Git refusal with force, and cannot be combined with `--force`. With `--json` it
+  returns `removed` and the recorded `cleanup` outcome; `removed: false` is a retention, not a
+  deletion [source: `managed-worktrees.md` lines 370, 623 and 635].
 
-**Resolve the managed worktree root before creating or using a delivery worktree.** Take
-`worktreeRoot` from the Gateway's `openclaw.json` when set; otherwise apply the documented default.
-Canonicalize the resolved root and the delivery worktree path, and verify that neither lies inside
-or contains the selected `_agent/` artifact store or the protected instruction-source root working
-tree. If the root cannot be resolved or any of those paths overlap, stop and report the resolved
-paths; do not create or use the worktree. The delivery audit records the resolved root, whether it
-came from `worktreeRoot` or the default, and the worktree path with its registered inventory record.
-[measured 2026-10-25, this host] `~/.openclaw/openclaw.json` has no `worktreeRoot` key, the probing
-shell had `OPENCLAW_STATE_DIR` unset, and `git worktree list` showed this repository's managed
-delivery worktrees under `/Users/brandonperfetti/.openclaw/worktrees/<repo-fingerprint>/<name>`.
-[inference] The effective root here is the default `~/.openclaw/worktrees`, outside
-`$AGENT_ROOT/_agent/`; the Gateway service's environment was not probed, so resolve the root again
-for each delivery rather than reusing this value.
+**Resolve the managed worktree root from the Gateway service's context before creating or using a
+delivery worktree.** The probing shell's environment is not the service's; resolve in this order
+and record each result with its source:
+
+1. The service's effective state directory: `OPENCLAW_STATE_DIR` from the Gateway service's
+   environment when set; otherwise the service's `OPENCLAW_HOME` when set, or else the service
+   user's home directory, followed by `/.openclaw`.
+2. The service's config: `OPENCLAW_CONFIG_PATH` from that environment when set, otherwise
+   `openclaw.json` in that state directory.
+3. The effective worktree root: `worktreeRoot` from that config when set, otherwise
+   `<state-dir>/worktrees` for the state directory from step 1.
+
+Run every `openclaw worktrees` command against that same state directory, so it reaches the Gateway
+that owns that inventory. Canonicalize the resolved root and the delivery worktree path, and verify
+that neither lies inside or contains the selected `_agent/` artifact store or the protected
+instruction-source root working tree. If the service's state directory, config, or root cannot be
+determined, or any of those paths overlap, stop and report the resolved paths; do not create or use
+the worktree. The delivery audit records the service state directory and which source supplied
+it (the service's `OPENCLAW_STATE_DIR`, the service's `OPENCLAW_HOME` plus `/.openclaw`, or the
+service user's home plus `/.openclaw`), the config path and its source, the resolved root and
+whether it came from `worktreeRoot` or the default, and the worktree path with its registered
+inventory record.
+[measured 2026-10-25, this host] `openclaw gateway status --json` reported the launchd service
+`ai.openclaw.gateway` with `service.command.environment.OPENCLAW_STATE_DIR` and
+`config.daemon.path` set to `/Users/brandonperfetti/.openclaw` and
+`/Users/brandonperfetti/.openclaw/openclaw.json`; that config has no `worktreeRoot` key; and
+`openclaw worktrees list --json` recorded this repository's managed delivery worktrees under
+`/Users/brandonperfetti/.openclaw/worktrees/<repo-fingerprint>/<name>`, each with `id`, `path`,
+`branch`, and `repoRoot`. [inference] The effective root here is the default
+`/Users/brandonperfetti/.openclaw/worktrees`, outside `$AGENT_ROOT/_agent/`; resolve it again for
+each delivery rather than reusing this value.
 
 [measured 2026-09-23, issue #24] Three delivery worktrees were created by commands that explicitly
 selected the protected instruction-source root working tree with `git -C`; their presence violated
@@ -546,10 +578,25 @@ worktree such as a release-review worktree, a dirty delivery worktree, and a bra
 ancestor of `origin/develop` are all retained and reported. The protected instruction-source root
 working tree is never eligible for cleanup. `<path>` is the value of the `worktree` line of the
 unique record in `git worktree list --porcelain` whose `branch` line is `refs/heads/<branch>`; on
-zero or multiple matches, stop, and retain and report the branch and every candidate worktree. On
-exit 0, with one match, and outside those exclusions, `git worktree remove <path>` without
-`--force`; then, only if that removal succeeded, `git branch -d <branch>`.
-Any refusal from either command is left as it is and reported, never overridden.
+zero or multiple matches, stop, and retain and report the branch and every candidate worktree.
+Then pick the removal route from OpenClaw's registered inventory, read with
+`openclaw worktrees list --json` against the Gateway service's state directory; if it cannot be
+read, stop, and retain and report the worktree and branch:
+
+- **Managed worktree.** `<id>` is the `id` of the unique `worktrees` record whose canonical `path`
+  is `<path>`; on zero matches the worktree is not managed. On multiple matches, or a match whose
+  `branch` is not `<branch>`, stop, and retain and report every candidate record. Run
+  `openclaw worktrees remove <id> --if-lossless --json`. Only `removed: true` is a successful
+  removal; `removed: false` is a retention, reported with its recorded `cleanup` outcome. Never run
+  ordinary `openclaw worktrees remove <id>`, which removes with Git force, or `--force`, and never
+  fall back to `git worktree remove` for a registered worktree.
+- **Existing plain Git worktree.** Only a worktree with no inventory record and outside the resolved
+  managed worktree root qualifies; one with no record inside that root is retained and reported.
+  Run `git worktree remove <path>` without `--force`.
+
+On exit 0, with one match, and outside those exclusions, remove by that route; then, only if that
+removal succeeded and `refs/heads/<branch>` still exists, `git branch -d <branch>`. Any refusal or
+retention from either command is left as it is and reported, never overridden.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
 and their branches without forcing a dirty removal, leaving the protected delivery host plus a
@@ -559,10 +606,12 @@ release-review worktree.
 
 Record the checkout and HEAD, Git author identity, `core.hooksPath` and hook presence, an explicit
 dry-run probe (or N/A when the repository installs no `pre-push` hook), the full gate result,
-branch ownership, and target-protection audit. For a delivery worktree, also record the resolved
-managed worktree root, its source (`worktreeRoot` or the default), the worktree path, its
-registered inventory record, and the `_agent/` and protected-root overlap check; any overlap stops
-the delivery (see
+branch ownership, and target-protection audit. For a delivery worktree, also record the Gateway
+service's state directory with the source that supplied it (service `OPENCLAW_STATE_DIR`, service
+`OPENCLAW_HOME` plus `/.openclaw`, or service home plus `/.openclaw`), its config path with its
+source, the resolved managed worktree root and its source (`worktreeRoot` or the default), the
+worktree path, its registered inventory record, the cleanup route with its `id` or plain Git path,
+and the `_agent/` and protected-root overlap check; any overlap stops the delivery (see
 [Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness)).
 Parts A/B remain the authority for RULE ZERO, no-force-push, and no-agent-merge; do not restate
 those rules here.

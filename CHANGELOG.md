@@ -27,7 +27,17 @@ being retrofitted onto the other.
   `<openclaw-state-dir>/worktrees`) before use, with a stop on any overlap with the `_agent/` store
   or the protected root and the resolution recorded in the delivery audit; and cited the installed
   OpenClaw 2026.10.6 docs by line and SHA-256 for the default and inventory behavior. Cleanup
-  safeguards still cover existing plain Git worktrees.
+  safeguards still cover existing plain Git worktrees. Amos's later review on PR #181 found that
+  cleanup still removed managed worktrees with `git worktree remove` and that root resolution read
+  the probing shell rather than the Gateway service. Cleanup now resolves a managed worktree's `id`
+  from the registered inventory and runs `openclaw worktrees remove <id> --if-lossless`, never
+  ordinary or forced OpenClaw removal; non-forced `git worktree remove` stays only for existing
+  plain Git worktrees without an inventory record and outside the managed root. Ancestry,
+  cleanliness, protected-root, uniqueness, and no-force safeguards are unchanged. Root resolution
+  first determines the service's state directory (the service's `OPENCLAW_STATE_DIR`, else the
+  service's `OPENCLAW_HOME` or the service user's home followed by `/.openclaw`) and records which
+  source supplied it, then its config, then `worktreeRoot` or `<state-dir>/worktrees`; this host's
+  service probe was measured with `openclaw gateway status --json`.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of
