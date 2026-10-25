@@ -54,11 +54,73 @@ tier where the mechanism accepts a caller's selection.
 **Model selectors (A4's tiers).** Which selector resolves each A4 role tier for an OpenClaw
 specialist is not recorded here — **unmeasured**; measure and record. The shared Claude Code
 wrapper takes no caller selector and pins its own exact model [source:
-`~/.openclaw/workspace/docs/team-operating-model.md` lines 195–196, read 2026-10-23, SHA-256
-`afd5812b86094920f41dc869673d09c9d59a0d0a8ca577cd6e3ddea8f04c1389`, which reads: "Invoke the
-wrapper without `--model` or `--fallback-model`; the wrapper pins the exact model and rejects
-caller-supplied model selection."], so a dispatch through it names its role tier, passes no
-selector, and records the model the wrapper pins (A4).
+`~/.openclaw/workspace/docs/team-operating-model.md` lines 198–199, read 2026-10-24, SHA-256
+`1bf9bcef0f5f2b17273c9d14f3062f19ae51a5ffa5e0c017621055fa6b84f163`, quoted below], so a dispatch
+through it names its role tier, passes no selector, and records the model the wrapper pins (A4).
+Those two lines read exactly, line break kept:
+
+```text
+Invoke the wrapper without `--model` or `--fallback-model`; the wrapper pins the exact
+model and rejects caller-supplied model selection. Transmitting relevant in-scope local
+```
+
+**Claude routes and intentional exceptions.** The same source applies its wrapper rule only where
+a role has a supported Claude route; without one, the affected substantive operation stops and
+reports the missing route, which is not a failed Claude invocation [source: same file, lines
+204–206, same read and SHA-256]. The 2026-10-23 role-local normalization covered Camina and ten
+specialist role sources, not the four roles below [source, issue #177].
+
+Search boundary [measured, 2026-10-24]: a case-insensitive `claude|wrapper` search of only six
+top-level files in each `~/.openclaw/workspace-<role>/`: `AGENTS.md`, `SOUL.md`, `IDENTITY.md`,
+`USER.md`, `HEARTBEAT.md` and `MEMORY.md`. All other files and subdirectories were excluded, among
+them `DREAMS.md`, `memory/`, `media/`, `avatars/`, `avatar-candidates*/`, `drafts/` and `_agent/`.
+"Only" and "no" about wrapper text below mean within that boundary, not across the workspace. Of
+the 14 `workspace-*/SOUL.md` files, those of `finance`, `marketing` and `openclaw-admin` do not
+name `claude-with-max.sh`, and `assistant`'s names it only conditionally [measured]. Configuration
+facts come from `~/.openclaw/openclaw.json` [source: read 2026-10-24, SHA-256
+`bf567245857808ffeef414e2904ee5b5873948eacde98ff639df54bba2b62ec6`]. Pilot and Slack-class facts
+come from `~/.openclaw/workspace/memory/2026-10-24.md` lines 121 and 131 [source: read 2026-10-24;
+lines 1–137 SHA-256 `267584c20d41942f872ecff7aed128158e2d16e8aa5baf4906afad40b3eb4459`]. Each
+entry covers only the role it names:
+
+- **`assistant` (Cortana):** the only wrapper text is `SOUL.md` lines 113–115 [measured; file
+  SHA-256 `1d96e6b2ebdb047194e14a3ad73c90d9a9830d967edc7a549ba3ed8e95b625a8`], which say the role
+  does not currently use Claude Code and that any future capability goes only through
+  `scripts/agent/claude-with-max.sh`, never bare `claude` [source]. Its config entry, lines
+  211–242, sets primary `openai/gpt-5.6-luna`, lists only `openai/gpt-5.6-luna` (runtime `codex`)
+  and `openai/gpt-5.6-terra` (runtime `openclaw`), and has `tools.alsoAllow` of `memory_write`
+  only [source]. That text grants no route; the role's runtime route is **unmeasured**.
+- **`finance` (Graham):** no wrapper text; the only `claude` match is `AGENTS.md` line 20's pointer
+  to a repository's `CLAUDE.md` [measured]. Its config entry, lines 628–695, sets primary
+  `openai/gpt-5.6-sol`, its `modelPolicy.allow` is only `openai/gpt-6-astra` and
+  `openai/gpt-5.6-sol`, and it has `tools.alsoAllow` of `memory_write` only [source]. The role
+  is an intentional GPT-only pilot [source: memory lines 121 and 131].
+- **`marketing` (Sloane):** no wrapper text; the only `claude` match is the same `AGENTS.md`
+  line 20 pointer [measured]. Its config entry, lines 696–763, sets primary `openai/gpt-5.6-sol`,
+  its `modelPolicy.allow` is only `openai/gpt-5.6-sol` and `openai/gpt-6-astra`, and it has
+  `tools.alsoAllow` of `memory_write` only [source].
+- **`finance` and `marketing` Slack class:** their `toolsBySender` rules, lines 676–693 and
+  744–761, cover the same two Slack senders, and each sender rule both denies `group:runtime` and
+  allows `gateway_exec` through its own `alsoAllow` [source]. For `finance`, that `gateway_exec`
+  allow is stale, and its authenticated Slack canary exposed no executable tools and made zero
+  Claude calls [source: memory line 121]. That class has no supported Claude route [source: memory
+  line 131]. Substantive filesystem-grounded work arriving through it therefore stops at the
+  missing route [inference, from the stop rule at lines 204–206 above applied to that source; not
+  inferred from the configured grants; what would verify it: an authenticated canary from one of
+  those two senders, to each role, that requests substantive filesystem-grounded work and
+  observes the missing-route stop, with no Claude call]. `marketing`'s route outside that class is
+  **unmeasured**.
+- **`openclaw-admin` (Ashford):** no match for either term in the six searched files [measured].
+  Its unsearched `_agent/` does contain `claude` or `wrapper` matches [measured], so that no-match
+  statement holds only within the stated boundary. Its config entry, lines 588–627, sets primary
+  `openai/gpt-5.6-sol`, lists only `openai/gpt-5.6-*` models, and has `tools.alsoAllow` of
+  `memory_write` only [source]. Its route status remains **unmeasured**; measure and record. Do
+  not infer it from the other entries.
+
+No runtime route, present or absent, is inferred here from missing wrapper text or configuration
+alone. This list is not a census: whether other roles outside the role-local wrapper contract
+exist, and the route status of any that do, is **unmeasured**; the entries above cover only the
+four roles they name.
 
 OpenClaw does not relax either mode's topology. Attended lanes use one of B1's two shapes: an
 mbox lane runs git only in its isolated clone, and a lane delivering uncommitted edits may edit its
