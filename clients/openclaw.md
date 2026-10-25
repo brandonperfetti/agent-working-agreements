@@ -10,9 +10,10 @@ when you acknowledge your reading** — "read the agreements and
 
 **Configured native agent root.** On Brandon's native macOS OpenClaw installation, the configured
 agent root is `~/dev/sansfaux`, currently resolving for the live account to
-`/Users/brandonperfetti/dev/sansfaux`. Its authoritative instruction checkout is
-`$AGENT_ROOT/agent-working-agreements/`; its artifact store is `$AGENT_ROOT/_agent/`. The
-instruction checkout is read-only and kept current with released `master` per
+`/Users/brandonperfetti/dev/sansfaux`. Its authoritative protected instruction-source root working
+tree is `$AGENT_ROOT/agent-working-agreements/`; its artifact store is `$AGENT_ROOT/_agent/`. That
+working tree is protected from delivery mutations and kept current with released `master` by the
+release refresh in
 [Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness) below.
 
 After a workspace's reviewed `AGENTS.md` pointer is replaced, the first approved acceptance session
@@ -469,38 +470,40 @@ patch paths after the same prelaunch error; the bounded Gateway equivalents reac
 
 ## Instruction-source isolation and freshness
 
-**The root instruction working tree is protected.** It remains clean, checked out on `master`, and
-equal to `origin/master` after the verified fast-forward following each `develop → master` release.
-Its Git administration may host isolated delivery worktrees under OpenClaw's managed worktree root;
-each delivery branch starts at `origin/develop`. Worktree administration may update shared Git
-metadata, but never the protected root's branch, index, or checked-out files. Delivery edits,
-commits, branch switches, and cleanup never target that root working tree; the release refresh below
-is the only operation that changes its branch, index, or checked-out files. Worktree administration
-that changes only shared Git metadata may run from the root without targeting its working tree.
+**The protected instruction-source root working tree stays protected.** It remains clean, checked
+out on `master`, and equal to `origin/master` after the verified fast-forward following each
+`develop → master` release. Its Git administration may host isolated delivery worktrees under
+OpenClaw's managed worktree root; each delivery branch starts at `origin/develop`. Worktree
+administration may run from the protected instruction-source root working tree and update shared
+Git metadata, but delivery edits, commits, branch switches, and cleanup never target it; the release
+refresh below is the only operation that changes its branch, index, or checked-out files.
 
 [measured 2026-09-23, issue #24] Three delivery worktrees were created by commands that explicitly
-selected the instruction-source clone with `git -C`; their presence violated its then one-worktree
-contract even though the commands ran from the workspace root. Issue #180 supersedes only that
-topology assumption: the containment remains that no delivery operation alters the protected root
-working tree. It does not change runtime project bindings or delete or migrate existing clones.
+selected the protected instruction-source root working tree with `git -C`; their presence violated
+its then one-worktree contract even though the commands ran from the workspace root. Issue #180
+supersedes only that topology assumption: the containment remains that no delivery operation alters
+the protected instruction-source root working tree. It does not change runtime project bindings or
+delete or migrate existing clones.
 
-**After every `develop → master` merge, fetch and fast-forward the instruction-source clone before
-any further work.** Run `git switch master`, then `git fetch origin`, then
+**After every `develop → master` merge, fetch and fast-forward the protected instruction-source
+root working tree before any further work.** Run `git switch master`, then `git fetch origin`, then
 `git merge --ff-only origin/master`; verify the tree is clean and `HEAD == origin/master`. The
-next report names the exact SHA the clone serves.
+next report names the exact SHA the protected instruction-source root working tree serves.
 [measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
-2026-09-22T20:18:10Z, but the clone remained six commits behind until the next day.
+2026-09-22T20:18:10Z, but the protected instruction-source root working tree remained six commits
+behind until the next day.
 
 **Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
-Run it from the Git administration host, which may be the protected root only for administration and
-never against its working tree: `git fetch origin` — if the fetch fails, stop, and retain and report
-the worktree and branch — then
+Run it from any of the repository's worktrees; the protected instruction-source root working tree
+may serve, but only for Git administration and never against its working tree:
+`git fetch origin` — if the fetch fails, stop, and retain and report the worktree and branch — then
 `git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
-not by itself enough: the protected root working tree, a delivery checkout host, another protected
-base worktree such as its release-review worktree, a dirty delivery worktree, and a branch that is
-not an ancestor of `origin/develop` are all retained and reported. The protected root is never
-eligible for cleanup. On exit 0 and outside those exclusions, `git worktree remove <path>` without
-`--force`; then, only if that removal succeeded, `git branch -d <branch>`.
+not by itself enough: the protected instruction-source root working tree, another protected base
+worktree such as a release-review worktree, a dirty delivery worktree, and a branch that is not an
+ancestor of `origin/develop` are all retained and reported. The protected instruction-source root
+working tree is never eligible for cleanup. On exit 0 and outside those exclusions,
+`git worktree remove <path>` without `--force`; then, only if that removal succeeded,
+`git branch -d <branch>`.
 Any refusal from either command is left as it is and reported, never overridden.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees

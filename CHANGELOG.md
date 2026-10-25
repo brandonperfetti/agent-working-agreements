@@ -11,14 +11,17 @@ of amendments in that batch**, not an ordinal; the two notations predate each ot
 being retrofitted onto the other.
 
 - **2026-10-25 — `clients/openclaw.md`: permit isolated delivery worktrees from the protected
-  instruction-source repository.** Issue #180. The #48 containment rule assumed that protecting the
+  instruction-source repository.** Issue #180. Brandon clarified the topology: the canonical
+  checkout stays protected and hosts disposable delivery worktrees, so delivery worktrees can be
+  created without duplicate clones. The #48 containment rule assumed that protecting the
   stable instruction checkout required a one-worktree topology; #24 supplied the measured failure
-  that established the need to protect it. The root instruction working tree may now serve as Git
-  administration for isolated managed delivery worktrees while it stays clean, on `master`, and
-  equal to `origin/master` after refresh; delivery work cannot alter its branch, index, or
-  checked-out files. Cleanup keeps the successful-fetch, merged-ancestry, clean-worktree, and
-  non-forced-removal requirements, and the protected root is never eligible. This narrows only that
-  topology assumption: it does not change runtime project bindings or delete or migrate clones.
+  that established the need to protect it. The protected instruction-source root working tree may
+  now serve as Git administration for isolated managed delivery worktrees while it stays clean, on
+  `master`, and equal to `origin/master` after refresh; delivery work cannot alter its branch,
+  index, or checked-out files. Cleanup keeps the successful-fetch, merged-ancestry,
+  clean-worktree, and non-forced-removal requirements, and the protected instruction-source root
+  working tree is never eligible. This narrows only that topology assumption: it does not change
+  runtime project bindings or delete or migrate clones.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of
