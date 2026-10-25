@@ -513,12 +513,12 @@ whose generated filename and line references identify this exact installed build
   to `<openclaw-state-dir>/worktrees`, and checkouts are created at
   `<worktreeRoot>/<repo-fingerprint>/<name>` [source: `config-runtime.md` lines 16 and 24;
   `managed-worktrees.md` lines 67 and 199]. The state directory is `OPENCLAW_STATE_DIR` when set,
-  otherwise `~/.openclaw` for an unset or `default` service `OPENCLAW_PROFILE`, or
-  `~/.openclaw-<profile>` for a named non-default service profile, where `~` is `OPENCLAW_HOME`
-  when that is set; the config file is `OPENCLAW_CONFIG_PATH` when set, otherwise
-  `$OPENCLAW_STATE_DIR/openclaw.json`
-  [source: `environment.md` lines 50, 346 and 347; `nix.md` line 89; `uninstall.md` line 88;
-  `profile-utils-BsmgdpgZ.mjs` lines 16–20].
+  and the config file is `OPENCLAW_CONFIG_PATH` when set, otherwise
+  `$OPENCLAW_STATE_DIR/openclaw.json`; `OPENCLAW_HOME`, when set, replaces the home directory for
+  these defaults [source: `environment.md` lines 50, 346 and 347; `nix.md` line 89]. With no
+  explicit state directory, it is `~/.openclaw` for an unset or `default` service
+  `OPENCLAW_PROFILE`, or `~/.openclaw-<profile>` for a named non-default service profile
+  [source: `uninstall.md` line 88; `profile-utils-BsmgdpgZ.mjs` lines 17–21].
 - `openclaw gateway status` human output includes the CLI's and service's config paths and their
   validity, to diagnose profile or state-dir drift [source: `query.md` line 281]. When a Gateway
   is running, its worktree CLI mutations use the authenticated Gateway that owns the selected local
@@ -543,9 +543,9 @@ and record each result with its source:
 
 1. The service's effective state directory: `OPENCLAW_STATE_DIR` from the Gateway service's
    environment when set; otherwise use the service's `OPENCLAW_HOME` when set, or else the service
-   user's home directory, followed by `/.openclaw` for an unset or `default` `OPENCLAW_PROFILE`, or
-   `/.openclaw-<profile>` for a named non-default profile [source: `uninstall.md` line 88;
-   `profile-utils-BsmgdpgZ.mjs` lines 16–20].
+   user's home directory [source: `environment.md` lines 50 and 346], followed by `/.openclaw` for
+   an unset or `default` `OPENCLAW_PROFILE`, or `/.openclaw-<profile>` for a named non-default
+   profile [source: `uninstall.md` line 88; `profile-utils-BsmgdpgZ.mjs` lines 17–21].
 2. The service's config: `OPENCLAW_CONFIG_PATH` from that environment when set, otherwise
    `openclaw.json` in that state directory.
 3. The effective worktree root: `worktreeRoot` from that config when set, otherwise
@@ -554,9 +554,16 @@ and record each result with its source:
 Run every `openclaw worktrees` command — `create`, `list`, and `remove` — with both effective
 Gateway values explicitly on that invocation:
 `OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw worktrees …`.
-[inference: `environment.md` lines 346-347] Passing both effective values prevents state and
-config selection from falling back to the probing shell's ambient values. When a Gateway is
-running, mutations use the authenticated owner of that selected local state directory.
+[inference: `environment.md` lines 346-347; what would verify it: with a different profile that
+has its own config and a deliberately distinct worktree inventory, run `openclaw gateway status`
+in a shell whose ambient `OPENCLAW_PROFILE` names that profile, and run
+`openclaw --profile <name> worktrees list --json` naming that profile, each with both effective
+values passed in the form above, and confirm that status reports the passed config path as the CLI's
+config path and the list returns the passed state directory's inventory, not the profile's config
+path or inventory; this verifies only those two commands in those two forms] Passing both effective
+values prevents state and config selection from falling back to the probing shell's
+ambient values. When
+a Gateway is running, mutations use the authenticated owner of that selected local state directory.
 Canonicalize the resolved root and the delivery worktree path, and verify that neither lies inside
 or contains the selected `_agent/` artifact store
 or the protected instruction-source root working tree. If the service's state directory, config, or
