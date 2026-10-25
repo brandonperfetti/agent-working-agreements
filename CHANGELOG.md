@@ -32,10 +32,18 @@ being retrofitted onto the other.
   the probing shell rather than the Gateway service. Cleanup now resolves a managed worktree's `id`
   from the registered inventory and runs `openclaw worktrees remove <id> --if-lossless`, never
   ordinary or forced OpenClaw removal; non-forced `git worktree remove` stays only for existing
-  plain Git worktrees without an inventory record and outside the managed root. Ancestry,
+  plain Git worktrees without an inventory record and outside the managed root. A follow-up binds
+  every `openclaw worktrees` command by passing the service's effective `OPENCLAW_STATE_DIR` and
+  `OPENCLAW_CONFIG_PATH` explicitly, and records those values and the result per invocation;
+  it accounts for
+  `OPENCLAW_PROFILE` when no explicit state directory is set using installed documentation and
+  profile-resolution source, states the recorded inventory paths and service config as the
+  default-root inference's verification criterion, and corrects the status and mutation-route
+  prose. Ancestry,
   cleanliness, protected-root, uniqueness, and no-force safeguards are unchanged. Root resolution
-  first determines the service's state directory (the service's `OPENCLAW_STATE_DIR`, else the
-  service's `OPENCLAW_HOME` or the service user's home followed by `/.openclaw`) and records which
+  first determines the service's state directory: the service's `OPENCLAW_STATE_DIR`, else its
+  `OPENCLAW_HOME` or the service user's home followed by `/.openclaw` for an unset or `default`
+  profile, or `/.openclaw-<profile>` for a named profile. It records which
   source supplied it, then its config, then `worktreeRoot` or `<state-dir>/worktrees`; this host's
   service probe was measured with `openclaw gateway status --json`.
 
