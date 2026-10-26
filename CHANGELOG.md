@@ -69,7 +69,11 @@ being retrofitted onto the other.
   worktree `HEAD` equal to the stale ref, not the remote commit. Creation now stops unless
   `git fetch origin` succeeds, captures `origin/develop` as a base OID, creates from that OID, and
   verifies the new worktree's `HEAD` equals it; the audit records the fetch result, the OID, and
-  the readback.
+  the readback. Later review tightened cleanup: `<path>` is canonicalized with every symlink
+  resolved, and cleanup stops unless that succeeds and a lookup of `<path>` positively confirms it
+  exists. Inventory `path` values are canonicalized the same way before matching; the only record
+  skipped is one whose `path` a lookup positively confirms missing and whose `branch` is not
+  `<branch>`, and any other failure to canonicalize or determine a record's `path` stops cleanup.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of

@@ -718,9 +718,10 @@ if it cannot be read, stop, and retain and report the worktree and branch:
 
 - **Managed worktree.** Canonicalize the `path` of every `worktrees` record, with every symlink
   resolved, before matching. Skip a record only when the lookup of its `path` positively reports
-  no such file and its `branch` is not `<branch>`, since it cannot equal `<path>`, which is already
-  canonical. If such a record's `branch` is `<branch>`, or on any other failure to canonicalize or
-  determine a record's `path`, including an existence lookup that cannot say, stop, and retain and
+  no such file and its `branch` is not `<branch>`, since it cannot equal `<path>`, which is
+  canonical and was positively confirmed to exist above. If such a record's `branch` is
+  `<branch>`, or on any other failure to canonicalize or determine a record's `path`, including
+  an existence lookup that cannot say, stop, and retain and
   report the worktree, branch, and record. `<id>` is the `id` of the unique `worktrees` record
   whose canonical `path` is `<path>`; on zero matches the worktree is not managed. On multiple
   matches, or a match whose `branch` is not `<branch>`, stop, and retain and report every
