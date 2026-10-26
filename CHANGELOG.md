@@ -15,23 +15,24 @@ being retrofitted onto the other.
   checkout stays protected and hosts disposable delivery worktrees, so delivery needs no duplicate
   clones. The #48 containment rule assumed that protecting the stable instruction checkout
   required a one-worktree topology; #24 supplied the measured failure that established the need to
-  protect it. This narrows only that assumption: the protected root may serve as Git
-  administration for isolated managed delivery worktrees and is never eligible for cleanup; no
-  runtime project binding changes, no clone is deleted or migrated, and the ancestry, cleanliness,
-  uniqueness, and no-force safeguards stay. The appendix carries the procedure; review on PR #181
-  found these defects in earlier wording. New worktrees came from plain `git worktree add` rather
-  than OpenClaw's managed facility, with the managed root unresolved. Amos found that cleanup
-  removed managed worktrees with `git worktree remove`, that root resolution read the probing
-  shell rather than the Gateway service, that the profile mechanism was misdescribed (a service's
-  `OPENCLAW_PROFILE` alone selects no profile root, and `openclaw gateway --dev` selects no
-  profile), and that the verification recipe passed `--profile`, which can replace the bound state
-  and config paths.
-  CodeRabbit (review comment `4372921615`) found that creation passed `--base-ref origin/develop`
-  without a fetch, so a stale ref could seed delivery. Later review found that cleanup matched
-  worktree paths without canonicalizing them or confirming they exist, and that the
-  inventory-verification recipe for `openclaw worktrees list --json` checked only that a plain Git
-  worktree was absent, which an empty or unreadable list also satisfies; it now also requires an
-  OpenClaw-managed worktree of the same scratch repository to be present.
+  protect it. This narrows only that assumption: the protected root stays clean, on `master`, and
+  equal to `origin/master` after refresh, and may serve as Git administration for isolated managed
+  delivery worktrees; delivery cannot alter its branch, index, or checked-out files, and the root is
+  never eligible for cleanup. No runtime project binding changes, no clone is deleted or migrated,
+  and the successful-fetch, ancestry, cleanliness, uniqueness, and no-force cleanup safeguards
+  stay. The appendix carries the procedure; review on PR #181 found these defects in earlier
+  wording. New worktrees came from plain `git worktree add` rather than OpenClaw's managed
+  facility, with the managed root unresolved. Amos found that cleanup removed managed worktrees
+  with `git worktree remove`, that root resolution read the probing shell rather than the Gateway
+  service, that the profile mechanism was misdescribed (a service's `OPENCLAW_PROFILE` alone
+  selects no profile root), and that the verification recipe passed `--profile`, which can replace
+  the bound state and config paths. A later correction found that `openclaw gateway --dev` selects
+  no profile. CodeRabbit (review comment `4372921615`) found that creation passed
+  `--base-ref origin/develop` without a fetch; [inference] a stale ref could seed delivery. Later
+  review found that cleanup matched worktree paths without canonicalizing them or confirming they
+  exist, and that the inventory-verification recipe for `openclaw worktrees list --json` checked
+  only that a plain Git worktree was absent, which an empty or unreadable list also satisfies; it
+  now also requires an OpenClaw-managed worktree of the same scratch repository to be present.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of
