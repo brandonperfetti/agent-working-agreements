@@ -505,7 +505,13 @@ delivery. Each delivery branch starts at that verified `<base-oid>`. Worktree ad
 from the protected instruction-source root working tree and update shared Git metadata, but
 delivery edits, commits, branch switches, and cleanup never target it; of the operations this
 appendix runs, only the release refresh below is meant to change its branch, index, or checked-out
-files. Creation resolves its base through `resolveWorktreeCreationBase` [source]
+files. [corrected 2026-10-26] An earlier revision said "the release refresh below is the only
+operation that changes its branch, index, or checked-out files", which must not be relied upon:
+[source] without a base ref, base preparation can fast-forward the protected root's checked-out
+default branch, as described below, and no measurement covered every operation that can touch that
+working tree. [inference] The qualified sentence covers only this appendix's operations and states
+intent, not a measured guarantee; the before-and-after status comparison below is what would verify
+it for one create run. Creation resolves its base through `resolveWorktreeCreationBase` [source]
 (`service-BAfHLKXG.mjs` line 3879). With an explicit `--base-ref`, that base resolution never calls
 base preparation [source] (`base-ref-B9lkLpLz.mjs` lines 24–40): it either uses a checkout commit
 already captured [source] (`base-ref-B9lkLpLz.mjs` lines 25–34) or runs
