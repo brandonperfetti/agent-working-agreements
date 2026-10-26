@@ -474,9 +474,14 @@ patch paths after the same prelaunch error; the bounded Gateway equivalents reac
 out on `master`, and equal to `origin/master` after the verified fast-forward following each
 `develop → master` release. Its Git administration may host isolated delivery worktrees. A new AWA
 delivery worktree is created only through OpenClaw's managed worktree facility, from a freshly
-fetched and captured base. First run `git -C <repo-root> fetch origin`; if the fetch fails, stop and
-report, and do not create the worktree. Then capture the base OID with
-`git -C <repo-root> rev-parse --verify 'origin/develop^{commit}'`; if it fails, stop and report.
+fetched and captured base. First fetch both base heads by name, not through the configured
+refspec:
+`git -C <repo-root> fetch origin +refs/heads/develop:refs/remotes/origin/develop +refs/heads/master:refs/remotes/origin/master`;
+if the fetch fails, stop and report, and do not create the worktree. Then, for each of `develop`
+and `master`, verify that `git -C <repo-root> rev-parse --verify 'origin/<name>^{commit}'` equals
+the OID `git -C <repo-root> ls-remote origin refs/heads/<name>` reports; if either command fails
+or they differ, stop and report, and do not create the worktree. The verified `origin/develop` OID
+is the captured base OID.
 Pass that captured `<base-oid>`, not the moving `origin/develop` name, and the Gateway context
 explicitly as a bound invocation, with no `--profile` or `--dev` (see `<profile-binding>` below):
 
@@ -491,12 +496,12 @@ OpenClaw's documentation says that creation without a base ref fetches origin's 
 branch, and that an explicit base must resolve to a commit and is never replaced by another base
 [source] (`managed-worktrees.md` line 204); that text does not establish that a fetch or refresh
 happens when an explicit base is given [source] (`managed-worktrees.md` line 204). [inference] The
-required preceding `git fetch origin` is what makes the captured `<base-oid>` current; what would
-verify that causation: in a disposable clone of a remote whose `develop` does not move during the
-test, with the clone's `origin/develop` deliberately left stale behind it, the `rev-parse` capture
-above run without a fetch returns the stale OID, and after a `git fetch origin` that exits 0 the
-same capture returns the OID `git ls-remote origin refs/heads/develop` reports. Before any
-delivery edit, verify that
+required preceding named fetch and `ls-remote` comparison are what make the captured `<base-oid>`
+current; what would verify that causation: in a disposable clone of a remote whose `develop` does
+not move during the test, with the clone's `origin/develop` deliberately left stale behind it, the
+`rev-parse` capture above run without a fetch returns the stale OID, and after the named fetch
+above exits 0 the same capture returns the OID `git ls-remote origin refs/heads/develop` reports.
+Before any delivery edit, verify that
 `git -C <path> rev-parse HEAD`, where `<path>` is the created worktree's registered inventory path,
 equals `<base-oid>`; on a mismatch, stop, and retain and report the worktree, its `HEAD`, and
 `<base-oid>`. The worktree then lives under the managed worktree root and appears in OpenClaw's
@@ -688,9 +693,10 @@ command arguments carry `--profile <name>` or a root/profile-selecting `--dev`, 
 `/.openclaw-<name>`), the service's command-line profile if any and its environment
 `OPENCLAW_PROFILE` value, the config path and its source, the resolved root and whether it came
 from `worktreeRoot` or the default, and the worktree path with its registered inventory record.
-For each creation, it also records the `git fetch origin` exit status, the captured `<base-oid>`
-and the `origin/develop` ref it was read from, and the created worktree's `HEAD` readback with its
-equality to `<base-oid>`.
+For each creation, it also records the named two-ref fetch's exit status; for each of
+`origin/develop` and `origin/master`, the local `rev-parse` OID, the `ls-remote` OID, and their
+equality result; the captured `<base-oid>` and the `origin/develop` ref it was read from; and the
+created worktree's `HEAD` readback with its equality to `<base-oid>`.
 For each `openclaw worktrees` invocation, record its subcommand, the explicit state directory and
 config path passed, the `OPENCLAW_PROFILE` value set or that it was unset, the absence of
 `--profile` and `--dev`, and its result.
@@ -758,9 +764,14 @@ the protected instruction-source root working tree. It does not change runtime p
 delete or migrate existing clones.
 
 **After every `develop → master` merge, fetch and fast-forward the protected instruction-source
-root working tree before any further work.** Run `git switch master`, then `git fetch origin`; if
-the fetch fails, stop and report before any merge. Then run `git merge --ff-only origin/master`;
-verify the tree is clean and `HEAD == origin/master`. The next report names the exact SHA the
+root working tree before any further work.** If any step below fails, exits nonzero, or finds a
+mismatch, stop and report its command, exit status, and output; run no later step. Run
+`git switch master`, then
+`git fetch origin +refs/heads/master:refs/remotes/origin/master`. Then
+`git status --porcelain --untracked-files=all` must exit 0 with empty output before any merge.
+Then run `git merge --ff-only origin/master`. Finally, that status command must again exit 0 with
+empty output, and `git rev-parse HEAD` must equal `git rev-parse --verify 'origin/master^{commit}'`.
+The next report names the exact SHA the
 protected instruction-source root working tree serves.
 [measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
 2026-09-22T20:18:10Z, but the protected instruction-source root working tree remained six commits
@@ -845,7 +856,12 @@ if it cannot be read, stop, and retain and report the worktree and branch:
   fall back to `git worktree remove` for a registered worktree.
 - **Existing plain Git worktree.** Only a worktree with no inventory record and outside the resolved
   managed worktree root qualifies; one with no record inside that root is retained and reported.
-  Run `git worktree remove <path>` without `--force`.
+  Immediately before removal, repeat the
+  `git --no-optional-locks -C <path> status --porcelain --untracked-files=all --ignored` check,
+  which must again exit 0 with empty output, and read `git worktree list --porcelain` again, which
+  must contain exactly one record whose canonical `worktree` path is `<path>`, with `branch` line
+  `refs/heads/<branch>`. On any failure, output, or mismatch, stop, and retain and report the
+  worktree and branch. Then run `git worktree remove <path>` without `--force`.
 
 On exit 0, with one match, and outside those exclusions, remove by that route; then, only if that
 removal succeeded and `refs/heads/<branch>` still exists, `git branch -d <branch>`. Any refusal or
@@ -857,7 +873,8 @@ candidate record for `<branch>`, and `<path>` with its existence lookup; the cle
 `<path>` with its exit status and output; each `worktrees` record's canonical `path`, or its skip
 with the existence lookup that allowed it, compared with `<path>`,
 and its `branch` compared with `<branch>`; and, on the plain Git route, the check of `<path>`
-against the resolved managed worktree root.
+against the resolved managed worktree root and the repeated status and inventory checks with their
+outputs.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
 and their branches without forcing a dirty removal, leaving the protected delivery host plus a
