@@ -767,10 +767,11 @@ worktree in that inventory, with every symlink resolved, and compare each with `
 them cannot be canonicalized or equals `<path>`, stop, and retain and report the worktree and
 branch, with no inventory query, removal route, or branch deletion. Then run
 `git --no-optional-locks -C <path> status --porcelain --untracked-files=all --ignored`; ignored
-files count, since `git worktree remove` without `--force` deletes them. If it exits nonzero,
-cannot be run, or prints any output, stop, and retain and report the worktree and branch with its
-exit status and output. Only exit 0 with empty output permits cleanup to continue. Then pick the
-removal route from OpenClaw's registered inventory. Run:
+files count, since `git worktree remove` without `--force` deletes them [measured 2026-10-25, Git
+2.56.0, a scratch repository; recorded in commit `adef2b1e7d6f2d3a4572d68802a6ed24edd661b7`]. If
+it exits nonzero, cannot be run, or prints any output, stop, and retain and report the worktree
+and branch with its exit status and output. Only exit 0 with empty output permits cleanup to
+continue. Then pick the removal route from OpenClaw's registered inventory. Run:
 
 ```sh
 env <profile-binding> \
