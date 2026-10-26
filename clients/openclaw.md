@@ -575,7 +575,8 @@ whose generated filenames and line references identify this exact installed buil
   paths [source: `managed-worktrees.md` lines 79, 408 and 621]. It does not list plain Git
   worktrees [inference: OpenClaw records managed worktrees in the shared state database
   (`managed-worktrees.md` line 11); what would verify it: one plain `git worktree add` in a
-  scratch repository, absent from the list].
+  scratch repository, absent from the list, and one OpenClaw-managed worktree of that repository,
+  present in it].
   Run it while a Gateway owns the local state: offline listing can retire missing checkouts
   [source: `managed-worktrees.md` lines 591–595].
 - Ordinary `openclaw worktrees remove <id>` is archival and uses Git's forced checkout removal
@@ -702,8 +703,9 @@ working tree is never eligible for cleanup. `<path>` is the canonical form, with
 resolved, of the value of the `worktree` line of the unique record in
 `git worktree list --porcelain` whose `branch` line is `refs/heads/<branch>`; on zero or multiple
 matches, stop, and retain and report the branch and every candidate worktree. If that value
-cannot be canonicalized, stop, and retain and report the worktree and branch. Then pick the
-removal route from OpenClaw's registered inventory. Run:
+cannot be canonicalized, or a lookup of `<path>` itself does not positively report that it exists,
+stop, and retain and report the worktree and branch. Then pick the removal route from OpenClaw's
+registered inventory. Run:
 
 ```sh
 env <profile-binding> \
