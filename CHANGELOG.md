@@ -22,24 +22,29 @@ being retrofitted onto the other.
   and the successful-fetch, ancestry, cleanliness, uniqueness, and no-force cleanup safeguards
   stay. The appendix carries the procedure; review on PR #181 found these defects in earlier
   wording. New worktrees came from plain `git worktree add` rather than OpenClaw's managed
-  facility, with the managed root unresolved. Amos found that cleanup removed managed worktrees
-  with `git worktree remove`, that root resolution read the probing shell rather than the Gateway
-  service, that the profile mechanism was misdescribed (a service's `OPENCLAW_PROFILE` alone
-  selects no profile root), and that the verification recipe passed `--profile`, which can replace
-  the bound state and config paths. A later correction found that `openclaw gateway --dev` selects
-  no profile. CodeRabbit (review comment `4372921615`) found that creation passed
-  `--base-ref origin/develop` without a fetch; [inference] a stale ref could seed delivery, which
+  facility, with the managed root unresolved. [source, commits `c3d598d`, `37f83c9` and
+  `428af38`] Cleanup removed managed worktrees with `git worktree remove`, root resolution read the
+  probing shell rather than the Gateway service, the profile mechanism was misdescribed (a
+  service's `OPENCLAW_PROFILE` alone selects no profile root), and the verification recipe passed
+  `--profile`, which can replace the bound state and config paths; those commits carry the
+  superseded wording and its replacement. A later correction,
+  commit `979decd`, records that `openclaw gateway --dev` selects no profile. [source, CodeRabbit,
+  PR #181 review comment `4372921615`] Creation passed `--base-ref origin/develop` without a
+  fetch; fixed in `e56f1ff` and `6973c1a`. [inference] A stale ref could seed delivery, which
   would be verified if, with `origin/develop` left stale behind the remote's `develop`, a worktree
   created with that base had `HEAD` equal to the stale OID rather than the OID
-  `git ls-remote origin refs/heads/develop` reports. Later review found that cleanup matched
-  worktree paths without canonicalizing them or confirming they exist, and that the
-  inventory-verification recipe for `openclaw worktrees list --json` checked only that a plain Git
-  worktree was absent, which an empty or unreadable list also satisfies; it now also requires an
-  OpenClaw-managed worktree of the same scratch repository to be present. Later review found that
-  nothing stopped the plain-Git route from selecting the protected root, which has no inventory
-  record and lies outside the managed root, and then that the fix guarded only the root, not every
-  protected base worktree, and then that the inventory of protected base worktrees had no defined
-  source. The inventory now comes from one `git worktree list --porcelain` read taken before any
+  `git ls-remote origin refs/heads/develop` reports. [source, CodeRabbit, PR #181 review
+  `5646215403`] Cleanup matched worktree paths without canonicalizing them; fixed in `a9f544f`.
+  [source, commit `efff37b`; the reviewer is not recorded here] Cleanup did not confirm the paths
+  exist, and the inventory-verification recipe for `openclaw worktrees list --json` checked only
+  that a plain Git worktree was absent, which an empty or unreadable list also satisfies; it now
+  also requires an OpenClaw-managed worktree of the same scratch repository to be present.
+  [source, CodeRabbit, PR #181 reviews `5646925778` and `5646995554`] Nothing stopped the
+  plain-Git route from selecting the protected root, which has no inventory record and lies outside
+  the managed root (fixed in `3c04d73`), and then the fix guarded only the root, not every
+  protected base worktree (fixed in `e2e926d`). [source, commit `3b4e257`; the reviewer is not
+  recorded here] The inventory of protected base worktrees had no defined source. The inventory
+  now comes from one `git worktree list --porcelain` read taken before any
   other cleanup step: the named root plus the main working tree and every `master`, `develop`,
   detached, or locked record. Cleanup compares `<path>` with each canonicalized inventory worktree
   before any route, retains on an unreadable or indeterminate inventory, including a record it

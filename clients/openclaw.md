@@ -661,13 +661,23 @@ equality to `<base-oid>`.
 For each `openclaw worktrees` invocation, record its subcommand, the explicit state directory and
 config path passed, the `OPENCLAW_PROFILE` value set or that it was unset, the absence of
 `--profile` and `--dev`, and its result.
-[measured 2026-10-25, this host] `openclaw gateway status --json` reported the launchd service
-`ai.openclaw.gateway` with `service.command.environment.OPENCLAW_STATE_DIR` and
-`config.daemon.path` set to `/Users/brandonperfetti/.openclaw` and
-`/Users/brandonperfetti/.openclaw/openclaw.json`; that config has no `worktreeRoot` key; and
-`openclaw worktrees list --json` recorded this repository's managed delivery worktrees under
-`/Users/brandonperfetti/.openclaw/worktrees/<repo-fingerprint>/<name>`, each with `id`, `path`,
-`branch`, and `repoRoot`. [inference] The effective root here is the default
+[measured 2026-10-26T03:55:06Z, this host, OpenClaw 2026.10.6 (41c5d94); the earlier
+2026-10-25 reading has no capture located, so this replaces it; raw captures `gateway-status.json`,
+`openclaw.json.copy` and `worktrees-list.json` preserved at
+`/Users/brandonperfetti/dev/sansfaux/_agent/evidence/2026-10-25-agent-working-agreements-pr-181-gateway-worktree-inventory/`]
+`openclaw gateway status --json` (exit 0, empty stderr; output SHA-256
+`2dbd291d1021280837b9192200db23fe75992968b642d93f4788b6629d34c81f`) reported a loaded launchd
+service from `~/Library/LaunchAgents/ai.openclaw.gateway.plist` with
+`"OPENCLAW_STATE_DIR": "/Users/brandonperfetti/.openclaw"` under
+`service.command.environment` and `config.daemon.path` set to
+`/Users/brandonperfetti/.openclaw/openclaw.json`. That file, read in the same pass (SHA-256
+`87027a892fc01a1464c5dc492389f196ef1494b2a01a03a79ac0dcd81fc668a3`), contains no `worktreeRoot`
+string. `openclaw worktrees list --json` (exit 0, empty stderr; output SHA-256
+`3a25f8eae2dcf7c05707413dd65845a14330f7fad1365a23c3214b9fc5c040d0`) recorded this delivery's
+worktree as `"repoFingerprint": "3be5ac1eed078a0d"`, `"path":
+"/Users/brandonperfetti/.openclaw/worktrees/3be5ac1eed078a0d/awa-180-protected-root-worktrees"`,
+with `id`, `branch` and `repoRoot` set. That is one record; it does not cover every managed
+worktree. [inference] The effective root here is the default
 `/Users/brandonperfetti/.openclaw/worktrees`, outside `$AGENT_ROOT/_agent/`; what would verify it:
 the service state directory still resolves to `/Users/brandonperfetti/.openclaw`, the service config
 at `config.daemon.path` has no `worktreeRoot` key, and the recorded inventory path for a newly
