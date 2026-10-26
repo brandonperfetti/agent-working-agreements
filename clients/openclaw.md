@@ -726,7 +726,9 @@ protected instruction-source root working tree serves.
 behind until the next day.
 
 **Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
-These safeguards apply to every delivery worktree, managed or an existing plain Git worktree.
+These safeguards govern only this manual post-merge cleanup route, for every delivery worktree it
+removes, managed or an existing plain Git worktree; they do not bind OpenClaw's own background
+cleanup (see the background-cleanup paragraph after this procedure).
 Run it from any of the repository's worktrees; the protected instruction-source root working tree
 may serve, but only for Git administration and never against its working tree. First read
 `git worktree list --porcelain` once and keep that output; if it cannot be read, stop, and retain
@@ -807,6 +809,33 @@ against the resolved managed worktree root.
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
 and their branches without forcing a dirty removal, leaving the protected delivery host plus a
 release-review worktree.
+
+**OpenClaw's background cleanup can purge a managed delivery worktree outside that manual route.**
+[source: `managed-worktrees.md` lines 95 and 379–380] [inference] It does not apply that route's
+safeguards: none of them appears among the cleanup rules or the eviction policy; what would verify
+it: re-read `managed-worktrees.md` lines 87–101 and 376–392 for any of those checks.
+[source: `managed-worktrees.md` lines 77, 87, 95, 101, 379–382 and 693] Capacity
+eviction enforces `worktreeMaxCount` (default 4096) across every owner sharing the state directory:
+it removes checkouts on branches merged into the default branch first, then squash-landed ones, then
+idle checkouts from oldest last use, and manual worktrees (managed worktrees created manually,
+recorded with `ownerKind: manual`) and unsaved data are eligible. Idle
+cleanup snapshots and removes unlocked session- and Workboard-owned worktrees idle for more than 7
+days, even when dirty, and a session worktree whose owner is archived or absent without waiting.
+OpenClaw snapshots dirty contents when it can, but snapshot failure does not block cap eviction;
+a snapshot record stays restorable for 30 days. Live owner leases protect active runs, and creation
+that would have to evict one is refused, naming the cap and live owners. Ordinary idle cleanup
+preserves foreign or unrecognized Git worktree locks. [inference] A lock, including the
+`protected base worktree` lock above, does not protect a managed checkout from cap eviction: the
+cap's stated exemptions name only live owner leases, and remembered idle-cleanup protection never
+exempts a checkout from it [source: `managed-worktrees.md` lines 95, 101 and 392]; what would
+verify it: in a scratch state directory, a locked, idle managed checkout evicted after
+`worktreeMaxCount` is lowered below the live count. Mitigation
+[source: `managed-worktrees.md` lines 87, 95, 101 and 381]: commit or otherwise back up work you
+need to retain before leaving a managed delivery worktree inactive, and keep the live managed
+worktree count below `worktreeMaxCount`, raising it in `openclaw.json` when needed. A snapshot
+record, when one was made, stays restorable for 30 days; that text does not say whether eviction
+keeps or deletes the checkout's branch or commits, so it shows committed work neither lost nor
+retained.
 
 ## Pickup guard and delivery audit
 
