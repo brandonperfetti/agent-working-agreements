@@ -573,8 +573,9 @@ whose generated filenames and line references identify this exact installed buil
   paths for reuse, cleanup, and restore [source: `config-runtime.md` line 26].
 - `openclaw worktrees list --json` reports OpenClaw's registered worktrees, including those recorded
   paths [source: `managed-worktrees.md` lines 79, 408 and 621]. It does not list plain Git
-  worktrees [inference: OpenClaw records managed worktrees in its state database (line 11); what
-  would verify it: one plain `git worktree add` in a scratch repository, absent from the list].
+  worktrees [inference: OpenClaw records managed worktrees in the shared state database
+  (`managed-worktrees.md` line 11); what would verify it: one plain `git worktree add` in a
+  scratch repository, absent from the list].
   Run it while a Gateway owns the local state: offline listing can retire missing checkouts
   [source: `managed-worktrees.md` lines 591–595].
 - Ordinary `openclaw worktrees remove <id>` is archival and uses Git's forced checkout removal
@@ -713,10 +714,12 @@ env <profile-binding> \
 
 if it cannot be read, stop, and retain and report the worktree and branch:
 
-- **Managed worktree.** `<id>` is the `id` of the unique `worktrees` record whose canonical `path`
-  is `<path>`; on zero matches the worktree is not managed. On multiple matches, or a match whose
-  `branch` is not `<branch>`, stop, and retain and report every candidate record. Run this
-  explicitly bound command:
+- **Managed worktree.** Canonicalize the `path` of every `worktrees` record, with every symlink
+  resolved, before matching; if any record's `path` cannot be canonicalized, stop, and retain and
+  report the worktree, branch, and record. `<id>` is the `id` of the unique `worktrees` record
+  whose canonical `path` is `<path>`; on zero matches the worktree is not managed. On multiple
+  matches, or a match whose `branch` is not `<branch>`, stop, and retain and report every
+  candidate record. Run this explicitly bound command:
 
   ```sh
   env <profile-binding> \
