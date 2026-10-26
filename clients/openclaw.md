@@ -10,9 +10,10 @@ when you acknowledge your reading** — "read the agreements and
 
 **Configured native agent root.** On Brandon's native macOS OpenClaw installation, the configured
 agent root is `~/dev/sansfaux`, currently resolving for the live account to
-`/Users/brandonperfetti/dev/sansfaux`. Its authoritative instruction checkout is
-`$AGENT_ROOT/agent-working-agreements/`; its artifact store is `$AGENT_ROOT/_agent/`. The
-instruction checkout is read-only and kept current with released `master` per
+`/Users/brandonperfetti/dev/sansfaux`. Its authoritative protected instruction-source root working
+tree is `$AGENT_ROOT/agent-working-agreements/`; its artifact store is `$AGENT_ROOT/_agent/`. That
+working tree is protected from delivery mutations and kept current with released `master` by the
+release refresh in
 [Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness) below.
 
 After a workspace's reviewed `AGENTS.md` pointer is replaced, the first approved acceptance session
@@ -469,39 +470,446 @@ patch paths after the same prelaunch error; the bounded Gateway equivalents reac
 
 ## Instruction-source isolation and freshness
 
-**Cut every delivery worktree from the delivery checkout host, never from the instruction-source
-clone.** [measured 2026-09-23, issue #24] Three delivery worktrees were created by commands that
-explicitly selected the instruction-source clone with `git -C`; their presence violated that
-clone's one-worktree contract even though the commands ran from the workspace root.
+**The protected instruction-source root working tree stays protected.** It remains clean, checked
+out on `master`, and equal to `origin/master` after the verified fast-forward following each
+`develop → master` release. Its Git administration may host isolated delivery worktrees. A new AWA
+delivery worktree is created only through OpenClaw's managed worktree facility, from a freshly
+fetched and captured base. First run `git -C <repo-root> fetch origin`; if the fetch fails, stop and
+report, and do not create the worktree. Then capture the base OID with
+`git -C <repo-root> rev-parse --verify 'origin/develop^{commit}'`; if it fails, stop and report.
+Pass that captured `<base-oid>`, not the moving `origin/develop` name, and the Gateway context
+explicitly as a bound invocation, with no `--profile` or `--dev` (see `<profile-binding>` below):
 
-**After every `develop → master` merge, fetch and fast-forward the instruction-source clone before
-any further work.** Run `git switch master`, then `git fetch origin`, then
-`git merge --ff-only origin/master`; verify the tree is clean and `HEAD == origin/master`. The
-next report names the exact SHA the clone serves.
+```sh
+env <profile-binding> \
+  OPENCLAW_STATE_DIR=<state-dir> \
+  OPENCLAW_CONFIG_PATH=<config-path> \
+  openclaw worktrees create <repo-root> --name <name> --base-ref <base-oid>
+```
+
+OpenClaw's documentation says that creation without a base ref fetches origin's remote default
+branch, and that an explicit base must resolve to a commit and is never replaced by another base
+[source] (`managed-worktrees.md` line 204); that text does not establish that a fetch or refresh
+happens when an explicit base is given [source] (`managed-worktrees.md` line 204). [inference] The
+required preceding `git fetch origin` is what makes the captured `<base-oid>` current; what would
+verify that causation: in a disposable clone of a remote whose `develop` does not move during the
+test, with the clone's `origin/develop` deliberately left stale behind it, the `rev-parse` capture
+above run without a fetch returns the stale OID, and after a `git fetch origin` that exits 0 the
+same capture returns the OID `git ls-remote origin refs/heads/develop` reports. Before any
+delivery edit, verify that
+`git -C <path> rev-parse HEAD`, where `<path>` is the created worktree's registered inventory path,
+equals `<base-oid>`; on a mismatch, stop, and retain and report the worktree, its `HEAD`, and
+`<base-oid>`. The worktree then lives under the managed worktree root and appears in OpenClaw's
+registered-path inventory; a plain `git worktree add` outside that inventory is not a route for new
+delivery. Each delivery branch starts at that verified `<base-oid>`. Worktree administration may run
+from the protected instruction-source root working tree and update shared Git metadata, but
+delivery edits, commits, branch switches, and cleanup never target it; of the operations this
+appendix runs, only the release refresh below is meant to change its branch, index, or checked-out
+files. [corrected 2026-10-26] An earlier revision said "the release refresh below is the only
+operation that changes its branch, index, or checked-out files", which must not be relied upon:
+[source] without a base ref, base preparation can fast-forward the protected root's checked-out
+default branch, as described below, and no measurement covered every operation that can touch that
+working tree. [inference] The qualified sentence covers only this appendix's operations and states
+intent, not a measured guarantee; the before-and-after status comparison below is what would verify
+it for one create run. Creation resolves its base through `resolveWorktreeCreationBase` [source]
+(`service-BAfHLKXG.mjs` line 3879). With an explicit `--base-ref`, that base resolution never calls
+base preparation [source] (`base-ref-B9lkLpLz.mjs` lines 24–40): it either uses a checkout commit
+already captured [source] (`base-ref-B9lkLpLz.mjs` lines 25–34) or runs
+`git -c core.warnAmbiguousRefs=true rev-parse --verify --end-of-options <base-oid>^{commit}` in
+`<repo-root>` [source] (`base-ref-B9lkLpLz.mjs` lines 41–63). So base resolution neither fetches
+nor fast-forwards anything; that statement covers base resolution only, not the rest of the create
+operation. Without a base ref, base preparation fetches origin's default branch [source]
+(`base-ref-B9lkLpLz.mjs` lines 76–83, 115 and 171–235) and then attempts
+`git merge --ff-only` of the local default branch [source] (`base-ref-B9lkLpLz.mjs` lines 152 and
+281–344). That merge runs only in `<repo-root>` itself, and only when `<repo-root>`'s `HEAD` is the
+default branch, `<repo-root>` is that branch's only checkout and is unlocked, sparse checkout is
+off, no other worktree Git operation is in progress,
+`git status --porcelain --untracked-files=all` there prints nothing, and the local branch is behind
+the fetched commit and an ancestor of it; otherwise it is skipped [source]
+(`base-ref-B9lkLpLz.mjs` lines 281–344). That fast-forward would move the protected root's branch
+and checked-out files, which is why the explicit `--base-ref <base-oid>` above is required.
+[inference] The rest of the create operation, which this reading of the source does not cover,
+also leaves the protected root's branch, index, and checked-out files unchanged, so the whole
+create command with `--base-ref <base-oid>` does. What would verify it, for one run: with no other
+process using `<repo-root>` meanwhile, run
+`git -C <repo-root> status --porcelain=v2 --branch --untracked-files=all` just before and just
+after the create command above and compare the two outputs for equality.
+
+OpenClaw documentation sources, all from the installed 2026.10.6 docs at
+`<runtime>/lib/node_modules/openclaw/docs/`, where `<runtime>` is
+`~/.openclaw/runtime/2026.10.6-release-41c5d94f722c-2026-10-22T19-49-54.000Z`, read
+2026-10-25: `gateway/config-runtime.md` (SHA-256
+`ee38d26c0cb37439c7c4b0ac71f826b8564a2559b6c451109cee7485568b60c8`),
+`concepts/managed-worktrees.md` (SHA-256
+`ecdbbfd79164e46e8883297680c975d13ff9d7cda149511c52be52dd6560d18d`),
+`help/environment.md` (SHA-256
+`adb51f50950f3d94814c19fd03164d0c100bf72ac749aaaa17cbd072da6411b8`),
+`install/nix.md` (SHA-256
+`db205205042c5351c47f94bb37385308706ae50f7389edd0dc175c5bc5ceeca8`),
+`install/uninstall.md` (SHA-256
+`74a52dab06de3ad3a96461b88eb51a04873f220f8a604d4abc9e2b50876be434`), and
+`cli/gateway/query.md` (SHA-256
+`2d179b4159fff0a1cef8c958ccbb96d386e5b5d1ed013c763a6211461dc33c65`).
+Installed runtime source, all in `<runtime>/lib/node_modules/openclaw/dist/`:
+`profile-utils-BsmgdpgZ.mjs` (SHA-256
+`99679c5ce486640d779cb56e8a64b099a49a479c76d6e691242f52f0abd6c3bd`),
+`state-dir-CYkBUd_G.mjs` (SHA-256
+`f18c1153a532214e9efb50e1f4b99a5a6af2c41229292c4895c328747093c3e1`),
+`profile-D1GpjMFM.mjs` (SHA-256
+`fcf1469bb3923ec0e0bda20aa7317710827f9dc536282ab407e5aa97deb83224`),
+`argv-invocation-BHqD0obO.mjs` (SHA-256
+`3d2d71e1932e07791f918c94d1e6a997d32bfa9c794148dd5f503b81bc57aec9`),
+`help-CRbQOEKD.mjs` (SHA-256
+`1c0d1eaf0682cc773797b483888fda3b6c180f231243f62c0f08e3e67e4d7cd2`),
+`run-command-CrXOzzsc.mjs` (SHA-256
+`b252fb2a80021189666fd3ff8a3808e6d35a5efc94c77473a5ea846a7b91a71a`),
+`entry.js` (SHA-256
+`84d9ae4527bb46be0eece8f95cafefa40559cba8bd921e1358998b331cea0d08`),
+`paths-BP0DYpE8.mjs` (SHA-256
+`25900721157f35508fdd0f49b65ba6be8ad50f9fe259209929543e0cf50accff`), and, read 2026-10-26,
+`base-ref-B9lkLpLz.mjs` (SHA-256
+`b4723d93a05b4c97c3b82c20ada3e46a34c3ead7215d1d195e8ff37080b35c0d`) and
+`service-BAfHLKXG.mjs` (SHA-256
+`ebd36bea37c2c403e6f0376e432e5d68268bde54c047c3bada395143c6dc46ae`),
+whose generated filenames and line references identify this exact installed build.
+
+- The managed worktree root is the global `worktreeRoot` key in `openclaw.json`; unset, it defaults
+  to `<openclaw-state-dir>/worktrees`, and checkouts are created at
+  `<worktreeRoot>/<repo-fingerprint>/<name>` [source: `config-runtime.md` lines 16 and 24;
+  `managed-worktrees.md` lines 67 and 199]. The state directory is `OPENCLAW_STATE_DIR` when set,
+  and the config file is `OPENCLAW_CONFIG_PATH` when set, otherwise
+  `$OPENCLAW_STATE_DIR/openclaw.json`; `OPENCLAW_HOME`, when set, replaces the home directory for
+  these defaults [source: `environment.md` lines 50, 346 and 347; `nix.md` line 89]. State
+  resolution itself returns `OPENCLAW_STATE_DIR` when set and otherwise `<home>/.openclaw`; it does
+  not read `OPENCLAW_PROFILE` [source: `state-dir-CYkBUd_G.mjs` lines 16–28;
+  `paths-BP0DYpE8.mjs` lines 115 and 121–142]. A profile-specific root `~/.openclaw-<profile>`
+  arises only when the command line carries `--profile <name>` or a root/profile-selecting `--dev`,
+  which selects profile `dev`: `entry.js` then calls
+  `applyCliProfileEnv`, which computes the root with `resolveProfileStateDir` and exports
+  `OPENCLAW_PROFILE`, `OPENCLAW_STATE_DIR`, and `OPENCLAW_CONFIG_PATH` before paths are resolved
+  [source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 10–65 and 66–102;
+  `profile-utils-BsmgdpgZ.mjs` lines 17–21; `paths-BP0DYpE8.mjs` lines 143–158]. A `--dev` is
+  root/profile-selecting only when no `gateway` command precedes it: `parseCliProfileArgs` passes a
+  `--dev` through unchanged, selecting no profile, when `resolveCliArgvInvocation` finds `gateway`
+  as the primary command among the arguments before it, so `openclaw gateway --dev` uses the
+  Gateway command's own `--dev` ("Create a dev config + workspace if missing") and selects no
+  profile, while `openclaw --dev gateway` selects `dev` [source: `profile-D1GpjMFM.mjs`
+  lines 14–25; `argv-invocation-BHqD0obO.mjs` lines 4–11; `help-CRbQOEKD.mjs` line 48 (root
+  `--dev`, "Dev profile"); `run-command-CrXOzzsc.mjs` line 36 (Gateway `--dev`)]. A service
+  environment's `OPENCLAW_PROFILE` alone does not select `~/.openclaw-<profile>`, although
+  `uninstall.md` line 88 describes profile defaults for both `--profile` and `OPENCLAW_PROFILE`.
+- `openclaw gateway status` human output includes the CLI's and service's config paths and their
+  validity, to diagnose profile or state-dir drift [source: `query.md` line 281]. When a Gateway
+  is running, its worktree CLI mutations use the authenticated Gateway that owns the selected local
+  state directory [source: `managed-worktrees.md` lines 583–589].
+- Changing `worktreeRoot` affects new allocations only; registered worktrees keep their recorded
+  paths for reuse, cleanup, and restore [source: `config-runtime.md` line 26].
+- `openclaw worktrees list --json` reports OpenClaw's registered worktrees, including those recorded
+  paths [source: `managed-worktrees.md` lines 79, 408 and 621]. It does not list plain Git
+  worktrees [inference: OpenClaw records managed worktrees in the shared state database
+  (`managed-worktrees.md` line 11); what would verify it: one plain `git worktree add` in a
+  scratch repository, absent from the list, and one OpenClaw-managed worktree of that repository,
+  present in it].
+  Run it while a Gateway owns the local state: offline listing can retire missing checkouts
+  [source: `managed-worktrees.md` lines 591–595].
+- Ordinary `openclaw worktrees remove <id>` is archival and uses Git's forced checkout removal
+  after a snapshot; `--if-lossless` is the non-force route, retains dirty or unpublished work, never
+  retries a Git refusal with force, and cannot be combined with `--force`. With `--json` it
+  returns `removed` and the recorded `cleanup` outcome; `removed: false` is a retention, not a
+  deletion [source: `managed-worktrees.md` lines 370, 623 and 635].
+
+**Resolve the managed worktree root from the Gateway service's context before creating or using a
+delivery worktree.** The probing shell's environment is not the service's; resolve in this order
+and record each result with its source:
+
+1. The service's effective state directory. Its home is the service's `OPENCLAW_HOME` when set,
+   or else the service user's home directory [source: `environment.md` lines 50 and 346]. When the
+   service's recorded command arguments carry no `--profile` and no root/profile-selecting `--dev`
+   (a `--dev` after the `gateway` command, as in `openclaw gateway --dev`, does not count), the
+   state directory is
+   `OPENCLAW_STATE_DIR` from the Gateway service's environment when set, otherwise that home
+   followed by `/.openclaw`, whatever the service's `OPENCLAW_PROFILE` value
+   [source: `state-dir-CYkBUd_G.mjs` lines 16–28]. When they carry `--profile <name>` or a
+   root/profile-selecting `--dev` (profile `dev`; a `--dev` after the `gateway` command is the
+   Gateway command's own option and selects no profile [source: `profile-D1GpjMFM.mjs`
+   lines 14–17; `run-command-CrXOzzsc.mjs` line 36]), the service
+   process applies `applyCliProfileEnv` to its environment: with no `OPENCLAW_STATE_DIR` there, the
+   state directory is that home followed by `/.openclaw-<name>` (`/.openclaw` for `default`), and
+   an `OPENCLAW_STATE_DIR` equal to the inherited profile's default root is replaced by it
+   [source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 14–25, 71–76, 83–86
+   and 94–95; `profile-utils-BsmgdpgZ.mjs` lines 17–21].
+2. The service's config: `OPENCLAW_CONFIG_PATH` from that environment when set, otherwise
+   `openclaw.json` in that state directory; with a service `--profile` or root/profile-selecting
+   `--dev`, take it from
+   what `applyCliProfileEnv` exports for that environment [source: `profile-D1GpjMFM.mjs`
+   lines 87–92 and 96].
+3. The effective worktree root: `worktreeRoot` from that config when set, otherwise
+   `<state-dir>/worktrees` for the state directory from step 1.
+
+The service's effective profile is the `--profile` value in its command arguments when present,
+or `dev` when they carry a root/profile-selecting `--dev`, otherwise `OPENCLAW_PROFILE` from its
+environment, otherwise unset; a Gateway `--dev` (`openclaw gateway --dev`) does not make it `dev`
+[source: `profile-D1GpjMFM.mjs` lines 14–25 and 93; `run-command-CrXOzzsc.mjs` line 36].
+
+Run every `openclaw worktrees` command — `create`, `list`, and `remove` — as a bound invocation:
+both effective Gateway values explicitly on that invocation, `OPENCLAW_PROFILE` set to the
+service's effective profile or unset when the service has none, and never `--profile` or `--dev`:
+`env <profile-binding> OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw
+worktrees …`, where `<profile-binding>` is `OPENCLAW_PROFILE=<service-profile>` or
+`-u OPENCLAW_PROFILE`. A CLI profile is prohibited because `entry.js` applies it with
+`applyCliProfileEnv`, which replaces a passed `OPENCLAW_STATE_DIR` or `OPENCLAW_CONFIG_PATH` that
+equals the inherited profile's default root or config with the selected profile's, and also clears
+inherited Gateway service selectors and, for `dev`, sets `OPENCLAW_GATEWAY_PORT` to `19001`
+[source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 77–101]. The ambient
+profile is bound because `OPENCLAW_PROFILE` still decides whether an invocation holds the default
+install identity that owns host service management [source: `paths-BP0DYpE8.mjs` lines 26–29
+and 52–78]. [inference: `state-dir-CYkBUd_G.mjs` lines 16–28 and `paths-BP0DYpE8.mjs` lines
+121–142 read the passed values, and no CLI profile reaches `applyCliProfileEnv`; what would verify
+it: with a different profile that has its own config and a deliberately distinct worktree
+inventory, export `OPENCLAW_PROFILE` naming that profile in the probing shell, then run
+`OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw gateway status` and
+`OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw worktrees list --json`
+with no `--profile` or `--dev`, and confirm that status reports the passed config path as the CLI's
+config path and the list returns the passed state directory's inventory, not the ambient profile's
+config path or inventory; repeat the list in the full bound form and confirm the same inventory;
+this verifies only those commands in those forms] Passing both effective values and the bound
+profile prevents state, config, and profile selection from falling back to the probing shell's
+ambient values. When
+a Gateway is running, mutations use the authenticated owner of that selected local state directory.
+Canonicalize the resolved root and the delivery worktree path, and verify that neither lies inside
+or contains the selected `_agent/` artifact store
+or the protected instruction-source root working tree. If the service's state directory, config, or
+root cannot be determined, or any of those paths overlap, stop and report the resolved paths; do
+not create or use the worktree. The delivery audit records the service state directory and which
+source supplied it (the service's `OPENCLAW_STATE_DIR`; with no explicit state directory, the
+service's `OPENCLAW_HOME` or service user's home plus `/.openclaw`; or, only when the service's
+command arguments carry `--profile <name>` or a root/profile-selecting `--dev`, not a Gateway
+`--dev`, the `applyCliProfileEnv` result such as
+`/.openclaw-<name>`), the service's command-line profile if any and its environment
+`OPENCLAW_PROFILE` value, the config path and its source, the resolved root and whether it came
+from `worktreeRoot` or the default, and the worktree path with its registered inventory record.
+For each creation, it also records the `git fetch origin` exit status, the captured `<base-oid>`
+and the `origin/develop` ref it was read from, and the created worktree's `HEAD` readback with its
+equality to `<base-oid>`.
+For each `openclaw worktrees` invocation, record its subcommand, the explicit state directory and
+config path passed, the `OPENCLAW_PROFILE` value set or that it was unset, the absence of
+`--profile` and `--dev`, and its result.
+[measured 2026-10-26T03:55:06Z, this host, OpenClaw 2026.10.6 (41c5d94); the earlier
+2026-10-25 reading has no capture located, so this replaces it; raw captures `gateway-status.json`,
+`openclaw.json.copy`, `worktrees-list.json`, `gateway-status.err` and `worktrees-list.err`
+preserved at
+`/Users/brandonperfetti/dev/sansfaux/_agent/evidence/2026-10-25-agent-working-agreements-pr-181-gateway-worktree-inventory/`]
+`openclaw gateway status --json` (empty stderr; output SHA-256
+`2dbd291d1021280837b9192200db23fe75992968b642d93f4788b6629d34c81f`) reported a loaded launchd
+service from `~/Library/LaunchAgents/ai.openclaw.gateway.plist` with
+`"OPENCLAW_PROFILE": "default"`, `"OPENCLAW_STATE_DIR":
+"/Users/brandonperfetti/.openclaw"` and `"OPENCLAW_CONFIG_PATH":
+"/Users/brandonperfetti/.openclaw/openclaw.json"` under `service.command.environment`, and
+`service.command.programArguments` contained only the recorded Bun and `dist/index.js` paths,
+`--no-install`, `gateway`, `--port` and `18789`, with neither `--profile` nor a
+root/profile-selecting `--dev`; thus its effective profile is that environment's `default`.
+It also reported `config.daemon.path` set to
+`/Users/brandonperfetti/.openclaw/openclaw.json`. That file, read in the same pass (SHA-256
+`87027a892fc01a1464c5dc492389f196ef1494b2a01a03a79ac0dcd81fc668a3`), contains no `worktreeRoot`
+string.
+[superseded 2026-10-25] An earlier revision continued: "`openclaw worktrees list --json` (empty
+stderr; output SHA-256 `3a25f8eae2dcf7c05707413dd65845a14330f7fad1365a23c3214b9fc5c040d0`)
+recorded this delivery's worktree as …". That reading came from the capture whose bindings were
+not recorded, `worktrees-list.json` with `worktrees-list.err` in the gateway-inventory directory
+above, which stays preserved unchanged. It is superseded by the bound capture below and must not
+be relied upon for the inventory claim. [measured 2026-10-25] That directory holds no argv,
+invocation manifest or record of the state directory, config path or profile the invocation was
+bound to; its `worktrees-list.json` SHA-256 equals that of the bound capture's `stdout.json`.
+[inference] Equal bytes do not show which state directory, config or profile the earlier invocation
+selected, so the earlier capture cannot support the inventory claim on its own; only the bound
+capture does. No later reading can verify the earlier invocation's bindings, because they were never
+recorded.
+[measured 2026-10-26T04:37:53Z, this host, OpenClaw 2026.10.6 (41c5d94); raw captures
+`argv.txt`, `argv-flag-check.txt`, `invocation-manifest.txt`, `run.sh`, `stdout.json`,
+`stderr.txt`, `exit-status.txt`, `captured-at-utc.txt`, `openclaw-version.txt` and `SHA256SUMS`
+preserved at
+`/Users/brandonperfetti/dev/sansfaux/_agent/evidence/2026-10-25-agent-working-agreements-pr-181-bound-worktrees-list/`]
+One `openclaw worktrees list --json` invocation ran with the call-local bindings
+`OPENCLAW_STATE_DIR=/Users/brandonperfetti/.openclaw`,
+`OPENCLAW_CONFIG_PATH=/Users/brandonperfetti/.openclaw/openclaw.json` and
+`OPENCLAW_PROFILE=default`; its actual argv was
+`/Users/brandonperfetti/.openclaw/bin/openclaw worktrees list --json`, with neither `--profile`
+nor `--dev`. Its `invocation-manifest.txt` records those three call-local bindings exactly,
+including `OPENCLAW_PROFILE=default` and the config path; `SHA256SUMS` records that manifest as
+`f0d0408d0f68f42f38eb6dee5b312d88fa0d223b9658237a488d58293cdd0283`.
+It exited 0 with zero-byte stderr (stdout SHA-256
+`3a25f8eae2dcf7c05707413dd65845a14330f7fad1365a23c3214b9fc5c040d0`) and listed 26 entries, 17
+active and 9 carrying `removedAt`. It recorded this delivery's
+worktree as `"repoFingerprint": "3be5ac1eed078a0d"`, `"path":
+"/Users/brandonperfetti/.openclaw/worktrees/3be5ac1eed078a0d/awa-180-protected-root-worktrees"`,
+with `id`, `branch` and `repoRoot` set. That is one record; it does not cover every managed
+worktree. [inference] The effective root here is the default
+`/Users/brandonperfetti/.openclaw/worktrees`, outside `$AGENT_ROOT/_agent/`; what would verify it:
+the service state directory still resolves to `/Users/brandonperfetti/.openclaw`, the service config
+at `config.daemon.path` has no `worktreeRoot` key, and the recorded inventory path for a newly
+created managed worktree lies under that root. Resolve it again for each delivery rather than
+reusing this value.
+
+[measured 2026-09-23, issue #24] Three delivery worktrees were created by commands that explicitly
+selected the protected instruction-source root working tree with `git -C`; their presence violated
+its then one-worktree contract even though the commands ran from the workspace root. Issue #180
+supersedes only that topology assumption: the containment remains that no delivery operation alters
+the protected instruction-source root working tree. It does not change runtime project bindings or
+delete or migrate existing clones.
+
+**After every `develop → master` merge, fetch and fast-forward the protected instruction-source
+root working tree before any further work.** Run `git switch master`, then `git fetch origin`; if
+the fetch fails, stop and report before any merge. Then run `git merge --ff-only origin/master`;
+verify the tree is clean and `HEAD == origin/master`. The next report names the exact SHA the
+protected instruction-source root working tree serves.
 [measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
-2026-09-22T20:18:10Z, but the clone remained six commits behind until the next day.
+2026-09-22T20:18:10Z, but the protected instruction-source root working tree remained six commits
+behind until the next day.
 
 **Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
-Run it from the delivery checkout host, never the instruction-source clone: `git fetch origin`
-— if the fetch fails, stop, and retain and report the worktree and branch — then
+These safeguards govern only this manual post-merge cleanup route, for every delivery worktree it
+removes, managed or an existing plain Git worktree; they do not bind OpenClaw's own background
+cleanup (see the background-cleanup paragraph after this procedure).
+Run it from any of the repository's worktrees; the protected instruction-source root working tree
+may serve, but only for Git administration and never against its working tree. First read
+`git worktree list --porcelain` once and keep that output; if it cannot be read, stop, and retain
+and report the worktree and branch. That one read, taken before any other cleanup step, is the
+protected-worktree inventory's source and the only source for `<path>` below. Then run
+`git fetch origin` — if the fetch fails, stop, and retain and report the worktree and branch — then
 `git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
-not by itself enough: a protected base worktree (the delivery checkout host itself, and any other
-the host reserves, such as its release-review worktree), a dirty worktree, and a branch that is
-not an ancestor of `origin/develop` are all retained and reported. On exit 0 and outside those
-exclusions, `git worktree remove <path>` without `--force`; then, only if that removal succeeded,
-`git branch -d <branch>`.
-Any refusal from either command is left as it is and reported, never overridden.
+not by itself enough: the protected instruction-source root working tree, another protected base
+worktree such as a release-review worktree, a dirty delivery worktree, and a branch that is not an
+ancestor of `origin/develop` are all retained and reported. The protected instruction-source root
+working tree is never eligible for cleanup. `<path>` is the canonical form, with every symlink
+resolved, of the value of the `worktree` line of the unique record in that output whose `branch`
+line is `refs/heads/<branch>`; on zero or multiple matches, stop, and retain and report the branch
+and every candidate worktree. If that value cannot be canonicalized, or a lookup of `<path>` itself
+does not positively report that it exists, stop, and retain and report the worktree and branch.
+The authoritative protected-worktree inventory is the protected instruction-source root working
+tree named under [Startup and mode](#startup-and-mode) plus every record of that output that is a
+protected base worktree: the first record, which is the main working tree of the clone being
+cleaned; every record whose `branch` line is `refs/heads/master` or `refs/heads/develop`, or that
+has a `detached` line, which covers a release-review worktree checked out on its base; and every
+record with a `locked` line, whatever its reason. A protected base worktree on any other branch is
+in the inventory only through its lock, so lock it with
+`git worktree lock --reason 'protected base worktree' <worktree>` when it is created. The inventory
+is indeterminate, and the cleanup stops, retaining and reporting the worktree, branch, and every
+unclassified record, if any record lacks a `worktree` line or any record after the first has
+neither a `branch` nor a `detached` line. Canonicalize the named root and the path of every
+worktree in that inventory, with every symlink resolved, and compare each with `<path>`; if any of
+them cannot be canonicalized or equals `<path>`, stop, and retain and report the worktree and
+branch, with no inventory query, removal route, or branch deletion. Then run
+`git --no-optional-locks -C <path> status --porcelain --untracked-files=all --ignored`; ignored
+files count, since [inference] `git worktree remove` without `--force` deletes them. What would
+verify it: in a disposable repository, add a worktree whose only local content is a file matched by
+`.gitignore`, run `git worktree remove <worktree>` without `--force`, and check that it exits 0
+and the file is gone. [corrected 2026-10-26] An earlier revision labelled that claim "[measured
+2026-10-25, Git 2.56.0, a scratch repository; recorded in commit
+`adef2b1e7d6f2d3a4572d68802a6ed24edd661b7`]", which must not be relied upon: no raw output of
+that scratch-repository run was preserved, and that commit only introduced the wording, so it
+locates the claim's history, not a measurement. If that status command exits nonzero, cannot be
+run, or prints any output, stop, and retain and report the worktree and branch with its exit
+status and output. Only exit 0 with empty output permits cleanup to continue. Then pick the
+removal route from OpenClaw's registered inventory. Run:
+
+```sh
+env <profile-binding> \
+  OPENCLAW_STATE_DIR=<state-dir> \
+  OPENCLAW_CONFIG_PATH=<config-path> \
+  openclaw worktrees list --json
+```
+
+if it cannot be read, stop, and retain and report the worktree and branch:
+
+- **Managed worktree.** Canonicalize the `path` of every `worktrees` record, with every symlink
+  resolved, before matching. Skip a record only when the lookup of its `path` positively reports
+  no such file and its `branch` is not `<branch>`, since it cannot equal `<path>`, which is
+  canonical and was positively confirmed to exist above. If such a record's `branch` is
+  `<branch>`, or on any other failure to canonicalize or determine a record's `path`, including
+  an existence lookup that cannot say, stop, and retain and report the worktree, branch, and
+  record. `<id>` is the `id` of the unique `worktrees` record whose canonical `path` is `<path>`;
+  on zero matches the worktree is not managed. On multiple matches, or a match whose `branch` is
+  not `<branch>`, stop, and retain and report every candidate record. Run this explicitly bound
+  command:
+
+  ```sh
+  env <profile-binding> \
+    OPENCLAW_STATE_DIR=<state-dir> \
+    OPENCLAW_CONFIG_PATH=<config-path> \
+    openclaw worktrees remove <id> --if-lossless --json
+  ```
+
+  Only `removed: true` is a successful removal; `removed: false` is a retention, reported with its
+  recorded `cleanup` outcome. Never run
+  ordinary `openclaw worktrees remove <id>`, which removes with Git force, or `--force`, and never
+  fall back to `git worktree remove` for a registered worktree.
+- **Existing plain Git worktree.** Only a worktree with no inventory record and outside the resolved
+  managed worktree root qualifies; one with no record inside that root is retained and reported.
+  Run `git worktree remove <path>` without `--force`.
+
+On exit 0, with one match, and outside those exclusions, remove by that route; then, only if that
+removal succeeded and `refs/heads/<branch>` still exists, `git branch -d <branch>`. Any refusal or
+retention from either command is left as it is and reported, never overridden. The cleanup audit
+records the inventory read and its output, each record's classification with the line that decided
+it, and every canonicalization and comparison the cleanup makes with its outcome, including a
+failure or a stop: the named root and each inventory worktree, each compared with `<path>`; every
+candidate record for `<branch>`, and `<path>` with its existence lookup; the clean-status check of
+`<path>` with its exit status and output; each `worktrees` record's canonical `path`, or its skip
+with the existence lookup that allowed it, compared with `<path>`,
+and its `branch` compared with `<branch>`; and, on the plain Git route, the check of `<path>`
+against the resolved managed worktree root.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
 and their branches without forcing a dirty removal, leaving the protected delivery host plus a
 release-review worktree.
 
+**OpenClaw's background cleanup can purge a managed delivery worktree outside that manual route.**
+[source: `managed-worktrees.md` lines 95 and 379–380] [inference] It does not apply that route's
+safeguards: none of them appears among the cleanup rules or the eviction policy; what would verify
+it: re-read `managed-worktrees.md` lines 87–101 and 376–392 for any of those checks.
+[source: `managed-worktrees.md` lines 77, 87, 95, 101, 379–382 and 693] Capacity
+eviction enforces `worktreeMaxCount` (default 4096) across every owner sharing the state directory:
+it removes checkouts on branches merged into the default branch first, then squash-landed ones, then
+idle checkouts from oldest last use, and manual worktrees (managed worktrees created manually,
+recorded with `ownerKind: manual`) and unsaved data are eligible. Idle
+cleanup snapshots and removes unlocked session- and Workboard-owned worktrees idle for more than 7
+days, even when dirty, and a session worktree whose owner is archived or absent without waiting.
+OpenClaw snapshots dirty contents when it can, but snapshot failure does not block cap eviction;
+a snapshot record stays restorable for 30 days. Live owner leases protect active runs, and creation
+that would have to evict one is refused, naming the cap and live owners. Ordinary idle cleanup
+preserves foreign or unrecognized Git worktree locks. [inference] A lock, including the
+`protected base worktree` lock above, does not protect a managed checkout from cap eviction: the
+cap's stated exemptions name only live owner leases, and remembered idle-cleanup protection never
+exempts a checkout from it [source: `managed-worktrees.md` lines 95, 101 and 392]; what would
+verify it: in a scratch state directory, a locked, idle managed checkout evicted after
+`worktreeMaxCount` is lowered below the live count. Mitigation
+[source: `managed-worktrees.md` lines 87, 95, 101 and 381]: commit or otherwise back up work you
+need to retain before leaving a managed delivery worktree inactive, and keep the live managed
+worktree count below `worktreeMaxCount`, raising it in `openclaw.json` when needed. A snapshot
+record, when one was made, stays restorable for 30 days; that text does not say whether eviction
+keeps or deletes the checkout's branch or commits, so it shows committed work neither lost nor
+retained.
+
 ## Pickup guard and delivery audit
 
 Record the checkout and HEAD, Git author identity, `core.hooksPath` and hook presence, an explicit
 dry-run probe (or N/A when the repository installs no `pre-push` hook), the full gate result,
-branch ownership, and target-protection audit. Parts A/B remain the authority for RULE ZERO,
-no-force-push, and no-agent-merge; do not restate those rules here.
+branch ownership, and target-protection audit. For a delivery worktree, also record the Gateway
+service's state directory with the source that supplied it (service `OPENCLAW_STATE_DIR`; with
+no explicit state directory, service `OPENCLAW_HOME` or service home plus `/.openclaw`; or, only
+when the service's command arguments carry `--profile <name>` or a root/profile-selecting `--dev`,
+not a Gateway `--dev`, the `applyCliProfileEnv` result such as `/.openclaw-<name>`), its
+command-line profile if any and its environment
+`OPENCLAW_PROFILE` value, its config path with its source, the resolved managed worktree root and
+its source (`worktreeRoot` or the default), the worktree path, its registered inventory record,
+each `openclaw worktrees` invocation with the explicit state directory and config path passed, the
+`OPENCLAW_PROFILE` value set or that it was unset, the absence of `--profile` and `--dev`, and its
+result, the cleanup audit with every canonicalization and comparison outcome, the cleanup route
+with its `id` or plain Git path, and the `_agent/` and protected-root overlap check; any overlap
+stops the delivery (see
+[Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness)).
+Parts A/B remain the authority for RULE ZERO, no-force-push, and no-agent-merge; do not restate
+those rules here.
 
 Attribution injection, arbitrary external injection, and exact reset/reload behavior remain
 unmeasured. Require a delivery audit or controlled observation rather than assuming them. Record a
