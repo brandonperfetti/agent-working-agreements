@@ -28,11 +28,14 @@ being retrofitted onto the other.
   selects no profile root), and that the verification recipe passed `--profile`, which can replace
   the bound state and config paths. A later correction found that `openclaw gateway --dev` selects
   no profile. CodeRabbit (review comment `4372921615`) found that creation passed
-  `--base-ref origin/develop` without a fetch; [inference] a stale ref could seed delivery. Later
-  review found that cleanup matched worktree paths without canonicalizing them or confirming they
-  exist, and that the inventory-verification recipe for `openclaw worktrees list --json` checked
-  only that a plain Git worktree was absent, which an empty or unreadable list also satisfies; it
-  now also requires an OpenClaw-managed worktree of the same scratch repository to be present.
+  `--base-ref origin/develop` without a fetch; [inference] a stale ref could seed delivery, which
+  would be verified if, with `origin/develop` left stale behind the remote's `develop`, a worktree
+  created with that base had `HEAD` equal to the stale OID rather than the OID
+  `git ls-remote origin refs/heads/develop` reports. Later review found that cleanup matched
+  worktree paths without canonicalizing them or confirming they exist, and that the
+  inventory-verification recipe for `openclaw worktrees list --json` checked only that a plain Git
+  worktree was absent, which an empty or unreadable list also satisfies; it now also requires an
+  OpenClaw-managed worktree of the same scratch repository to be present.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of
