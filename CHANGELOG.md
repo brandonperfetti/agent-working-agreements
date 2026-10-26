@@ -10,6 +10,102 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-25 — `clients/openclaw.md`: permit isolated delivery worktrees from the protected
+  instruction-source repository.** Issue #180. Brandon clarified the topology: the canonical
+  checkout stays protected and hosts disposable delivery worktrees, so delivery needs no duplicate
+  clones. The #48 containment rule assumed that protecting the stable instruction checkout
+  required a one-worktree topology; #24 supplied the measured failure that established the need to
+  protect it. This narrows only that assumption: the protected root stays clean, on `master`, and
+  equal to `origin/master` after refresh, and may serve as Git administration for isolated managed
+  delivery worktrees; delivery cannot alter its branch, index, or checked-out files, and the root is
+  never eligible for cleanup. No runtime project binding changes, no clone is deleted or migrated,
+  and the successful-fetch, ancestry, cleanliness, uniqueness, and no-force cleanup safeguards
+  stay. The appendix carries the procedure; review and revision on PR #181 identified the
+  following defects in earlier wording. [source, commit `9669abf`] That wording named no
+  worktree-creation route, so it did not require OpenClaw's managed facility and registered
+  inventory or exclude plain `git worktree add`, and the earlier wording named no resolution of
+  the managed root.
+  [source, commits `c3d598d`, `37f83c9` and `428af38`] Cleanup removed managed worktrees with
+  `git worktree remove`, root resolution read the probing shell rather than the Gateway service,
+  the profile mechanism was misdescribed (a service's `OPENCLAW_PROFILE` alone selects no profile
+  root), and the verification recipe passed `--profile`, which can replace the bound state and
+  config paths; those commits carry the superseded wording and its replacement. A later correction,
+  commit `979decd`, records that `openclaw gateway --dev` selects no profile. [source, CodeRabbit,
+  PR #181 review comment `4372921615`] Creation passed `--base-ref origin/develop` without a
+  fetch; fixed in `e56f1ff` and `6973c1a`. [inference] A stale ref could seed delivery, which
+  would be verified if, with `origin/develop` left stale behind the remote's `develop`, a worktree
+  created with that base had `HEAD` equal to the stale OID rather than the OID
+  `git ls-remote origin refs/heads/develop` reports. [source, CodeRabbit, PR #181 review
+  `5646215403`] Cleanup matched worktree paths without canonicalizing them; fixed in `a9f544f`.
+  [source, commit `efff37b`; the reviewer is not recorded here] Cleanup did not confirm the paths
+  exist, and the inventory-verification recipe for `openclaw worktrees list --json` checked only
+  that a plain Git worktree was absent, which an empty or unreadable list also satisfies; it now
+  also requires an OpenClaw-managed worktree of the same scratch repository to be present.
+  [source, CodeRabbit, PR #181 reviews `5646925778` and `5646995554`] Nothing stopped the
+  plain-Git route from selecting the protected root, which has no inventory record and lies outside
+  the managed root (fixed in `3c04d73`), and then the fix guarded only the root, not every
+  protected base worktree (fixed in `e2e926d`). [source, commit `3b4e257`; the reviewer is not
+  recorded here] The inventory of protected base worktrees had no defined source. The inventory
+  now comes from one `git worktree list --porcelain` read taken before any
+  other cleanup step: the named root plus the main working tree and every `master`, `develop`,
+  detached, or locked record. Cleanup compares `<path>` with each canonicalized inventory worktree
+  before any route, retains on an unreadable or indeterminate inventory, including a record it
+  cannot classify, and records every canonicalization and comparison outcome in its audit.
+  [source, commits `70cd49b`, `a288d49` and `2900e68`] Those commits bound the appendix's
+  `openclaw worktrees list --json` inventory evidence to a capture that records its bindings and
+  labelled the former capture, which recorded none, superseded. That was an evidence correction,
+  not a new policy amendment. [source, commit `ac42d29`] Cleanup already ran
+  `git --no-optional-locks -C <path> status --porcelain --untracked-files=all` after the
+  protected-worktree comparison and before the inventory query, retained and reported the worktree
+  and branch unless that exited 0 with empty output, and recorded that check's exit status and
+  output in its audit. [source, commit `adef2b1`] That check now also passes `--ignored`, so the
+  same clean-status enforcement and audit cover ignored files. [source, commit
+  `ac42d296adae956a278960570dfb86ce0ea52183`] As first written, the check omitted `--ignored`.
+  [inference] That form can exit 0 with empty output for a worktree whose only local content is an
+  ignored file, which `git worktree remove` without `--force` then deletes, while the `--ignored`
+  form prints a `!!` line for that file. What would verify it: in a disposable repository, add a
+  worktree whose only local content is a file matched by `.gitignore`, such as `.env`; run both
+  forms of the check there, expecting empty output and then `!! .env`; then run
+  `git worktree remove <worktree>` without `--force`, expecting exit 0 and the file gone.
+  *(Corrected 2026-10-26: this entry read "[measured 2026-10-25, Git 2.56.0] In a scratch
+  repository, that form exited 0 with empty output for a worktree whose only local content was an
+  ignored file, and `git worktree remove` without `--force` then deleted it. [measured 2026-10-25,
+  Git 2.56.0] With `--ignored`, the check printed `!! .env`.", which should not be relied on. No
+  raw output of that run was preserved, so neither observation has a receipt. Commit `adef2b1`
+  first recorded them and locates their history only, not a measurement.)* [inference] Because
+  `clients/openclaw.md`'s procedure lets cleanup continue only on exit 0 with empty output, that
+  output would stop cleanup and retain the worktree and branch; running the procedure against such
+  a worktree and observing it retained would verify this. [source, CodeRabbit, PR #182 review
+  comments `4379996717`, `4379996762` and `4379996780`] `4379996717` reported that creation's
+  `git fetch origin` updates only the tracking refs the configured refspec maps, so the base capture
+  could read a stale `origin/develop`; `4379996762`, that the post-release refresh stopped only on a
+  failed fetch, not on a failed switch or fast-forward, and had no pre-merge clean-tree check; and
+  `4379996780`, that the plain-Git cleanup route neither repeated the `--ignored` status check nor
+  reconfirmed that `<path>` still belongs to `<branch>` immediately before removal. [inference] In
+  a single-branch clone, whose configured refspec maps one branch, that fetch can exit 0 while
+  `origin/develop` keeps an older OID. What would verify it: in a disposable
+  `git clone --single-branch --branch master` clone, set `refs/remotes/origin/develop` to an older
+  OID with `git update-ref`, run `git fetch origin`, and expect exit 0 with `origin/develop`
+  unchanged and different from the OID `git ls-remote origin refs/heads/develop` reports.
+  [source, commit `c9c9dfe`] Creation now fetches `develop` and `master` by name and, for each,
+  requires the local `origin/<name>` OID to equal the OID `git ls-remote` reports, stopping without
+  creating the worktree on any failure or difference; its audit records the named fetch's exit
+  status and, for each ref, the `rev-parse` OID, the `ls-remote` OID, and their equality result.
+  Refresh fetches `master` by name; stops on any failed step or mismatch, reporting its command,
+  exit status, and output and running no later step; and requires
+  `git status --porcelain --untracked-files=all` to exit 0 with empty output before and after the
+  fast-forward, and `git rev-parse HEAD` to equal `origin/master`. The plain-Git cleanup route
+  repeats the `--ignored` status check and requires exactly one `git worktree list --porcelain`
+  record whose canonical path is `<path>` with branch `refs/heads/<branch>`, retaining and
+  reporting the worktree and branch on any failure, output, or mismatch; its audit adds those
+  repeated checks with their outputs. [source, this entry's `clients/openclaw.md` change, which has
+  no commit or review locator yet; reviewer not recorded] Cleanup's ancestry fetch now fetches
+  `develop` by name, `+refs/heads/develop:refs/remotes/origin/develop`, not through the configured
+  refspec, before `git merge-base --is-ancestor <branch> origin/develop`. [source, CodeRabbit,
+  PR #182 review comment `4380197119`] Refresh's first clean-status check ran after
+  `git switch master`, so a dirty root could be switched before the check stopped it; that check
+  now runs first, before any branch switch.
+
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of
   `~/.openclaw/workspace/docs/team-operating-model.md` under a SHA-256 the reviewed, expanded file
