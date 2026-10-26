@@ -766,7 +766,8 @@ neither a `branch` nor a `detached` line. Canonicalize the named root and the pa
 worktree in that inventory, with every symlink resolved, and compare each with `<path>`; if any of
 them cannot be canonicalized or equals `<path>`, stop, and retain and report the worktree and
 branch, with no inventory query, removal route, or branch deletion. Then run
-`git --no-optional-locks -C <path> status --porcelain --untracked-files=all`; if it exits nonzero,
+`git --no-optional-locks -C <path> status --porcelain --untracked-files=all --ignored`; ignored
+files count, since `git worktree remove` without `--force` deletes them. If it exits nonzero,
 cannot be run, or prints any output, stop, and retain and report the worktree and branch with its
 exit status and output. Only exit 0 with empty output permits cleanup to continue. Then pick the
 removal route from OpenClaw's registered inventory. Run:

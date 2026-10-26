@@ -54,7 +54,16 @@ being retrofitted onto the other.
   [source, commits `70cd49b`, `a288d49` and `2900e68`] Those commits bound the appendix's
   `openclaw worktrees list --json` inventory evidence to a capture that records its bindings and
   labelled the former capture, which recorded none, superseded. That was an evidence correction,
-  not a new policy amendment.
+  not a new policy amendment. [source, commit `ac42d29`] Cleanup already ran
+  `git --no-optional-locks -C <path> status --porcelain --untracked-files=all` after the
+  protected-worktree comparison and before the inventory query, retained and reported the worktree
+  and branch unless that exited 0 with empty output, and recorded that check's exit status and
+  output in its audit. That check now also passes `--ignored`, so the same clean-status
+  enforcement and audit cover ignored files. [source, PR #181 review; its identifier is not
+  recorded here] As first written, the check omitted `--ignored`. [measured 2026-10-25, Git
+  2.56.0] In a scratch repository, that form exited 0 with empty output for a worktree whose only
+  local content was an ignored file, and `git worktree remove` without `--force` then deleted it;
+  with `--ignored` the check printed `!! .env` and cleanup would stop.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of
