@@ -704,8 +704,9 @@ resolved, of the value of the `worktree` line of the unique record in
 `git worktree list --porcelain` whose `branch` line is `refs/heads/<branch>`; on zero or multiple
 matches, stop, and retain and report the branch and every candidate worktree. If that value
 cannot be canonicalized, or a lookup of `<path>` itself does not positively report that it exists,
-stop, and retain and report the worktree and branch. Canonicalize the protected instruction-source
-root working tree's path, with every symlink resolved, and compare it with `<path>`; if it cannot be
+stop, and retain and report the worktree and branch. Canonicalize the path of every protected base
+worktree, including the protected instruction-source root working tree and any release-review
+worktree, with every symlink resolved, and compare each with `<path>`; if any of them cannot be
 canonicalized or equals `<path>`, stop, and retain and report the worktree and branch, with no
 inventory query, removal route, or branch deletion. Then pick the removal route from OpenClaw's
 registered inventory. Run:
