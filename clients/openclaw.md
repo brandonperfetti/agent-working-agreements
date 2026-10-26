@@ -55,8 +55,8 @@ tier where the mechanism accepts a caller's selection.
 **Model selectors (A4's tiers).** Which selector resolves each A4 role tier for an OpenClaw
 specialist is not recorded here — **unmeasured**; measure and record. The shared Claude Code
 wrapper takes no caller selector and pins its own exact model [source:
-`~/.openclaw/workspace/docs/team-operating-model.md` lines 198–199, read 2026-10-24, SHA-256
-`1bf9bcef0f5f2b17273c9d14f3062f19ae51a5ffa5e0c017621055fa6b84f163`, quoted below], so a dispatch
+`~/.openclaw/workspace/docs/team-operating-model.md` lines 198–199, read 2026-10-26, SHA-256
+`f728ac8aad65abf94e9a7a352f96373ee0f1e3e66c46c24d406b9f2867524153`, quoted below], so a dispatch
 through it names its role tier, passes no selector, and records the model the wrapper pins (A4).
 Those two lines read exactly, line break kept:
 
