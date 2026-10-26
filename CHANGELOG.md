@@ -101,7 +101,10 @@ being retrofitted onto the other.
   repeated checks with their outputs. [source, this entry's `clients/openclaw.md` change, which has
   no commit or review locator yet; reviewer not recorded] Cleanup's ancestry fetch now fetches
   `develop` by name, `+refs/heads/develop:refs/remotes/origin/develop`, not through the configured
-  refspec, before `git merge-base --is-ancestor <branch> origin/develop`.
+  refspec, before `git merge-base --is-ancestor <branch> origin/develop`. [source, CodeRabbit,
+  PR #182 review comment `4380197119`] Refresh's first clean-status check ran after
+  `git switch master`, so a dirty root could be switched before the check stopped it; that check
+  now runs first, before any branch switch.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of

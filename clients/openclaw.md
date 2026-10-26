@@ -765,11 +765,11 @@ delete or migrate existing clones.
 
 **After every `develop → master` merge, fetch and fast-forward the protected instruction-source
 root working tree before any further work.** If any step below fails, exits nonzero, or finds a
-mismatch, stop and report its command, exit status, and output; run no later step. Run
-`git switch master`, then
-`git fetch origin +refs/heads/master:refs/remotes/origin/master`. Then
-`git status --porcelain --untracked-files=all` must exit 0 with empty output before any merge.
-Then run `git merge --ff-only origin/master`. Finally, that status command must again exit 0 with
+mismatch, stop and report its command, exit status, and output; run no later step. First,
+`git status --porcelain --untracked-files=all` must exit 0 with empty output before any branch
+switch. Then run `git switch master`, then
+`git fetch origin +refs/heads/master:refs/remotes/origin/master`, then
+`git merge --ff-only origin/master`. Finally, that status command must again exit 0 with
 empty output, and `git rev-parse HEAD` must equal `git rev-parse --verify 'origin/master^{commit}'`.
 The next report names the exact SHA the
 protected instruction-source root working tree serves.
