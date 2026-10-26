@@ -59,12 +59,17 @@ being retrofitted onto the other.
   selectors and the `dev` port. Every bound invocation now prohibits `--profile` and `--dev`, sets
   `OPENCLAW_PROFILE` to the service's own value or unsets it, and records that per invocation. The
   recipe now tests a bound invocation under a different ambient profile with no CLI profile.
-  CodeRabbit on PR #181 found that creation passed `--base-ref origin/develop` without a fetch, and
+  CodeRabbit on PR #181 found that creation passed `--base-ref origin/develop` without a fetch
+  [source: review comment `4372921615`, `clients/openclaw.md` line 484, 2026-10-25].
   `managed-worktrees.md` line 204 documents a fetch of origin's remote default branch for creation
-  without a base ref but does not establish a refresh for an explicit base, so a stale ref could
-  seed delivery. Creation now stops unless `git fetch origin` succeeds, captures `origin/develop`
-  as a base OID, creates from that OID, and verifies the new worktree's `HEAD` equals it; the audit
-  records the fetch result, the OID, and the readback.
+  without a base ref but does not establish a refresh for an explicit base [source]. [inference] A
+  stale `origin/develop` could therefore seed delivery; what would verify it: with `origin/develop`
+  deliberately set behind `git ls-remote origin refs/heads/develop` and remote `develop` left
+  unchanged, a creation that passes `--base-ref origin/develop` with no preceding fetch yields a
+  worktree `HEAD` equal to the stale ref, not the remote commit. Creation now stops unless
+  `git fetch origin` succeeds, captures `origin/develop` as a base OID, creates from that OID, and
+  verifies the new worktree's `HEAD` equals it; the audit records the fetch result, the OID, and
+  the readback.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of

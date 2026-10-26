@@ -489,9 +489,14 @@ env <profile-binding> \
 
 OpenClaw's documentation says that creation without a base ref fetches origin's remote default
 branch, and that an explicit base must resolve to a commit and is never replaced by another base
-[source: `managed-worktrees.md` line 204]; it does not establish that a fetch or refresh happens
-when an explicit base is given, so the preceding fetch is what makes the captured base current.
-Before any delivery edit, verify that
+[source] (`managed-worktrees.md` line 204); that text does not establish that a fetch or refresh
+happens when an explicit base is given [source] (`managed-worktrees.md` line 204). [inference] The
+required preceding `git fetch origin` is what makes the captured `<base-oid>` current; what would
+verify that causation: in a disposable clone of a remote whose `develop` does not move during the
+test, with the clone's `origin/develop` deliberately left stale behind it, the `rev-parse` capture
+above run without a fetch returns the stale OID, and after a `git fetch origin` that exits 0 the
+same capture returns the OID `git ls-remote origin refs/heads/develop` reports. Before any
+delivery edit, verify that
 `git -C <path> rev-parse HEAD`, where `<path>` is the created worktree's registered inventory path,
 equals `<base-oid>`; on a mismatch, stop, and retain and report the worktree, its `HEAD`, and
 `<base-oid>`. The worktree then lives under the managed worktree root and appears in OpenClaw's
