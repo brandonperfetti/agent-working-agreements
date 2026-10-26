@@ -58,15 +58,24 @@ being retrofitted onto the other.
   `git --no-optional-locks -C <path> status --porcelain --untracked-files=all` after the
   protected-worktree comparison and before the inventory query, retained and reported the worktree
   and branch unless that exited 0 with empty output, and recorded that check's exit status and
-  output in its audit. That check now also passes `--ignored`, so the same clean-status
-  enforcement and audit cover ignored files. [source, commit
+  output in its audit. [source, commit `adef2b1`] That check now also passes `--ignored`, so the
+  same clean-status enforcement and audit cover ignored files. [source, commit
   `ac42d296adae956a278960570dfb86ce0ea52183`] As first written, the check omitted `--ignored`.
-  [measured 2026-10-25, Git 2.56.0] In a scratch repository, that form exited 0 with empty output
-  for a worktree whose only local content was an ignored file, and `git worktree remove` without
-  `--force` then deleted it. [measured 2026-10-25, Git 2.56.0] With `--ignored`, the check printed
-  `!! .env`. [inference] Because `clients/openclaw.md`'s procedure lets cleanup continue only on
-  exit 0 with empty output, that output would stop cleanup and retain the worktree and branch;
-  running the procedure against such a worktree and observing it retained would verify this.
+  [inference] That form can exit 0 with empty output for a worktree whose only local content is an
+  ignored file, which `git worktree remove` without `--force` then deletes, while the `--ignored`
+  form prints a `!!` line for that file. What would verify it: in a disposable repository, add a
+  worktree whose only local content is a file matched by `.gitignore`, such as `.env`; run both
+  forms of the check there, expecting empty output and then `!! .env`; then run
+  `git worktree remove <worktree>` without `--force`, expecting exit 0 and the file gone.
+  *(Corrected 2026-10-26: this entry read "[measured 2026-10-25, Git 2.56.0] In a scratch
+  repository, that form exited 0 with empty output for a worktree whose only local content was an
+  ignored file, and `git worktree remove` without `--force` then deleted it. [measured 2026-10-25,
+  Git 2.56.0] With `--ignored`, the check printed `!! .env`.", which should not be relied on. No
+  raw output of that run was preserved, so neither observation has a receipt. Commit `adef2b1`
+  first recorded them and locates their history only, not a measurement.)* [inference] Because
+  `clients/openclaw.md`'s procedure lets cleanup continue only on exit 0 with empty output, that
+  output would stop cleanup and retain the worktree and branch; running the procedure against such
+  a worktree and observing it retained would verify this.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of

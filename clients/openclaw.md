@@ -503,8 +503,31 @@ equals `<base-oid>`; on a mismatch, stop, and retain and report the worktree, it
 registered-path inventory; a plain `git worktree add` outside that inventory is not a route for new
 delivery. Each delivery branch starts at that verified `<base-oid>`. Worktree administration may run
 from the protected instruction-source root working tree and update shared Git metadata, but
-delivery edits, commits, branch switches, and cleanup never target it; the release refresh below
-is the only operation that changes its branch, index, or checked-out files.
+delivery edits, commits, branch switches, and cleanup never target it; of the operations this
+appendix runs, only the release refresh below is meant to change its branch, index, or checked-out
+files. Creation resolves its base through `resolveWorktreeCreationBase` [source]
+(`service-BAfHLKXG.mjs` line 3879). With an explicit `--base-ref`, that base resolution never calls
+base preparation [source] (`base-ref-B9lkLpLz.mjs` lines 24–40): it either uses a checkout commit
+already captured [source] (`base-ref-B9lkLpLz.mjs` lines 25–34) or runs
+`git -c core.warnAmbiguousRefs=true rev-parse --verify --end-of-options <base-oid>^{commit}` in
+`<repo-root>` [source] (`base-ref-B9lkLpLz.mjs` lines 41–63). So base resolution neither fetches
+nor fast-forwards anything; that statement covers base resolution only, not the rest of the create
+operation. Without a base ref, base preparation fetches origin's default branch [source]
+(`base-ref-B9lkLpLz.mjs` lines 76–83, 115 and 171–235) and then attempts
+`git merge --ff-only` of the local default branch [source] (`base-ref-B9lkLpLz.mjs` lines 152 and
+281–344). That merge runs only in `<repo-root>` itself, and only when `<repo-root>`'s `HEAD` is the
+default branch, `<repo-root>` is that branch's only checkout and is unlocked, sparse checkout is
+off, no other worktree Git operation is in progress,
+`git status --porcelain --untracked-files=all` there prints nothing, and the local branch is behind
+the fetched commit and an ancestor of it; otherwise it is skipped [source]
+(`base-ref-B9lkLpLz.mjs` lines 281–344). That fast-forward would move the protected root's branch
+and checked-out files, which is why the explicit `--base-ref <base-oid>` above is required.
+[inference] The rest of the create operation, which this reading of the source does not cover,
+also leaves the protected root's branch, index, and checked-out files unchanged, so the whole
+create command with `--base-ref <base-oid>` does. What would verify it, for one run: with no other
+process using `<repo-root>` meanwhile, run
+`git -C <repo-root> status --porcelain=v2 --branch --untracked-files=all` just before and just
+after the create command above and compare the two outputs for equality.
 
 OpenClaw documentation sources, all from the installed 2026.10.6 docs at
 `<runtime>/lib/node_modules/openclaw/docs/`, where `<runtime>` is
@@ -535,9 +558,13 @@ Installed runtime source, all in `<runtime>/lib/node_modules/openclaw/dist/`:
 `run-command-CrXOzzsc.mjs` (SHA-256
 `b252fb2a80021189666fd3ff8a3808e6d35a5efc94c77473a5ea846a7b91a71a`),
 `entry.js` (SHA-256
-`84d9ae4527bb46be0eece8f95cafefa40559cba8bd921e1358998b331cea0d08`), and
+`84d9ae4527bb46be0eece8f95cafefa40559cba8bd921e1358998b331cea0d08`),
 `paths-BP0DYpE8.mjs` (SHA-256
-`25900721157f35508fdd0f49b65ba6be8ad50f9fe259209929543e0cf50accff`),
+`25900721157f35508fdd0f49b65ba6be8ad50f9fe259209929543e0cf50accff`), and, read 2026-10-26,
+`base-ref-B9lkLpLz.mjs` (SHA-256
+`b4723d93a05b4c97c3b82c20ada3e46a34c3ead7215d1d195e8ff37080b35c0d`) and
+`service-BAfHLKXG.mjs` (SHA-256
+`ebd36bea37c2c403e6f0376e432e5d68268bde54c047c3bada395143c6dc46ae`),
 whose generated filenames and line references identify this exact installed build.
 
 - The managed worktree root is the global `worktreeRoot` key in `openclaw.json`; unset, it defaults
@@ -767,11 +794,17 @@ worktree in that inventory, with every symlink resolved, and compare each with `
 them cannot be canonicalized or equals `<path>`, stop, and retain and report the worktree and
 branch, with no inventory query, removal route, or branch deletion. Then run
 `git --no-optional-locks -C <path> status --porcelain --untracked-files=all --ignored`; ignored
-files count, since `git worktree remove` without `--force` deletes them [measured 2026-10-25, Git
-2.56.0, a scratch repository; recorded in commit `adef2b1e7d6f2d3a4572d68802a6ed24edd661b7`]. If
-it exits nonzero, cannot be run, or prints any output, stop, and retain and report the worktree
-and branch with its exit status and output. Only exit 0 with empty output permits cleanup to
-continue. Then pick the removal route from OpenClaw's registered inventory. Run:
+files count, since [inference] `git worktree remove` without `--force` deletes them. What would
+verify it: in a disposable repository, add a worktree whose only local content is a file matched by
+`.gitignore`, run `git worktree remove <worktree>` without `--force`, and check that it exits 0
+and the file is gone. [corrected 2026-10-26] An earlier revision labelled that claim "[measured
+2026-10-25, Git 2.56.0, a scratch repository; recorded in commit
+`adef2b1e7d6f2d3a4572d68802a6ed24edd661b7`]", which must not be relied upon: no raw output of
+that scratch-repository run was preserved, and that commit only introduced the wording, so it
+locates the claim's history, not a measurement. If that status command exits nonzero, cannot be
+run, or prints any output, stop, and retain and report the worktree and branch with its exit
+status and output. Only exit 0 with empty output permits cleanup to continue. Then pick the
+removal route from OpenClaw's registered inventory. Run:
 
 ```sh
 env <profile-binding> \
