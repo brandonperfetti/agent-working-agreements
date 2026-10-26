@@ -669,8 +669,13 @@ preserved at
 `openclaw gateway status --json` (empty stderr; output SHA-256
 `2dbd291d1021280837b9192200db23fe75992968b642d93f4788b6629d34c81f`) reported a loaded launchd
 service from `~/Library/LaunchAgents/ai.openclaw.gateway.plist` with
-`"OPENCLAW_STATE_DIR": "/Users/brandonperfetti/.openclaw"` under
-`service.command.environment` and `config.daemon.path` set to
+`"OPENCLAW_PROFILE": "default"`, `"OPENCLAW_STATE_DIR":
+"/Users/brandonperfetti/.openclaw"` and `"OPENCLAW_CONFIG_PATH":
+"/Users/brandonperfetti/.openclaw/openclaw.json"` under `service.command.environment`, and
+`service.command.programArguments` contained only the recorded Bun and `dist/index.js` paths,
+`--no-install`, `gateway`, `--port` and `18789`, with neither `--profile` nor a
+root/profile-selecting `--dev`; thus its effective profile is that environment's `default`.
+It also reported `config.daemon.path` set to
 `/Users/brandonperfetti/.openclaw/openclaw.json`. That file, read in the same pass (SHA-256
 `87027a892fc01a1464c5dc492389f196ef1494b2a01a03a79ac0dcd81fc668a3`), contains no `worktreeRoot`
 string.
@@ -696,7 +701,10 @@ One `openclaw worktrees list --json` invocation ran with the call-local bindings
 `OPENCLAW_CONFIG_PATH=/Users/brandonperfetti/.openclaw/openclaw.json` and
 `OPENCLAW_PROFILE=default`; its actual argv was
 `/Users/brandonperfetti/.openclaw/bin/openclaw worktrees list --json`, with neither `--profile`
-nor `--dev`. It exited 0 with zero-byte stderr (stdout SHA-256
+nor `--dev`. Its `invocation-manifest.txt` records those three call-local bindings exactly,
+including `OPENCLAW_PROFILE=default` and the config path; `SHA256SUMS` records that manifest as
+`f0d0408d0f68f42f38eb6dee5b312d88fa0d223b9658237a488d58293cdd0283`.
+It exited 0 with zero-byte stderr (stdout SHA-256
 `3a25f8eae2dcf7c05707413dd65845a14330f7fad1365a23c3214b9fc5c040d0`) and listed 26 entries, 17
 active and 9 carrying `removedAt`. It recorded this delivery's
 worktree as `"repoFingerprint": "3be5ac1eed078a0d"`, `"path":
@@ -757,8 +765,11 @@ unclassified record, if any record lacks a `worktree` line or any record after t
 neither a `branch` nor a `detached` line. Canonicalize the named root and the path of every
 worktree in that inventory, with every symlink resolved, and compare each with `<path>`; if any of
 them cannot be canonicalized or equals `<path>`, stop, and retain and report the worktree and
-branch, with no inventory query, removal route, or branch deletion. Then pick the removal route
-from OpenClaw's registered inventory. Run:
+branch, with no inventory query, removal route, or branch deletion. Then run
+`git --no-optional-locks -C <path> status --porcelain --untracked-files=all`; if it exits nonzero,
+cannot be run, or prints any output, stop, and retain and report the worktree and branch with its
+exit status and output. Only exit 0 with empty output permits cleanup to continue. Then pick the
+removal route from OpenClaw's registered inventory. Run:
 
 ```sh
 env <profile-binding> \
@@ -801,8 +812,9 @@ retention from either command is left as it is and reported, never overridden. T
 records the inventory read and its output, each record's classification with the line that decided
 it, and every canonicalization and comparison the cleanup makes with its outcome, including a
 failure or a stop: the named root and each inventory worktree, each compared with `<path>`; every
-candidate record for `<branch>`, and `<path>` with its existence lookup; each `worktrees` record's
-canonical `path`, or its skip with the existence lookup that allowed it, compared with `<path>`,
+candidate record for `<branch>`, and `<path>` with its existence lookup; the clean-status check of
+`<path>` with its exit status and output; each `worktrees` record's canonical `path`, or its skip
+with the existence lookup that allowed it, compared with `<path>`,
 and its `branch` compared with `<branch>`; and, on the plain Git route, the check of `<path>`
 against the resolved managed worktree root.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one

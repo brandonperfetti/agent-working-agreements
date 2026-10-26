@@ -51,6 +51,10 @@ being retrofitted onto the other.
   detached, or locked record. Cleanup compares `<path>` with each canonicalized inventory worktree
   before any route, retains on an unreadable or indeterminate inventory, including a record it
   cannot classify, and records every canonicalization and comparison outcome in its audit.
+  [source, commits `70cd49b`, `a288d49` and `2900e68`] Those commits bound the appendix's
+  `openclaw worktrees list --json` inventory evidence to a capture that records its bindings and
+  labelled the former capture, which recorded none, superseded. That was an evidence correction,
+  not a new policy amendment.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of
