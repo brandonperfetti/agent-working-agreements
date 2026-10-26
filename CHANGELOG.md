@@ -35,7 +35,15 @@ being retrofitted onto the other.
   worktree paths without canonicalizing them or confirming they exist, and that the
   inventory-verification recipe for `openclaw worktrees list --json` checked only that a plain Git
   worktree was absent, which an empty or unreadable list also satisfies; it now also requires an
-  OpenClaw-managed worktree of the same scratch repository to be present.
+  OpenClaw-managed worktree of the same scratch repository to be present. Later review found that
+  nothing stopped the plain-Git route from selecting the protected root, which has no inventory
+  record and lies outside the managed root, and then that the fix guarded only the root, not every
+  protected base worktree, and then that the inventory of protected base worktrees had no defined
+  source. The inventory now comes from one `git worktree list --porcelain` read taken before any
+  other cleanup step: the named root plus the main working tree and every `master`, `develop`,
+  detached, or locked record. Cleanup compares `<path>` with each canonicalized inventory worktree
+  before any route, retains on an unreadable or indeterminate inventory, including a record it
+  cannot classify, and records every canonicalization and comparison outcome in its audit.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of

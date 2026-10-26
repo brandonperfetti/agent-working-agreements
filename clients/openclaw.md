@@ -693,23 +693,35 @@ behind until the next day.
 **Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
 These safeguards apply to every delivery worktree, managed or an existing plain Git worktree.
 Run it from any of the repository's worktrees; the protected instruction-source root working tree
-may serve, but only for Git administration and never against its working tree:
+may serve, but only for Git administration and never against its working tree. First read
+`git worktree list --porcelain` once and keep that output; if it cannot be read, stop, and retain
+and report the worktree and branch. That one read, taken before any other cleanup step, is the
+protected-worktree inventory's source and the only source for `<path>` below. Then run
 `git fetch origin` — if the fetch fails, stop, and retain and report the worktree and branch — then
 `git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
 not by itself enough: the protected instruction-source root working tree, another protected base
 worktree such as a release-review worktree, a dirty delivery worktree, and a branch that is not an
 ancestor of `origin/develop` are all retained and reported. The protected instruction-source root
 working tree is never eligible for cleanup. `<path>` is the canonical form, with every symlink
-resolved, of the value of the `worktree` line of the unique record in
-`git worktree list --porcelain` whose `branch` line is `refs/heads/<branch>`; on zero or multiple
-matches, stop, and retain and report the branch and every candidate worktree. If that value
-cannot be canonicalized, or a lookup of `<path>` itself does not positively report that it exists,
-stop, and retain and report the worktree and branch. Canonicalize the path of every protected base
-worktree, including the protected instruction-source root working tree and any release-review
-worktree, with every symlink resolved, and compare each with `<path>`; if any of them cannot be
-canonicalized or equals `<path>`, stop, and retain and report the worktree and branch, with no
-inventory query, removal route, or branch deletion. Then pick the removal route from OpenClaw's
-registered inventory. Run:
+resolved, of the value of the `worktree` line of the unique record in that output whose `branch`
+line is `refs/heads/<branch>`; on zero or multiple matches, stop, and retain and report the branch
+and every candidate worktree. If that value cannot be canonicalized, or a lookup of `<path>` itself
+does not positively report that it exists, stop, and retain and report the worktree and branch.
+The authoritative protected-worktree inventory is the protected instruction-source root working
+tree named under [Startup and mode](#startup-and-mode) plus every record of that output that is a
+protected base worktree: the first record, which is the main working tree of the clone being
+cleaned; every record whose `branch` line is `refs/heads/master` or `refs/heads/develop`, or that
+has a `detached` line, which covers a release-review worktree checked out on its base; and every
+record with a `locked` line, whatever its reason. A protected base worktree on any other branch is
+in the inventory only through its lock, so lock it with
+`git worktree lock --reason 'protected base worktree' <worktree>` when it is created. The inventory
+is indeterminate, and the cleanup stops, retaining and reporting the worktree, branch, and every
+unclassified record, if any record lacks a `worktree` line or any record after the first has
+neither a `branch` nor a `detached` line. Canonicalize the named root and the path of every
+worktree in that inventory, with every symlink resolved, and compare each with `<path>`; if any of
+them cannot be canonicalized or equals `<path>`, stop, and retain and report the worktree and
+branch, with no inventory query, removal route, or branch deletion. Then pick the removal route
+from OpenClaw's registered inventory. Run:
 
 ```sh
 env <profile-binding> \
@@ -748,7 +760,14 @@ if it cannot be read, stop, and retain and report the worktree and branch:
 
 On exit 0, with one match, and outside those exclusions, remove by that route; then, only if that
 removal succeeded and `refs/heads/<branch>` still exists, `git branch -d <branch>`. Any refusal or
-retention from either command is left as it is and reported, never overridden.
+retention from either command is left as it is and reported, never overridden. The cleanup audit
+records the inventory read and its output, each record's classification with the line that decided
+it, and every canonicalization and comparison the cleanup makes with its outcome, including a
+failure or a stop: the named root and each inventory worktree, each compared with `<path>`; every
+candidate record for `<branch>`, and `<path>` with its existence lookup; each `worktrees` record's
+canonical `path`, or its skip with the existence lookup that allowed it, compared with `<path>`,
+and its `branch` compared with `<branch>`; and, on the plain Git route, the check of `<path>`
+against the resolved managed worktree root.
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
 and their branches without forcing a dirty removal, leaving the protected delivery host plus a
@@ -768,8 +787,9 @@ command-line profile if any and its environment
 its source (`worktreeRoot` or the default), the worktree path, its registered inventory record,
 each `openclaw worktrees` invocation with the explicit state directory and config path passed, the
 `OPENCLAW_PROFILE` value set or that it was unset, the absence of `--profile` and `--dev`, and its
-result, the cleanup route with its `id` or plain Git path, and the `_agent/` and protected-root
-overlap check; any overlap stops the delivery (see
+result, the cleanup audit with every canonicalization and comparison outcome, the cleanup route
+with its `id` or plain Git path, and the `_agent/` and protected-root overlap check; any overlap
+stops the delivery (see
 [Instruction-source isolation and freshness](#instruction-source-isolation-and-freshness)).
 Parts A/B remain the authority for RULE ZERO, no-force-push, and no-agent-merge; do not restate
 those rules here.
