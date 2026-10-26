@@ -721,11 +721,11 @@ if it cannot be read, stop, and retain and report the worktree and branch:
   no such file and its `branch` is not `<branch>`, since it cannot equal `<path>`, which is
   canonical and was positively confirmed to exist above. If such a record's `branch` is
   `<branch>`, or on any other failure to canonicalize or determine a record's `path`, including
-  an existence lookup that cannot say, stop, and retain and
-  report the worktree, branch, and record. `<id>` is the `id` of the unique `worktrees` record
-  whose canonical `path` is `<path>`; on zero matches the worktree is not managed. On multiple
-  matches, or a match whose `branch` is not `<branch>`, stop, and retain and report every
-  candidate record. Run this explicitly bound command:
+  an existence lookup that cannot say, stop, and retain and report the worktree, branch, and
+  record. `<id>` is the `id` of the unique `worktrees` record whose canonical `path` is `<path>`;
+  on zero matches the worktree is not managed. On multiple matches, or a match whose `branch` is
+  not `<branch>`, stop, and retain and report every candidate record. Run this explicitly bound
+  command:
 
   ```sh
   env <profile-binding> \
