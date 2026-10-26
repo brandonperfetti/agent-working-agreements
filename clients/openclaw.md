@@ -673,8 +673,20 @@ service from `~/Library/LaunchAgents/ai.openclaw.gateway.plist` with
 `service.command.environment` and `config.daemon.path` set to
 `/Users/brandonperfetti/.openclaw/openclaw.json`. That file, read in the same pass (SHA-256
 `87027a892fc01a1464c5dc492389f196ef1494b2a01a03a79ac0dcd81fc668a3`), contains no `worktreeRoot`
-string. `openclaw worktrees list --json` (empty stderr; output SHA-256
-`3a25f8eae2dcf7c05707413dd65845a14330f7fad1365a23c3214b9fc5c040d0`) recorded this delivery's
+string.
+[measured 2026-10-26T04:37:53Z, this host, OpenClaw 2026.10.6 (41c5d94); raw captures
+`argv.txt`, `argv-flag-check.txt`, `invocation-manifest.txt`, `run.sh`, `stdout.json`,
+`stderr.txt`, `exit-status.txt`, `captured-at-utc.txt`, `openclaw-version.txt` and `SHA256SUMS`
+preserved at
+`/Users/brandonperfetti/dev/sansfaux/_agent/evidence/2026-10-25-agent-working-agreements-pr-181-bound-worktrees-list/`]
+One `openclaw worktrees list --json` invocation ran with the call-local bindings
+`OPENCLAW_STATE_DIR=/Users/brandonperfetti/.openclaw`,
+`OPENCLAW_CONFIG_PATH=/Users/brandonperfetti/.openclaw/openclaw.json` and
+`OPENCLAW_PROFILE=default`; its actual argv was
+`/Users/brandonperfetti/.openclaw/bin/openclaw worktrees list --json`, with neither `--profile`
+nor `--dev`. It exited 0 with zero-byte stderr (stdout SHA-256
+`3a25f8eae2dcf7c05707413dd65845a14330f7fad1365a23c3214b9fc5c040d0`) and listed 26 entries, 17
+active and 9 carrying `removedAt`. It recorded this delivery's
 worktree as `"repoFingerprint": "3be5ac1eed078a0d"`, `"path":
 "/Users/brandonperfetti/.openclaw/worktrees/3be5ac1eed078a0d/awa-180-protected-root-worktrees"`,
 with `id`, `branch` and `repoRoot` set. That is one record; it does not cover every managed
