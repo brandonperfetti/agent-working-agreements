@@ -75,7 +75,33 @@ being retrofitted onto the other.
   first recorded them and locates their history only, not a measurement.)* [inference] Because
   `clients/openclaw.md`'s procedure lets cleanup continue only on exit 0 with empty output, that
   output would stop cleanup and retain the worktree and branch; running the procedure against such
-  a worktree and observing it retained would verify this.
+  a worktree and observing it retained would verify this. [source, CodeRabbit, PR #182 review
+  comments `4379996717`, `4379996762` and `4379996780`] `4379996717` reported that creation's
+  `git fetch origin` updates only the tracking refs the configured refspec maps, so the base capture
+  could read a stale `origin/develop`; `4379996762`, that the post-release refresh stopped only on a
+  failed fetch, not on a failed switch or fast-forward, and had no pre-merge clean-tree check; and
+  `4379996780`, that the plain-Git cleanup route neither repeated the `--ignored` status check nor
+  reconfirmed that `<path>` still belongs to `<branch>` immediately before removal. [inference] In
+  a single-branch clone, whose configured refspec maps one branch, that fetch can exit 0 while
+  `origin/develop` keeps an older OID. What would verify it: in a disposable
+  `git clone --single-branch --branch master` clone, set `refs/remotes/origin/develop` to an older
+  OID with `git update-ref`, run `git fetch origin`, and expect exit 0 with `origin/develop`
+  unchanged and different from the OID `git ls-remote origin refs/heads/develop` reports.
+  [source, commit `c9c9dfe`] Creation now fetches `develop` and `master` by name and, for each,
+  requires the local `origin/<name>` OID to equal the OID `git ls-remote` reports, stopping without
+  creating the worktree on any failure or difference; its audit records the named fetch's exit
+  status and, for each ref, the `rev-parse` OID, the `ls-remote` OID, and their equality result.
+  Refresh fetches `master` by name; stops on any failed step or mismatch, reporting its command,
+  exit status, and output and running no later step; and requires
+  `git status --porcelain --untracked-files=all` to exit 0 with empty output before and after the
+  fast-forward, and `git rev-parse HEAD` to equal `origin/master`. The plain-Git cleanup route
+  repeats the `--ignored` status check and requires exactly one `git worktree list --porcelain`
+  record whose canonical path is `<path>` with branch `refs/heads/<branch>`, retaining and
+  reporting the worktree and branch on any failure, output, or mismatch; its audit adds those
+  repeated checks with their outputs. [source, this entry's `clients/openclaw.md` change, which has
+  no commit or review locator yet; reviewer not recorded] Cleanup's ancestry fetch now fetches
+  `develop` by name, `+refs/heads/develop:refs/remotes/origin/develop`, not through the configured
+  refspec, before `git merge-base --is-ancestor <branch> origin/develop`.
 
 - **2026-10-24 — `clients/openclaw.md`: current wrapper-selector citation and a Claude-route
   exception record.** Issue #177. The appendix cited the wrapper-selector rule at lines 195–196 of

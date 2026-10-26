@@ -785,8 +785,10 @@ Run it from any of the repository's worktrees; the protected instruction-source 
 may serve, but only for Git administration and never against its working tree. First read
 `git worktree list --porcelain` once and keep that output; if it cannot be read, stop, and retain
 and report the worktree and branch. That one read, taken before any other cleanup step, is the
-protected-worktree inventory's source and the only source for `<path>` below. Then run
-`git fetch origin` — if the fetch fails, stop, and retain and report the worktree and branch — then
+protected-worktree inventory's source and the only source for `<path>` below. Then fetch
+`develop` by name, not through the configured refspec:
+`git fetch origin +refs/heads/develop:refs/remotes/origin/develop` — if the fetch fails, stop, and
+retain and report the worktree and branch — then
 `git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
 not by itself enough: the protected instruction-source root working tree, another protected base
 worktree such as a release-review worktree, a dirty delivery worktree, and a branch that is not an
