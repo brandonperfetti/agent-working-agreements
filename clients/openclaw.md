@@ -676,15 +676,16 @@ service from `~/Library/LaunchAgents/ai.openclaw.gateway.plist` with
 string.
 [superseded 2026-10-25] An earlier revision continued: "`openclaw worktrees list --json` (empty
 stderr; output SHA-256 `3a25f8eae2dcf7c05707413dd65845a14330f7fad1365a23c3214b9fc5c040d0`)
-recorded this delivery's worktree as …". That reading came from the unbound capture
-`worktrees-list.json` with `worktrees-list.err` in the gateway-inventory directory above, which
-stays preserved unchanged. It is superseded by the bound capture below and must not be relied upon
-for the inventory claim. [measured 2026-10-25] That directory holds no argv, invocation manifest
-or record of the state directory, config path or profile the invocation was bound to; its
-`worktrees-list.json` SHA-256 equals that of the bound capture's `stdout.json`. [inference] Equal
-bytes do not show which state directory, config or profile the earlier invocation selected, so the
-earlier capture cannot support the inventory claim on its own; only the bound capture does. No
-later reading can verify the earlier invocation's bindings, because they were never recorded.
+recorded this delivery's worktree as …". That reading came from the capture whose bindings were
+not recorded, `worktrees-list.json` with `worktrees-list.err` in the gateway-inventory directory
+above, which stays preserved unchanged. It is superseded by the bound capture below and must not
+be relied upon for the inventory claim. [measured 2026-10-25] That directory holds no argv,
+invocation manifest or record of the state directory, config path or profile the invocation was
+bound to; its `worktrees-list.json` SHA-256 equals that of the bound capture's `stdout.json`.
+[inference] Equal bytes do not show which state directory, config or profile the earlier invocation
+selected, so the earlier capture cannot support the inventory claim on its own; only the bound
+capture does. No later reading can verify the earlier invocation's bindings, because they were never
+recorded.
 [measured 2026-10-26T04:37:53Z, this host, OpenClaw 2026.10.6 (41c5d94); raw captures
 `argv.txt`, `argv-flag-check.txt`, `invocation-manifest.txt`, `run.sh`, `stdout.json`,
 `stderr.txt`, `exit-status.txt`, `captured-at-utc.txt`, `openclaw-version.txt` and `SHA256SUMS`
