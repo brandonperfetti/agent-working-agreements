@@ -20,14 +20,16 @@ being retrofitted onto the other.
   delivery worktrees; delivery cannot alter its branch, index, or checked-out files, and the root is
   never eligible for cleanup. No runtime project binding changes, no clone is deleted or migrated,
   and the successful-fetch, ancestry, cleanliness, uniqueness, and no-force cleanup safeguards
-  stay. The appendix carries the procedure; review on PR #181 found these defects in earlier
-  wording. New worktrees came from plain `git worktree add` rather than OpenClaw's managed
-  facility, with the managed root unresolved. [source, commits `c3d598d`, `37f83c9` and
-  `428af38`] Cleanup removed managed worktrees with `git worktree remove`, root resolution read the
-  probing shell rather than the Gateway service, the profile mechanism was misdescribed (a
-  service's `OPENCLAW_PROFILE` alone selects no profile root), and the verification recipe passed
-  `--profile`, which can replace the bound state and config paths; those commits carry the
-  superseded wording and its replacement. A later correction,
+  stay. The appendix carries the procedure; review and revision on PR #181 identified the
+  following defects in earlier wording. [source, commit `9669abf`] That wording named no
+  worktree-creation route, so it did not require OpenClaw's managed facility and registered
+  inventory or exclude plain `git worktree add`, and the earlier wording named no resolution of
+  the managed root.
+  [source, commits `c3d598d`, `37f83c9` and `428af38`] Cleanup removed managed worktrees with
+  `git worktree remove`, root resolution read the probing shell rather than the Gateway service,
+  the profile mechanism was misdescribed (a service's `OPENCLAW_PROFILE` alone selects no profile
+  root), and the verification recipe passed `--profile`, which can replace the bound state and
+  config paths; those commits carry the superseded wording and its replacement. A later correction,
   commit `979decd`, records that `openclaw gateway --dev` selects no profile. [source, CodeRabbit,
   PR #181 review comment `4372921615`] Creation passed `--base-ref origin/develop` without a
   fetch; fixed in `e56f1ff` and `6973c1a`. [inference] A stale ref could seed delivery, which
