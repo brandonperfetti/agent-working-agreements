@@ -10,6 +10,16 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-26 — `clients/openclaw.md`: refresh the wrapper-selector source locator.** New
+  node and Gateway route wording changed the surrounding bytes of
+  `~/.openclaw/workspace/docs/team-operating-model.md` and left the source receipt stale: the
+  protected source clone still carried the former lines 195–196 receipt and hash, while `develop`
+  carried the intermediate lines 198–199 correction against an earlier hash. The appendix now cites
+  lines 198–199, read 2026-10-26, at SHA-256
+  `f728ac8aad65abf94e9a7a352f96373ee0f1e3e66c46c24d406b9f2867524153`; those lines still match the
+  quoted text exactly. The quoted wrapper requirement, the AWA rules and the wrapper-selector
+  semantics do not change.
+
 - **2026-10-25 — `clients/openclaw.md`: permit isolated delivery worktrees from the protected
   instruction-source repository.** Issue #180. Brandon clarified the topology: the canonical
   checkout stays protected and hosts disposable delivery worktrees, so delivery needs no duplicate
