@@ -697,10 +697,12 @@ may serve, but only for Git administration and never against its working tree:
 not by itself enough: the protected instruction-source root working tree, another protected base
 worktree such as a release-review worktree, a dirty delivery worktree, and a branch that is not an
 ancestor of `origin/develop` are all retained and reported. The protected instruction-source root
-working tree is never eligible for cleanup. `<path>` is the value of the `worktree` line of the
-unique record in `git worktree list --porcelain` whose `branch` line is `refs/heads/<branch>`; on
-zero or multiple matches, stop, and retain and report the branch and every candidate worktree.
-Then pick the removal route from OpenClaw's registered inventory. Run:
+working tree is never eligible for cleanup. `<path>` is the canonical form, with every symlink
+resolved, of the value of the `worktree` line of the unique record in
+`git worktree list --porcelain` whose `branch` line is `refs/heads/<branch>`; on zero or multiple
+matches, stop, and retain and report the branch and every candidate worktree. If that value
+cannot be canonicalized, stop, and retain and report the worktree and branch. Then pick the
+removal route from OpenClaw's registered inventory. Run:
 
 ```sh
 env <profile-binding> \
