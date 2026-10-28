@@ -35,7 +35,7 @@ finding; `/domain-modeling` writes it when it resolves the first term, and not b
 | delivery owner | A4 and B2: the seat that owns a delivery's repository mechanics — the assigned qualified specialist, or the orchestrator when none is assigned, and alone controls the shared checkout's git state, a specialist dispatched as a sub-agent included; A4 lists its duties |
 | independent reviewer | A4: the seat, separate from whoever produced the work, that runs the two-axis review, including the whole-branch review at the exact final head before a delivery is presented for merge |
 | lane | A4, B1 and B2: one dispatched sub-agent's work on named files — autonomous (B2), running git only in its own worktree; attended (B1), either an mbox lane running git only in its own isolated clone, or an uncommitted lane editing its named files in the shared checkout and delivering them uncommitted, running no git in the shared checkout; a delivery owner dispatched as a sub-agent is not a lane and keeps its A4 duties for the shared checkout's git state |
-| RULE ZERO | A4: no attribution on any commit, PR body, reply or comment; an agent's commits on Brandon's behalf carry his identity, anyone else's carry their own, and a PR carrying his identity from another account is not merged until re-authored |
+| RULE ZERO | A4: an agent's commits on Brandon's behalf carry his author identity, anyone else's carry their own, and a PR carrying his identity from another account is not merged until re-authored; attribution lines are allowed and never required (since 2026-10-27) |
 | evidence labels | A2: `[measured]`, `[source]`, `[inference]` on every claim |
 | stop-list | B2: what an agent in autonomous mode stops and asks about |
 

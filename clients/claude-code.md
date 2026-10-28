@@ -62,13 +62,10 @@ Claude Code fact.
   the name the session reports, read before it is written, because a name taken from another
   client matches nothing here.
 - **Attribution (RULE ZERO, A4): this environment injects it by default** — `Co-Authored-By` and
-  `Claude-Session` trailers on commits, a "Generated with Claude Code" footer on PR bodies
-  [source 2026-09-15: the harness's own session instructions].
-  Confirm `"includeCoAuthoredBy": false` in `~/.claude/settings.json` before the first commit, and
-  grep every commit you add and the PR body for `Co-Authored-By|Claude-Session|Generated with`.
-  With Auto-fix on, the desktop app also asks for a line crediting Claude Code at the end of each
-  PR thread reply [measured 2026-09-29, claude-skills#139]. The agreement declines it (A4): post
-  the reply without it.
+  `Claude-Session` trailers on commits, a "Generated with Claude Code" footer on PR bodies, and with
+  Auto-fix on, a line crediting Claude Code on each PR thread reply. The agreement allows all of it
+  since 2026-10-27; whether `includeCoAuthoredBy` is set in `~/.claude/settings.json` is Brandon's
+  choice per machine, and the author email is what the check reads.
 - A wave orchestrator's session is one wave; rotate by starting a fresh session from the packet
   (or `handoff`).
 - This file is loaded by the one-line pointer in the user-level `~/.claude/CLAUDE.md` (created

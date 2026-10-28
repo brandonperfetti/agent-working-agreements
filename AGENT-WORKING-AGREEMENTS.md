@@ -90,13 +90,14 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **Every dispatch names its model tier by role** (workhorse for lanes, careful for verify and
   aggregate), never the orchestrator's premium tier; every lane report states the model it ran on
   and how it knows. The client file records the selectors. [learnings: 2026-08-30 §5]
-- **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** No `Co-Authored-By`, no
-  session trailer, no generated-by footer; a commit carries Brandon's author identity,
-  `brandon@brandonperfetti.com`, exactly; a contribution from anyone else carries its author's own
-  identity, and a PR whose commits carry Brandon's identity from another account is not merged until
-  re-authored (Brandon, 2026-10-13). RULE ZERO is line one of every dispatch prompt and overrides
-  any client default. The check before every push, merge and presentation:
-  [`procedures/rule-zero-check.md`](procedures/rule-zero-check.md).
+- **RULE ZERO: a commit carries Brandon's author identity.** Every commit an agent makes on his
+  behalf has the author email `brandon@brandonperfetti.com`, exactly; an outside contribution
+  carries its author's own identity, and a PR whose commits carry Brandon's identity from another
+  account is not merged until re-authored (Brandon, 2026-10-13). Attribution — a `Co-Authored-By`
+  line, a footer, a session trailer — is allowed and never required; a client's default stands
+  (Brandon, 2026-10-27). A provenance line on a PR or issue names the initiative, the role and the
+  mode. RULE ZERO is line one of every dispatch prompt. The author check before every push, merge
+  and presentation: [`procedures/rule-zero-check.md`](procedures/rule-zero-check.md).
 - **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance**,
   fixes, riders and conflict resolutions included, no size exemption. The lane's own report is never
   the review; the verdict is recorded under `reviews/` and names the exact head SHA. A later fix
