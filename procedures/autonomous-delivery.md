@@ -108,8 +108,8 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
   on every merged tree before every push. CI on the PR is the arbiter for flakes.
 - **Issues:** agents file the findings that are real work (A4) freely via `writing-tickets`,
   labelled **`agent-filed`**, so Brandon can sweep them. Closing or relabelling existing issues is
-  orchestrator-only and cited. Board intake is each repository's add-to-project Action, issues
-  only ([`github-paths.md`](github-paths.md)).
+  orchestrator-only and cited. Board intake is a repository's own `add-to-project` workflow,
+  issues only ([`github-paths.md`](github-paths.md)).
 
 Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
 

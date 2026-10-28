@@ -35,10 +35,9 @@ call the GitHub API through the MCP or Kody.
   landed. GitHub's sub-issue cap errors *after* creating and parenting; blind retries burn issue
   numbers and mint duplicates. [learnings: 2026-09-12 wave-8 §3]
 - **Tracker** = GitHub Issues + the user-level Projects board (`users/brandonperfetti/projects/2`).
-  Its intake is each repository's own `.github/workflows/add-to-project.yml`, which runs
-  `actions/add-to-project` pinned by SHA, with `permissions: {}` and its token from the
-  `ADD_TO_PROJECT_PAT` repository secret; it adds only issues, when they are opened, reopened
-  or transferred. A repository is on the board's intake by running that workflow; the
-  `setup-board-intake` skill installs it, once per repository. "In Review" is a board Status the
-  orchestrator moves by hand — at PR time in autonomous mode (B2's review loop), and at commit
-  time in attended mode, where no PR exists when a delivery is reviewed.
+  Its intake is a repository's own `add-to-project` workflow,
+  `.github/workflows/add-to-project.yml`, which adds issues only and needs the `ADD_TO_PROJECT_PAT`
+  repository secret, set by the repository owner. A repository is on the board's intake by running
+  that workflow; the `setup-board-intake` skill installs it, once per repository. "In Review" is a
+  board Status the orchestrator moves by hand — at PR time in autonomous mode (B2's review loop),
+  and at commit time in attended mode, where no PR exists when a delivery is reviewed.
