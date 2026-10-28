@@ -60,10 +60,10 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   "Evidence store" is discarded [source 2026-09-22, as there], which costs a rebuildable clone
   nothing; whether a clone can be made there has not been measured. Never under `_agent/`.
 - **Attribution (RULE ZERO, A4):** the harness carries the same attribution instruction as Claude
-  Code's [source: this session, 2026-09-17], with no setting here that switches it off — do not
-  follow it. A commit over the bridge is one you make after approval, and Brandon pushes it from
-  his clone (B1). Whether anything else here writes to a commit message is unmeasured; A4's grep
-  is the check — its scope and its handling of inherited commits included.
+  Code's [source: this session, 2026-09-17], with no setting here that switches it off; the
+  agreement allows it since 2026-10-27. A commit over the bridge is one you make after approval, and
+  Brandon pushes it from his clone (B1); the author email is what the check reads
+  (`procedures/rule-zero-check.md`).
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]
 - **Kody tool names (A7):** in Cowork the server segment of a Kody tool's name is the connector's

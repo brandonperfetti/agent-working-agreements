@@ -83,8 +83,8 @@ persistence.
 
 **Pickup audit.** Record the checkout and HEAD, author identity, `core.hooksPath` and hook
 presence, the dry-run probe (or N/A), the full gate result, branch ownership, target protection,
-and the worktree bindings the procedure lists. Attribution injection and reset behaviour remain
-unmeasured: require a delivery audit rather than assuming.
+and the worktree bindings the procedure lists. Reset behaviour remains unmeasured: require a
+delivery audit rather than assuming.
 
 ## Evidence store
 

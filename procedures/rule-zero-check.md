@@ -37,6 +37,12 @@ the measurement). A commit at any other email is a send-back: reject or regenera
 a commit already on a base branch stays as it is, and a mismatch found there goes in the
 delivery's review record, never back to the lane.
 
+**The identity rule overrides any environment default.** A harness that would commit as a bot or
+service account, or as the user of another machine, is configured or worked around so the commit
+carries Brandon's email; the client file records what is known of its default. A provenance line
+on a PR or issue names the initiative, the role and the mode, never the client or the product, and
+says who read the evidence, which A2 wants.
+
 **Attribution is not checked.** A `Co-Authored-By` line, a generated-with footer or a session
 trailer may be present or absent; neither state is a finding (Brandon, 2026-10-27). A trailer
 never established that a commit came through a reviewed lane: the two-axis review record under
