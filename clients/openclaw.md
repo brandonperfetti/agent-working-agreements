@@ -11,16 +11,16 @@ when you acknowledge your reading** — "read the agreements and
 - **Host:** Brandon's Mac mini, native macOS, user `brandonperfetti`, since 2026-10-21
   [measured 2026-10-27, #186: no Bubblewrap or AppArmor on PATH; Docker present, use unresolved].
   The former VPS and its sandbox are history; their recovery procedure is dormant (below).
-- **Agent root** `~/dev/sansfaux`. **Protected instruction-source root**
-  `$AGENT_ROOT/agent-working-agreements/`: clean, on `master`, equal to `origin/master` after the
-  post-release refresh, never a delivery checkout; its Git administration hosts isolated managed
-  delivery worktrees. **Artifact store** `$AGENT_ROOT/_agent/`, selected at session start and kept
-  for the session, never switched or dual-written (A6); a role started from a changed pointer
-  selects it provisionally, runs the create/readback canary through its supported route, and
-  reports the exact instruction paths and hashes and the store it selected before the pointer
-  counts as accepted for that role. The former workspace checkout and artifact store stay as
-  rollback roots: never merged, mirrored, symlinked, moved, deleted or rewritten. The Mac path
-  above is this host's; do not infer it across hosts.
+- **Agent root** `~/dev/sansfaux`, set here: A6's upward walk from a role workspace finds its own
+  `_agent/` or none. **Protected instruction-source root** `$AGENT_ROOT/agent-working-agreements/`:
+  clean, on `master`, equal to `origin/master` after the post-release refresh, never a delivery
+  checkout; its Git administration hosts isolated managed delivery worktrees. **Artifact store**
+  `$AGENT_ROOT/_agent/`, the one store for every role and for Claude Code, named by absolute path;
+  kept for the session, never switched or dual-written (A6). Each `~/.openclaw/workspace*/_agent/`
+  and the former workspace checkout are rollback roots gaining only a pointer; never merged,
+  mirrored, symlinked, moved, deleted or otherwise rewritten. A role on a changed pointer holds the
+  store provisionally, runs the create/readback canary on its supported route and reports its exact
+  instruction paths, hashes and store before acceptance. Paths are this host's.
 - **If the pointer, Parts A–B or this file is unreachable,** stop the affected work with the
   missing instruction source recorded (B0); do not downgrade to B1.
 - **Default mode: autonomous.** B0's guard is scored per exact checkout and delivery path, and
