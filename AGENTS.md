@@ -49,10 +49,11 @@ exiting 0:
 npx --yes markdownlint-cli2
 ```
 
-`check-structure.sh` holds the core under its line ceiling, requires every file
-under `procedures/` to carry its four fields and be indexed in both
-`procedures/README.md` and the core's *Triggers* table, and rejects a 40- or
-64-hex pin in normative text.
+`check-structure.sh` holds the core and each client file under their line
+ceilings, requires every file under `procedures/` to carry its four fields and
+be indexed in `procedures/README.md` and in the core's *Triggers* table (or,
+for `procedures/<client>/`, in that client's appendix), and rejects a 40- or
+64-hex pin in normative text; `history/` is exempt from the pin rule.
 
 No environment export is needed. They are the steps of the job `check` in
 `.github/workflows/check.yml`, and `check` is the required status check on

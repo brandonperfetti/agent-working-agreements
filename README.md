@@ -30,6 +30,8 @@ AGENTS.md                            repository-specific agent instructions
 .github/pull_request_template.md     the pull request template
 AGENT-WORKING-AGREEMENTS.md          Parts A (portable discipline) + B (modes) + the Part C index
 procedures/<name>.md                 the mechanics behind a rule, read when its trigger occurs
+procedures/<client>/<name>.md        the same, for one client, linked from its appendix
+history/<client>.md                  measurements, pinned source readings, superseded claims: never startup reading
 clients/<client>.md                  one appendix per environment — read only your own
 docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
 docs/agents/triage-labels.md         the triage roles mapped to this repository's labels
@@ -39,7 +41,7 @@ CHANGELOG.md                         why each rule changed, newest first
 LICENSE                              the CC BY 4.0 legal code; it covers the documentation
 LICENSE-MIT                          the MIT text; it covers scripts/ and the GitHub workflows
 scripts/check-index.sh               CI: the index and clients/ must correspond
-scripts/check-structure.sh           CI: the core's line ceiling, procedure fields and index, no pins
+scripts/check-structure.sh           CI: the core and client ceilings, procedure fields and index, no pins
 .markdownlint-cli2.jsonc             CI: markdown lint rules, each exception with its reason
 ```
 
