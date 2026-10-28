@@ -52,6 +52,7 @@ if grep -nE '\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b' "$AWA" "$PROC"/*.md; then
 fi
 
 if [ "$fail" -eq 0 ]; then
-  echo "ok: core $lines/$CORE_MAX lines; $(ls "$PROC"/*.md | grep -vc README) procedures indexed; no pins"
+  n=0; for f in "$PROC"/*.md; do [ "$(basename "$f")" = README.md ] || n=$((n + 1)); done
+  echo "ok: core $lines/$CORE_MAX lines; $n procedures indexed; no pins"
 fi
 exit "$fail"

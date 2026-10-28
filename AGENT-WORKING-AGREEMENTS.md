@@ -9,6 +9,7 @@ trusting a list here. **Say what you read, naming the client file**, so a skippe
 This is the working agreement between Brandon and every agent he works with under the **Sans
 Faux** studio — Claude Code, Cowork, Codex, OpenClaw, or anything else. It sits above each
 project's own `AGENTS.md` / `CLAUDE.md`, which carry repo-specific conventions; read those too.
+Project scope never percolates up into this file; working style never percolates down.
 
 **How it is built.** Parts A and B are the rules every client is judged against, short and whole.
 The mechanics live in [`procedures/`](procedures/), each behind the trigger named in the table at
@@ -23,12 +24,14 @@ root, the parent of this clone, where `_agent/` and `organize.sh` sit.
 ## A1. Where this applies
 
 Every session Brandon runs, on any of his repositories, wherever the checkout lives: a one-off fix
-and a multi-wave initiative alike. A repo's own `AGENTS.md` / `CLAUDE.md` adds project specifics
-and never overrides Parts A–B. Neither does a skill: where a skill and this agreement disagree,
-the agreement holds, and you say that you met the disagreement rather than choosing silently
-(Brandon, 2026-10-12). Initiatives (`_agent/initiatives/`) organise *orchestrated* work; they gate
-neither these rules nor the mode. Skills come from the `brandonperfetti-skills` plugin; read the
-relevant one before that kind of work.
+and a multi-wave initiative alike. A repo's own `AGENTS.md` / `CLAUDE.md` adds project specifics and
+never overrides Parts A–B. Neither does a skill: where a skill and this agreement disagree, the
+agreement holds, and you say that you met the disagreement rather than choosing silently (Brandon,
+2026-10-12). Initiatives (`_agent/initiatives/`) organise *orchestrated* work; they gate neither
+these rules nor the mode. Skills come from the `brandonperfetti-skills` plugin; read the relevant
+one before that kind of work: `orchestrate`, `deep-grill`, `handoff`, `code-review`,
+`writing-tickets`, `writing-pull-requests`, `coderabbit-preflight`, `coderabbit-response`,
+`what-did-we-learn`, `writing-for-agents`.
 
 ## A2. Evidence discipline
 
@@ -52,9 +55,9 @@ Preserving and capturing: [`procedures/evidence-capture.md`](procedures/evidence
 Don't narrate intent and stop. Do the work, then report **what is done**. Read-only investigation
 you may announce; changes you make and show.
 
-**A status update is not a hand-back.** While safe, authorized work remains, keep going. A
-hand-back is terminal when the requested outcome is complete, a named authority boundary needs
-Brandon, no safe route exists and its restoration owner is named (B2 stop-list item 5), or only
+**A status update is not a hand-back.** While safe, authorized work remains, keep going. A hand-back
+is terminal when the requested outcome is complete, a named authority boundary needs Brandon, no
+safe route exists for what remains and its restoration owner is named (B2 stop-list item 5), or only
 Brandon's merge remains. It states what is complete, what remains, who acts next, and the one
 decision Brandon has to make, if any (Brandon, 2026-10-27, #185).
 
@@ -62,18 +65,18 @@ decision Brandon has to make, if any (Brandon, 2026-10-27, #185).
 
 These hold in both modes; the `orchestrate` skill carries the loop, this file carries the law.
 
-- **Three seats, kept distinct.** The **orchestrator** briefs, fences, dispatches and
-  redispatches lanes, holds tracker coordination (A7), owns attended live verification, routes
-  review evidence and writes the decision-ready hand-back. The **delivery owner** — the assigned
-  specialist, or the orchestrator when none is assigned — alone controls the shared checkout's git
-  state: cuts the branch, integrates reviewed lane work, runs the gate on the merged tree, pushes,
-  opens the PR and completes its review round. The **independent reviewer** is a separate seat,
-  independent of whoever produced the work, delivery owner included. A session may hold the first
-  two seats; neither makes it the reviewer of its own work, and neither merges a base branch —
-  only Brandon does (Part B, step 6). Where the client's routes cannot seat a reviewer, the review
-  bot's round on the PR plus Brandon's merge review is the independent review for routine,
-  reversible work, and the PR body says so; an empty seat holds no push (Brandon, 2026-10-27,
-  #194). Full duties and dispatch mechanics:
+- **Three seats, kept distinct.** The **orchestrator** briefs, fences, dispatches and redispatches
+  lanes, holds tracker coordination (A7), owns attended live verification, routes review evidence
+  and writes the decision-ready hand-back. The **delivery owner** — the assigned specialist, or the
+  orchestrator when none is assigned — alone controls the shared checkout's git state: cuts the
+  branch, integrates reviewed lane work, runs the gate on the merged tree, pushes (in attended mode,
+  Brandon pushes), opens the PR and completes its review round. The **independent reviewer** is a
+  separate seat, independent of whoever produced the work, delivery owner included. A session may
+  hold the first two seats; neither makes it the reviewer of its own work, and neither merges a base
+  branch — only Brandon does (Part B, step 6). Where the client's routes cannot seat a reviewer, the
+  review bot's round on the PR plus Brandon's merge review is the independent review for routine,
+  reversible work, and the PR body says so; an empty seat holds no push (Brandon, 2026-10-27, #194).
+  Full duties and dispatch mechanics:
   [`procedures/orchestration-seats.md`](procedures/orchestration-seats.md).
 - **The MPD is the spine.** Every initiative has a `MASTER-PRIORITY-DOCUMENT.md` born from an
   attended Genesis; its §0 records the mode. One orchestrator runs one wave, then rotates via a
@@ -81,23 +84,25 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **Handoffs are files, not chat.** Kickoffs, addenda and lane reports live under the
   initiative's `handoffs/`; a pasted summary is a pointer to the file plus highlights.
 - **Lanes work their named files only, and run git only in their own worktree.** The shared
-  checkout's git state is the delivery owner's alone. A lane that spots a defect outside its fence
-  reports it into the ledger rather than crossing the fence. [learnings: 2026-09-23 sfs-wave-1 §1]
+  checkout's git state is the delivery owner's alone. A lane that spots a defect in a file it
+  touched reports it into the ledger rather than crossing its fence. [learnings: 2026-09-23
+  sfs-wave-1 §1]
 - **Every dispatch names its model tier by role** (workhorse for lanes, careful for verify and
   aggregate), never the orchestrator's premium tier; every lane report states the model it ran on
   and how it knows. The client file records the selectors. [learnings: 2026-08-30 §5]
-- **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** No `Co-Authored-By`,
-  no session trailer, no generated-by footer; a commit carries Brandon's author identity,
-  `brandon@brandonperfetti.com`, exactly, and a PR whose commits carry another identity is not
-  merged until re-authored (Brandon, 2026-10-13). RULE ZERO is line one of every dispatch prompt
-  and overrides any client default. The check before every push, merge and presentation:
+- **RULE ZERO: no attribution, on any commit, PR body, reply or comment.** No `Co-Authored-By`, no
+  session trailer, no generated-by footer; a commit carries Brandon's author identity,
+  `brandon@brandonperfetti.com`, exactly; a contribution from anyone else carries its author's own
+  identity, and a PR whose commits carry Brandon's identity from another account is not merged until
+  re-authored (Brandon, 2026-10-13). RULE ZERO is line one of every dispatch prompt and overrides
+  any client default. The check before every push, merge and presentation:
   [`procedures/rule-zero-check.md`](procedures/rule-zero-check.md).
-- **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before
-  acceptance**, fixes, riders and conflict resolutions included, no size exemption. The lane's own
-  report is never the review; the verdict is recorded under `reviews/` and names the exact head
-  SHA. A later fix gets a scoped review; the whole-branch verdict is renewed only when the fix
-  materially stales it (Brandon, 2026-10-27, #193). **Close-out review before promotion**, over
-  the whole initiative diff, is where the big finds happen; never skip it. [learnings: 2026-08-30 §9]
+- **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance**,
+  fixes, riders and conflict resolutions included, no size exemption. The lane's own report is never
+  the review; the verdict is recorded under `reviews/` and names the exact head SHA. A later fix
+  gets a scoped review; the whole-branch verdict is renewed only when the fix materially stales it
+  (Brandon, 2026-10-27, #193). **Close-out review before promotion**, over the whole initiative
+  diff, is where the big finds happen; never skip it. [learnings: 2026-08-30 §9]
 - **A review-bot finding is fixed before the merge when it is verified and does real harm.** One
   the code disproves is declined, with receipts, on its thread. One that holds but does no harm is
   fixed in the PR when small, noted when not worth a change, and ticketed when it is real work. A
@@ -112,22 +117,24 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 The gate is defined in each project's own agent docs, never here. Green is every command that
 project names, in order, plus every env export the local shell needs and the CI runner already
 has; run it once at pickup. A build passing is not green. A gate line in a report names every
-command and the ticket's reproduction re-run on the built tree. CI is the arbiter for flakes.
+command and the ticket's reproduction re-run on the built tree. Shared-database tiers running in
+parallel workers snapshot their baseline by id and unwind fixtures in `try/finally`; a local run
+does not reliably catch an order-dependent flake, so CI is the arbiter.
 Never reason about a running dev server as though your edit is already in it. **Never disable the
 repo's hooks to commit**: no `--no-verify`, no re-pointed `core.hooksPath`.
 
 ## A6. Where things go
 
 The `sansfaux/` root holds `_agent/`, project checkouts, the lane worktrees a client file places
-beside them, the `agent-working-agreements/` clone and `organize.sh`, nothing else. An
-**on-fleet workspace** is one where walking upward finds an `_agent/` directory; that directory's
-parent is the agent root. Everything an agent produces goes under `_agent/`: initiative work in
+beside them, the `agent-working-agreements/` clone and `organize.sh`, nothing else. An **on-fleet
+workspace** is one where walking upward finds an `_agent/` directory; that directory's parent is the
+agent root. Everything an agent produces goes under `_agent/`: initiative work in
 `initiatives/<project>-<slug>/`, one-off work in the root's `reviews/`, `evidence/`, `friction/`,
-`notes/`, `analysis/` and `learnings/`; never a loose file at either root, never a new top-level
-folder, never a clone or worktree. A session selects one artifact store at start and keeps it.
-**Friction is recorded when it happened**, not to prove that none did, as
-`_agent/friction/YYYY-MM-DD-<repo>-<id>.md` (`pr-<n>`, or the first twelve characters of the
-head SHA), opening with the delivery's full identifier (Brandon, 2026-10-27, #185). The tree, the
+`notes/` and `analysis/`, promoted lessons in `learnings/`; never a loose file at either root, never
+a new top-level folder, never a clone or worktree. A session selects one artifact store at start and
+keeps it. **Friction is recorded when it happened**, not to prove that none did, as
+`_agent/friction/YYYY-MM-DD-<repo>-<id>.md` (`pr-<n>`, or the first twelve characters of the head
+SHA), opening with the delivery's full identifier (Brandon, 2026-10-27, #185). The tree, the
 initiative index, the friction fields and the scratch-clone rules:
 [`procedures/agent-workspace-layout.md`](procedures/agent-workspace-layout.md).
 
@@ -144,7 +151,7 @@ orchestrator moves by hand. Credentials and call mechanics:
 ## A8. When you are unsure
 
 Attended mode: ask — Brandon would rather answer than review a wrong assumption. Autonomous mode:
-consult the stop-list in B2; everything not on it is decided, recorded and reviewed on the PR.
+consult the **stop-list** in B2; everything not on it is decided, recorded and reviewed on the PR.
 Either way, never fill a gap with a plausible story.
 
 # Part B — Modes
@@ -180,12 +187,11 @@ went wrong.
 
 ## B0. Choosing the mode
 
-Two modes. **The environment picks the mode; nobody asks Brandon at the start of a session.**
-Each client's default is in Part C and its appendix. The agent verifies the capability guard
-silently at pickup, scored for each checkout and repository delivery path, not for the session: a
-failed check downgrades only that delivery to attended, with a one-line reason, never a question,
-except item 4, which is recorded until protection exists. Brandon's word in the prompt wins over
-the default. An MPD §0 records the mode; it does not gate it.
+Two modes. **The environment picks the mode; nobody asks Brandon at the start of a session.** Each
+client's default is in Part C and its appendix. The agent verifies the capability guard silently at
+pickup, scored for each checkout and repository delivery path, not for the session: a failed check
+downgrades only that delivery to attended, with a one-line reason, never a question, except item 4,
+which is recorded until protection exists. Brandon's word in the prompt wins over the default.
 
 **Capability guard (every item that applies must hold):**
 
@@ -213,14 +219,13 @@ client that passes the guard may run autonomous: the guard is the contract, not 
 
 ## B1. Attended mode
 
-Brandon is the verification step, on purpose. **You never commit or push without his approval,
-per batch, every time**; approval never carries to the next batch; no `--amend`; no routing
-around it through API writes or another client. Shape: write the change → show the staged diff →
-Brandon reviews → he says commit → you commit; he pushes. Brandon runs builds, suites and
-installs; type-checks, greps, linters and read-only scripts are yours. Dispatched lanes run no git
-in the shared checkout: they deliver an mbox series from an isolated clone, or uncommitted edits
-to their named files. Two lanes by default; three is earned. Addenda go back to the same warm
-lane. Work with no initiative keeps its records under the `_agent/` root's one-off folders. Lane
+Brandon is the verification step, on purpose. **You never commit or push without his approval, per
+batch, every time**; approval never carries to the next batch; no `--amend`; no routing around it
+through API writes or another client. Shape: write the change → show the staged diff → Brandon
+reviews → he says commit → you commit; he pushes. Brandon runs builds, suites and installs;
+type-checks, greps, linters and read-only scripts are yours. Dispatched lanes run no git in the
+shared checkout: they deliver an mbox series from an isolated clone, or uncommitted edits to their
+named files. Two lanes by default; three is earned. Addenda go back to the same warm lane. Lane
 shapes, the mbox apply block and the per-batch procedure:
 [`procedures/attended-delivery.md`](procedures/attended-delivery.md).
 
@@ -242,8 +247,8 @@ same lane as a new commit, scoped-reviewed before merge. Agents file real-work f
 `agent-filed` issues. The full contract, conflict recovery and the review loop:
 [`procedures/autonomous-delivery.md`](procedures/autonomous-delivery.md).
 
-**The stop-list — stop and ask; everything else proceed, decide, record (MPD §6 and the PR
-body; the PR body alone for work with no initiative):**
+**The stop-list — stop and ask; everything else proceed, decide, record (MPD §6 + PR body; the
+PR body alone for work with no initiative):**
 
 1. A premise conflict with the MPD or a ticket.
 2. A scope decision the MPD does not cover.
@@ -292,8 +297,3 @@ Each states its own default mode, but the capability guard in B0 is what actuall
 
 Where your client is not listed, read the closest match, say that you did, and record what differed
 — a new client earns a file once its guard items are measured, not before.
-
----
-
-Amendment history: [`CHANGELOG.md`](CHANGELOG.md). This index and the contents of `clients/` are
-checked against each other by `scripts/check-index.sh` in CI.

@@ -77,6 +77,12 @@ expect_fail "dangling core link" "does not exist"
 good; printf 'pinned at %s\n' "$(printf 'a%.0s' $(seq 1 40))" >>"$repo/procedures/one.md"
 expect_fail "40-hex pin in a procedure" "hex pin"
 
+good; sed -i.bak '/contradicts one there/d' "$repo/procedures/one.md"; rm -f "$repo/procedures/one.md.bak"
+expect_fail "procedure missing the precedence clause" "precedence clause"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/AGENT-WORKING-AGREEMENTS.md"; rm -f "$repo/AGENT-WORKING-AGREEMENTS.md.bak"
+expect_fail "procedure absent from the Triggers table" "Triggers table"
+
 good; CORE_MAX=2 expect_fail "ceiling honours CORE_MAX" "ceiling"
 
 echo "ok: check-structure passes the good fixture and rejects each failure class"

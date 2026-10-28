@@ -26,7 +26,8 @@ The agreement stays small on purpose; these rules are what keep it small.
 - **An amendment replaces or shortens; it layers nothing on top.** Parts A–B and each client
   file do not grow net lines. Procedure goes to `procedures/` (read when its trigger occurs;
   four fields on top, indexed in two places) or the skill that owns it; the agreement keeps the
-  invariant and a pointer.
+  invariant and a pointer. A rule moves only once its destination carries it, is linked from
+  where it stood, and has been reviewed.
 - **Evidence lives in `_agent/`, not in the rule.** No line numbers, hashes or captures of
   mutable files in the agreement or an appendix; a rule cites a learning or an issue.
 - **Positive phrasing.** Say what to do; a prohibition is for a hard boundary only.

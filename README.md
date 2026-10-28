@@ -50,8 +50,8 @@ enough to be read whole at every session start. The mechanics that carry a rule 
 client — its selectors, its measured limits, who fills which seat — is in that client's appendix:
 an agent reads Parts A and B, then the one appendix [Part C](AGENT-WORKING-AGREEMENTS.md#part-c--environment-appendices-read-only-yours)
 indexes for its environment, and no other. A rule moves out of the root file only once its
-destination carries it and is linked from where it stood, because a rule moved without a
-destination is broken silently by whoever did not follow the link. Repository gates and
+destination carries it, is linked from where it stood and has been reviewed, because a rule moved
+without a destination is broken silently by whoever did not follow the link. Repository gates and
 conventions stay in each repository's own `AGENTS.md`, and workflow procedures in the skills Part A
 names (#173).
 

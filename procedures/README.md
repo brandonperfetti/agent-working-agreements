@@ -22,5 +22,7 @@ Every procedure opens with four fields — **Trigger**, **Owner**, **Implements*
 | [`autonomous-delivery.md`](autonomous-delivery.md) | B2 | an autonomous delivery |
 
 The text in these files was moved out of the agreement verbatim on 2026-10-27 (PR 2 of the
-hardening, epic #185). Where it says "above" or "below", it means the agreement section it
-implements. Trimming it is later work, one procedure per PR, under `AGENTS.md`'s amendment rules.
+hardening, epic #185), minus the lines the core kept (`review-findings.md` skips A4's issue and
+tests bullets; `autonomous-delivery.md` skips the stop-list). Where it says "above" or "below", it
+means the agreement section it implements. Trimming it is later work, one procedure per PR, under
+`AGENTS.md`'s amendment rules.
