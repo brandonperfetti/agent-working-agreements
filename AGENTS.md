@@ -15,16 +15,45 @@ This convention is local to `brandonperfetti/agent-working-agreements`. Do not
 apply it to another repository unless that repository records the same rule in
 its own instructions.
 
+## Amending the agreement
+
+The agreement stays small on purpose; these rules are what keep it small.
+
+- **A rule earns its place after something bit and Brandon agreed it bit.** An agent that
+  meets a rule's cost records friction (A6) and opens no amendment in that session. Brandon
+  decides which friction becomes a rule, and batches the amendments: one agreement PR at a
+  time.
+- **An amendment replaces or shortens; it layers nothing on top.** Parts A–B and each client
+  file do not grow net lines. Procedure goes to `procedures/` (read when its trigger occurs;
+  four fields on top, indexed in two places) or the skill that owns it; the agreement keeps the
+  invariant and a pointer. A rule moves only once its destination carries it, is linked from
+  where it stood, and has been reviewed.
+- **Evidence lives in `_agent/`, not in the rule.** No line numbers, hashes or captures of
+  mutable files in the agreement or an appendix; a rule cites a learning or an issue.
+- **Positive phrasing.** Say what to do; a prohibition is for a hard boundary only.
+- **The changelog entry is short:** what changed, why, who decided, one receipt link (issue
+  numbers in the heading are identifiers, not receipts). Under ten lines.
+- **Stable anchors.** A1–A8, B0–B2 and the client file names stay; shrink their bodies, never
+  rename them.
+
 ## CI gate
 
-Green is these three commands, run in this order from the repository root, each
+Green is these five commands, run in this order from the repository root, each
 exiting 0:
 
 ```bash
 ./scripts/check-index.sh
 ./scripts/check-index.test.sh
+./scripts/check-structure.sh
+./scripts/check-structure.test.sh
 npx --yes markdownlint-cli2
 ```
+
+`check-structure.sh` holds the core and each client file under their line
+ceilings, requires every file under `procedures/` to carry its four fields and
+be indexed in `procedures/README.md` and in the core's *Triggers* table (or,
+for `procedures/<client>/`, in that client's appendix), and rejects a 40- or
+64-hex pin in normative text; `history/` is exempt from the pin rule.
 
 No environment export is needed. They are the steps of the job `check` in
 `.github/workflows/check.yml`, and `check` is the required status check on

@@ -10,6 +10,38 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-27 — The OpenClaw appendix (#185, #189, #190, #194).** `clients/openclaw.md` goes
+  from 996 lines to under the 150-line ceiling Brandon accepted (decision 3): host and startup,
+  seats and routes, delivery topology, evidence store, the dormant breaker's signature, pointers.
+  The worktree, protected-root refresh, cleanup and pickup-audit procedure moves verbatim to
+  `procedures/openclaw/managed-worktrees.md`; the former host's Bubblewrap breaker to
+  `procedures/openclaw/native-sandbox-breaker.md`, dormant behind its signature (decision 2);
+  hashed evidence, the route census, the staff prose, the acceptance narrative and the migration
+  dispositions to `history/openclaw.md`, never startup reading. CI holds each client file under
+  150 lines and rejects pins there. Third of three PRs.
+
+- **2026-10-27 — The constitution and `procedures/` (#185, #188, #192).** Parts A–B shrink
+  from 748 lines to a core under the 300-line ceiling Brandon accepted (decision 3). The
+  mechanics behind A2, A4, A6, A7, B0, B1 and B2 moved verbatim into nine files under
+  `procedures/`, each opening with Trigger, Owner, Implements and Stop, and reached from the
+  *Triggers* table at the end of Part B. Part C's two copies of B0's OpenClaw exception are
+  gone (one owner per rule). `scripts/check-structure.sh` enforces the ceiling, the procedure
+  fields and index, and no hash pins in normative text; the gate is now five commands. Every
+  anchor (A1–A8, B0–B2, the ritual, Part C) and every client file name is unchanged. Second of
+  three PRs; evidence proportionality (A2) is the one new sentence.
+
+- **2026-10-27 — The stopping rules (#185, #193, #194).** Parts A–B are read once per
+  session; a status update is not a hand-back (A3); whole-branch re-review renews only on
+  material staleness and a bot round closes when it finds no new harm (A4, replacing the
+  2026-10-23 renewal-after-every-change rule); an unseatable reviewer is covered by the bot plus
+  Brandon's merge for routine work (A4); friction is recorded only when observed, under a
+  filename the filesystem accepts (A6); a no-route stop names its restoration owner (B0, B2
+  stop-list item 5, `clients/openclaw.md`); and `AGENTS.md` carries the amendment rules that
+    stop this file growing back. The appendix's stale 2026-09-20 "was therefore attended"
+  statement, which contradicted B0's OpenClaw exception, is retired to history. Decided by
+  Brandon after the 2026-10-27 hardening audit; the first of three PRs that shrink the
+  agreement ([#196](https://github.com/brandonperfetti/agent-working-agreements/pull/196)).
+
 - **2026-10-26 — `clients/openclaw.md`: refresh the wrapper-selector source locator.** New
   node and Gateway route wording changed the surrounding bytes of
   `~/.openclaw/workspace/docs/team-operating-model.md` and left the source receipt stale: the

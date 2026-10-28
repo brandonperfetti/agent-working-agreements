@@ -29,6 +29,9 @@ AGENTS.md                            repository-specific agent instructions
 .github/copilot-instructions.md      a symlink to AGENTS.md, the name GitHub Copilot reads
 .github/pull_request_template.md     the pull request template
 AGENT-WORKING-AGREEMENTS.md          Parts A (portable discipline) + B (modes) + the Part C index
+procedures/<name>.md                 the mechanics behind a rule, read when its trigger occurs
+procedures/<client>/<name>.md        the same, for one client, linked from its appendix
+history/<client>.md                  measurements, pinned source readings, superseded claims: never startup reading
 clients/<client>.md                  one appendix per environment — read only your own
 docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
 docs/agents/triage-labels.md         the triage roles mapped to this repository's labels
@@ -38,19 +41,21 @@ CHANGELOG.md                         why each rule changed, newest first
 LICENSE                              the CC BY 4.0 legal code; it covers the documentation
 LICENSE-MIT                          the MIT text; it covers scripts/ and the GitHub workflows
 scripts/check-index.sh               CI: the index and clients/ must correspond
+scripts/check-structure.sh           CI: the core and client ceilings, procedure fields and index, no pins
 .markdownlint-cli2.jsonc             CI: markdown lint rules, each exception with its reason
 ```
 
-**The split rule:** anything every client is judged against stays in the root file, in full —
-evidence discipline, authority boundaries, stop conditions, the delivery states, the review
-invariants and skill routing among it. What is specific to one client — its selectors, its
-measured limits, who fills which seat — is disclosed progressively, in that client's appendix:
+**The split rule:** the rule every client is judged against stays in the root file — evidence
+discipline, authority boundaries, stop conditions, the git ritual, the review invariant — short
+enough to be read whole at every session start. The mechanics that carry a rule out live in
+`procedures/`, each behind a named trigger, read when that trigger occurs. What is specific to one
+client — its selectors, its measured limits, who fills which seat — is in that client's appendix:
 an agent reads Parts A and B, then the one appendix [Part C](AGENT-WORKING-AGREEMENTS.md#part-c--environment-appendices-read-only-yours)
-indexes for its environment, and no other. A rule moves out of Parts A or B only once its
-destination carries it, is linked from where it stood and has been reviewed; until then it stays,
-because a rule moved without a destination is broken silently by whoever did not follow the link.
-Repository gates and conventions stay in each repository's own `AGENTS.md`, and workflow
-procedures in the skills Part A names (#173).
+indexes for its environment, and no other. A rule moves out of the root file only once its
+destination carries it, is linked from where it stood and has been reviewed, because a rule moved
+without a destination is broken silently by whoever did not follow the link. Repository gates and
+conventions stay in each repository's own `AGENTS.md`, and workflow procedures in the skills Part A
+names (#173).
 
 **Who does what in a delivery** is A4's to say, in its three seats — the orchestrator, the
 delivery owner and the independent reviewer — and only Brandon merges. A client appendix may name
@@ -84,5 +89,8 @@ Rules change by pull request against `develop`, the same as any repo here — wi
 stating plainly: **this repo is exempt from the wave/initiative machinery its own Part B describes.**
 An amendment is a branch, a PR, a review, and a merge. It does not get an MPD.
 
-Every amendment adds an entry at the top of `CHANGELOG.md`. Git history records *what* changed;
-the changelog records *why*, and the agreement's own rules cite it.
+Every amendment adds a short entry at the top of `CHANGELOG.md`. Git history records *what*
+changed; the changelog records *why*, and the agreement's own rules cite it. The rules that keep
+the agreement from growing back — friction before amendment, one agreement PR at a time, replace
+rather than layer, evidence out of the rule — are in [`AGENTS.md`](AGENTS.md), *Amending the
+agreement*; an agent reads them before proposing a change here.
