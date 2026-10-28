@@ -255,9 +255,9 @@ body; the PR body alone for work with no initiative):**
    both sides' pre-merge gate records; unresolved recovery leaves the branch at its pre-merge tip
    (Git contract above). [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
 5. A required operation has no safe route on this client's supported routes. The stop names the
-   exact missing capability and its **restoration owner** — the client file says who — and hands
-   back per A3; work that does not depend on the operation continues, and Brandon is never made
-   the command runner (Brandon, 2026-10-27, #194).
+   exact missing capability and its **restoration owner** — the client file says who, and where it
+   names none the owner is Brandon — and hands back per A3; work that does not depend on the
+   operation continues, and Brandon is never made the command runner (Brandon, 2026-10-27, #194).
 
 For work with no initiative, item 1 reads "A premise conflict with the ticket or the prompt" and
 item 2 reads "A scope decision neither the ticket nor the prompt covers": both exist for every
