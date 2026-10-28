@@ -11,11 +11,11 @@ of amendments in that batch**, not an ordinal; the two notations predate each ot
 being retrofitted onto the other.
 
 - **2026-10-28 — One artifact store, named by absolute path.** `clients/openclaw.md` says
-  `$AGENT_ROOT/_agent/` is the store for every role and for Claude Code, that upward discovery from
-  a role workspace finds the workspace rollback root first, and that rollback roots receive no new
-  artifacts. Brandon, 2026-10-28: fragmenting the store is not helpful. A per-role canary showed
-  every role can write the store; the routing text sent work to the fallback
-  (`_agent/evidence/2026-10-28-store-unification/README.md`).
+  `$AGENT_ROOT/_agent/` is the store for every role and for Claude Code, and that every role
+  workspace's `_agent/` (main's is the one upward discovery finds) is a rollback root carrying only
+  a pointer here; Brandon approved that pointer. Brandon, 2026-10-28: fragmenting the store is not
+  helpful. A per-role canary showed every role can write the store; routing text sent work to the
+  fallback (receipt: `_agent/evidence/2026-10-28-store-unification/README.md`).
 
 - **2026-10-27 — RULE ZERO is the author-identity rule (#185).** Attribution lines are allowed
   and never required; the author email `brandon@brandonperfetti.com` on every agent commit, and
