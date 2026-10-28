@@ -16,9 +16,9 @@ when you acknowledge your reading** — "read the agreements and
   post-release refresh, never a delivery checkout; its Git administration hosts isolated managed
   delivery worktrees. **Artifact store** `$AGENT_ROOT/_agent/`, the one store for every role and
   for Claude Code, named by absolute path for all output; kept for the session, never switched or
-  dual-written (A6). Each `~/.openclaw/workspace*/_agent/` (upward discovery from main's finds it
-  first) and the former workspace checkout are rollback roots carrying only a pointer here: never
-  merged, mirrored, symlinked, moved, deleted or otherwise rewritten. A role started from a changed
+  dual-written (A6). Each `~/.openclaw/workspace*/_agent/` (from main's workspace, upward discovery
+  finds its own first) and the former workspace checkout are rollback roots gaining only a pointer;
+  never merged, mirrored, symlinked, moved, deleted or otherwise rewritten. A role on a changed
   pointer holds the store provisionally, runs the create/readback canary on its supported route and
   reports its exact instruction paths, hashes and store before acceptance. Paths are this host's.
 - **If the pointer, Parts A–B or this file is unreachable,** stop the affected work with the
