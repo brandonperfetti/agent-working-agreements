@@ -69,5 +69,5 @@ Claude Code fact.
 - A wave orchestrator's session is one wave; rotate by starting a fresh session from the packet
   (or `handoff`).
 - This file is reached from the one-line pointer in the user-level `~/.claude/CLAUDE.md` (created
-  2026-09-10), which every Claude Code session on this machine loads; the repo's own `CLAUDE.md`
-  adds project specifics.
+  2026-09-10), which every Claude Code session on this machine loads [measured 2026-10-28]; the
+  repo's own `CLAUDE.md` adds project specifics.

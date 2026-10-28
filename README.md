@@ -68,7 +68,7 @@ per-client configuration; the agreement itself is identical for all of them.
 
 | Client | Pointer lives in | Notes |
 | --- | --- | --- |
-| Claude Code | `~/.claude/CLAUDE.md` | plain file, read at session start |
+| Claude Code | `~/.claude/CLAUDE.md` | plain file the harness loads at session start |
 | Cowork (Claude desktop) | the desktop **Instructions for Claude** field | applies to chats and Cowork only — it does *not* reach Claude Code |
 | Codex (ChatGPT desktop) | **Personalization → Codex instructions**, which *is* `~/.codex/AGENTS.md` | one surface, not two — see below |
 | OpenClaw (Camina) | workspace-root `AGENTS.md` | routes Parts A–B plus `clients/openclaw.md` to one protected instruction-source root working tree on `master` (its Git administration may host isolated managed delivery worktrees without altering the root tree), fast-forwarded after each release per #48; new/reset-session application must be verified |
