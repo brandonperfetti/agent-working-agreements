@@ -24,8 +24,9 @@ The agreement stays small on purpose; these rules are what keep it small.
   decides which friction becomes a rule, and batches the amendments: one agreement PR at a
   time.
 - **An amendment replaces or shortens; it layers nothing on top.** Parts A–B and each client
-  file do not grow net lines. Procedure goes to `procedures/` or the skill that owns it; the
-  agreement keeps the invariant and a pointer.
+  file do not grow net lines. Procedure goes to `procedures/` (read when its trigger occurs;
+  four fields on top, indexed in two places) or the skill that owns it; the agreement keeps the
+  invariant and a pointer.
 - **Evidence lives in `_agent/`, not in the rule.** No line numbers, hashes or captures of
   mutable files in the agreement or an appendix; a rule cites a learning or an issue.
 - **Positive phrasing.** Say what to do; a prohibition is for a hard boundary only.
@@ -35,14 +36,21 @@ The agreement stays small on purpose; these rules are what keep it small.
 
 ## CI gate
 
-Green is these three commands, run in this order from the repository root, each
+Green is these five commands, run in this order from the repository root, each
 exiting 0:
 
 ```bash
 ./scripts/check-index.sh
 ./scripts/check-index.test.sh
+./scripts/check-structure.sh
+./scripts/check-structure.test.sh
 npx --yes markdownlint-cli2
 ```
+
+`check-structure.sh` holds the core under its line ceiling, requires every file
+under `procedures/` to carry its four fields and be indexed in both
+`procedures/README.md` and the core's *Triggers* table, and rejects a 40- or
+64-hex pin in normative text.
 
 No environment export is needed. They are the steps of the job `check` in
 `.github/workflows/check.yml`, and `check` is the required status check on
