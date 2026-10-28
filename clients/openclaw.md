@@ -107,5 +107,5 @@ bwrap: No permissions to create a new namespace, likely because the kernel does 
 ## History
 
 Measurements, source readings with their hashes, the route census, superseded claims and the
-migration dispositions: [`../history/openclaw.md`](../history/openclaw.md). Nothing there is
-startup reading.
+migration dispositions: [`../history/openclaw.md`](../history/openclaw.md). None of it is required
+reading.

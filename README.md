@@ -31,7 +31,7 @@ AGENTS.md                            repository-specific agent instructions
 AGENT-WORKING-AGREEMENTS.md          Parts A (portable discipline) + B (modes) + the Part C index
 procedures/<name>.md                 the mechanics behind a rule, read when its trigger occurs
 procedures/<client>/<name>.md        the same, for one client, linked from its appendix
-history/<client>.md                  measurements, pinned source readings, superseded claims: never startup reading
+history/<client>.md                  measurements, pinned source readings, superseded claims: never required reading
 clients/<client>.md                  one appendix per environment — read only your own
 docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
 docs/agents/triage-labels.md         the triage roles mapped to this repository's labels
@@ -47,7 +47,7 @@ scripts/check-structure.sh           CI: the core and client ceilings, procedure
 
 **The split rule:** the rule every client is judged against stays in the root file — evidence
 discipline, authority boundaries, stop conditions, the git ritual, the review invariant — short
-enough to be read whole at every session start. The mechanics that carry a rule out live in
+enough to be read whole before a delivery. The mechanics that carry a rule out live in
 `procedures/`, each behind a named trigger, read when that trigger occurs. What is specific to one
 client — its selectors, its measured limits, who fills which seat — is in that client's appendix:
 an agent reads Parts A and B, then the one appendix [Part C](AGENT-WORKING-AGREEMENTS.md#part-c--environment-appendices-read-only-yours)
