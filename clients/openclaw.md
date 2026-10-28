@@ -205,11 +205,12 @@ The B2 readiness boundary is unchanged: Brandon receives a ready feature PR with
 relevant diff and gate evidence, and material decisions. This section adds no second acceptance
 ceremony.
 
-**Restoration owners (B2 stop-list item 5)** [decision 2026-10-27, Brandon, #194]: **Ashford**
-for OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration);
-**Bull** for host and runtime capability; the **delivery owner** for repository and worktree
-capability. Camina routes the stop and keeps continuity. A stop that names its owner is complete;
-it needs no packet.
+**Restoration owners (B2 stop-list item 5)** [decision 2026-10-27, Brandon, #194]: **Ashford** for
+OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
+instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
+**delivery owner** for repository and worktree capability, the protected root's post-release refresh
+included. Camina routes the stop and keeps continuity; a stop that names its owner is complete and
+needs no packet.
 
 ## Bubblewrap circuit breaker
 

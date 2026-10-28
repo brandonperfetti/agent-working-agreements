@@ -29,7 +29,8 @@ The agreement stays small on purpose; these rules are what keep it small.
 - **Evidence lives in `_agent/`, not in the rule.** No line numbers, hashes or captures of
   mutable files in the agreement or an appendix; a rule cites a learning or an issue.
 - **Positive phrasing.** Say what to do; a prohibition is for a hard boundary only.
-- **The changelog entry is short:** what changed, why, who decided, one link. Under ten lines.
+- **The changelog entry is short:** what changed, why, who decided, one receipt link (issue
+  numbers in the heading are identifiers, not receipts). Under ten lines.
 - **Stable anchors.** A1–A8, B0–B2 and the client file names stay; shrink their bodies, never
   rename them.
 
