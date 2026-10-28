@@ -1,9 +1,10 @@
 # Repository instructions
 
-Read [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md) before
-working in this repository. This file adds only what is specific to this
-repository; it never overrides Parts A–B, and a rule here that contradicts one
-there is the rule that is wrong.
+Read [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md) on the
+trigger its opening paragraph sets: before your first write or GitHub action
+in this repository; a read-only look needs no read. This file adds only what
+is specific to this repository; it never overrides Parts A–B, and a rule here
+that contradicts one there is the rule that is wrong.
 
 ## Commit subjects
 

@@ -13,8 +13,8 @@ This README is for a human reader: the maintainer, or someone arriving from outs
 
 These are one engineer's working agreements, running against a real fleet. The paths
 (`~/dev/sansfaux/_agent/`), the client appendices and the initiatives named in the changelog are
-his, and they stay as they are: agents read the agreement and their client file at the start of
-every session, and a path an agent can follow is worth more than one a stranger finds tidy. What
+his, and they stay as they are: agents read the agreement and their client file before a session's
+first delivery, and a path an agent can follow is worth more than one a stranger finds tidy. What
 is portable is the structure and the rules — the evidence labels, the two modes and the guard that
 picks between them, the git ritual, the stop-list — not the layout. This is the real thing, not a
 template. The changelog is the record of these rules being exercised: an entry names what produced
@@ -31,7 +31,7 @@ AGENTS.md                            repository-specific agent instructions
 AGENT-WORKING-AGREEMENTS.md          Parts A (portable discipline) + B (modes) + the Part C index
 procedures/<name>.md                 the mechanics behind a rule, read when its trigger occurs
 procedures/<client>/<name>.md        the same, for one client, linked from its appendix
-history/<client>.md                  measurements, pinned source readings, superseded claims: never startup reading
+history/<client>.md                  measurements, pinned source readings, superseded claims: never required reading
 clients/<client>.md                  one appendix per environment — read only your own
 docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
 docs/agents/triage-labels.md         the triage roles mapped to this repository's labels
@@ -47,7 +47,7 @@ scripts/check-structure.sh           CI: the core and client ceilings, procedure
 
 **The split rule:** the rule every client is judged against stays in the root file — evidence
 discipline, authority boundaries, stop conditions, the git ritual, the review invariant — short
-enough to be read whole at every session start. The mechanics that carry a rule out live in
+enough to be read whole before the first delivery. The mechanics that carry a rule out live in
 `procedures/`, each behind a named trigger, read when that trigger occurs. What is specific to one
 client — its selectors, its measured limits, who fills which seat — is in that client's appendix:
 an agent reads Parts A and B, then the one appendix [Part C](AGENT-WORKING-AGREEMENTS.md#part-c--environment-appendices-read-only-yours)
@@ -68,7 +68,7 @@ per-client configuration; the agreement itself is identical for all of them.
 
 | Client | Pointer lives in | Notes |
 | --- | --- | --- |
-| Claude Code | `~/.claude/CLAUDE.md` | plain file, read at session start |
+| Claude Code | `~/.claude/CLAUDE.md` | plain file the harness loads at session start |
 | Cowork (Claude desktop) | the desktop **Instructions for Claude** field | applies to chats and Cowork only — it does *not* reach Claude Code |
 | Codex (ChatGPT desktop) | **Personalization → Codex instructions**, which *is* `~/.codex/AGENTS.md` | one surface, not two — see below |
 | OpenClaw (Camina) | workspace-root `AGENTS.md` | routes Parts A–B plus `clients/openclaw.md` to one protected instruction-source root working tree on `master` (its Git administration may host isolated managed delivery worktrees without altering the root tree), fast-forwarded after each release per #48; new/reset-session application must be verified |

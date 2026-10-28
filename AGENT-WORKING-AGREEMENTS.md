@@ -1,10 +1,10 @@
 # Agent working agreements — Sans Faux
 
-**Read this first, every session, before touching anything**, and read it once: Parts A and B in
-full, then the one file under [`clients/`](clients/) for the environment you are in, and no other.
-A resumed step, a dispatch packet or a later turn points back here and starts no re-read. Confirm
-your tooling with `ListSkills` / `ListConnectors` (or your client's equivalent) rather than
-trusting a list here. **Say what you read, naming the client file**, so a skipped read is visible.
+**Read this once, before a session's first delivery, dispatch, repository write or GitHub action:**
+Parts A and B in full, then your [`clients/`](clients/) file, and no other. An answer from memory or
+the bootstrap needs no read; a resumed step, a packet or a later turn pointing back here starts no
+re-read. Confirm your tooling with `ListSkills` / `ListConnectors` or your client's equivalent, not
+a list here. **Say what you read, naming the client file**, so a skipped read is visible.
 
 This is the working agreement between Brandon and every agent he works with under the **Sans
 Faux** studio — Claude Code, Cowork, Codex, OpenClaw, or anything else. It sits above each
@@ -132,9 +132,9 @@ workspace** is one where walking upward finds an `_agent/` directory; that direc
 agent root. Everything an agent produces goes under `_agent/`: initiative work in
 `initiatives/<project>-<slug>/`, one-off work in the root's `reviews/`, `evidence/`, `friction/`,
 `notes/` and `analysis/`, promoted lessons in `learnings/`; never a loose file at either root, never
-a new top-level folder, never a clone or worktree. A session selects one artifact store at start and
-keeps it. **Friction is recorded when it happened**, not to prove that none did, as
-`_agent/friction/YYYY-MM-DD-<repo>-<id>.md` (`pr-<n>`, or the first twelve characters of the head
+a new top-level folder, never a clone or worktree under `_agent/`. A session selects one artifact
+store at start and keeps it. **Friction is recorded when it happened**, not to prove that none did,
+as `_agent/friction/YYYY-MM-DD-<repo>-<id>.md` (`pr-<n>`, or the first twelve characters of the head
 SHA), opening with the delivery's full identifier (Brandon, 2026-10-27, #185). The tree, the
 initiative index, the friction fields and the scratch-clone rules:
 [`procedures/agent-workspace-layout.md`](procedures/agent-workspace-layout.md).
