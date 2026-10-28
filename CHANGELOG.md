@@ -10,6 +10,25 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-28 — Read before the first delivery, not at session start; A6's clause scoped to
+  `_agent/` (#203).** Core and appendix are read once, before a session's first delivery, dispatch,
+  repository write or GitHub action; an answer from memory or the bootstrap needs no read. Camina
+  rightly answered a status question from OpenClaw's injected bootstrap and broke the rule as
+  written (friction: `_agent/friction/2026-10-28-openclaw-workspace-656188b6.md`). A6's closing
+  clause gains "under `_agent/`", a wording scope: alone it read as forbidding the lane worktrees
+  its paragraph places at the root (CodeRabbit on claude-skills#352;
+  [#203](https://github.com/brandonperfetti/agent-working-agreements/issues/203)). Brandon,
+  2026-10-28.
+
+- **2026-10-28 — Board intake is the per-repo `add-to-project` workflow (#99).** A7, the *Tracker*
+  bullet of `procedures/github-paths.md` and the *Issues* bullet of
+  `procedures/autonomous-delivery.md` name each repository's own `add-to-project` workflow as the
+  board's intake, issues only, in place of the board's built-in Auto-add. Why: one fleet-wide intake
+  mechanism, defined and reviewed in each repository, with no dependence on the board's Auto-add
+  slots; the built-in filter also added pull requests, so PR board cards stop, and PR-to-issue
+  linking is unaffected. Brandon, 2026-10-01, reaffirmed 2026-10-28
+  ([#99](https://github.com/brandonperfetti/agent-working-agreements/issues/99)).
+
 - **2026-10-28 — One artifact store, named by absolute path.** `clients/openclaw.md` says
   `$AGENT_ROOT/_agent/` is the store for every role and for Claude Code, that it sets the agent root
   rather than discovering it, and that each role workspace's `_agent/` is a rollback root gaining
