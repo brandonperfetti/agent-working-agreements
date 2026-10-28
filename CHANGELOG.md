@@ -14,8 +14,9 @@ being retrofitted onto the other.
   `$AGENT_ROOT/_agent/` is the store for every role and for Claude Code, that it sets the agent root
   rather than discovering it, and that each role workspace's `_agent/` is a rollback root gaining
   only a pointer; Brandon approved that pointer. Brandon, 2026-10-28: fragmenting the store is not
-  helpful. A per-role canary showed every role can write the store; routing text sent work to the
-  fallback (receipt: `_agent/evidence/2026-10-28-store-unification/README.md`).
+  helpful. [measured 2026-10-28] A per-role canary showed every role can write the store; routing
+  text sent work to the fallback (receipt:
+  `_agent/evidence/2026-10-28-store-unification/README.md`).
 
 - **2026-10-27 — RULE ZERO is the author-identity rule (#185).** Attribution lines are allowed
   and never required; the author email `brandon@brandonperfetti.com` on every agent commit, and
