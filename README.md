@@ -84,5 +84,8 @@ Rules change by pull request against `develop`, the same as any repo here — wi
 stating plainly: **this repo is exempt from the wave/initiative machinery its own Part B describes.**
 An amendment is a branch, a PR, a review, and a merge. It does not get an MPD.
 
-Every amendment adds an entry at the top of `CHANGELOG.md`. Git history records *what* changed;
-the changelog records *why*, and the agreement's own rules cite it.
+Every amendment adds a short entry at the top of `CHANGELOG.md`. Git history records *what*
+changed; the changelog records *why*, and the agreement's own rules cite it. The rules that keep
+the agreement from growing back — friction before amendment, one agreement PR at a time, replace
+rather than layer, evidence out of the rule — are in [`AGENTS.md`](AGENTS.md), *Amending the
+agreement*; an agent reads them before proposing a change here.

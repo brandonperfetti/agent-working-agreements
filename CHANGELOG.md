@@ -10,6 +10,18 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-27 — The stopping rules (#185, #193, #194).** Parts A–B are read once per
+  session; a status update is not a hand-back (A3); whole-branch re-review renews only on
+  material staleness and a bot round closes when it finds no new harm (A4, replacing the
+  2026-10-23 renewal-after-every-change rule); an unseatable reviewer is covered by the bot plus
+  Brandon's merge for routine work (A4); friction is recorded only when observed, under a
+  filename the filesystem accepts (A6); a no-route stop names its restoration owner (B0, B2
+  stop-list item 5, `clients/openclaw.md`); and `AGENTS.md` carries the amendment rules that
+    stop this file growing back. The appendix's stale 2026-09-20 "was therefore attended"
+  statement, which contradicted B0's OpenClaw exception, is retired to history. Decided by
+  Brandon after the 2026-10-27 hardening audit; the first of three PRs that shrink the
+  agreement ([#196](https://github.com/brandonperfetti/agent-working-agreements/pull/196)).
+
 - **2026-10-26 — `clients/openclaw.md`: refresh the wrapper-selector source locator.** New
   node and Gateway route wording changed the surrounding bytes of
   `~/.openclaw/workspace/docs/team-operating-model.md` and left the source receipt stale: the

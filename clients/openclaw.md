@@ -205,6 +205,13 @@ The B2 readiness boundary is unchanged: Brandon receives a ready feature PR with
 relevant diff and gate evidence, and material decisions. This section adds no second acceptance
 ceremony.
 
+**Restoration owners (B2 stop-list item 5)** [decision 2026-10-27, Brandon, #194]: **Ashford** for
+OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
+instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
+**delivery owner** for repository and worktree capability, the protected root's post-release refresh
+included. Camina routes the stop and keeps continuity; a stop that names its owner is complete and
+needs no packet.
+
 ## Bubblewrap circuit breaker
 
 [source, issue #58] Camina's measured specification, transcribed; a Mac session cannot observe
@@ -934,13 +941,6 @@ Attribution injection, arbitrary external injection, and exact reset/reload beha
 unmeasured. Require a delivery audit or controlled observation rather than assuming them. Record a
 skill source/version when it materially affects delivery; skill precedence is not agreement
 authority.
-
-[measured 2026-09-20, current Gateway host] `claude-skills` could not pass guard item 2 because its
-gate step 6 requires Ruby to validate `agents/openai.yaml`, and step 7 requires `zip` to rebuild and
-compare the `.plugin` distribution. That measured session was therefore attended. OpenClaw may
-deliver there, and claude-skills #111
-tracks a durable install and complete remeasurement. It did not block agreement adoption or the
-pointer cutover.
 
 [source, B0 and Startup and mode] Future OpenClaw work still re-evaluates B0 for its exact
 checkout and path as capability evidence, not as the B1/B2 mode selector.
