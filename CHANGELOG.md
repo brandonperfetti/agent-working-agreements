@@ -12,7 +12,7 @@ being retrofitted onto the other.
 
 - **2026-10-28 — Read before the first delivery, not at session start; A6's clause scoped to
   `_agent/` (#203).** Core and appendix are read once, before a session's first delivery, dispatch,
-  repository write or GitHub action; an answer from memory and the bootstrap needs no read. Camina
+  repository write or GitHub action; an answer from memory or the bootstrap needs no read. Camina
   rightly answered a status question from OpenClaw's injected bootstrap and broke the rule as
   written (friction: `_agent/friction/2026-10-28-openclaw-workspace-656188b6.md`). A6's closing
   clause gains "under `_agent/`", a wording scope: alone it read as forbidding the lane worktrees

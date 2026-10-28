@@ -1,10 +1,10 @@
 # Agent working agreements — Sans Faux
 
 **Read this once, before a session's first delivery, dispatch, repository write or GitHub action:**
-Parts A and B in full, then your [`clients/`](clients/) file, and no other. An answer from memory
-and the bootstrap needs no read; a resumed step, a packet or a later turn pointing back here starts
-no re-read. Confirm your tooling with `ListSkills` / `ListConnectors` or your client's equivalent,
-not a list here. **Say what you read, naming the client file**, so a skipped read is visible.
+Parts A and B in full, then your [`clients/`](clients/) file, and no other. An answer from memory or
+the bootstrap needs no read; a resumed step, a packet or a later turn pointing back here starts no
+re-read. Confirm your tooling with `ListSkills` / `ListConnectors` or your client's equivalent, not
+a list here. **Say what you read, naming the client file**, so a skipped read is visible.
 
 This is the working agreement between Brandon and every agent he works with under the **Sans
 Faux** studio — Claude Code, Cowork, Codex, OpenClaw, or anything else. It sits above each

@@ -13,8 +13,8 @@ This README is for a human reader: the maintainer, or someone arriving from outs
 
 These are one engineer's working agreements, running against a real fleet. The paths
 (`~/dev/sansfaux/_agent/`), the client appendices and the initiatives named in the changelog are
-his, and they stay as they are: agents read the agreement and their client file at the start of
-every session, and a path an agent can follow is worth more than one a stranger finds tidy. What
+his, and they stay as they are: agents read the agreement and their client file before a session's
+first delivery, and a path an agent can follow is worth more than one a stranger finds tidy. What
 is portable is the structure and the rules — the evidence labels, the two modes and the guard that
 picks between them, the git ritual, the stop-list — not the layout. This is the real thing, not a
 template. The changelog is the record of these rules being exercised: an entry names what produced
@@ -47,7 +47,7 @@ scripts/check-structure.sh           CI: the core and client ceilings, procedure
 
 **The split rule:** the rule every client is judged against stays in the root file — evidence
 discipline, authority boundaries, stop conditions, the git ritual, the review invariant — short
-enough to be read whole before a delivery. The mechanics that carry a rule out live in
+enough to be read whole before the first delivery. The mechanics that carry a rule out live in
 `procedures/`, each behind a named trigger, read when that trigger occurs. What is specific to one
 client — its selectors, its measured limits, who fills which seat — is in that client's appendix:
 an agent reads Parts A and B, then the one appendix [Part C](AGENT-WORKING-AGREEMENTS.md#part-c--environment-appendices-read-only-yours)
