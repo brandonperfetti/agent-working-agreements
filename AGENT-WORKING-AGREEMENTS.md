@@ -86,8 +86,8 @@ you may announce; changes you make and show.
 
 **A status update is not a hand-back.** While safe, authorized work remains, keep going. A
 hand-back is terminal when the requested outcome is complete, a named authority boundary needs
-Brandon, no safe route exists and its restoration owner is named (B2 stop-list item 5), or only
-Brandon's merge remains. It states what is complete, what remains, who acts next, and the one
+Brandon, no safe route exists for what remains and its restoration owner is named (B2 stop-list
+item 5), or only Brandon's merge remains. It states what is complete, what remains, who acts next, and the one
 decision Brandon has to make, if any (Brandon, 2026-10-27, #185).
 
 ## A4. Orchestration invariants
@@ -117,8 +117,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
     updates the feature pull request and completes its review round, and may draft the
     `develop → master` release pull request.
   - The **independent reviewer** is a separate seat, independent of whoever produced the work
-    under review, delivery owner included; it runs the two-axis review below. Where the client's
-    supported routes cannot seat one — the dispatch tool refuses the role, or the session is the
+        under review, delivery owner included; it runs the two-axis review below. Where the
+    client's supported routes cannot seat one — the dispatch tool refuses the role, or the session is the
     only one there is — the review bot's round on the PR plus Brandon's merge review is the independent
     review for routine, reversible work, and the PR body says so. An empty seat holds no push
     (Brandon, 2026-10-27, #194).
@@ -251,7 +251,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   the vector and re-argue the trade on purpose and cost** — never by repeating evidence the bot has
   already weighed. [learnings: 2026-09-12 wave-8 §22] **A re-review round continues only while it
   surfaces a new, verified finding that does real harm;** a round that surfaces none closes the
-  loop, its remaining threads answered as above (Brandon, 2026-10-27, #193). **No agent spends
+  loop, its remaining threads answered as above, and that is what the ritual's "clean" means
+  (Brandon, 2026-10-27, #193). **No agent spends
   usage credits:** a billing prompt holds the paid review, never the push (Brandon, 2026-09-29).
 - **Close-out review before promotion** — the last review over the whole initiative diff is where the
   big finds happen; never skip it. [learnings: 2026-08-30 §9]
@@ -326,16 +327,18 @@ initiative writes its record to `_agent/friction/YYYY-MM-DD-<repo>-<id>.md`, whe
 repository name and `<id>` is `pr-<number>` or, with no PR, the first twelve characters of the head
 SHA; the record opens with the delivery's full identifier (its PR URL, or its `origin` URL plus the
 full head SHA). An initiative delivery keeps its initiative `friction/`. The agent closing the
-delivery writes it; B1 or B2, by mode, carries the delivery's procedure, and all seat authority
-comes from A4. (Brandon, 2026-10-27, #185: the hashed filename this replaces exceeded the
-filesystem's 255-byte limit the first time a delivery had no PR.)
+delivery writes it; B1 or B2, by mode, carries the delivery's procedure (Brandon, 2026-10-20),
+and all seat authority comes from A4 (Brandon, 2026-10-23, #173). The plain filename replaces a
+hashed one that exceeded the filesystem's 255-byte limit the first time a delivery had no PR
+(Brandon, 2026-10-27, #185).
 
 An entry names the delivery and the workflow step; what was observed, with A2 labels and evidence
 locators where they exist; the cost (interruption, retries, rework, or elapsed time when
 measured); the workaround, if any; first-seen or recurring, and how to reproduce; and the proposed
 durable fix, or `unknown`. Friction is a workflow cost, kept apart from evidence (A2), review
 findings (`reviews/`), learnings (`what-did-we-learn`) and issues (filed after triage); it may link
-to any of them. Correct it in place under A2. Its promotion path is friction → triage → a
+to any of them. Preserve the raw record; correct it in place under A2, quoting the old text,
+marked and dated. Its promotion path is friction → triage → a
 recurring, reproducible issue → a durable learning, rule, skill or script. Capture is
 non-blocking: it creates no checkpoint and stops nothing.
 
@@ -715,8 +718,8 @@ A lane merge that conflicts goes back to the lane the same way (Git contract abo
 4. **Brandon alone merges, manually, in the GitHub UI** — wave PRs into `develop`, and the release
    PR `develop → master`, which the delivery owner may open as a draft with a changelog. Closing
    keywords fire on the default branch; the orchestrator moves issues to In Review at PR time.
-5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`. The
-   wave-close record also meets A6's friction-close requirement.
+5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`, and
+   any friction the wave met goes to its `friction/` (A6).
 
 # Part C — Environment appendices (read only yours)
 

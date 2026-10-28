@@ -17,8 +17,10 @@ being retrofitted onto the other.
   Brandon's merge for routine work (A4); friction is recorded only when observed, under a
   filename the filesystem accepts (A6); a no-route stop names its restoration owner (B0, B2
   stop-list item 5, `clients/openclaw.md`); and `AGENTS.md` carries the amendment rules that
-  stop this file growing back. Decided by Brandon after the 2026-10-27 hardening audit; the
-  first of three PRs that shrink the agreement.
+    stop this file growing back. The appendix's stale 2026-09-20 "was therefore attended"
+  statement, which contradicted B0's OpenClaw exception, is retired to history. Decided by
+  Brandon after the 2026-10-27 hardening audit; the first of three PRs that shrink the
+  agreement ([#196](https://github.com/brandonperfetti/agent-working-agreements/pull/196)).
 
 - **2026-10-26 — `clients/openclaw.md`: refresh the wrapper-selector source locator.** New
   node and Gateway route wording changed the surrounding bytes of
