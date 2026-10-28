@@ -12,14 +12,13 @@ being retrofitted onto the other.
 
 - **2026-10-27 — The OpenClaw appendix (#185, #189, #190, #194).** `clients/openclaw.md` goes
   from 996 lines to under the 150-line ceiling Brandon accepted (decision 3): host and startup,
-  seats and routes, delivery topology, evidence store, the dormant breaker's signature, and
-  pointers. The managed-worktree, protected-root refresh, cleanup and pickup-audit procedure
-  moves verbatim to `procedures/openclaw/managed-worktrees.md`; the former host's Bubblewrap
-  breaker to `procedures/openclaw/native-sandbox-breaker.md`, dormant behind its exact
-  signature (decision 2); every paragraph carrying a source hash, the 2026-10-24 route census,
-  the acceptance narrative and the migration dispositions to `history/openclaw.md`, which is
-  never startup reading. CI now also holds each client file under 150 lines and rejects pins
-  there. Third of three PRs.
+  seats and routes, delivery topology, evidence store, the dormant breaker's signature, pointers.
+  The worktree, protected-root refresh, cleanup and pickup-audit procedure moves verbatim to
+  `procedures/openclaw/managed-worktrees.md`; the former host's Bubblewrap breaker to
+  `procedures/openclaw/native-sandbox-breaker.md`, dormant behind its signature (decision 2);
+  hashed evidence, the route census, the staff prose, the acceptance narrative and the migration
+  dispositions to `history/openclaw.md`, never startup reading. CI holds each client file under
+  150 lines and rejects pins there. Third of three PRs.
 
 - **2026-10-27 — The constitution and `procedures/` (#185, #188, #192).** Parts A–B shrink
   from 748 lines to a core under the 300-line ceiling Brandon accepted (decision 3). The

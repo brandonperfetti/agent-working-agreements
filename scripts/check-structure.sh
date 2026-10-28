@@ -78,7 +78,9 @@ done
 
 # No mutable-file pins in normative text. `git` SHAs in a commit citation are 7–12 hex; the
 # pattern catches only full object or SHA-256 digests.
-if grep -nE '\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b' "$AWA" "$PROC"/*.md "$PROC"/*/*.md "$ROOT"/clients/*.md 2>/dev/null; then
+normative=("$AWA")
+for f in "$PROC"/*.md "$PROC"/*/*.md "$ROOT"/clients/*.md; do [ -e "$f" ] && normative+=("$f"); done
+if grep -nE '\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b' "${normative[@]}"; then
   echo "FAIL: a 40- or 64-hex pin appears in normative text (above); cite a learning or issue" >&2
   fail=1
 fi

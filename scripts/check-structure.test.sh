@@ -105,6 +105,9 @@ expect_fail "client over the ceiling" "clients/acme.md"
 good; printf '# Acme\n\nA client with no link.\n' >"$repo/clients/acme.md"
 expect_fail "nested procedure not linked from its client" "not linked from clients/acme.md"
 
+good; printf 'pinned at %s\n' "$(printf 'b%.0s' $(seq 1 64))" >>"$repo/clients/acme.md"
+expect_fail "64-hex pin in a client file" "hex pin"
+
 good; CORE_MAX=2 expect_fail "ceiling honours CORE_MAX" "ceiling"
 
 echo "ok: check-structure passes the good fixture and rejects each failure class"

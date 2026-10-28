@@ -133,6 +133,84 @@ the amendment exemption in its README means an autonomous amendment uses one iso
 worktree branched from `develop`, rather than a wave branch; do not invent a wave merely to obtain
 isolation.
 
+## From *Staff operating model*: the prose the seat table replaced
+
+This is an OpenClaw-only operating model. It does not change B0's guard, B1/B2's delivery rules,
+the Part B ritual, or another client's appendix.
+
+OpenClaw fills A4's three seats, and Brandon's, with distinct roles [decision 2026-10-23, Brandon,
+issue #173]:
+
+- **Camina — orchestrator.** Holds A4's orchestrator duties, preserves continuity across the
+  conversation, and synthesizes the decision-ready hand-back. While a delivery specialist is
+  assigned, Camina does not execute that delivery's repository mechanics; the orchestrating session
+  fills the delivery-owner seat only when no specialist is assigned.
+- **Judy (coder), or the assigned delivery specialist — delivery owner.** Holds A4's
+  delivery-owner duties, and implementation and diagnostics of the delivery's authorized routine,
+  reversible repository work.
+- **Amos (reviewer), or the assigned reviewer — independent reviewer.** Holds A4's
+  independent-reviewer duties; neither a lane's nor the delivery owner's own report is that review.
+- **Brandon — merge.** Brandon alone merges into `develop`, `master`, or `main`.
+
+A4 is the authority for each seat's complete duties, but for A6's one-off close record, which A6
+assigns to the agent closing a delivery with no initiative; this list binds OpenClaw roles to them.
+
+Work outside the authorized routine, reversible boundary escalates rather than staying with the
+specialist, and administration outside it retains its existing authorization and stop conditions.
+
+The OpenClaw agent team owns installs, builds, test suites, and verification for authorized,
+routine, reversible repository work through a ready B2 pull request; an authorized B2-qualified
+specialist lane is the default delivery path. Progress and status updates are informational and
+non-blocking: sending one neither requests owner approval nor creates an approval checkpoint.
+If a required safe route is unavailable, the team records that capability evidence and stops at the
+affected operation with the precise missing route. It does not fall back to B1 or make Brandon the
+command runner. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
+
+Keep five decisions separate:
+
+1. **Staff authority** — the owner has authorized the lane to decide and proceed within its scope.
+2. **Lane capability** — B0 is evaluated for the selected lane's exact checkout and delivery path;
+   a parent session unable to use that path does not downgrade the lane.
+3. **Risk and reversibility** — only routine, reversible repository work may proceed on that
+   authority.
+4. **Delivery topology** — OpenClaw's autonomous default uses B2's dedicated-worktree shape;
+   B1's lane shapes apply only when Brandon explicitly selects attended delivery.
+5. **Human approval** — Brandon alone merges into `develop`, `master`, or `main`.
+
+An authorized autonomous specialist owns authorized routine, reversible repository work through
+the ready B2 pull request. Brandon alone accepts and merges into `develop`, `master`, or
+`main`; he is not the command runner for that delivery. Every existing stop remains in force,
+including destructive, irreversible, production, credentialed, financial, and externally published
+actions; those stops are not delegated with the lane.
+
+Within an authorized B2 delivery, commits, pushes, pull-request creation or updates, review
+responses, and integration of reviewed lane work are routine delivery work and require no
+per-batch owner approval. This is not authority for a B2 stop-list action or for a merge into
+`develop`, `master`, or `main`; Brandon's ready-PR acceptance and manual merge remain the human
+acceptance boundary.
+
+Within an assigned B2 feature branch, an authorized lane may create a lane branch from that
+feature branch. The delivery owner may integrate the lane's reviewed work back into that feature
+branch only after a completed A4 two-axis review. B1 deliveries retain B1's lane shapes (mbox or
+uncommitted edits). Neither lane-branch composition nor feature-branch ownership permits an agent
+merge into `develop`, `master`, or `main`.
+
+Every delivery retains a completed A4 two-axis verdict, the relevant diff and gate evidence, and
+Brandon's decision context. Routine reversible work may present those required items in the
+smallest sufficient packet; higher-risk or more substantive work adds scrutiny and evidence. This
+scales ceremony around A4; it does not waive or replace A4's review requirement.
+
+The B2 readiness boundary is unchanged: Brandon receives a ready feature PR with its A4 verdict,
+relevant diff and gate evidence, and material decisions. This section adds no second acceptance
+ceremony.
+
+**Restoration owners (B2 stop-list item 5)** [decision 2026-10-27, Brandon, #194]: **Ashford** for
+OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
+instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
+**delivery owner** for repository and worktree capability, the protected root's post-release refresh
+included. Camina routes the stop and keeps continuity; a stop that names its owner is complete and
+needs no packet.
+
 ## From *Bubblewrap circuit breaker*: pinned evidence
 
 (none)
@@ -177,50 +255,6 @@ Installed runtime source, all in `<runtime>/lib/node_modules/openclaw/dist/`:
 `ebd36bea37c2c403e6f0376e432e5d68268bde54c047c3bada395143c6dc46ae`),
 whose generated filenames and line references identify this exact installed build.
 
-Run every `openclaw worktrees` command — `create`, `list`, and `remove` — as a bound invocation:
-both effective Gateway values explicitly on that invocation, `OPENCLAW_PROFILE` set to the
-service's effective profile or unset when the service has none, and never `--profile` or `--dev`:
-`env <profile-binding> OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw
-worktrees …`, where `<profile-binding>` is `OPENCLAW_PROFILE=<service-profile>` or
-`-u OPENCLAW_PROFILE`. A CLI profile is prohibited because `entry.js` applies it with
-`applyCliProfileEnv`, which replaces a passed `OPENCLAW_STATE_DIR` or `OPENCLAW_CONFIG_PATH` that
-equals the inherited profile's default root or config with the selected profile's, and also clears
-inherited Gateway service selectors and, for `dev`, sets `OPENCLAW_GATEWAY_PORT` to `19001`
-[source: `entry.js` lines 189–190 and 242–251; `profile-D1GpjMFM.mjs` lines 77–101]. The ambient
-profile is bound because `OPENCLAW_PROFILE` still decides whether an invocation holds the default
-install identity that owns host service management [source: `paths-BP0DYpE8.mjs` lines 26–29
-and 52–78]. [inference: `state-dir-CYkBUd_G.mjs` lines 16–28 and `paths-BP0DYpE8.mjs` lines
-121–142 read the passed values, and no CLI profile reaches `applyCliProfileEnv`; what would verify
-it: with a different profile that has its own config and a deliberately distinct worktree
-inventory, export `OPENCLAW_PROFILE` naming that profile in the probing shell, then run
-`OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw gateway status` and
-`OPENCLAW_STATE_DIR=<state-dir> OPENCLAW_CONFIG_PATH=<config-path> openclaw worktrees list --json`
-with no `--profile` or `--dev`, and confirm that status reports the passed config path as the CLI's
-config path and the list returns the passed state directory's inventory, not the ambient profile's
-config path or inventory; repeat the list in the full bound form and confirm the same inventory;
-this verifies only those commands in those forms] Passing both effective values and the bound
-profile prevents state, config, and profile selection from falling back to the probing shell's
-ambient values. When
-a Gateway is running, mutations use the authenticated owner of that selected local state directory.
-Canonicalize the resolved root and the delivery worktree path, and verify that neither lies inside
-or contains the selected `_agent/` artifact store
-or the protected instruction-source root working tree. If the service's state directory, config, or
-root cannot be determined, or any of those paths overlap, stop and report the resolved paths; do
-not create or use the worktree. The delivery audit records the service state directory and which
-source supplied it (the service's `OPENCLAW_STATE_DIR`; with no explicit state directory, the
-service's `OPENCLAW_HOME` or service user's home plus `/.openclaw`; or, only when the service's
-command arguments carry `--profile <name>` or a root/profile-selecting `--dev`, not a Gateway
-`--dev`, the `applyCliProfileEnv` result such as
-`/.openclaw-<name>`), the service's command-line profile if any and its environment
-`OPENCLAW_PROFILE` value, the config path and its source, the resolved root and whether it came
-from `worktreeRoot` or the default, and the worktree path with its registered inventory record.
-For each creation, it also records the named two-ref fetch's exit status; for each of
-`origin/develop` and `origin/master`, the local `rev-parse` OID, the `ls-remote` OID, and their
-equality result; the captured `<base-oid>` and the `origin/develop` ref it was read from; and the
-created worktree's `HEAD` readback with its equality to `<base-oid>`.
-For each `openclaw worktrees` invocation, record its subcommand, the explicit state directory and
-config path passed, the `OPENCLAW_PROFILE` value set or that it was unset, the absence of
-`--profile` and `--dev`, and its result.
 [measured 2026-10-26T03:55:06Z, this host, OpenClaw 2026.10.6 (41c5d94); the earlier
 2026-10-25 reading has no capture located, so this replaces it; raw captures `gateway-status.json`,
 `openclaw.json.copy`, `worktrees-list.json`, `gateway-status.err` and `worktrees-list.err`
@@ -239,6 +273,7 @@ It also reported `config.daemon.path` set to
 `/Users/brandonperfetti/.openclaw/openclaw.json`. That file, read in the same pass (SHA-256
 `87027a892fc01a1464c5dc492389f196ef1494b2a01a03a79ac0dcd81fc668a3`), contains no `worktreeRoot`
 string.
+
 [superseded 2026-10-25] An earlier revision continued: "`openclaw worktrees list --json` (empty
 stderr; output SHA-256 `3a25f8eae2dcf7c05707413dd65845a14330f7fad1365a23c3214b9fc5c040d0`)
 recorded this delivery's worktree as …". That reading came from the capture whose bindings were
@@ -251,6 +286,7 @@ bound to; its `worktrees-list.json` SHA-256 equals that of the bound capture's `
 selected, so the earlier capture cannot support the inventory claim on its own; only the bound
 capture does. No later reading can verify the earlier invocation's bindings, because they were never
 recorded.
+
 [measured 2026-10-26T04:37:53Z, this host, OpenClaw 2026.10.6 (41c5d94); raw captures
 `argv.txt`, `argv-flag-check.txt`, `invocation-manifest.txt`, `run.sh`, `stdout.json`,
 `stderr.txt`, `exit-status.txt`, `captured-at-utc.txt`, `openclaw-version.txt` and `SHA256SUMS`
@@ -277,60 +313,11 @@ at `config.daemon.path` has no `worktreeRoot` key, and the recorded inventory pa
 created managed worktree lies under that root. Resolve it again for each delivery rather than
 reusing this value.
 
-**After every `develop → master` merge, fetch and fast-forward the protected instruction-source
-root working tree before any further work.** If any step below fails, exits nonzero, or finds a
-mismatch, stop and report its command, exit status, and output; run no later step. First,
-`git status --porcelain --untracked-files=all` must exit 0 with empty output before any branch
-switch. Then run `git switch master`, then
-`git fetch origin +refs/heads/master:refs/remotes/origin/master`, then
-`git merge --ff-only origin/master`. Finally, that status command must again exit 0 with
-empty output, and `git rev-parse HEAD` must equal `git rev-parse --verify 'origin/master^{commit}'`.
-The next report names the exact SHA the
-protected instruction-source root working tree serves.
 [measured 2026-09-23] PR #41 merged at `b733b59982736285d078ee9f67209bcce2fea957` on
 2026-09-22T20:18:10Z, but the protected instruction-source root working tree remained six commits
 behind until the next day.
 
-**Remove a delivery worktree and its local branch once its feature PR has merged into `develop`.**
-These safeguards govern only this manual post-merge cleanup route, for every delivery worktree it
-removes, managed or an existing plain Git worktree; they do not bind OpenClaw's own background
-cleanup (see the background-cleanup paragraph after this procedure).
-Run it from any of the repository's worktrees; the protected instruction-source root working tree
-may serve, but only for Git administration and never against its working tree. First read
-`git worktree list --porcelain` once and keep that output; if it cannot be read, stop, and retain
-and report the worktree and branch. That one read, taken before any other cleanup step, is the
-protected-worktree inventory's source and the only source for `<path>` below. Then fetch
-`develop` by name, not through the configured refspec:
-`git fetch origin +refs/heads/develop:refs/remotes/origin/develop` — if the fetch fails, stop, and
-retain and report the worktree and branch — then
-`git merge-base --is-ancestor <branch> origin/develop`. Exit 0 is the only permission, and
-not by itself enough: the protected instruction-source root working tree, another protected base
-worktree such as a release-review worktree, a dirty delivery worktree, and a branch that is not an
-ancestor of `origin/develop` are all retained and reported. The protected instruction-source root
-working tree is never eligible for cleanup. `<path>` is the canonical form, with every symlink
-resolved, of the value of the `worktree` line of the unique record in that output whose `branch`
-line is `refs/heads/<branch>`; on zero or multiple matches, stop, and retain and report the branch
-and every candidate worktree. If that value cannot be canonicalized, or a lookup of `<path>` itself
-does not positively report that it exists, stop, and retain and report the worktree and branch.
-The authoritative protected-worktree inventory is the protected instruction-source root working
-tree named under [Startup and mode][startup] plus every record of that output that is a
-protected base worktree: the first record, which is the main working tree of the clone being
-cleaned; every record whose `branch` line is `refs/heads/master` or `refs/heads/develop`, or that
-has a `detached` line, which covers a release-review worktree checked out on its base; and every
-record with a `locked` line, whatever its reason. A protected base worktree on any other branch is
-in the inventory only through its lock, so lock it with
-`git worktree lock --reason 'protected base worktree' <worktree>` when it is created. The inventory
-is indeterminate, and the cleanup stops, retaining and reporting the worktree, branch, and every
-unclassified record, if any record lacks a `worktree` line or any record after the first has
-neither a `branch` nor a `detached` line. Canonicalize the named root and the path of every
-worktree in that inventory, with every symlink resolved, and compare each with `<path>`; if any of
-them cannot be canonicalized or equals `<path>`, stop, and retain and report the worktree and
-branch, with no inventory query, removal route, or branch deletion. Then run
-`git --no-optional-locks -C <path> status --porcelain --untracked-files=all --ignored`; ignored
-files count, since [inference] `git worktree remove` without `--force` deletes them. What would
-verify it: in a disposable repository, add a worktree whose only local content is a file matched by
-`.gitignore`, run `git worktree remove <worktree>` without `--force`, and check that it exits 0
-and the file is gone. [corrected 2026-10-26] An earlier revision labelled that claim "[measured
+[corrected 2026-10-26] An earlier revision labelled that claim "[measured
 2026-10-25, Git 2.56.0, a scratch repository; recorded in commit
 `adef2b1e7d6f2d3a4572d68802a6ed24edd661b7`]", which must not be relied upon: no raw output of
 that scratch-repository run was preserved, and that commit only introduced the wording, so it

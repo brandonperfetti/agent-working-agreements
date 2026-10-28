@@ -15,23 +15,30 @@ when you acknowledge your reading** — "read the agreements and
   `$AGENT_ROOT/agent-working-agreements/`: clean, on `master`, equal to `origin/master` after the
   post-release refresh, never a delivery checkout; its Git administration hosts isolated managed
   delivery worktrees. **Artifact store** `$AGENT_ROOT/_agent/`, selected at session start and kept
-  for the session (A6); a role started from a changed pointer selects it provisionally, runs the
-  create/readback canary through its supported route, and reports the exact instruction paths
-  before the pointer counts as accepted for that role.
+  for the session, never switched or dual-written (A6); a role started from a changed pointer
+  selects it provisionally, runs the create/readback canary through its supported route, and
+  reports the exact instruction paths and hashes and the store it selected before the pointer
+  counts as accepted for that role. The former workspace checkout and artifact store stay as
+  rollback roots: never merged, mirrored, symlinked, moved, deleted or rewritten. The Mac path
+  above is this host's; do not infer it across hosts.
 - **If the pointer, Parts A–B or this file is unreachable,** stop the affected work with the
   missing instruction source recorded (B0); do not downgrade to B1.
 - **Default mode: autonomous.** B0's guard is scored per exact checkout and delivery path, and
   that Camina coordinates several deliveries in one conversation widens nothing. An unavailable
-  capability is evidence about that operation: the team continues on its supported routes and
-  stops at the first operation with no safe route, naming the capability and its restoration owner
-  (B2 stop-list item 5). Brandon is never the command runner, and only Brandon merges.
+  capability is evidence about that operation, not a switch of the delivery or team to B1: the
+  team continues on its supported routes and stops at the first operation with no safe route,
+  naming the capability and its restoration owner (B2 stop-list item 5). A role with no supported
+  Claude route stops the affected substantive operation and reports the missing route, which is
+  not a failed Claude invocation. Brandon is never the command runner, and only Brandon merges.
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
+- **Resolve the active workspace and target checkout from live inventory**; do not assume every
+  specialist shares main's working directory.
 
 ## Seats and routes
 
 | A4 seat | OpenClaw role |
 | --- | --- |
-| Orchestrator | **Camina** (`main`): briefs, dispatches, routes, synthesizes the hand-back; runs no delivery mechanics while a specialist is assigned |
+| Orchestrator | **Camina** (`main`): briefs, dispatches, routes, synthesizes the hand-back; runs no delivery mechanics while a specialist is assigned and fills the delivery-owner seat only when none is |
 | Delivery owner | **Judy** (`coder`), or the assigned delivery specialist |
 | Independent reviewer | **Amos** (`reviewer`), or the assigned reviewer; where no reviewer can be seated, A4's bot-plus-merge rule applies and the PR body says so |
 | Merge | **Brandon**, by hand, into `develop`, `master` or `main` |
@@ -39,9 +46,13 @@ when you acknowledge your reading** — "read the agreements and
 [decision 2026-10-23, Brandon, #173]. The staff model — the roster, routing, the Claude wrapper
 contract, consultation patterns — is `~/.openclaw/workspace/docs/team-operating-model.md`; this
 file does not restate it. Within an authorized B2 delivery, commits, pushes, PR creation and
-updates, review responses and integration of reviewed lane work are routine and need no per-batch
-approval; B2 stop-list actions and merges are not delegated with the lane. Routine reversible work
-presents its A4 verdict, diff and gate evidence in the smallest sufficient packet.
+updates, review responses and integration of lane work (after its A4 two-axis review) are routine
+and need no per-batch approval; B2 stop-list actions and merges are not delegated with the lane,
+and work outside the routine, reversible boundary escalates rather than staying with the
+specialist. Progress and status updates are informational and non-blocking: one neither requests
+approval nor creates a checkpoint. Every delivery presents its A4 verdict, diff, gate evidence and
+Brandon's decision context; routine reversible work does so in the smallest sufficient packet,
+higher-risk work adds scrutiny, and neither waives A4's review.
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; then role, deliverable, mode, file fence and tier.
@@ -66,8 +77,9 @@ service's state directory, config and profile, and placed outside both `_agent/`
 protected root; it is removed losslessly once its PR has merged, and the protected root is
 fast-forwarded to `origin/master` after each release. Commands, checks and the audit fields:
 [`../procedures/openclaw/managed-worktrees.md`](../procedures/openclaw/managed-worktrees.md),
-read at pickup. OpenClaw's own background cleanup is a separate hazard: commit or back up work
-you need before relying on a managed worktree's persistence.
+read at pickup; any overlap of those paths stops the delivery. OpenClaw's own background cleanup
+is a separate hazard: commit or back up work you need before relying on a managed worktree's
+persistence.
 
 **Pickup audit.** Record the checkout and HEAD, author identity, `core.hooksPath` and hook
 presence, the dry-run probe (or N/A), the full gate result, branch ownership, target protection,
@@ -77,8 +89,9 @@ unmeasured: require a delivery audit rather than assuming.
 ## Evidence store
 
 Use the selected store's `evidence/` and `analysis/` per A2 and A6; date-name artifacts and label
-claims. A scratch clone goes in the client's own scratch space, never under `_agent/`; where that
-space is on this host, and whether specialists share it, is **unmeasured** — measure and record.
+claims. A scratch clone never goes under `_agent/`, and the Gateway executable-check scratch root
+is not a place for one either; where a scratch clone goes on this host, and whether specialists
+share that space, is **unmeasured** — measure and record.
 
 ## Dormant: the native sandbox breaker
 

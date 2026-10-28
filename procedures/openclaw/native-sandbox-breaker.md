@@ -192,6 +192,7 @@ leave the expansion unquoted.
 [inference/recommendation, Camina's, issue #103] A generic/native read tool is not automatically
 a route after the strike; it qualifies only if it is separately established not to cross the
 failed native boundary. The deterministic breaker route is the exact-path read through Gateway.
+
 [measured 2026-10-02 by the orchestrator that filed issue #103, git 2.46.0, a scratch repository
 on the maintainer's machine, not the OpenClaw host; recorded on that issue, which Camina cites and
 did not re-run] `git apply` left the added file untracked, and row 3's index-based diff printed no
