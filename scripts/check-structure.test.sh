@@ -10,13 +10,28 @@ cleanup() { rm -rf -- "$fixture"; }
 trap cleanup EXIT
 
 repo="$fixture/repo"
-mkdir -p "$repo/procedures" "$repo/scripts"
+mkdir -p "$repo/procedures/acme" "$repo/clients" "$repo/scripts"
 cp "$ROOT/scripts/check-structure.sh" "$repo/scripts/"
 chmod 755 "$repo/scripts/check-structure.sh"
 
 clause='a rule here that contradicts one there is the rule that is wrong.'
 
 good() {
+  rm -f "$repo/procedures/acme"/*.md "$repo/procedures/two.md"
+  printf '# Acme\n\nA client. See [the runbook](../procedures/acme/run.md).\n' >"$repo/clients/acme.md"
+  cat >"$repo/procedures/acme/run.md" <<EOF
+# Run
+
+This procedure never overrides Parts A–B, and $clause
+
+**Trigger:** x
+
+**Owner:** y
+
+**Implements:** B0
+
+**Stop:** none
+EOF
   cat >"$repo/AGENT-WORKING-AGREEMENTS.md" <<EOF
 # Agreement
 
@@ -32,6 +47,7 @@ EOF
 | Procedure |
 | --- |
 | [\`one.md\`](one.md) |
+| [\`acme/run.md\`](acme/run.md) |
 EOF
   cat >"$repo/procedures/one.md" <<EOF
 # One
@@ -82,6 +98,12 @@ expect_fail "procedure missing the precedence clause" "precedence clause"
 
 good; sed -i.bak '/procedures\/one.md/d' "$repo/AGENT-WORKING-AGREEMENTS.md"; rm -f "$repo/AGENT-WORKING-AGREEMENTS.md.bak"
 expect_fail "procedure absent from the Triggers table" "Triggers table"
+
+good; printf '%.0s\n' $(seq 1 200) >>"$repo/clients/acme.md"
+expect_fail "client over the ceiling" "clients/acme.md"
+
+good; printf '# Acme\n\nA client with no link.\n' >"$repo/clients/acme.md"
+expect_fail "nested procedure not linked from its client" "not linked from clients/acme.md"
 
 good; CORE_MAX=2 expect_fail "ceiling honours CORE_MAX" "ceiling"
 

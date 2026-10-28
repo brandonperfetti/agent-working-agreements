@@ -7,7 +7,8 @@ never overrides Parts A–B, and a rule here that contradicts one there is the r
 
 Every procedure opens with four fields — **Trigger**, **Owner**, **Implements**, **Stop** — and
 `scripts/check-structure.sh` checks that each file here is listed below and in the agreement's
-*Triggers* table, carries those fields, and holds no hash or line-number pin of a mutable file.
+*Triggers* table (a client-specific one under `<client>/` is linked from that client's appendix
+instead), carries those fields, and holds no hash or line-number pin of a mutable file.
 
 | Procedure | Implements | Trigger |
 | --- | --- | --- |
@@ -20,6 +21,8 @@ Every procedure opens with four fields — **Trigger**, **Owner**, **Implements*
 | [`pickup-guard.md`](pickup-guard.md) | B0 | picking up a delivery |
 | [`attended-delivery.md`](attended-delivery.md) | B1 | an attended delivery |
 | [`autonomous-delivery.md`](autonomous-delivery.md) | B2 | an autonomous delivery |
+| [`openclaw/managed-worktrees.md`](openclaw/managed-worktrees.md) | `clients/openclaw.md` | pickup of an OpenClaw delivery: create, refresh, clean up |
+| [`openclaw/native-sandbox-breaker.md`](openclaw/native-sandbox-breaker.md) | `clients/openclaw.md` | dormant: the exact Bubblewrap prelaunch signature |
 
 The text in these files was moved out of the agreement verbatim on 2026-10-27 (PR 2 of the
 hardening, epic #185), minus the lines the core kept (`review-findings.md` skips A4's issue and
