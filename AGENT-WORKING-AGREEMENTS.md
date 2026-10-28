@@ -84,10 +84,10 @@ Keep the three apart; never let a right measurement carry a wrong mechanism. Rul
 Don't narrate intent and stop. Do the work, then report **what is done**. Read-only investigation
 you may announce; changes you make and show.
 
-**A status update is not a hand-back.** While safe, authorized work remains, keep going. A
-hand-back is terminal when the requested outcome is complete, a named authority boundary needs
-Brandon, no safe route exists for what remains and its restoration owner is named (B2 stop-list
-item 5), or only Brandon's merge remains. It states what is complete, what remains, who acts next, and the one
+**A status update is not a hand-back.** While safe, authorized work remains, keep going. A hand-back
+is terminal when the requested outcome is complete, a named authority boundary needs Brandon, no
+safe route exists for what remains and its restoration owner is named (B2 stop-list item 5), or only
+Brandon's merge remains. It states what is complete, what remains, who acts next, and the one
 decision Brandon has to make, if any (Brandon, 2026-10-27, #185).
 
 ## A4. Orchestration invariants
@@ -117,11 +117,11 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
     updates the feature pull request and completes its review round, and may draft the
     `develop → master` release pull request.
   - The **independent reviewer** is a separate seat, independent of whoever produced the work
-        under review, delivery owner included; it runs the two-axis review below. Where the
-    client's supported routes cannot seat one — the dispatch tool refuses the role, or the session is the
-    only one there is — the review bot's round on the PR plus Brandon's merge review is the independent
-    review for routine, reversible work, and the PR body says so. An empty seat holds no push
-    (Brandon, 2026-10-27, #194).
+    under review, delivery owner included; it runs the two-axis review below. Where the client's
+    supported routes cannot seat one — the dispatch tool refuses the role, or the session is the
+    only one there is — the review bot's round on the PR plus Brandon's merge review is the
+    independent review for routine, reversible work, and the PR body says so. An empty seat holds
+    no push (Brandon, 2026-10-27, #194).
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
   neither seat makes it the reviewer of its own work, and neither merges a base branch — only
