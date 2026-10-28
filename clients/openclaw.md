@@ -14,13 +14,13 @@ when you acknowledge your reading** — "read the agreements and
 - **Agent root** `~/dev/sansfaux`. **Protected instruction-source root**
   `$AGENT_ROOT/agent-working-agreements/`: clean, on `master`, equal to `origin/master` after the
   post-release refresh, never a delivery checkout; its Git administration hosts isolated managed
-  delivery worktrees. **Artifact store** `$AGENT_ROOT/_agent/`, selected at session start and kept
-  for the session, never switched or dual-written (A6); a role started from a changed pointer
-  selects it provisionally, runs the create/readback canary through its supported route, and
-  reports the exact instruction paths and hashes and the store it selected before the pointer
-  counts as accepted for that role. The former workspace checkout and artifact store stay as
-  rollback roots: never merged, mirrored, symlinked, moved, deleted or rewritten. The Mac path
-  above is this host's; do not infer it across hosts.
+  delivery worktrees. **Artifact store** `$AGENT_ROOT/_agent/`, the one store for every role and
+  for Claude Code, named by absolute path for all output, handoffs included; kept for the session,
+  never switched or dual-written (A6). `~/.openclaw/workspace/_agent/`, which upward discovery from
+  a role workspace finds first, and the former workspace checkout are rollback roots: no new
+  artifacts, never merged, mirrored, symlinked, moved, deleted or rewritten. A role started from a
+  changed pointer runs the create/readback canary on its supported route and reports its
+  instruction paths, hashes and store before the pointer counts as accepted. Paths are this host's.
 - **If the pointer, Parts A–B or this file is unreachable,** stop the affected work with the
   missing instruction source recorded (B0); do not downgrade to B1.
 - **Default mode: autonomous.** B0's guard is scored per exact checkout and delivery path, and
