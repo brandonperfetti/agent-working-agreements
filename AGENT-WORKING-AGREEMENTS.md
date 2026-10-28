@@ -4,7 +4,10 @@
 full, then **the one file under [`clients/`](clients/) for the environment you are actually in** —
 and no others. Confirm your tooling with `ListSkills` / `ListConnectors` (or your client's
 equivalent) rather than trusting any list here. **Say what you read, naming the client file**, so a
-skipped read is visible rather than silent.
+skipped read is visible rather than silent. Read them **once per session**: a resumed step, a
+dispatch packet or a later turn points back here and starts no re-read. How this file changes is
+[`AGENTS.md`](AGENTS.md)'s to say; an agent that meets a rule's cost records friction (A6) and
+amends nothing in that session.
 
 This is a personal working agreement between Brandon and whatever agent he is working with under
 the **Sans Faux** studio — Claude (Cowork / Claude Code), ChatGPT desktop Codex, OpenClaw, or
@@ -81,6 +84,12 @@ Keep the three apart; never let a right measurement carry a wrong mechanism. Rul
 Don't narrate intent and stop. Do the work, then report **what is done**. Read-only investigation
 you may announce; changes you make and show.
 
+**A status update is not a hand-back.** While safe, authorized work remains, keep going. A
+hand-back is terminal when the requested outcome is complete, a named authority boundary needs
+Brandon, no safe route exists and its restoration owner is named (B2 stop-list item 5), or only
+Brandon's merge remains. It states what is complete, what remains, who acts next, and the one
+decision Brandon has to make, if any (Brandon, 2026-10-27, #185).
+
 ## A4. Orchestration invariants
 
 These hold in both modes; the `orchestrate` skill carries the loop, this file carries the law.
@@ -108,7 +117,11 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
     updates the feature pull request and completes its review round, and may draft the
     `develop → master` release pull request.
   - The **independent reviewer** is a separate seat, independent of whoever produced the work
-    under review, delivery owner included; it runs the two-axis review below.
+    under review, delivery owner included; it runs the two-axis review below. Where the client's
+    supported routes cannot seat one — the dispatch tool refuses the role, or the session is the
+    only one there is — the review bot's round on the PR plus Brandon's merge review is the independent
+    review for routine, reversible work, and the PR body says so. An empty seat holds no push
+    (Brandon, 2026-10-27, #194).
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
   neither seat makes it the reviewer of its own work, and neither merges a base branch — only
@@ -191,13 +204,14 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   attended mode Brandon's per-batch review is already that reader (Brandon, 2026-10-12).
   **Before a delivery is presented for Brandon's merge, the independent reviewer runs the two-axis
   review over the whole branch** — its full diff against the base, not only the latest change —
-  **at the exact final head SHA**, and the verdict names that SHA. **Any later
-  repository-changing change to the head — a fix, a lane merge, a base merge — needs its scoped
-  review (above) and then a renewed whole-branch verdict from the independent reviewer at the new
-  exact head before presentation**, because per-delivery reviews each saw a part, and a verdict
-  on another head attests to different bytes (Brandon, 2026-10-23, #173). Stricter timing that a
-  client's own authority — its appendix or the client's own operating policy — has already
-  established still applies for that client.
+  **at the exact final head SHA**, and the verdict names that SHA. A later fix to the
+  head gets its scoped review (above). **The whole-branch verdict is renewed only when the fix
+  materially stales it:** observable scope or behaviour changed, reviewed logic was substantially
+  rewritten, a conflict resolution changed semantics, the base moved the reviewed surface, or the
+  verification basis changed. A fix that stales none of these rides the existing verdict, and the
+  presentation names the verdict's SHA and each later fix SHA (Brandon, 2026-10-27, #193; this
+  replaces the renewal-after-every-change rule of 2026-10-23, #173). A client's own documents
+  point here and set no stricter timing.
 - **Distrust the issue until you've read the code.** Issues predate the tree; re-verify at pickup,
   read the comments, record direction changes as marked, dated comments.
 - **Tests ship with the change**, in the right place.
@@ -235,8 +249,10 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   Bare declines teach the bot nothing.
   [learnings: 2026-09-06 wave-6 §6] **When a re-raise names a vector the decline missed, concede
   the vector and re-argue the trade on purpose and cost** — never by repeating evidence the bot has
-  already weighed. [learnings: 2026-09-12 wave-8 §22] **No agent spends usage credits:** a billing
-  prompt holds the paid review, never the push (Brandon, 2026-09-29).
+  already weighed. [learnings: 2026-09-12 wave-8 §22] **A re-review round continues only while it
+  surfaces a new, verified finding that does real harm;** a round that surfaces none closes the
+  loop, its remaining threads answered as above (Brandon, 2026-10-27, #193). **No agent spends
+  usage credits:** a billing prompt holds the paid review, never the push (Brandon, 2026-09-29).
 - **Close-out review before promotion** — the last review over the whole initiative diff is where the
   big finds happen; never skip it. [learnings: 2026-08-30 §9]
 
@@ -305,47 +321,23 @@ updated at wave close. Date-prefix files
 folder (if nothing fits: `experiments/`, and say so). `./organize.sh` (dry-run by default) tidies
 loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's command, not an agent's**.
 
-**Friction.** For a delivery with no initiative, define its canonical delivery identifier before
-writing its close record: use its GitHub pull-request URL when it has one; otherwise use its
-checkout's `origin` URL plus the delivery's full `HEAD` SHA; otherwise use its full branch ref plus
-that full SHA. A6 itself assigns the one-off close record: the agent closing that delivery owns and
-writes it, and B1 or B2, by mode, carries the delivery's procedure, so that attended work with no
-initiative is not pointed at the autonomous section (Brandon, 2026-10-20); all remaining seat
-authority for that delivery comes from A4, not from B1 or B2 (Brandon, 2026-10-23, #173). In
-`_agent/friction/`, that record is exactly
-`YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--pr-<number>.md` for the pull-request form,
-or `YYYY-MM-DD-<repository-slug>--repo-<repository-hash>--branch-<branch-slug>--ref-<branch-hash>--<full-head-sha>.md`
-otherwise. `repository-identity` is the exact remote host and path before normalization, or the
-exact checkout basename when there is no remote; `repository-slug` is that identity lowercased with
-non-alphanumerics replaced by `-`. `repository-hash` is the full lowercase hexadecimal SHA-256
-digest of the UTF-8 bytes of `repository-identity`. `branch-slug` is the same normalization of the
-full branch ref, and `branch-hash` is the full lowercase hexadecimal SHA-256 digest of the UTF-8
-bytes of that exact full branch ref. The hashes are mandatory stable suffixes, so distinct inputs
-that normalize to the same slug still produce distinct filenames. The record starts with the exact
-canonical identifier, so the filename maps to that delivery without ambiguity. Initiative
-deliveries keep their initiative `friction/` location and existing semantics.
+**Friction.** Record friction when it happened, not to prove that none did. A delivery with no
+initiative writes its record to `_agent/friction/YYYY-MM-DD-<repo>-<id>.md`, where `<repo>` is the
+repository name and `<id>` is `pr-<number>` or, with no PR, the first twelve characters of the head
+SHA; the record opens with the delivery's full identifier (its PR URL, or its `origin` URL plus the
+full head SHA). An initiative delivery keeps its initiative `friction/`. The agent closing the
+delivery writes it; B1 or B2, by mode, carries the delivery's procedure, and all seat authority
+comes from A4. (Brandon, 2026-10-27, #185: the hashed filename this replaces exceeded the
+filesystem's 255-byte limit the first time a delivery had no PR.)
 
-At delivery close — and at each wave close for an initiative — record either `friction: none` or
-one or more dated entries in that delivery's `friction/` location. An entry names the delivery and
-affected workflow step; the observed behaviour, with A2 labels and evidence
-locators where available; the cost or impact (human interruption, retries, rework, or elapsed time
-only when measured); the workaround, if any; whether it is first-seen or recurring and how to
-reproduce it; and the proposed durable fix, or `unknown`.
-
-Friction is an observed workflow cost or obstacle while following the agreement. It is not
-evidence: A2 evidence supports a labelled claim and keeps its own locator or preserved capture. It
-is not a review finding: a review finding is a concern from the independent review that still needs
-verification and its verdict belongs in `reviews/`. It is not a learning: a learning is a resolved,
-cited durable lesson promoted through `what-did-we-learn`. It is not a GitHub issue: an issue is
-repository-owned tracker work filed only after triage and deduplication. A friction record may link
-to any of them without replacing its record.
-
-Preserve the raw record. Correct it in place under A2: quote the old text, mark and date the
-correction, and distinguish what was observed from what was concluded. The promotion path is raw
-friction record → triage and deduplication → recurring, reproducible, repository-owned GitHub
-issue → resolved durable learning, rule, skill or software improvement. Capture is non-blocking:
-it creates no approval checkpoint and stops no delivery unless the underlying condition
-independently reaches an existing gate failure, authority boundary, or B2 stop-list item.
+An entry names the delivery and the workflow step; what was observed, with A2 labels and evidence
+locators where they exist; the cost (interruption, retries, rework, or elapsed time when
+measured); the workaround, if any; first-seen or recurring, and how to reproduce; and the proposed
+durable fix, or `unknown`. Friction is a workflow cost, kept apart from evidence (A2), review
+findings (`reviews/`), learnings (`what-did-we-learn`) and issues (filed after triage); it may link
+to any of them. Correct it in place under A2. Its promotion path is friction → triage → a
+recurring, reproducible issue → a durable learning, rule, skill or script. Capture is
+non-blocking: it creates no checkpoint and stops nothing.
 
 **Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
 lives in the client's own scratch directory, outside `_agent/` — your client file names that
@@ -516,7 +508,8 @@ what has been measured there; none is assumed from the client's name.
 Parts A–B:** in OpenClaw, a failed or unavailable capability
 check is evidence about the affected operation, not a B1 downgrade: the autonomous team continues
 within its supported routes and stops at the first operation that has no safe route, recording the
-exact missing capability. It does not make Brandon the command runner. **Where this file is not
+exact missing capability and its restoration owner (B2 stop-list item 5). It does not make Brandon
+the command runner. **Where this file is not
 reachable at all, attended rules apply, except in OpenClaw: stop the affected work with the missing
 instruction-source capability recorded; do not automatically convert it to B1.** Any client that
 passes the guard may run autonomous — the
@@ -685,6 +678,10 @@ PR body alone for work with no initiative):**
    merge-conflict resolution, this applies only to a red of the resolution's own, one absent from
    both sides' pre-merge gate records; unresolved recovery leaves the branch at its pre-merge tip
    (Git contract above). [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
+5. A required operation has no safe route on this client's supported routes. The stop names the
+   exact missing capability and its **restoration owner** — the client file says who — and hands
+   back per A3; work that does not depend on the operation continues, and Brandon is never made
+   the command runner (Brandon, 2026-10-27, #194).
 
 For work with no initiative, item 1 reads "A premise conflict with the ticket or the prompt" and
 item 2 reads "A scope decision neither the ticket nor the prompt covers": both exist for every

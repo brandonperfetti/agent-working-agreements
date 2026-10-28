@@ -15,6 +15,24 @@ This convention is local to `brandonperfetti/agent-working-agreements`. Do not
 apply it to another repository unless that repository records the same rule in
 its own instructions.
 
+## Amending the agreement
+
+The agreement stays small on purpose; these rules are what keep it small.
+
+- **A rule earns its place after something bit and Brandon agreed it bit.** An agent that
+  meets a rule's cost records friction (A6) and opens no amendment in that session. Brandon
+  decides which friction becomes a rule, and batches the amendments: one agreement PR at a
+  time.
+- **An amendment replaces or shortens; it layers nothing on top.** Parts A–B and each client
+  file do not grow net lines. Procedure goes to `procedures/` or the skill that owns it; the
+  agreement keeps the invariant and a pointer.
+- **Evidence lives in `_agent/`, not in the rule.** No line numbers, hashes or captures of
+  mutable files in the agreement or an appendix; a rule cites a learning or an issue.
+- **Positive phrasing.** Say what to do; a prohibition is for a hard boundary only.
+- **The changelog entry is short:** what changed, why, who decided, one link. Under ten lines.
+- **Stable anchors.** A1–A8, B0–B2 and the client file names stay; shrink their bodies, never
+  rename them.
+
 ## CI gate
 
 Green is these three commands, run in this order from the repository root, each
