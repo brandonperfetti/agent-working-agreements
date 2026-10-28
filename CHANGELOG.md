@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-27 — RULE ZERO is the author-identity rule (#185).** Attribution lines are allowed
+  and never required; the author email `brandon@brandonperfetti.com` on every agent commit, and
+  the fork rule, are what remain. `procedures/rule-zero-check.md` keeps the author check and
+  drops the grep; `clients/claude-code.md` stops asking for `includeCoAuthoredBy`. Brandon,
+  2026-10-27: now that every client is Claude Code or a cousin, being transparent about it costs
+  nothing he minds ([#185](https://github.com/brandonperfetti/agent-working-agreements/issues/185)).
+
 - **2026-10-27 — The OpenClaw appendix (#185, #189, #190, #194).** `clients/openclaw.md` goes
   from 996 lines to under the 150-line ceiling Brandon accepted (decision 3): host and startup,
   seats and routes, delivery topology, evidence store, the dormant breaker's signature, pointers.
