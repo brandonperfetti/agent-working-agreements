@@ -132,9 +132,9 @@ workspace** is one where walking upward finds an `_agent/` directory; that direc
 agent root. Everything an agent produces goes under `_agent/`: initiative work in
 `initiatives/<project>-<slug>/`, one-off work in the root's `reviews/`, `evidence/`, `friction/`,
 `notes/` and `analysis/`, promoted lessons in `learnings/`; never a loose file at either root, never
-a new top-level folder, never a clone or worktree. A session selects one artifact store at start and
-keeps it. **Friction is recorded when it happened**, not to prove that none did, as
-`_agent/friction/YYYY-MM-DD-<repo>-<id>.md` (`pr-<n>`, or the first twelve characters of the head
+a new top-level folder, never a clone or worktree under `_agent/`. A session selects one artifact
+store at start and keeps it. **Friction is recorded when it happened**, not to prove that none did,
+as `_agent/friction/YYYY-MM-DD-<repo>-<id>.md` (`pr-<n>`, or the first twelve characters of the head
 SHA), opening with the delivery's full identifier (Brandon, 2026-10-27, #185). The tree, the
 initiative index, the friction fields and the scratch-clone rules:
 [`procedures/agent-workspace-layout.md`](procedures/agent-workspace-layout.md).
