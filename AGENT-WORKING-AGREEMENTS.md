@@ -145,8 +145,8 @@ initiative index, the friction fields and the scratch-clone rules:
 `@brandonperfetti/github` package read, orchestrate PRs and call the API; **neither authors
 commits** — a commit comes from the local checkout, in both modes. On a create-then-link error,
 read the current state before retrying. The tracker is GitHub Issues plus the user-level Projects
-board (`users/brandonperfetti/projects/2`, Auto-add intake); "In Review" is a board status the
-orchestrator moves by hand. Credentials and call mechanics:
+board (`users/brandonperfetti/projects/2`; intake is each repository's own Action, issues only);
+"In Review" is a board status the orchestrator moves by hand. Credentials and call mechanics:
 [`procedures/github-paths.md`](procedures/github-paths.md).
 
 ## A8. When you are unsure

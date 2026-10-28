@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-28 — Board intake is the per-repo Action (#99).** A7, the *Tracker* bullet of
+  `procedures/github-paths.md` and the *Issues* bullet of `procedures/autonomous-delivery.md`
+  name each repository's own `add-to-project` workflow as the board's intake, issues only, in
+  place of the board's built-in Auto-add. Why: one fleet-wide intake mechanism, defined and
+  reviewed in each repository, with no dependence on the board's Auto-add slots; the built-in
+  filter also added pull requests, so PR board cards stop, and PR-to-issue linking is
+  unaffected. Brandon, 2026-10-01, reaffirmed 2026-10-28
+  ([#99](https://github.com/brandonperfetti/agent-working-agreements/issues/99)).
+
 - **2026-10-27 — RULE ZERO is the author-identity rule (#185).** Attribution lines are allowed
   and never required; the author email `brandon@brandonperfetti.com` on every agent commit, and
   the fork rule, are what remain. `procedures/rule-zero-check.md` keeps the author check and
