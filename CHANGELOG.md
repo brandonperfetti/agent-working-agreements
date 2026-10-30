@@ -15,7 +15,7 @@ being retrofitted onto the other.
   session archived only once it is safe to. Camina rotated Catalyst Wave 3 as a subagent because no
   rule named this client, which left the old session unable to retire. A visible spawn loses
   `gateway`, `openclaw` and `automations` and adds depth, so Brandon starts the session when a wave
-  needs them or at depth 4. Net lines stay level: the background-cleanup warning now lives only in
+  needs them or at depth 4/5. Net lines stay level: the background-cleanup warning now lives only in
   its procedure, and four other sentences shrink. Friction:
   `_agent/initiatives/sansfaux-catalyst-ui-post-stable/friction/2026-10-30-wave3-rotation-subagent.md`.
   Brandon, 2026-10-30.

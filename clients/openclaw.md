@@ -56,12 +56,12 @@ higher-risk work adds scrutiny, and neither waives A4's review.
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; then role, deliverable, mode, file fence and tier.
-- **Rotation (A4):** each wave's orchestrator gets a new sidebar session: `sessions_spawn` with
-  `visible: true`, `expectsCompletionMessage: false`, the initiative's `group`, an explicit model,
-  the kickoff, no `sessions_yield`. It lacks `gateway`, `openclaw`, `automations`; if a wave needs
-  one, or your kickoff said `depth 4/5`, Brandon pastes the new kickoff in a thread. The old session
-  ends naming the new one and saying Brandon may archive it once nothing else it spawned runs, it
-  owns no worktree in use and no open decision lives only there [decision 2026-10-30, Brandon].
+- **Rotation (A4):** each wave's orchestrator gets a new session. If the wave needs `gateway`,
+  `openclaw` or `automations`, which a spawn lacks, or your kickoff said `depth 4/5`, Brandon
+  pastes the kickoff in a thread. Otherwise `sessions_spawn` with `visible: true`, initiative `group`,
+  `expectsCompletionMessage: false`, explicit model, the kickoff, no `sessions_yield`. The old
+  session names the new one; Brandon may archive it once nothing else it spawned runs or is
+  queued, it owns no worktree in use and no open decision lives only there (Brandon, 2026-10-30).
 - **Model selectors (A4 tiers):** the shared Claude wrapper pins its own model and rejects a
   caller selector, so a dispatch names its role tier, passes no selector, and records the model
   the wrapper pins. Which selector resolves each tier on a non-wrapper route is **unmeasured**;
