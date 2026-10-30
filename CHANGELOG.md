@@ -15,7 +15,7 @@ being retrofitted onto the other.
   run. A spawned session permanently lacks `sessions_send`, so it cannot send an addendum to its
   warm lane, and Catalyst Waves 3 and 4 both stopped on that. Brandon now starts each orchestrator
   by pasting the kickoff in a new thread, which also ends any chain of spawned orchestrators. The
-  spawn route goes, since all four post-stable Catalyst waves needed an addendum, and the operator
+  rotation spawn route goes, since all four post-stable Catalyst waves needed an addendum, and the
   relay gets one line. Requested from the operator session; Brandon decides at merge. Friction:
   `_agent/initiatives/sansfaux-catalyst-ui-post-stable/friction/2026-10-30-wave3-continuation-unavailable.md`.
 
