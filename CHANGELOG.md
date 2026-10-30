@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-30 — OpenClaw rotation starts from a pasted kickoff.** The *Rotation* bullet in
+  `clients/openclaw.md` defaulted to a visible spawn and kept the paste for waves a spawn could not
+  run. A spawned session permanently lacks `sessions_send`, so it cannot send an addendum to its
+  warm lane, and Catalyst Waves 3 and 4 both stopped on that. Brandon now starts each orchestrator
+  by pasting the kickoff in a new thread, which also ends any chain of spawned orchestrators. The
+  rotation spawn route goes, since all four post-stable Catalyst waves needed an addendum, and the
+  relay gets one line. Requested from the operator session; Brandon decides at merge. Friction:
+  `_agent/initiatives/sansfaux-catalyst-ui-post-stable/friction/2026-10-30-wave3-continuation-unavailable.md`.
+
 - **2026-10-30 — OpenClaw wave rotation gets a new sidebar session.** `clients/openclaw.md` now
   says how an OpenClaw orchestrator rotates: a visible spawn in the initiative's group, with the old
   session archived only once it is safe to. Camina rotated Catalyst Wave 3 as a subagent because no
