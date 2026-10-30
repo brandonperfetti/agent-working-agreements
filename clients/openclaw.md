@@ -70,7 +70,7 @@ higher-risk work adds scrutiny, and neither waives A4's review.
 OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
 instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
 **delivery owner** for repository and worktree capability, the protected root's post-release refresh
-included. Camina routes the stop and keeps continuity; one naming its owner needs no packet.
+included. Camina routes the stop and keeps continuity; a stop naming its owner needs no packet.
 
 ## Delivery topology
 
