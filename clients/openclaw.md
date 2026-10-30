@@ -56,11 +56,12 @@ higher-risk work adds scrutiny, and neither waives A4's review.
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; then role, deliverable, mode, file fence and tier.
-- **Rotation (A4):** each wave's orchestrator starts in a new top-level session: `openclaw gateway
-  call sessions.create` with params `agentId`, `label`, `model`, the initiative's group as
-  `category` and the kickoff as `message`. The old session's last message names it and says it can
-  be archived once nothing it spawned runs, it owns no worktree in use, and no open decision lives
-  only there; Brandon archives it [decision 2026-10-30, Brandon].
+- **Rotation (A4):** each wave's orchestrator starts in a new sidebar session: `sessions_spawn` with
+  `visible: true`, `expectsCompletionMessage: false`, the initiative's `group`, an explicit model
+  and the kickoff, with no `sessions_yield`; at spawn depth 4, Brandon pastes the kickoff into a new
+  thread instead. The old session's last message names the new one and says Brandon can archive it
+  once nothing else it spawned runs, it owns no worktree in use, and no open decision lives only
+  there [decision 2026-10-30, Brandon].
 - **Model selectors (A4 tiers):** the shared Claude wrapper pins its own model and rejects a
   caller selector, so a dispatch names its role tier, passes no selector, and records the model
   the wrapper pins. Which selector resolves each tier on a non-wrapper route is **unmeasured**;
@@ -85,8 +86,7 @@ read at pickup; any overlap of those paths stops the delivery.
 
 **Pickup audit.** Record the checkout and HEAD, author identity, `core.hooksPath` and hook
 presence, the dry-run probe (or N/A), the full gate result, branch ownership, target protection,
-and the worktree bindings the procedure lists. Reset behaviour remains unmeasured: require a
-delivery audit rather than assuming.
+and the worktree bindings the procedure lists. Reset is unmeasured; require a delivery audit.
 
 ## Evidence store
 
