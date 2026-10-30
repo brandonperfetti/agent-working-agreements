@@ -56,6 +56,10 @@ higher-risk work adds scrutiny, and neither waives A4's review.
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; then role, deliverable, mode, file fence and tier.
+- **Rotation (A4):** each wave's orchestrator starts in a new sidebar session: `sessions_spawn` with
+  `visible: true`, the initiative's `group`, an explicit model and the packet, not yielded on. It
+  reports in its own chat. The old session is archived once nothing it spawned runs, it owns no
+  worktree in use, and no open decision lives only there [decision 2026-10-30, Brandon].
 - **Model selectors (A4 tiers):** the shared Claude wrapper pins its own model and rejects a
   caller selector, so a dispatch names its role tier, passes no selector, and records the model
   the wrapper pins. Which selector resolves each tier on a non-wrapper route is **unmeasured**;
@@ -77,9 +81,7 @@ service's state directory, config and profile, and placed outside both `_agent/`
 protected root; it is removed losslessly once its PR has merged, and the protected root is
 fast-forwarded to `origin/master` after each release. Commands, checks and the audit fields:
 [`../procedures/openclaw/managed-worktrees.md`](../procedures/openclaw/managed-worktrees.md),
-read at pickup; any overlap of those paths stops the delivery. OpenClaw's own background cleanup
-is a separate hazard: commit or back up work you need before relying on a managed worktree's
-persistence.
+read at pickup; any overlap of those paths stops the delivery.
 
 **Pickup audit.** Record the checkout and HEAD, author identity, `core.hooksPath` and hook
 presence, the dry-run probe (or N/A), the full gate result, branch ownership, target protection,
@@ -89,9 +91,8 @@ delivery audit rather than assuming.
 ## Evidence store
 
 Use the selected store's `evidence/` and `analysis/` per A2 and A6; date-name artifacts and label
-claims. A scratch clone never goes under `_agent/`, and the Gateway executable-check scratch root
-is not a place for one either; where a scratch clone goes on this host, and whether specialists
-share that space, is **unmeasured** — measure and record.
+claims. The Gateway executable-check scratch root takes no scratch clone; where one goes on this
+host, and whether specialists share that space, is **unmeasured** — measure and record.
 
 ## Dormant: the native sandbox breaker
 
@@ -107,5 +108,4 @@ bwrap: No permissions to create a new namespace, likely because the kernel does 
 ## History
 
 Measurements, source readings with their hashes, the route census, superseded claims and the
-migration dispositions: [`../history/openclaw.md`](../history/openclaw.md). None of it is required
-reading.
+migration dispositions; none required reading: [`../history/openclaw.md`](../history/openclaw.md).
