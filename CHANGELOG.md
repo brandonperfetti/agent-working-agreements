@@ -10,12 +10,12 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-10-30 — OpenClaw wave rotation gets a new sidebar session.** `clients/openclaw.md` now
-  says how an OpenClaw orchestrator rotates: a visible session in the initiative's group, reporting
-  in its own chat, with the old session archived only once it is safe to. Camina rotated Catalyst
-  Wave 3 as a subagent because no rule named this client, which left the old session unable to
-  retire. Net lines stay level: the background-cleanup warning now lives only in its procedure,
-  and two other sentences shrink. Friction:
+- **2026-10-30 — OpenClaw wave rotation gets a new top-level session.** `clients/openclaw.md` now
+  says how an OpenClaw orchestrator rotates: `sessions.create` in the initiative's group, with the
+  old session archived only once it is safe to. Camina rotated Catalyst Wave 3 as a subagent because
+  no rule named this client, which left the old session unable to retire. A top-level session has
+  no parent to report to and adds no spawn depth. Net lines stay level: the background-cleanup
+  warning now lives only in its procedure, and three other sentences shrink. Friction:
   `_agent/initiatives/sansfaux-catalyst-ui-post-stable/friction/2026-10-30-wave3-rotation-subagent.md`.
   Brandon, 2026-10-30.
 

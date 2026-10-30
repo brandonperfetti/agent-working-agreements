@@ -56,10 +56,11 @@ higher-risk work adds scrutiny, and neither waives A4's review.
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; then role, deliverable, mode, file fence and tier.
-- **Rotation (A4):** each wave's orchestrator starts in a new sidebar session: `sessions_spawn` with
-  `visible: true`, the initiative's `group`, an explicit model and the packet, not yielded on. It
-  reports in its own chat. The old session is archived once nothing it spawned runs, it owns no
-  worktree in use, and no open decision lives only there [decision 2026-10-30, Brandon].
+- **Rotation (A4):** each wave's orchestrator starts in a new top-level session: `openclaw gateway
+  call sessions.create` with params `agentId`, `label`, `model`, the initiative's group as
+  `category` and the kickoff as `message`. The old session's last message names it and says it can
+  be archived once nothing it spawned runs, it owns no worktree in use, and no open decision lives
+  only there; Brandon archives it [decision 2026-10-30, Brandon].
 - **Model selectors (A4 tiers):** the shared Claude wrapper pins its own model and rejects a
   caller selector, so a dispatch names its role tier, passes no selector, and records the model
   the wrapper pins. Which selector resolves each tier on a non-wrapper route is **unmeasured**;
@@ -68,8 +69,7 @@ higher-risk work adds scrutiny, and neither waives A4's review.
 OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
 instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
 **delivery owner** for repository and worktree capability, the protected root's post-release refresh
-included. Camina routes the stop and keeps continuity; a stop that names its owner is complete and
-needs no packet.
+included. Camina routes the stop and keeps continuity; one naming its owner needs no packet.
 
 ## Delivery topology
 
