@@ -73,9 +73,9 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   the shared checkout's git state, integration, full gate, push, PR and review round; in attended
   mode Brandon pushes. The **independent reviewer** did not produce the work. One session may
   hold the first two seats, never its own review seat; only Brandon merges base branches (Part B).
-  Where supported routes cannot seat a reviewer, the PR bot's round plus Brandon's merge review
-  serves for routine, reversible work; the PR body says so and an empty seat holds no push.
-  Full duties, staff coordination and dispatch:
+  Where supported routes cannot seat a reviewer, routine reversible work may integrate and push
+  before independent review (B2 exception); the PR bot and Brandon review before base merge.
+  The PR discloses the missing reviewer route. Full duties, staff coordination and dispatch:
   [`procedures/orchestration-seats.md`](procedures/orchestration-seats.md).
 - **The MPD is the spine.** Every initiative has a `MASTER-PRIORITY-DOCUMENT.md` born from an
   attended Genesis; its §0 records the mode. Leads advance approved work across waves and rotate
@@ -98,7 +98,7 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   (Brandon, 2026-10-27). A provenance line on a PR or issue names the initiative, the role and the
   mode. RULE ZERO is line one of every dispatch prompt. The author check before every push, merge
   and presentation: [`procedures/rule-zero-check.md`](procedures/rule-zero-check.md).
-- **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance**,
+- **Two-axis review before acceptance** (Standards + Spec, `code-review`), with A4's exception;
   fixes, riders and conflict resolutions included, no size exemption. The lane's own report is never
   the review; the verdict is recorded under `reviews/` and names the exact head SHA. A later fix
   gets a scoped review; the whole-branch verdict is renewed only when the fix materially stales it
@@ -238,8 +238,8 @@ Brandon's review moves to the pull request; the delivery owner owns the branch u
 **Git contract.** Feature, bugfix, wave and lane branches descend from `develop`; lanes may branch
 from the delivery branch and integrate reviewed work. Never push `master`, force-push, or push
 feature work to `develop`. Release-cut work and release-PR review fixes push to `develop`, reviewed
-on `develop → master`. Each lane has its own worktree, with hooks firing. The owner merges a lane
-only after two-axis review passes, re-runs the gate on the merged tree, runs
+on `develop → master`. Each lane has its own worktree, with hooks firing. The owner integrates lanes
+after two-axis review (or A4's no-reviewer exception), re-runs the gate on the merged tree, runs
 `coderabbit-preflight` when the push carries new work and the CLI is available, then pushes; a
 lane merge that conflicts goes back to the lane. The ready-for-review PR opens against `develop`
 at the first push; the delivery owner works the CodeRabbit round with `coderabbit-response`;

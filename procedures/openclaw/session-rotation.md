@@ -19,8 +19,18 @@ threshold, finish the current bounded unit and rotate at a clean pause; at the b
 next safe stop instead of starting new work. Wave close, PR submission and PR merge are natural
 pauses, not mandatory rotations or owner approval gates. Save an A4 packet in the initiative's
 `handoffs/` (`_agent/initiatives/<project>-<slug>/handoffs/`). Begin with shipped-versus-open
-reconciliation and record the outcome, receipts, owners, authority, constraints and exact next
+reconciliation; record outcomes, decisions, receipts, owners, authority, constraints and exact next
 authorized action. Carry authority without inventing gates.
+
+**Context signal:** For Claude, Codex OAuth and approved API routes, use the current session's
+supported `/status` or Control UI context readout: reported used-context tokens divided by that
+session's reported context capacity, multiplied by 100. Record session ID/key, timestamp, route,
+source, numerator, denominator and percent with the checkpoint. A supported CLI/session readout
+may supply the same reported fields; label estimates and stale readings. Do not substitute
+provider quota, lifetime token totals or another session's capacity. If either field is missing,
+stale or inconsistent, record usage as unknown, refresh through a supported readout and preserve
+a checkpoint; unknown is not zero. These thresholds guide clean-pause rotation, not exact
+provider failure cliffs. Do not claim identical telemetry availability across runtimes.
 
 Choose a key absent from the session store. Use the current lead's canonical agent ID and matching
 key prefix; the example below is for Camina (`main`).

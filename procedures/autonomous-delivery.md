@@ -27,6 +27,12 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
 
 **Git contract**
 
+A4's no-reviewer exception applies to this procedure's pre-integration and pre-push review steps
+only for routine, reversible work when supported routes cannot seat an independent reviewer.
+Integrate and push with the full gate, disclose the missing reviewer route in the PR, and complete
+the bot round plus Brandon's review before base merge. When a reviewer is available, the normal
+two-axis sequence applies; the delivery owner never claims independent review of its own work.
+
 - The delivery owner cuts a feature, bugfix or wave branch descending from `develop` (the
   ritual's step 1). Further branches may descend from that branch; reviewed lane work integrates
   there before the ready PR into `develop`. Keep branch ownership and worktree isolation clear.
@@ -56,7 +62,7 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
   (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
 - **The delivery owner merges a lane into the wave branch** (for work with no initiative, into that
-  work's own branch) **only after two-axis review passes** (A4), records the verdict in
+  work's own branch) **after two-axis review or A4's no-reviewer exception**, records the basis in
   `reviews/`, **re-runs the full CI gate on the merged branch, runs `coderabbit-preflight` when the
   push carries new work (below) and the CodeRabbit CLI is available to that client, then
   pushes.**

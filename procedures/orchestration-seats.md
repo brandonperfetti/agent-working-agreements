@@ -11,7 +11,8 @@ initiative (an MPD exists or is being born).
 
 **Implements:** A4 — the three seats, the MPD, handoffs, lane fences, models and effort.
 
-**Stop:** Stop-list items 1 and 2 (B2) when a premise or scope conflict appears.
+**Stop:** Stop-list items 1 and 2 (B2): unresolved conflicts in owner instructions or authorized
+objectives, or expansion of the authorized scope.
 
 ---
 
@@ -40,9 +41,9 @@ initiative (an MPD exists or is being born).
   - The **independent reviewer** is a separate seat, independent of whoever produced the work
     under review, delivery owner included; it runs the two-axis review below. Where the client's
     supported routes cannot seat one — the dispatch tool refuses the role, or the session is the
-    only one there is — the review bot's round on the PR plus Brandon's merge review is the
-    independent review for routine, reversible work, and the PR body says so. An empty seat holds
-    no push (Brandon, 2026-10-27, #194).
+    only one there is — A4 permits routine reversible work to integrate and push before independent
+    review. The PR discloses the missing route; its bot round plus Brandon's review occur before
+    base merge. This exception changes timing, not reviewer independence or the full gate.
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
   neither seat makes it the reviewer of its own work, and neither merges a base branch — only

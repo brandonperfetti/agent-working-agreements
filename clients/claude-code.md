@@ -66,8 +66,8 @@ Claude Code fact.
   Auto-fix on, a line crediting Claude Code on each PR thread reply. The agreement allows all of it
   since 2026-10-27; whether `includeCoAuthoredBy` is set in `~/.claude/settings.json` is Brandon's
   choice per machine, and the author email is what the check reads.
-- Rotate at a context-driven clean pause from A4's saved packet (or `handoff`), through the
-  supported session route; verify successor capability and advancement before retiring this one.
+- Rotate at a context-driven clean pause through the supported session route, using A4's packet
+  (or `handoff`); verify successor capability, receipt, acceptance and advancement before retirement.
 - This file is reached from the one-line pointer in the user-level `~/.claude/CLAUDE.md` (created
   2026-09-10), which Claude Code sessions on this machine load [measured 2026-10-28]; the repo's own
   `CLAUDE.md` adds project specifics.

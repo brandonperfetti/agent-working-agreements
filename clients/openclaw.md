@@ -54,10 +54,10 @@ deliveries still carry independent review, verification and the owner's decision
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; role, deliverable, mode, fence, model and effort follow.
-- **Rotation (A4):** checkpoint at 30%, prepare the handoff at 40%, rotate at the next clean pause;
-  at 60% take the next safe stop instead of new work. These are operational heuristics. Verify the
-  successor's root tools, provenance and advancement before retiring the old session, following
-  [`../procedures/openclaw/session-rotation.md`](../procedures/openclaw/session-rotation.md).
+- **Rotation (A4):** reported used context / capacity: checkpoint at 30%, prepare at 40%, rotate at
+  a clean pause; at 60% take the next safe stop. Heuristics, not cliffs; unknown is not zero. Record
+  session ID/time; verify successor root tools, provenance, receipt, acceptance and advancement per
+  [`session-rotation.md`](../procedures/openclaw/session-rotation.md) before retiring the old session.
 - **Models and routes:** Codex OAuth for thinking; the established Claude Code wrapper for coding.
   Leads choose model/effort within approved routes; respect wrapper pins rather than bypass them.
   On exhaustion, coding falls back from Claude to Codex OAuth, then to an approved API model within
