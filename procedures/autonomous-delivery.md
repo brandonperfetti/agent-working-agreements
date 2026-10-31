@@ -27,12 +27,10 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
 
 **Git contract**
 
-- The wave's delivery owner cuts **one branch per wave off `develop`**
-  (`<initiative>/wave-<n>`), and that is the **only** branch an agent pushes to land an
-  initiative's **feature** work. Feature
-  work with no initiative has no wave: it gets **one branch of its own off `develop`** for that
-  piece of work (the ritual's step 1), with no other work on it, and that is the **only** branch an
-  agent pushes to land it. **Never `master`, never a force-push, and never feature work pushed
+- The delivery owner cuts a feature, bugfix or wave branch descending from `develop` (the
+  ritual's step 1). Further branches may descend from that branch; reviewed lane work integrates
+  there before the ready PR into `develop`. Keep branch ownership and worktree isolation clear.
+  **Never `master`, never a force-push, and never feature work pushed
   onto `develop`.** Protection enforces this only on `master`; `develop` blocks force-pushes and
   deletions but accepts pushes by design (step 4 of the ritual), so it is a rule you keep, not a
   wall you hit.
@@ -101,9 +99,9 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
   PR, and the delivery owner completes the round before hand-back.** The PR uses the
   `writing-pull-requests` shape; its body is seeded under the initiative's `pull-requests/` and
   grown as lanes land.
-- **File-disjoint lanes may run in parallel up to the measured cap**, which each client file
-  records where it has been measured. A client without one measures its own Agent tool before
-  assuming concurrency and records the number in the MPD.
+- **Run independent lanes in parallel within available capacity.** Record advertised limits
+  separately from measured concurrency. File ownership, shared mutations, application access and
+  resource limits determine what can overlap; contention serializes the affected work only.
 - **Agents run the full CI gate themselves** — every lane before handing back; the delivery owner
   on every merged tree before every push. CI on the PR is the arbiter for flakes.
 - **Issues:** agents file the findings that are real work (A4) freely via `writing-tickets`,
@@ -111,7 +109,8 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
   orchestrator-only and cited. Board intake is a repository's own `add-to-project` workflow,
   issues only ([`github-paths.md`](github-paths.md)).
 
-Non-blocking questions batch at the wave boundary. Rotation stays per wave with a packet.
+Batch non-blocking questions without holding progress. Reconcile and choose the next approved
+wave at wave close; rotate when context calls for it, with A4's packet and successor verification.
 
 **Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new
 commit**, and is re-reviewed (scoped to the fix) before merge — never a fresh session, never the

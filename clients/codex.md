@@ -56,8 +56,8 @@ conversation.
   repo; this appendix — and Part B — apply only to a session that has a local shell and is working
   a repo under `~/dev/sansfaux`. Elsewhere only Part A's honesty rules carry.
 - **Sub-agents:** ≥ 2 workers ran concurrently alongside the parent (4 slots advertised, 3 workers
-  unverified). Model selectors are **GPT tiers only** — A4's role-named tiers map to those, and
-  which GPT selector serves each tier is **unmeasured** — measure and record; a
+  unverified). Choose model and effort per task using available approved selectors; record
+  requested settings separately from backend attestation. A
   full-history fork **inherits the parent's model and cannot override**, and config is not
   attestation (A4).
 - **Hazards:**
