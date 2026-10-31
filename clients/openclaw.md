@@ -56,12 +56,10 @@ higher-risk work adds scrutiny, and neither waives A4's review.
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; then role, deliverable, mode, file fence and tier.
-- **Rotation (A4):** each wave's orchestrator gets a new session: Brandon pastes the kickoff in a
-  new thread. A spawned session, even `visible: true`, permanently lacks `sessions_send`, so it
-  cannot message its warm lane (B2). On Brandon's request, Claude Code confirms the target's id and
-  delivers a handoff: `openclaw agent --agent <agent> --session-id <sessionId> --message-file <f>`.
-  The old session names the kickoff file; Brandon may archive it once nothing it spawned runs or
-  is queued, it owns no worktree in use and no open decision lives only there (Brandon, 2026-10-30).
+- **Rotation (A4):** Rotate at wave close or earlier at a clean stopping point when context runs
+  high; Brandon sets the numeric trigger. Preserve the handoff and use an empty named root with
+  attributed kickoff and verified provenance; first real-work pickup remains unproven. Follow
+  [`../procedures/openclaw/session-rotation.md`](../procedures/openclaw/session-rotation.md).
 - **Model selectors (A4 tiers):** the shared Claude wrapper pins its own model and rejects a
   caller selector, so a dispatch names its role tier, passes no selector, and records the model
   the wrapper pins. Which selector resolves each tier on a non-wrapper route is **unmeasured**;
