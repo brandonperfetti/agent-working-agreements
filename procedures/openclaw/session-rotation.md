@@ -16,8 +16,8 @@ A–B, and a rule here that contradicts one there is the rule that is wrong.
 
 **Rotation:** Rotate at wave close, or earlier at a clean stopping point when context runs high;
 Brandon sets the numeric trigger. Before rotation, save a packet under the initiative’s `handoffs/`
-that begins with shipped-versus-open reconciliation and records the outcome, evidence, owners,
-approvals and exact next action.
+whose first instruction is to reconcile shipped versus open and which records the outcome, evidence,
+owners, approvals and exact next action.
 
 Choose a key absent from the session store.
 
