@@ -32,7 +32,9 @@ the skill's to define.
 **Artifact store.** `_agent/` names an artifact-location class, not a synchronization or cutover
 mechanism. At session start, the applicable store policy selects one concrete artifact store; the
 session records that location and does not switch stores or write the same artifact to another
-store mid-session. Client appendices resolve discovery and client limits.
+store mid-session. Each execution machine keeps receipts for the initiative it runs. Agents share
+relevant receipt pointers across roles, with privacy and access boundaries preserved; the owner
+need not relay them. Client appendices resolve discovery and client limits.
 
 On an on-fleet workspace, everything an agent produces goes under `_agent/` — a clone is not a
 product (**Clones**, below):

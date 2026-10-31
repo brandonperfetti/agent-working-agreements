@@ -13,8 +13,8 @@ the orchestrator for routing fixes to lanes.
 
 **Implements:** A4 — two-axis review, material staleness, the harm threshold and its three outcomes.
 
-**Stop:** A finding that is verified and does real harm holds the merge until fixed; a billing
-prompt holds the paid review, never the push.
+**Stop:** A verified harmful finding holds the merge until fixed; spending outside an approved
+allowance holds the paid review, never the push (B2).
 
 ---
 
@@ -79,5 +79,5 @@ prompt holds the paid review, never the push.
   already weighed. [learnings: 2026-09-12 wave-8 §22] **A re-review round continues only while it
   surfaces a new, verified finding that does real harm;** a round that surfaces none closes the
   loop, its remaining threads answered as above, and that is what the ritual's "clean" means
-  (Brandon, 2026-10-27, #193). **No agent spends
-  usage credits:** a billing prompt holds the paid review, never the push (Brandon, 2026-09-29).
+  (Brandon, 2026-10-27, #193). **Use only an approved funded allowance** for paid reviews;
+  an exhausted allowance or unapproved charge holds that paid review, never the push (B2).

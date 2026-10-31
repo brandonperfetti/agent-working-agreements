@@ -2,17 +2,17 @@
 
 This procedure carries mechanics for a rule in
 [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts A–B,
-and a rule here that contradicts one there is the rule that is wrong. The text below was moved here
-verbatim on 2026-10-27; "above" and "below" in it refer to the agreement section it implements.
+and a rule here that contradicts one there is the rule that is wrong.
 
 **Trigger:** A session dispatches a lane or sub-agent, holds more than one seat, or runs an
 initiative (an MPD exists or is being born).
 
 **Owner:** The orchestrator.
 
-**Implements:** A4 — the three seats, the MPD, handoffs, lane fences, model tiers.
+**Implements:** A4 — the three seats, the MPD, handoffs, lane fences, models and effort.
 
-**Stop:** Stop-list items 1 and 2 (B2) when a premise or scope conflict appears.
+**Stop:** Stop-list items 1 and 2 (B2): unresolved conflicts in owner instructions or authorized
+objectives, or expansion of the authorized scope.
 
 ---
 
@@ -41,23 +41,33 @@ initiative (an MPD exists or is being born).
   - The **independent reviewer** is a separate seat, independent of whoever produced the work
     under review, delivery owner included; it runs the two-axis review below. Where the client's
     supported routes cannot seat one — the dispatch tool refuses the role, or the session is the
-    only one there is — the review bot's round on the PR plus Brandon's merge review is the
-    independent review for routine, reversible work, and the PR body says so. An empty seat holds
-    no push (Brandon, 2026-10-27, #194).
+    only one there is — A4 permits routine reversible work to integrate and push before independent
+    review. The PR discloses the missing route; its bot round plus Brandon's review occur before
+    base merge. This exception changes timing, not reviewer independence or the full gate.
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
   neither seat makes it the reviewer of its own work, and neither merges a base branch — only
   Brandon does (Part B ritual, step 6). A client appendix may name who fills each seat there
   (Brandon, 2026-10-23, #173).
-- **The MPD is the spine.** Every initiative has a `MASTER-PRIORITY-DOCUMENT.md` born from an
-  attended Genesis (deep-grill → research → agreed plan → tickets → waves). Its §0 declares the
-  **mode** (Part B) the wave orchestrators run in. One orchestrator runs **one wave, then rotates**
-  via a packet whose first instruction is **shipped-vs-open reconciliation** against the board and
-  the merged diff. [learnings: 2026-08-30 §7]
-- **Handoffs are files, not chat.** Kickoffs, addenda, and lane reports live under the initiative's
-  `handoffs/`; a pasted summary is a pointer to the file plus highlights, never the record.
-- **Lanes work their named files only.** Batches are file-disjoint; contention points (shared
-  manifests, generated files, single-owner dirs) are serialised. A lane that spots a defect in a
+- **The MPD is the spine.** The owner conversation establishes the objective and decisions;
+  `MASTER-PRIORITY-DOCUMENT.md` records them and §0's mode. The lead advances the next justified
+  wave within that objective, reconciles outcomes and reprioritizes at wave close. Wave close is
+  not an approval gate or mandatory session rotation. Rotate at a clean pause when context calls
+  for it, using the client's supported route and the packet below.
+- **Staff own outcomes in their domains.** The assigned lead may delegate bounded work and
+  choose the next in-scope action. Direct owner instructions count without another agent's
+  reapproval. Reconcile changed priorities, ownership, dependencies and blockers with affected
+  colleagues; the owner is not the relay. Share relevant receipts and decisions, preserving
+  privacy and task-specific holds.
+- **Handoffs are files, not chat.** Save kickoffs, addenda and lane reports under `handoffs/`.
+  A rotation packet begins with shipped-vs-open reconciliation and names decisions, owners,
+  receipts, governing constraints and the next authorized action. Carry existing authority;
+  a packet cannot invent approval gates or narrow the owner's objective. A pasted summary is a
+  pointer plus highlights. Verify successor capability, receipt, acceptance and actual advancement
+  before retiring the predecessor; preserve any still-active lanes, worktrees and unique decisions.
+- **Lanes work their named files only.** Independent work runs in parallel within available
+  resources and file ownership; shared manifests, generated files, applications and other
+  contention points are serialized. A lane that spots a defect in a
   file it touched **reports it into the ledger — it is our finding** — rather than crossing its
   fence or smoothing it over. [learnings: 2026-09-06 wave-6 §4]
 - **Lanes keep their git in their own worktree.** The file fence says which files a lane edits;
@@ -71,11 +81,12 @@ initiative (an MPD exists or is being born).
   A lane whose merge into the wave branch conflicts resolves it in its own worktree too (B2).
   [learnings: 2026-09-23 sfs-wave-1 §1]
 - **Every lane report states the model it ran on, and how it knows.** Requested, inherited,
-  configured and backend-attested are four different claims; a dispatched tier resolves to whatever
-  the account serves, and config is not attestation. Say which you have. [learnings: 2026-08-30 §5]
-- **Explicit model tier on every dispatch — never omitted, never the orchestrator's premium tier.**
-  Tiers are named by *role* (workhorse for lanes, careful for verify/aggregate); each client file
-  records its own selector for each tier, or that the mapping is unmeasured, and a client whose
-  dispatch tool cannot select records that instead of pretending. This applies to skills that fan
-  out their own sub-agents. Route by role per `agent-workspace/references/subagent-model-routing.md`.
+  configured and backend-attested are four different claims. The task's chosen model and effort
+  are requests, not evidence of what the account served. State which evidence you have.
   [learnings: 2026-08-30 §5]
+- **Choose model and effort for the task.** The lead uses approved routes and allowances, adjusting
+  to observed quality, cost and elapsed time. A dispatch names the chosen model/effort and reason,
+  or records inheritance or a route's pinned setting. A client whose tool cannot select says so;
+  it never claims a requested selector proves the served model. Approved subscription routes may
+  fall back automatically; paid routes require an already-approved funded allowance (B2).
+  Apply the same rule when a skill fans out helpers; client files carry route mechanics.

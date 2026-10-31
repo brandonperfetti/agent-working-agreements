@@ -53,7 +53,9 @@ Preserving and capturing: [`procedures/evidence-capture.md`](procedures/evidence
 ## A3. Do the work inside the turn
 
 Don't narrate intent and stop. Do the work, then report **what is done**. Read-only investigation
-you may announce; changes you make and show.
+you may announce; changes you make and show. Within the authorized objective, act, decide, record;
+relevant read-only and scratch prerequisites are included. Direct owner instructions count wherever
+received. Preserve explicit task holds, privacy and security constraints; reconcile affected staff.
 
 **A status update is not a hand-back.** While safe, authorized work remains, keep going. A hand-back
 is terminal when the requested outcome is complete, a named authority boundary needs Brandon, no
@@ -65,31 +67,29 @@ decision Brandon has to make, if any (Brandon, 2026-10-27, #185).
 
 These hold in both modes; the `orchestrate` skill carries the loop, this file carries the law.
 
-- **Three seats, kept distinct.** The **orchestrator** briefs, fences, dispatches and redispatches
-  lanes, holds tracker coordination (A7), owns attended live verification, routes review evidence
-  and writes the decision-ready hand-back. The **delivery owner** — the assigned specialist, or the
-  orchestrator when none is assigned — alone controls the shared checkout's git state: cuts the
-  branch, integrates reviewed lane work, runs the gate on the merged tree, pushes (in attended mode,
-  Brandon pushes), opens the PR and completes its review round. The **independent reviewer** is a
-  separate seat, independent of whoever produced the work, delivery owner included. A session may
-  hold the first two seats; neither makes it the reviewer of its own work, and neither merges a base
-  branch — only Brandon does (Part B, step 6). Where the client's routes cannot seat a reviewer, the
-  review bot's round on the PR plus Brandon's merge review is the independent review for routine,
-  reversible work, and the PR body says so; an empty seat holds no push (Brandon, 2026-10-27, #194).
-  Full duties and dispatch mechanics:
+- **Three seats, kept distinct.** The **orchestrator** briefs and dispatches lanes, coordinates
+  the tracker (A7), routes review and owns the hand-back. Qualified staff lead and delegate work
+  in their domains. The **delivery owner** — assigned specialist, or orchestrator if none — owns
+  the shared checkout's git state, integration, full gate, push, PR and review round; in attended
+  mode Brandon pushes. The **independent reviewer** did not produce the work. One session may
+  hold the first two seats, never its own review seat; only Brandon merges base branches (Part B).
+  Where supported routes cannot seat a reviewer, routine reversible work may integrate and push
+  before independent review (B2 exception); the PR bot and Brandon review before base merge.
+  The PR discloses the missing reviewer route. Full duties, staff coordination and dispatch:
   [`procedures/orchestration-seats.md`](procedures/orchestration-seats.md).
 - **The MPD is the spine.** Every initiative has a `MASTER-PRIORITY-DOCUMENT.md` born from an
-  attended Genesis; its §0 records the mode. One orchestrator runs one wave, then rotates via a
-  packet whose first instruction is shipped-vs-open reconciliation. [learnings: 2026-08-30 §7]
+  attended Genesis; its §0 records the mode. Leads advance approved work across waves and rotate
+  at context-driven clean pauses; a packet starts with shipped-vs-open reconciliation.
 - **Handoffs are files, not chat.** Kickoffs, addenda and lane reports live under the
-  initiative's `handoffs/`; a pasted summary is a pointer to the file plus highlights.
+  initiative's `handoffs/`; a pasted summary is a pointer plus highlights. They carry owner and
+  governing constraints, never invent approval gates or reduce the authorized objective.
 - **Lanes work their named files only, and run git only in their own worktree.** The shared
   checkout's git state is the delivery owner's alone. A lane that spots a defect in a file it
   touched reports it into the ledger rather than crossing its fence. [learnings: 2026-09-23
   sfs-wave-1 §1]
-- **Every dispatch names its model tier by role** (workhorse for lanes, careful for verify and
-  aggregate), never the orchestrator's premium tier; every lane report states the model it ran on
-  and how it knows. The client file records the selectors. [learnings: 2026-08-30 §5]
+- **Leads choose models and effort per task** within approved routes and budgets, adapting to
+  measured outcomes. Every dispatch records its choice or inherited setting; every lane report
+  distinguishes requested, configured, inherited and backend-attested model claims.
 - **RULE ZERO: a commit carries Brandon's author identity.** Every commit an agent makes on his
   behalf has the author email `brandon@brandonperfetti.com`, exactly; an outside contribution
   carries its author's own identity, and a PR whose commits carry Brandon's identity from another
@@ -98,7 +98,7 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
   (Brandon, 2026-10-27). A provenance line on a PR or issue names the initiative, the role and the
   mode. RULE ZERO is line one of every dispatch prompt. The author check before every push, merge
   and presentation: [`procedures/rule-zero-check.md`](procedures/rule-zero-check.md).
-- **Two-axis review (Standards + Spec, `code-review` skill) on every delivery before acceptance**,
+- **Two-axis review before acceptance** (Standards + Spec, `code-review`), with A4's exception;
   fixes, riders and conflict resolutions included, no size exemption. The lane's own report is never
   the review; the verdict is recorded under `reviews/` and names the exact head SHA. A later fix
   gets a scoped review; the whole-branch verdict is renewed only when the fix materially stales it
@@ -107,8 +107,8 @@ These hold in both modes; the `orchestrate` skill carries the loop, this file ca
 - **A review-bot finding is fixed before the merge when it is verified and does real harm.** One
   the code disproves is declined, with receipts, on its thread. One that holds but does no harm is
   fixed in the PR when small, noted when not worth a change, and ticketed when it is real work. A
-  re-review round continues only while it surfaces a new, verified, harmful finding. No agent
-  spends usage credits: a billing prompt holds the paid review, never the push. The outcomes,
+  re-review round continues only while it surfaces a new, verified, harmful finding. Spending
+  follows B2's financial boundary; an unfunded paid review never holds the push. The outcomes,
   routing and reply mechanics: [`procedures/review-findings.md`](procedures/review-findings.md).
 - **Distrust the issue until you've read the code**; re-verify at pickup and record direction
   changes as marked, dated comments. **Tests ship with the change**, in the right place.
@@ -132,8 +132,9 @@ workspace** is one where walking upward finds an `_agent/` directory; that direc
 agent root. Everything an agent produces goes under `_agent/`: initiative work in
 `initiatives/<project>-<slug>/`, one-off work in the root's `reviews/`, `evidence/`, `friction/`,
 `notes/` and `analysis/`, promoted lessons in `learnings/`; never a loose file at either root, never
-a new top-level folder, never a clone or worktree under `_agent/`. A session selects one artifact
-store at start and keeps it. **Friction is recorded when it happened**, not to prove that none did,
+a new top-level folder, never a clone or worktree under `_agent/`. Each execution machine keeps
+receipts; a session selects one store and shares relevant pointers with affected staff. **Friction
+is recorded when it happened**, not to prove that none did,
 as `_agent/friction/YYYY-MM-DD-<repo>-<id>.md` (`pr-<n>`, or the first twelve characters of the head
 SHA), opening with the delivery's full identifier (Brandon, 2026-10-27, #185). The tree, the
 initiative index, the friction fields and the scratch-clone rules:
@@ -151,9 +152,8 @@ only); "In Review" is a board status the orchestrator moves by hand. Credentials
 
 ## A8. When you are unsure
 
-Attended mode: ask — Brandon would rather answer than review a wrong assumption. Autonomous mode:
-consult the **stop-list** in B2; everything not on it is decided, recorded and reviewed on the PR.
-Either way, never fill a gap with a plausible story.
+Consult the **stop-list** in B2 in autonomous mode; otherwise decide, record and verify, on the PR
+for repository work. In attended mode, ask. Never fill an evidence gap with a plausible story.
 
 # Part B — Modes
 
@@ -163,7 +163,7 @@ Either way, never fill a gap with a plausible story.
 merge.** It is not a mode, a policy, or a thing to derive — it is what Brandon does, on **every**
 repo, in his words. Rules below serve it; where a rule and this section disagree, the rule is wrong.
 
-1. **Feature work branches off `develop`.** One branch per wave or piece of work.
+1. **Feature work branches off `develop`**, with nested feature, bugfix and lane branches as needed.
 2. **That branch opens a PR into `develop`.** The review bot reviews it; findings are worked **on
    the feature branch**; Brandon merges it into `develop`.
 3. **When `develop` is ready to ship, a PR is opened from `develop` into `master`.** Its **head is
@@ -176,7 +176,8 @@ repo, in his words. Rules below serve it; where a rule and this section disagree
    the version bump, the CHANGELOG section rename and any built artifact are pushed to `develop`
    before or during that PR. They are reviewed on it, like everything else the PR carries. (The only
    per-repo difference in this whole ritual is whether a repo has a version to bump at all.)
-6. **Brandon merges. Both PRs, always, by hand in the host's UI.** No agent merges.
+6. **Brandon merges both base-branch PRs, by hand in the host's UI.** The delivery owner merges
+   reviewed lanes.
 7. **Brandon tags on `master`**, where the repo publishes releases, and the tag fires the release
    workflow.
 8. **The back-merge carries `master` home to `develop`** — a direct push by the workflow, which is
@@ -234,28 +235,30 @@ shapes, the mbox apply block and the per-batch procedure:
 
 Brandon's review moves to the pull request; the delivery owner owns the branch until then.
 
-**Git contract.** One branch per wave off `develop` (`<initiative>/wave-<n>`), or one branch of
-its own for work with no initiative, is the only branch an agent pushes to land feature work:
-never `master`, never a force-push, never feature work onto `develop`. Release-cut work pushes
-straight to `develop` and is reviewed on the `develop → master` PR. Each lane works in its own
-worktree on a branch off the wave branch, with hooks firing. The delivery owner merges a lane
-only after two-axis review passes, re-runs the gate on the merged tree, runs
+**Git contract.** Feature, bugfix, wave and lane branches descend from `develop`; lanes may branch
+from the delivery branch and integrate reviewed work. Never push `master`, force-push, or push
+feature work to `develop`. Release-cut work and release-PR review fixes push to `develop`, reviewed
+on `develop → master`. Each lane has its own worktree, with hooks firing. The owner integrates lanes
+after two-axis review (or A4's no-reviewer exception), re-runs the gate on the merged tree, runs
 `coderabbit-preflight` when the push carries new work and the CLI is available, then pushes; a
 lane merge that conflicts goes back to the lane. The ready-for-review PR opens against `develop`
 at the first push; the delivery owner works the CodeRabbit round with `coderabbit-response`;
-Brandon alone merges, by hand; `what-did-we-learn` runs at wave close. Addenda go back to the
+Brandon alone merges base PRs, by hand; `what-did-we-learn` runs at wave close. Addenda go back to the
 same lane as a new commit, scoped-reviewed before merge. Agents file real-work findings as
 `agent-filed` issues. The full contract, conflict recovery and the review loop:
 [`procedures/autonomous-delivery.md`](procedures/autonomous-delivery.md).
 
-**The stop-list — stop and ask; everything else proceed, decide, record (MPD §6 + PR body; the
-PR body alone for work with no initiative):**
+**The stop-list — pause only the affected action and name its decision or restoration owner;
+otherwise act, decide, record (MPD §6 and PR, or the task receipt when neither exists):**
 
-1. A premise conflict with the MPD or a ticket.
-2. A scope decision the MPD does not cover.
-3. Anything destructive or irreversible — data migrations against shared infra, deletions outside
-   the repo, secrets, third-party writes (CMS, DNS, billing).
-   A billing prompt holds the paid review, never the push (A4).
+1. An unresolved conflict in owner instructions or authorized objectives; current explicit owner
+   direction settles older plans, tickets and handoffs. Reconcile the record and affected staff.
+2. Expanding the authorized objective, strategy, channels or business commitments. Necessary
+   prerequisites and ordinary nonfinancial execution, configuration and external writes within
+   approved scope proceed with appropriate checks; uncertainty alone creates no approval gate.
+3. Purchases or financial commitments/transactions without explicit approval or an approved budget
+   covering the action. Read-only financial research, analysis and preparation proceed. Existing
+   approved allowances may be used; budget increases, top-ups and unbudgeted commitments require approval.
 4. A CI gate remains red after bounded evidence-led recovery reaches its declared budget — inside a
    merge-conflict resolution, this applies only to a red of the resolution's own, one absent from
    both sides' pre-merge gate records; unresolved recovery leaves the branch at its pre-merge tip
@@ -265,10 +268,7 @@ PR body alone for work with no initiative):**
    names none the owner is Brandon — and hands back per A3; work that does not depend on the
    operation continues, and Brandon is never made the command runner (Brandon, 2026-10-27, #194).
 
-For work with no initiative, item 1 reads "A premise conflict with the ticket or the prompt" and
-item 2 reads "A scope decision neither the ticket nor the prompt covers": both exist for every
-piece of work, and with no MPD, item 2 as written would stop every scope decision (Brandon,
-2026-10-20).
+These boundaries apply with or without an initiative; an MPD or handoff is never extra authority.
 
 ## Triggers
 

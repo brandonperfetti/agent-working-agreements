@@ -70,14 +70,10 @@ repository a session delivers to.
    straight to `develop`, or merging its own PR into `master` once the gate is green `[inference —
    untested, since testing it means merging into a protected branch]`. **Feature work never lands
    on a base branch, and only Brandon merges** are therefore rules of this agreement, not repo settings.
-   Making either mechanical needs a separate agent identity (machine user or App token), and that
-   is decided not now (Brandon, 2026-10-12): the two stay rules of this agreement because one
-   account has write access to each repository, every change reaches `master` through a pull
-   request Brandon merges by hand, the CI gate is a required check on `master`, and feature work
-   goes through its branch (B2) and a PR into `develop`; a separate identity costs a secret, a
-   token-switch step in every client and a new PR author, a cost not paid while those conditions
-   hold. It reopens on a second account with write access to a repository this agreement governs,
-   or on one measured breach of either rule, with a GitHub App as the recommended shape.
+   Brandon explicitly accepts the shared-identity risk for now (2026-10-31). Separate agent
+   identities remain a future goal; this agreement does not initiate that migration. Preserve the
+   branch protections and Git ritual, and report a measured breach. A settings PASS is never proof
+   that agents cannot act as the owner or that the human-merge boundary is mechanically enforced.
 5. Brandon has not overridden the mode to attended for this session.
 
 By environment: each client's appendix records how that client scores against these items and
