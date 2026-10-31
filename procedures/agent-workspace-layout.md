@@ -33,7 +33,7 @@ the skill's to define.
 **Artifact store.** `_agent/` names an artifact-location class, not a synchronization or cutover
 mechanism. At session start, the applicable store policy selects one concrete artifact store; the
 session records that location and does not switch stores or write the same artifact to another
-store mid-session. Each execution machine keeps receipts for the initiative it runs. Agents share
+store mid-session. Each execution machine keeps receipts for its work. Agents share
 relevant receipt pointers with roles that can read the same store; verify access before relying
 on them. Across stores, send a bounded handoff through an existing authorized, access-controlled
 transfer route, naming the source machine, store, path and observation time. The recipient saves

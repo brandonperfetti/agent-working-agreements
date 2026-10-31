@@ -48,9 +48,9 @@ Claude Code fact.
   subdirectory of it per sub-agent.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
-- **Model and effort (A4):** the lead chooses from the client's available approved selectors for
-  the task and records what was requested versus actually attested. Read live tool capabilities;
-  historical role-to-selector mappings are not restrictions on task-based choice.
+- **Model and effort (A4):** leads choose approved selectors per task from live capabilities.
+  Distinguish requested, configured, inherited and backend-attested claims; backend identity is
+  unknown without evidence. Historical role-to-selector mappings do not restrict task-based choice.
 - **CodeRabbit CLI, for B2's preflight:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti`
   [measured 2026-09-29, Brandon's desktop]. A record, not a guarantee: `coderabbit-preflight`
   re-checks the CLI on every run.

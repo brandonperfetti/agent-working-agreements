@@ -18,9 +18,10 @@ A–B, and a rule here that contradicts one there is the rule that is wrong.
 threshold, finish the current bounded unit and rotate at a clean pause; at the backstop, take the
 next safe stop instead of starting new work. Wave close, PR submission and PR merge are natural
 pauses, not mandatory rotations or owner approval gates. Save an A4 packet in the initiative's
-`handoffs/` (`_agent/initiatives/<project>-<slug>/handoffs/`). Begin with shipped-versus-open
-reconciliation; record outcomes, decisions, receipts, owners, authority, constraints and exact next
-authorized action. Carry authority without inventing gates.
+`handoffs/` (`_agent/initiatives/<project>-<slug>/handoffs/`); without an initiative, use
+`_agent/handoffs/`. Begin with shipped-versus-open reconciliation; record outcomes, decisions,
+receipts, owners, authority, constraints and the exact next authorized action. Carry authority
+without inventing gates.
 
 **Context signal:** For Claude, Codex OAuth and approved API routes, use the current session's
 supported `/status` or Control UI context readout: reported used-context tokens divided by that

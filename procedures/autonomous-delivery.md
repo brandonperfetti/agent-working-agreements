@@ -33,8 +33,8 @@ Integrate and push with the full gate, disclose the missing reviewer route in th
 the bot round plus Brandon's review before base merge. When a reviewer is available, the normal
 two-axis sequence applies; the delivery owner never claims independent review of its own work.
 
-- The delivery owner cuts a feature, bugfix or wave branch descending from `develop` (the
-  ritual's step 1). Further branches may descend from that branch; reviewed lane work integrates
+- The delivery owner cuts a feature, bugfix or wave branch (the delivery branch) descending from
+  `develop` (ritual step 1). Further branches may descend from it; reviewed lane work integrates
   there before the ready PR into `develop`. Keep branch ownership and worktree isolation clear.
   **Never `master`, never a force-push, and never feature work pushed
   onto `develop`.** Protection enforces this only on `master`; `develop` blocks force-pushes and
@@ -56,26 +56,26 @@ two-axis sequence applies; the delivery owner never claims independent review of
   delivery owner (A4) stages them and shows the staged diff before Brandon's batch approval, then
   commits after it; an mbox series the delivery owner applies with `git am` only after that
   approval, since `git am` is the commit. Brandon pushes.
-- **Each lane works in its own git worktree on a branch off the wave branch** (for work with no
+- **Each lane works in its own git worktree on a branch off the delivery branch** (for work with no
   initiative, off that work's own branch, B0 item 3) and commits there with the repo's hooks
   firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
   (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
   with the repro named, model it ran on).
-- **The delivery owner merges a lane into the wave branch** (for work with no initiative, into that
+- **The delivery owner merges a lane into the delivery branch** (for work with no initiative, into that
   work's own branch) **after two-axis review or A4's no-reviewer exception**, records the basis in
   `reviews/`, **re-runs the full CI gate on the merged branch, runs `coderabbit-preflight` when the
   push carries new work (below) and the CodeRabbit CLI is available to that client, then
   pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
-- **A lane merge that conflicts goes back to the lane.** The lane merges the wave
+- **A lane merge that conflicts goes back to the lane.** The lane merges the delivery
   branch into its own branch in its own worktree — a merge commit, never a rebase, which would
   rewrite commits it has already reported — resolves there and re-runs the gate; the resolution
   gets a scoped review, as an addendum's fix does; the delivery owner's merge is clean against
-  the tip the lane merged, and a wave branch that has moved since is the same rule again — a
+  the tip the lane merged, and a delivery branch that has moved since is the same rule again — a
   merge that
   conflicts goes back to the lane. Only
   where the lane is no longer available does the delivery owner resolve, and its resolution gets a
-  scoped two-axis review before the push. A resolution is new work, and no work reaches the wave
+  scoped two-axis review before the push. A resolution is new work, and no work reaches the delivery
   branch unreviewed (Brandon, 2026-10-12). Inside a resolution, whoever resolves:
   - **Bounded evidence-led recovery when the gate shows a red of the resolution's own — one absent
     from both sides' pre-merge gate records:** take multiple causally supported, in-scope corrective
@@ -89,7 +89,7 @@ two-axis sequence applies; the delivery owner never claims independent review of
     resolution diff and gate output, then `git merge --abort` back to the pre-merge tip. Only a
     successful full CI gate on the resolved merged tree permits the merge commit; the resolution's
     scoped two-axis review remains required. A branch left mid-merge holds unreviewed work where
-    the next reader may not know a merge is in progress, and on the wave branch it blocks every
+    the next reader may not know a merge is in progress, and on the delivery branch it blocks every
     other lane's merge; the pre-merge tip was reviewed, and the record keeps what the attempt
     learned. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
   - **A red that a side's own gate record already shows is that side's, not the merge's:**
@@ -125,9 +125,9 @@ continues the same authorized objective; replacement grants no wider scope. Wher
 dispatched, the session is the owning lane and its fix still gets independent review (A4). Where
 no lane owns the file, the orchestrator extends one lane's fence for one addendum, and
 that lane makes the fix, the scoped review still required and the extension recorded (A4). While
-the wave PR is open, a small fix (A4) to work already merged into the wave branch rides it,
+the delivery PR is open, a small fix (A4) to work already merged into the delivery branch rides it,
 through the owning lane or the lane whose fence was extended to the file, a scoped review and a
-push; a fresh ticket is for real work (A4), and for work found after the wave PR has
+push; a fresh ticket is for real work (A4), and for work found after the delivery PR has
 merged. On a release PR, A4 names who makes a small fix.
 A lane merge that conflicts goes back to the lane the same way (Git contract above).
 
@@ -141,7 +141,7 @@ A lane merge that conflicts goes back to the lane the same way (Git contract abo
    finding, has the orchestrator redispatch the fixes A4 calls for to lanes (worktrees, review,
    merge, push as above), replies per thread with receipts, monitors re-reviews to clean.
    Brandon's review is the PR's final state, not the threads.
-4. **Brandon alone merges, manually, in the GitHub UI** — wave PRs into `develop`, and the release
+4. **Brandon alone merges, manually, in the GitHub UI** — delivery PRs into `develop`, and the release
    PR `develop → master`, which the delivery owner may open as a draft with a changelog. Closing
    keywords fire on the default branch; the orchestrator moves issues to In Review at PR time.
 5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`, and
