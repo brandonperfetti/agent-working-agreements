@@ -32,6 +32,13 @@ stale or inconsistent, record usage as unknown, refresh through a supported read
 a checkpoint; unknown is not zero. These thresholds guide clean-pause rotation, not exact
 provider failure cliffs. Do not claim identical telemetry availability across runtimes.
 
+If a supported refresh still leaves usage unknown, finish the current bounded unit and rotate at
+the next safe pause through the verified route below, preserving the checkpoint and unknown
+status. If that route is unavailable, retain the predecessor and apply B2 item 5 to the affected
+continuation: name the missing capability and restoration owner; independent work may continue.
+Do not repeatedly rotate successors solely to retry missing telemetry. All successor checks below
+still apply before retirement.
+
 Choose a key absent from the session store. Use the current lead's canonical agent ID and matching
 key prefix; the example below is for Camina (`main`).
 
