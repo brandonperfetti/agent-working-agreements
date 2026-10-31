@@ -112,11 +112,12 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
 Batch non-blocking questions without holding progress. Reconcile and choose the next approved
 wave at wave close; rotate when context calls for it, with A4's packet and successor verification.
 
-**Addenda:** a defect found in review goes back to the **same lane, in its worktree, as a new
-commit**, and is re-reviewed (scoped to the fix) before merge — never a fresh session, never the
-orchestrator's own hands, except where the session dispatches no lanes: that session counts as
-that lane, the scoped two-axis review still required (A4). Where the session dispatches lanes and
-none owns the file, the orchestrator extends one lane's fence to that file for one addendum, and
+**Addenda:** a defect found in review goes back to the **same owning lane while available**, in
+its worktree as a new commit, with scoped two-axis review before merge. If that lane is unavailable,
+the orchestrator assigns a replacement that reads its receipts, inherits its file fence and
+continues the same authorized objective; replacement grants no wider scope. Where no lanes were
+dispatched, the session is the owning lane and its fix still gets independent review (A4). Where
+no lane owns the file, the orchestrator extends one lane's fence for one addendum, and
 that lane makes the fix, the scoped review still required and the extension recorded (A4). While
 the wave PR is open, a small fix (A4) to work already merged into the wave branch rides it,
 through the owning lane or the lane whose fence was extended to the file, a scoped review and a
