@@ -1,4 +1,4 @@
-# OpenClaw (Camina)
+# OpenClaw (studio staff)
 
 **Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B first, then
 the target repository's instructions.** This appendix adds client mechanics only; it never overrides
@@ -28,8 +28,8 @@ when you acknowledge your reading** — "read the agreements and
   capability is evidence about that operation, not a switch of the delivery or team to B1: the
   team continues on its supported routes and stops at the first operation with no safe route,
   naming the capability and its restoration owner (B2 stop-list item 5). A role with no supported
-  Claude route stops the affected substantive operation and reports the missing route, which is
-  not a failed Claude invocation. Brandon is never the command runner, and only Brandon merges.
+  execution route stops only the affected operation, naming its restoration owner. Use approved
+  fallback routes below; Brandon is never the command runner and alone merges base-branch PRs.
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 - **Resolve the active workspace and target checkout from live inventory**; do not assume every
   specialist shares main's working directory.
@@ -38,32 +38,30 @@ when you acknowledge your reading** — "read the agreements and
 
 | A4 seat | OpenClaw role |
 | --- | --- |
-| Orchestrator | **Camina** (`main`): briefs, dispatches, routes, synthesizes the hand-back; runs no delivery mechanics while a specialist is assigned and fills the delivery-owner seat only when none is |
+| Orchestrator | **Camina** (`main`), chief of staff, assigns the accountable lead; every staff member may orchestrate work in their domain |
 | Delivery owner | **Judy** (`coder`), or the assigned delivery specialist |
 | Independent reviewer | **Amos** (`reviewer`), or the assigned reviewer; where no reviewer can be seated, A4's bot-plus-merge rule applies and the PR body says so |
 | Merge | **Brandon**, by hand, into `develop`, `master` or `main` |
 
-[decision 2026-10-23, Brandon, #173]. The staff model — the roster, routing, the Claude wrapper
-contract, consultation patterns — is `~/.openclaw/workspace/docs/team-operating-model.md`; this
-file does not restate it. Within an authorized B2 delivery, commits, pushes, PR creation and
-updates, review responses and integration of lane work (after its A4 two-axis review) are routine
-and need no per-batch approval; B2 stop-list actions and merges are not delegated with the lane,
-and work outside the routine, reversible boundary escalates rather than staying with the
-specialist. Progress and status updates are informational and non-blocking: one neither requests
-approval nor creates a checkpoint. Every delivery presents its A4 verdict, diff, gate evidence and
-Brandon's decision context; routine reversible work does so in the smallest sufficient packet,
-higher-risk work adds scrutiny, and neither waives A4's review.
+The roster and route mechanics live in `~/.openclaw/workspace/docs/team-operating-model.md`.
+Brandon may instruct any staff member directly; staff reconcile relevant operational context with
+Camina and affected colleagues without reapproval. Initiative receipts share the store above.
+Camina consolidates daily updates and weekly outcome/priority reviews; urgent material issues go
+through promptly. Marketing may publish within approved strategy, channels and boundaries; website
+code follows the Git ritual. B2 governs financial commitments and other scope boundaries.
+Authorized execution proceeds without per-wave or per-batch approval in B2. Status is informational;
+deliveries still carry independent review, verification and the owner's decision context.
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
-  is one, not a requirement). RULE ZERO first; then role, deliverable, mode, file fence and tier.
-- **Rotation (A4):** Rotate at wave close or earlier at a clean stopping point when context runs
-  high; Brandon sets the numeric trigger. Preserve the A4 packet; use an empty named root with
-  attributed kickoff and verified provenance. [measured: 2026-10-30 probe] Real-work pickup was unproven.
-  Follow [`../procedures/openclaw/session-rotation.md`](../procedures/openclaw/session-rotation.md).
-- **Model selectors (A4 tiers):** the shared Claude wrapper pins its own model and rejects a
-  caller selector, so a dispatch names its role tier, passes no selector, and records the model
-  the wrapper pins. Which selector resolves each tier on a non-wrapper route is **unmeasured**;
-  the 2026-10-24 per-role route census is in [`../history/openclaw.md`](../history/openclaw.md).
+  is one, not a requirement). RULE ZERO first; role, deliverable, mode, fence, model and effort follow.
+- **Rotation (A4):** reported used context / capacity: checkpoint at 30%, prepare at 40%, rotate at
+  a clean pause; at 60% take the next safe stop. Heuristics, not cliffs; unknown is not zero. Record
+  session ID/time; verify successor root tools, provenance, receipt, acceptance and advancement per
+  [`session-rotation.md`](../procedures/openclaw/session-rotation.md) before retiring the old session.
+- **Models and routes:** Codex OAuth for thinking; the established Claude Code wrapper for coding.
+  Leads choose model/effort within approved routes; respect wrapper pins rather than bypass them.
+  On exhaustion, coding falls back from Claude to Codex OAuth, then to an approved API model within
+  an existing funded allowance (B2). No automatic top-up; report an unavailable selector honestly.
 - **Restoration owners (B2 stop-list item 5)** [decision 2026-10-27, Brandon, #194]: **Ashford** for
 OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
 instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
