@@ -33,7 +33,7 @@ adopted or is non-empty, stop.
 Pass no message, task, attachments or parent. Inspect its provenance, then deliver the kickoff
 through native attributed `sessions_send`, never CLI messaging. Point to the saved packet, include
 its highlights and instruct the recipient to read it. Verify no `spawnedBy` or parent,
-depth `0` or absent, required control/messaging tools, kickoff receipt and `created_actor_type` is
+`spawnDepth` 0/absent, control/messaging tools, kickoff receipt and `createdActor.type` absent or
 not `system` and `displayName` is set.
 
 [measured: 2026-10-30 probe] The harmless probe passed but did not demonstrate real-work pickup.
