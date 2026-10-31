@@ -48,9 +48,9 @@ Claude Code fact.
   subdirectory of it per sub-agent.
 - **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10; the ceiling
   is unmeasured).
-- **Model selectors (A4's tiers):** workhorse → `opus` for lane work. Careful
-  (verify/aggregate) → **unmeasured**; no selector is recorded for it. `sonnet` is only the
-  selector for a trivially mechanical dispatch, never the careful tier. [learnings: 2026-08-30 §5]
+- **Model and effort (A4):** leads choose approved selectors per task from live capabilities.
+  Distinguish requested, configured, inherited and backend-attested claims; backend identity is
+  unknown without evidence. Historical role-to-selector mappings do not restrict task-based choice.
 - **CodeRabbit CLI, for B2's preflight:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti`
   [measured 2026-09-29, Brandon's desktop]. A record, not a guarantee: `coderabbit-preflight`
   re-checks the CLI on every run.
@@ -66,8 +66,8 @@ Claude Code fact.
   Auto-fix on, a line crediting Claude Code on each PR thread reply. The agreement allows all of it
   since 2026-10-27; whether `includeCoAuthoredBy` is set in `~/.claude/settings.json` is Brandon's
   choice per machine, and the author email is what the check reads.
-- A wave orchestrator's session is one wave; rotate by starting a fresh session from the packet
-  (or `handoff`).
+- Rotate at a context-driven clean pause through the supported session route, using A4's packet
+  (or `handoff`); verify successor capability, receipt, acceptance and advancement before retirement.
 - This file is reached from the one-line pointer in the user-level `~/.claude/CLAUDE.md` (created
   2026-09-10), which Claude Code sessions on this machine load [measured 2026-10-28]; the repo's own
   `CLAUDE.md` adds project specifics.

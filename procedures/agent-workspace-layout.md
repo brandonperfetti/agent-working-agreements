@@ -12,7 +12,8 @@ record, plan) or to clone or check out a repository for scratch work.
 
 **Implements:** A6 — Where things go.
 
-**Stop:** None; a file with no home goes to `experiments/` and says so.
+**Stop:** B2 item 5 for an inaccessible required handoff; a file with no home goes to
+`experiments/` and says so.
 
 ---
 
@@ -32,7 +33,14 @@ the skill's to define.
 **Artifact store.** `_agent/` names an artifact-location class, not a synchronization or cutover
 mechanism. At session start, the applicable store policy selects one concrete artifact store; the
 session records that location and does not switch stores or write the same artifact to another
-store mid-session. Client appendices resolve discovery and client limits.
+store mid-session. Each execution machine keeps receipts for its work. Agents share
+relevant receipt pointers with roles that can read the same store; verify access before relying
+on them. Across stores, send a bounded handoff through an existing authorized, access-controlled
+transfer route, naming the source machine, store, path and observation time. The recipient saves
+that handoff in its already-selected store; the source receipt remains canonical, without store
+mirroring or new access grants. Verify receipt and usable evidence before dependent work; if no
+safe transfer route exists, apply B2 item 5 only to that dependency. Preserve privacy and access
+boundaries; the owner need not relay receipts. Client appendices resolve discovery and limits.
 
 On an on-fleet workspace, everything an agent produces goes under `_agent/` — a clone is not a
 product (**Clones**, below):
