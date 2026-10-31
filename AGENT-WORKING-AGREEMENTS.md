@@ -176,7 +176,8 @@ repo, in his words. Rules below serve it; where a rule and this section disagree
    the version bump, the CHANGELOG section rename and any built artifact are pushed to `develop`
    before or during that PR. They are reviewed on it, like everything else the PR carries. (The only
    per-repo difference in this whole ritual is whether a repo has a version to bump at all.)
-6. **Brandon merges both base-branch PRs, by hand in the host's UI.** Agents merge reviewed lanes.
+6. **Brandon merges both base-branch PRs, by hand in the host's UI.** The delivery owner merges
+   reviewed lanes.
 7. **Brandon tags on `master`**, where the repo publishes releases, and the tag fires the release
    workflow.
 8. **The back-merge carries `master` home to `develop`** — a direct push by the workflow, which is

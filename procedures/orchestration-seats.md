@@ -80,8 +80,9 @@ initiative (an MPD exists or is being born).
   A lane whose merge into the wave branch conflicts resolves it in its own worktree too (B2).
   [learnings: 2026-09-23 sfs-wave-1 §1]
 - **Every lane report states the model it ran on, and how it knows.** Requested, inherited,
-  configured and backend-attested are four different claims; a dispatched tier resolves to whatever
-  the account serves, and config is not attestation. Say which you have. [learnings: 2026-08-30 §5]
+  configured and backend-attested are four different claims. The task's chosen model and effort
+  are requests, not evidence of what the account served. State which evidence you have.
+  [learnings: 2026-08-30 §5]
 - **Choose model and effort for the task.** The lead uses approved routes and allowances, adjusting
   to observed quality, cost and elapsed time. A dispatch names the chosen model/effort and reason,
   or records inheritance or a route's pinned setting. A client whose tool cannot select says so;

@@ -17,9 +17,10 @@ A–B, and a rule here that contradicts one there is the rule that is wrong.
 **Rotation:** Apply the client appendix's context thresholds automatically. At the handoff
 threshold, finish the current bounded unit and rotate at a clean pause; at the backstop, take the
 next safe stop instead of starting new work. Wave close, PR submission and PR merge are natural
-pauses, not mandatory rotations or owner approval gates. Save an A4 packet under `handoffs/` that
-begins with shipped-versus-open reconciliation and records the outcome, receipts, owners,
-authority, constraints and exact next authorized action. Carry authority without inventing gates.
+pauses, not mandatory rotations or owner approval gates. Save an A4 packet in the initiative's
+`handoffs/` (`_agent/initiatives/<project>-<slug>/handoffs/`). Begin with shipped-versus-open
+reconciliation and record the outcome, receipts, owners, authority, constraints and exact next
+authorized action. Carry authority without inventing gates.
 
 Choose a key absent from the session store. Use the current lead's canonical agent ID and matching
 key prefix; the example below is for Camina (`main`).

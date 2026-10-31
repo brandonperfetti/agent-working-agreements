@@ -14,7 +14,7 @@ being retrofitted onto the other.
   replace incidental approval gates with act/decide/record, retain financial and base-merge
   boundaries, let staff leads delegate and choose models, and rotate by context with verified
   successor advancement. Shared receipts and direct owner instructions preserve continuity.
-  [Owner decision record, §6](../_agent/initiatives/fleet-operating-model/MASTER-PRIORITY-DOCUMENT.md#6-accepted-decisions).
+  [Owner decision record](https://github.com/brandonperfetti/agent-working-agreements/issues/214).
 
 - **2026-10-30 — OpenClaw rotation uses an empty named root.** Brandon approved an attributed
   kickoff and provenance verification after the harmless probe; real-work pickup remains unproven.
