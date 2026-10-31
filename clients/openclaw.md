@@ -57,9 +57,9 @@ higher-risk work adds scrutiny, and neither waives A4's review.
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; then role, deliverable, mode, file fence and tier.
 - **Rotation (A4):** Rotate at wave close or earlier at a clean stopping point when context runs
-  high; Brandon sets the numeric trigger. Preserve the A4 packet and use an empty named root with
-  attributed kickoff and verified provenance; first real-work pickup remains unproven. Follow
-  [`../procedures/openclaw/session-rotation.md`](../procedures/openclaw/session-rotation.md).
+  high; Brandon sets the numeric trigger. Preserve the A4 packet; use an empty named root with
+  attributed kickoff and verified provenance. [measured: 2026-10-30 probe] Real-work pickup was unproven.
+  Follow [`../procedures/openclaw/session-rotation.md`](../procedures/openclaw/session-rotation.md).
 - **Model selectors (A4 tiers):** the shared Claude wrapper pins its own model and rejects a
   caller selector, so a dispatch names its role tier, passes no selector, and records the model
   the wrapper pins. Which selector resolves each tier on a non-wrapper route is **unmeasured**;

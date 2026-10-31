@@ -12,7 +12,8 @@ being retrofitted onto the other.
 
 - **2026-10-30 — OpenClaw rotation uses an empty named root.** Brandon approved an attributed
   kickoff and provenance verification after the harmless probe; real-work pickup remains unproven.
-  The procedure carries the steps and the appendix keeps the invariant. Host receipt:
+  The procedure carries the steps and the appendix keeps the invariant. [Timing disposition](https://github.com/brandonperfetti/agent-working-agreements/pull/212#discussion_r4431747239);
+  host probe receipt:
 
   ```text
   $AGENT_ROOT/_agent/initiatives/fleet-guardrails-and-verification/evidence/2026-10-30-empty-create-result.md

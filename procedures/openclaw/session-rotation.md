@@ -36,10 +36,11 @@ its highlights and instruct the recipient to read it. Verify no `spawnedBy` or p
 depth `0` or absent, required control/messaging tools, kickoff receipt and `created_actor_type` is
 not `system` and `displayName` is set.
 
-The harmless probe passed; real-work pickup remains unproven. At the first real handoff, verify the
-recipient accepts and advances the authorized next action. Before retiring or archiving the old
-orchestrator, ensure nothing it spawned runs or is queued, it owns no worktree in use, and no open
-decision lives only there. Brandon may archive the old session once these conditions are met.
+[measured: 2026-10-30 probe] The harmless probe passed but did not demonstrate real-work pickup.
+At the first real handoff, verify the recipient accepts and advances the authorized next action.
+Before retiring or archiving the old orchestrator, ensure nothing it spawned runs or is queued, it
+owns no worktree in use, and no open decision lives only there. Brandon may archive it once these
+conditions are met.
 
 Never rotate through `sessions_spawn`. Automations failed default visibility; direct CLI agent
 messaging was refused. On refusal, system/spawn provenance or missing tools, stop with the exact
