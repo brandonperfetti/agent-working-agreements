@@ -12,9 +12,11 @@ being retrofitted onto the other.
 
 - **2026-10-30 — OpenClaw rotation uses an empty named root.** Brandon approved an attributed
   kickoff and provenance verification after the harmless probe; real-work pickup remains unproven.
-  The procedure carries the steps and the appendix keeps the invariant. Receipt:
-  `$AGENT_ROOT/_agent/initiatives/fleet-guardrails-and-verification/evidence/`
-  `2026-10-30-empty-create-result.md`.
+  The procedure carries the steps and the appendix keeps the invariant. Host receipt:
+
+  ```text
+  $AGENT_ROOT/_agent/initiatives/fleet-guardrails-and-verification/evidence/2026-10-30-empty-create-result.md
+  ```
 
 - **2026-10-30 — OpenClaw rotation starts from a pasted kickoff.** The *Rotation* bullet in
   `clients/openclaw.md` defaulted to a visible spawn and kept the paste for waves a spawn could not
