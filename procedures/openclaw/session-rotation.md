@@ -18,11 +18,16 @@ A–B, and a rule here that contradicts one there is the rule that is wrong.
 Brandon sets the numeric trigger. Save the outcome, evidence, owners, approvals and exact next action
 in the initiative handoff.
 
+Choose a key absent from the session store.
+
 Create an empty named root with:
 
 ```sh
 openclaw gateway call sessions.create --params '{"key":"agent:main:<fresh-key>","agentId":"main","displayName":"<title>"}' --json
 ```
+
+Before sending, verify the root is newly created and has no prior messages or context; if it was
+adopted or is non-empty, stop.
 
 Pass no message, task, attachments or parent. Inspect its provenance, then deliver the kickoff
 through native attributed `sessions_send`, never CLI messaging. Verify no `spawnedBy` or parent,
