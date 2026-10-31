@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-10-30 — OpenClaw rotation uses an empty named root.** Brandon approved an attributed
+  kickoff and provenance verification after the harmless probe; real-work pickup remains unproven.
+  The procedure carries the steps and the appendix keeps the invariant. [Timing disposition](https://github.com/brandonperfetti/agent-working-agreements/pull/212#discussion_r4431747239);
+  host probe receipt:
+
+  ```text
+  $AGENT_ROOT/_agent/initiatives/fleet-guardrails-and-verification/evidence/2026-10-30-empty-create-result.md
+  ```
+
 - **2026-10-30 — OpenClaw rotation starts from a pasted kickoff.** The *Rotation* bullet in
   `clients/openclaw.md` defaulted to a visible spawn and kept the paste for waves a spawn could not
   run. A spawned session permanently lacks `sessions_send`, so it cannot send an addendum to its
