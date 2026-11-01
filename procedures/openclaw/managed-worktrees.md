@@ -94,7 +94,9 @@ process using `<repo-root>` meanwhile, run
 `git -C <repo-root> status --porcelain=v2 --branch --untracked-files=all` just before and just
 after the create command above and compare the two outputs for equality.
 
-- The managed worktree root is the global `worktreeRoot` key in `openclaw.json`; unset, it defaults
+- For new allocations prefer the OpenClaw namespace in [worktree lifecycle](../worktree-lifecycle.md).
+  Configure it through the supported setting; keep existing registered paths until retirement.
+  The managed worktree root is the global `worktreeRoot` key in `openclaw.json`; unset, it defaults
   to `<openclaw-state-dir>/worktrees`, and checkouts are created at
   `<worktreeRoot>/<repo-fingerprint>/<name>` [source: `config-runtime.md` lines 16 and 24;
   `managed-worktrees.md` lines 67 and 199]. The state directory is `OPENCLAW_STATE_DIR` when set,

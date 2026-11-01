@@ -77,8 +77,8 @@ conversation.
   - **A task can keep a stale MCP catalog after a config change, even across an app restart**
     `[source: 2026-09-06 setup record]` — start a fresh task rather than trusting the old one.
   - Truncated tool output is a general hazard, not a Codex one — see A2.
-- **Scratch clones (A6, "Clones"):** where a scratch clone goes in this environment, and whether
-  workers share a scratch space, is **unmeasured** — measure and record. Never under `_agent/`.
+- **Worktrees:** use native create/archive for app-managed trees; follow [lifecycle](../procedures/worktree-lifecycle.md).
+  Scratch placement remains unmeasured, outside `_agent/`. T3: [adapter](../procedures/t3-adapter.md).
 - **Attribution (RULE ZERO, A4):** allowed since 2026-10-27, so whether this environment injects a
   trailer no longer needs measuring; the author email on each commit is what the check reads.
 - **Measure and record:** whether a dispatched worker keeps issuing tool calls while the app window
