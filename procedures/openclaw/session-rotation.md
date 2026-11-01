@@ -1,69 +1,99 @@
-# OpenClaw session rotation
+# OpenClaw conversation continuity
 
-This procedure carries mechanics for `clients/openclaw.md` and the rule it implements in
-[`../../AGENT-WORKING-AGREEMENTS.md`](../../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts
-A–B, and a rule here that contradicts one there is the rule that is wrong.
+**Trigger:** Context pressure, compaction, or recovery of an OpenClaw orchestrator.
 
-**Trigger:** Context-driven rotation of an OpenClaw orchestrator at a clean stopping point.
+**Owner:** The current orchestrator; Ashford owns control-plane maintenance routes.
 
-**Owner:** The current orchestrator; the client appendix records approved context thresholds.
+**Implements:** A4 continuity and `clients/openclaw.md` context checkpoints.
 
-**Implements:** A4 and `clients/openclaw.md` *Rotation*.
+**Stop:** Retain the checkpoint and current owner on an unsafe or unavailable operation;
+name its restoration owner under B2 while independent work continues.
 
-**Stop:** On refusal, system/spawn provenance or missing tools, stop with the exact result.
+This procedure implements the canonical agreement; it never overrides Parts A–B, and
+a rule here that contradicts one there is the rule that is wrong.
 
----
+## Keep Camina's conversation stable
 
-**Rotation:** Apply the client appendix's context thresholds automatically. At the handoff
-threshold, finish the current bounded unit and rotate at a clean pause; at the backstop, take the
-next safe stop instead of starting new work. Wave close, PR submission and PR merge are natural
-pauses, not mandatory rotations or owner approval gates. Save an A4 packet in the initiative's
-`handoffs/` (`_agent/initiatives/<project>-<slug>/handoffs/`); without an initiative, use
-`_agent/handoffs/`. Begin with shipped-versus-open reconciliation; record outcomes, decisions,
-receipts, owners, authority, constraints and the exact next authorized action. Carry authority
-without inventing gates.
+Keep one user-facing Camina conversation and session key as the chief-of-staff entry point.
+Initiative ownership, staff sessions and their bounded worker lanes remain distinct from that
+conversation's context maintenance. Save their current receipts and pointers on disk.
 
-**Context signal:** For Claude, Codex OAuth and approved API routes, use the current session's
-supported `/status` or Control UI context readout: reported used-context tokens divided by that
-session's reported context capacity, multiplied by 100. Record session ID/key, timestamp, route,
-source, numerator, denominator and percent with the checkpoint. A supported CLI/session readout
-may supply the same reported fields; label estimates and stale readings. Do not substitute
-provider quota, lifetime token totals or another session's capacity. If either field is missing,
-stale or inconsistent, record usage as unknown, refresh through a supported readout and preserve
-a checkpoint; unknown is not zero. These thresholds guide clean-pause rotation, not exact
-provider failure cliffs. Do not claim identical telemetry availability across runtimes.
+Prefer the runtime's automatic in-place compaction. Context growth alone does not require a new
+sidebar session, ownership transfer or collector retarget. Use supported idle compaction when
+maintenance is needed; use a same-key reset only for recovery at a verified clean pause.
+Exceptional root replacement is the last branch below.
 
-If a supported refresh still leaves usage unknown, finish the current bounded unit and rotate at
-the next safe pause through the verified route below, preserving the checkpoint and unknown
-status. If that route is unavailable, retain the predecessor and apply B2 item 5 to the affected
-continuation: name the missing capability and restoration owner; independent work may continue.
-Do not repeatedly rotate successors solely to retry missing telemetry. All successor checks below
-still apply before retirement.
+## Checkpoint and inspect
 
-Choose a key absent from the session store. Use the current lead's canonical agent ID and matching
-key prefix; the example below is for Camina (`main`).
+1. Measure the current session's reported used-context tokens / capacity. Record key, runtime
+   identity, timestamp, route, numerator, denominator and source. Refresh stale or missing
+   telemetry; retain an unknown reading honestly rather than treating it as zero.
+2. Checkpoint decisions and work around 30%; refresh the recovery packet around 40%. At 60%,
+   assess actual pressure and the supported maintenance route at the next safe pause. These
+   are planning heuristics, not provider quality cliffs or mandatory new-session thresholds.
+3. Keep the MPD and one concise current checkpoint sufficient for pickup: owner-authorized
+   objective, shipped versus open work, holds, exact owners/checkouts, pending results and
+   decisions, receipt pointers, continuation route and next bounded action. Update existing
+   records rather than creating a new handoff chain for each observation.
 
-Create an empty named root with:
+## Compact and continue in place
+
+Let automatic compaction preserve the conversation. For manual maintenance, verify the actual
+runtime supports it: built-in OpenClaw and a native provider CLI can have different capabilities.
+A refused or no-op request is not a successful compaction.
+
+Run manual lifecycle operations only after foreground activity and queued inputs have settled.
+The orchestrator may arrange an idle maintenance handoff to a qualified staff root; finish the
+bounded turn instead of waiting on an operation that requires that same turn to become idle.
+The maintainer retains the checkpoint pointer and owns resumption through a supported route.
+Use existing completion/continuation paths rather than adding a persistent watcher.
+
+Record the operation's result and recheck key, visible title, root provenance and required tools.
+Use reported compaction evidence or context reduction to distinguish compaction from admission.
+Reload the checkpoint, current agreement and triggered sources, reconcile live work, and actually
+advance its next action. Preserve the same continuation binding and verify it remains usable.
+
+## Same-key reset for recovery
+
+A reset can cancel unfinished native children, invalidate inherited memory audiences and discard
+queued notices. First settle affected children, staff callbacks, active runs and queued inputs;
+persist every needed decision/result and establish who will resume the checkpoint afterward.
+Keep independent delivery owners and worktrees intact.
+
+Use the supported in-place reset on the exact key, with an expected current session identity
+where available. A lifecycle revision can change even when the session ID stays the same.
+Recheck the key and title, empty/new active context, root provenance and available tools.
+Then deliver the checkpoint kickoff to that same conversation through a supported attributed
+route, reload governing sources, apply `takeover` reconciliation and verify actual advancement.
+Reconcile continuation references to runtime identity if needed; an unchanged session key alone
+does not prove every old callback remains valid.
+
+On a partial, refused or ambiguous result, inspect live state before another operation. Preserve
+the checkpoint and name the affected route's restoration owner; avoid repeated reset attempts.
+
+## Exceptional root replacement
+
+Use a new root when measured evidence shows the existing conversation cannot safely recover
+through its supported in-place routes. Record the reason and preserve the A4 packet under the
+initiative's `handoffs/`, or `_agent/handoffs/` for one-off work. Retain the predecessor until
+the replacement is accepted and actually advances the authorized objective.
+
+Choose an absent key under the current lead's canonical agent ID. Create an empty named root:
 
 ```sh
 openclaw gateway call sessions.create --params '{"key":"agent:main:<fresh-key>","agentId":"main","displayName":"<title>"}' --json
 ```
 
-Before sending, verify the root is newly created and has no prior messages or context; if it was
-adopted or is non-empty, stop.
+Pass no message, task, attachments or parent. Verify new/empty state, operator rather than system
+or spawn provenance, depth zero, required control/messaging tools and receipt access. A nested
+worker retains its own tool boundaries; naming it Camina does not grant chief-of-staff tools.
+On an unsafe or unavailable creation route, stop that operation with its exact result.
 
-Pass no message, task, attachments or parent. Inspect its provenance, then deliver the kickoff
-through native attributed `sessions_send`, never CLI messaging. Point to the saved packet, include
-its highlights and instruct the recipient to read it. Verify no `spawnedBy` or parent,
-`spawnDepth` 0/absent, control/messaging tools, kickoff receipt and `createdActor.type` absent or
-not `system` and `displayName` is set.
+Deliver the saved kickoff through native attributed `sessions_send` under the team dispatch
+procedure. Verify receipt, acceptance and actual advancement before explicitly transferring
+ownership. Reconcile the existing continuation route and observe its actual pickup.
 
-A harmless creation probe is not real-work pickup. For every handoff, verify that the recipient
-accepts and actually advances the authorized next action, with a receipt linked from the packet.
-Before retiring or archiving the old orchestrator, ensure nothing it spawned runs or is queued, it
-owns no worktree in use, and no open decision lives only there. Brandon may archive it once these
-conditions are met.
-
-Never rotate through `sessions_spawn`. Automations failed default visibility; direct CLI agent
-messaging was refused. On refusal, system/spawn provenance or missing tools, stop with the exact
-result—no alternate route, marker changes or allowlist additions.
+Once no spawned work is running or queued, no worktree remains in use by the predecessor, and
+no decision lives only there, archive it through the supported lifecycle route and move the
+current label to the accepted owner. Retain an older root only for a named live dependency with
+an owner and next check; a generic read-only fallback is not indefinite sidebar retention.

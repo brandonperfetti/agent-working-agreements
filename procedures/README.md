@@ -24,7 +24,7 @@ instead), carries those fields, and holds no hash or line-number pin of a mutabl
 | [`attended-delivery.md`](attended-delivery.md) | B1 | an attended delivery |
 | [`autonomous-delivery.md`](autonomous-delivery.md) | B2 | an autonomous delivery |
 | [`openclaw/managed-worktrees.md`](openclaw/managed-worktrees.md) | `clients/openclaw.md` | pickup of an OpenClaw delivery: create, refresh, clean up |
-| [`openclaw/session-rotation.md`](openclaw/session-rotation.md) | `clients/openclaw.md` | orchestrator rotation |
+| [`openclaw/session-rotation.md`](openclaw/session-rotation.md) | `clients/openclaw.md` | stable conversation, context maintenance and recovery |
 | [`openclaw/native-sandbox-breaker.md`](openclaw/native-sandbox-breaker.md) | `clients/openclaw.md` | dormant: the exact Bubblewrap prelaunch signature |
 
 The text in these files was moved out of the agreement verbatim on 2026-10-27 (PR 2 of the
