@@ -74,8 +74,8 @@ Autonomous specialists use B2's dedicated-worktree shape; attended lanes use B1'
 this agreement repository, an amendment uses one isolated feature worktree off `develop`, never a
 wave. A delivery worktree is created only through OpenClaw's managed worktree facility, from a
 freshly fetched `develop` OID verified against `ls-remote`, bound explicitly to the Gateway
-service's state directory, config and profile, and placed outside both `_agent/` and the
-protected root; it is removed losslessly once its PR has merged, and the protected root is
+service's state directory, config and profile, placed per [lifecycle](../procedures/worktree-lifecycle.md),
+outside `_agent/` and the protected root; it is removed losslessly after merge, and the root is
 fast-forwarded to `origin/master` after each release. Commands, checks and the audit fields:
 [`../procedures/openclaw/managed-worktrees.md`](../procedures/openclaw/managed-worktrees.md),
 read at pickup; any overlap of those paths stops the delivery.

@@ -29,10 +29,10 @@ recorded in MPD §0 for initiative work, or with the delivery's decisions for wo
 initiative, B1 or B2, by mode). Whether the repo carries any hooks at all is a repo fact, not a
 Claude Code fact.
 
-- Lane isolation: `git worktree add ../<repo>-<lane> -b <initiative>/wave-<n>-<lane>` from the wave
-  branch (flat form — git refuses a ref that is a path prefix of another, so `wave-<n>/<lane>`
-  cannot coexist with `wave-<n>` [measured 2026-09-11]); remove the worktree after merge. A
-  lane uses this command, not the `EnterWorktree` tool (#101).
+- Lane isolation and retirement follow [worktree lifecycle](../procedures/worktree-lifecycle.md):
+  Shell lanes use `manual/`; retain native T3 ownership. Do not use `EnterWorktree` (#101).
+  Branch from the delivery branch using flat lane names: `wave-<n>-<lane>` avoids a Git ref-prefix
+  collision with `wave-<n>`. In T3 also read [its adapter](../procedures/t3-adapter.md).
 - **Lane worktrees and hooks:** a worktree made by `git worktree add` shares the main checkout's
   `.git/hooks` [measured 2026-09-17, as B0 item 1], so item 1's probe there covers it. Read
   `git config core.hooksPath` before dispatching lanes: where item 1 makes the probe per worktree,

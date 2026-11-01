@@ -17,8 +17,8 @@ record, plan) or to clone or check out a repository for scratch work.
 
 ---
 
-The `sansfaux/` root holds `_agent/`, project checkouts, the lane worktrees a client file places
-beside them, the `agent-working-agreements/` clone, and `organize.sh` — nothing else.
+The `sansfaux/` root holds `_agent/`, project checkouts, `.worktrees/`, the agreement clone and
+`organize.sh`. [Worktree lifecycle](worktree-lifecycle.md) defines placement and retirement.
 
 An **on-fleet workspace** is one where walking upward from the working directory finds an
 `_agent/` directory; the directory containing its first occurrence is the **agent root**, and

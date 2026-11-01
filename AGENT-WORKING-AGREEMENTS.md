@@ -126,18 +126,16 @@ repo's hooks to commit**: no `--no-verify`, no re-pointed `core.hooksPath`.
 
 ## A6. Where things go
 
-The `sansfaux/` root holds `_agent/`, project checkouts, the lane worktrees a client file places
-beside them, the `agent-working-agreements/` clone and `organize.sh`, nothing else. An **on-fleet
-workspace** is one where walking upward finds an `_agent/` directory; that directory's parent is the
-agent root. Everything an agent produces goes under `_agent/`: initiative work in
-`initiatives/<project>-<slug>/`, one-off work in the root's `reviews/`, `evidence/`, `friction/`,
-`notes/` and `analysis/`, promoted lessons in `learnings/`; never a loose file at either root, never
-a new top-level folder, never a clone or worktree under `_agent/`. Each execution machine keeps
-receipts; a session selects one store and shares relevant pointers with affected staff. **Friction
-is recorded when it happened**, not to prove that none did,
-as `_agent/friction/YYYY-MM-DD-<repo>-<id>.md` (`pr-<n>`, or the first twelve characters of the head
-SHA), opening with the delivery's full identifier (Brandon, 2026-10-27, #185). The tree, the
-initiative index, the friction fields and the scratch-clone rules:
+The `sansfaux/` root holds `_agent/`, project checkouts, `.worktrees/`, the agreement clone and
+`organize.sh`. Worktree placement and retirement follow `procedures/worktree-lifecycle.md`.
+An **on-fleet workspace** has `_agent/` above it; that directory's parent is the agent root.
+Agent artifacts go under `_agent/`: initiative work in `initiatives/<project>-<slug>/`, one-off
+work in `reviews/`, `evidence/`, `friction/`, `notes/` and `analysis/`, promoted lessons in
+`learnings/`; never loose at either root, in a new top-level folder, or a clone/worktree in `_agent/`.
+Each execution machine keeps receipts; select one store and share relevant pointers with staff.
+Record friction when it happens, not to prove none did: `_agent/friction/YYYY-MM-DD-<repo>-<id>.md`
+(`pr-<n>` or the first twelve head-SHA characters), opening with the delivery's full identifier
+(Brandon, 2026-10-27, #185). Tree, index, friction fields and scratch-clone rules:
 [`procedures/agent-workspace-layout.md`](procedures/agent-workspace-layout.md).
 
 ## A7. GitHub paths
@@ -278,6 +276,8 @@ These boundaries apply with or without an initiative; an MPD or handoff is never
 | You dispatch a lane, hold more than one seat, or run an initiative | [`orchestration-seats.md`](procedures/orchestration-seats.md) |
 | You are about to push, merge, present, or apply an mbox series | [`rule-zero-check.md`](procedures/rule-zero-check.md) |
 | A delivery is ready for review, or a bot or reviewer finding needs an outcome | [`review-findings.md`](procedures/review-findings.md) |
+| You create or retire a worktree | [`worktree-lifecycle.md`](procedures/worktree-lifecycle.md) |
+| You work through T3 | [`t3-adapter.md`](procedures/t3-adapter.md) |
 | You write any artifact, or need a scratch clone | [`agent-workspace-layout.md`](procedures/agent-workspace-layout.md) |
 | You touch an issue, a PR, or the GitHub API | [`github-paths.md`](procedures/github-paths.md) |
 | You pick up a delivery (first commit on a checkout, each repository) | [`pickup-guard.md`](procedures/pickup-guard.md) |
@@ -286,8 +286,8 @@ These boundaries apply with or without an initiative; an MPD or handoff is never
 
 # Part C — Environment appendices (read only yours)
 
-One file per client. Read the one you are in; the others describe machines you are not on.
-Each states its own default mode, but the capability guard in B0 is what actually decides.
+Read your client appendix; B0 decides the mode. In T3, use the actual provider appendix
+plus `procedures/t3-adapter.md`; desktop-specific observations are not T3 guarantees.
 
 | You are | Read | Default mode |
 | --- | --- | --- |
