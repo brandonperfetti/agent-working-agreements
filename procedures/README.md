@@ -16,7 +16,7 @@ instead), carries those fields, and holds no hash or line-number pin of a mutabl
 | [`orchestration-seats.md`](orchestration-seats.md) | A4 | dispatching a lane, holding more than one seat, running an initiative |
 | [`rule-zero-check.md`](rule-zero-check.md) | A4 | before a push, merge, presentation or `git am` |
 | [`review-findings.md`](review-findings.md) | A4 | a delivery ready for review; a bot or reviewer finding |
-| [`worktree-lifecycle.md`](worktree-lifecycle.md) | A4, A6, B2 | worktree creation/adoption/retirement and delivery closeout |
+| [`worktree-lifecycle.md`](worktree-lifecycle.md) | A4, A6, B2 | worktree creation/adoption/movement/retirement and delivery closeout |
 | [`t3-adapter.md`](t3-adapter.md) | A2, A3, A6, B0 | working through T3 |
 | [`agent-workspace-layout.md`](agent-workspace-layout.md) | A6 | writing any artifact; a scratch clone |
 | [`github-paths.md`](github-paths.md) | A7 | touching an issue, a PR or the GitHub API |

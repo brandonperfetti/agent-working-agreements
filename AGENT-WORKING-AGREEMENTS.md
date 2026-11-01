@@ -276,7 +276,7 @@ These boundaries apply with or without an initiative; an MPD or handoff is never
 | You dispatch a lane, hold more than one seat, or run an initiative | [`orchestration-seats.md`](procedures/orchestration-seats.md) |
 | You are about to push, merge, present, or apply an mbox series | [`rule-zero-check.md`](procedures/rule-zero-check.md) |
 | A delivery is ready for review, or a bot or reviewer finding needs an outcome | [`review-findings.md`](procedures/review-findings.md) |
-| You create or retire a worktree | [`worktree-lifecycle.md`](procedures/worktree-lifecycle.md) |
+| You create, adopt, move or retire a worktree, or close out a delivery | [`worktree-lifecycle.md`](procedures/worktree-lifecycle.md) |
 | You work through T3 | [`t3-adapter.md`](procedures/t3-adapter.md) |
 | You write any artifact, or need a scratch clone | [`agent-workspace-layout.md`](procedures/agent-workspace-layout.md) |
 | You touch an issue, a PR, or the GitHub API | [`github-paths.md`](procedures/github-paths.md) |
