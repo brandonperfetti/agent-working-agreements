@@ -1,6 +1,6 @@
 # OpenClaw conversation continuity
 
-**Trigger:** Context pressure, compaction, or recovery of an OpenClaw orchestrator.
+**Trigger:** Routine context maintenance, context pressure, compaction, or recovery of an OpenClaw orchestrator.
 
 **Owner:** The current orchestrator; Ashford owns control-plane maintenance routes.
 
