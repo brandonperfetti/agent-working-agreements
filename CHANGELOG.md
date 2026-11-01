@@ -10,6 +10,11 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-01 — Shared worktree home and T3 adapter.** Brandon approved manager-separated
+  `.worktrees/` placement and owner-led retirement after legacy trees accumulated. Client pointers
+  replace sibling placement; the small T3 adapter preserves provider instructions and qualifies
+  delegation, approval visibility and recovery separately. [T3 audit and follow-ups](https://github.com/brandonperfetti/agent-working-agreements/issues/217#issuecomment-6561522926).
+
 - **2026-10-31 — Autonomy follows the approved objective.** Brandon's MEGA.dev review decisions
   replace incidental approval gates with act/decide/record, retain financial and base-merge
   boundaries, let staff leads delegate and choose models, and rotate by context with verified
