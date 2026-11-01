@@ -13,9 +13,11 @@ and a rule here that contradicts one there is the rule that is wrong.
 **Stop:** Stop only an operation with no supported authorized route; name its restoration owner
 under B2. Provider login or a successful fixture does not qualify every repository or remote route.
 
-Read Parts A–B and the actual provider appendix (`clients/codex.md` or `clients/claude-code.md`).
-Use this adapter for T3 mechanics; remeasure desktop-specific capability claims. Their triggered
-procedures still apply, including evidence capture and artifact placement when writing receipts.
+Read Parts A–B and the selected agreement's actual provider appendix: canonically
+`clients/codex.md` or `clients/claude-code.md`; in a single-file scaffold, the corresponding
+filled-in Part C appendix. Do not require files that scaffold does not ship. Use this adapter for
+T3 mechanics and remeasure desktop-specific capability claims. Triggered procedures still apply,
+including evidence capture and artifact placement when writing receipts.
 
 1. Identify the execution environment, host, provider and repository before using paths. Keep
    each host's receipts in its selected store. Record configured model/effort separately from

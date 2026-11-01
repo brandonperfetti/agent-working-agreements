@@ -108,5 +108,6 @@ output.
 Keeping that evidence is how this sits beside the `experiments/` line's "never /tmp": a
 transcript has to survive the session, a clone can be made again. The reason: a clone under
 `_agent/` is a nested repository in a store meant to replicate, a second copy of a project's
-source with its licence, and the one thing in `_agent/` that is rebuildable. This moves no lane
-worktree: where those live is unchanged and is each client file's to name. (Brandon, 2026-10-12)
+source with its licence, and the one thing in `_agent/` that is rebuildable (Brandon, 2026-10-12).
+Scratch-clone rules move no existing lane tree; [worktree lifecycle](worktree-lifecycle.md) governs
+new placement and retirement through the owning manager.
