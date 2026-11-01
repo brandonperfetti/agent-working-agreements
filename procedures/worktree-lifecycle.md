@@ -1,9 +1,5 @@
 # Worktree placement and retirement
 
-This procedure carries mechanics for a rule in
-[`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts A–B,
-and a rule here that contradicts one there is the rule that is wrong.
-
 **Trigger:** Creating, adopting, moving or retiring a worktree; delivery closeout after integration.
 
 **Owner:** The delivery owner; the orchestrator reconciles active lanes and retained dependencies.
@@ -12,6 +8,10 @@ and a rule here that contradicts one there is the rule that is wrong.
 
 **Stop:** Retain the affected tree when ownership, local content, integration or recovery is unknown.
 Independent work continues under B2.
+
+This procedure carries mechanics for a rule in
+[`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts A–B,
+and a rule here that contradicts one there is the rule that is wrong.
 
 ## Placement
 

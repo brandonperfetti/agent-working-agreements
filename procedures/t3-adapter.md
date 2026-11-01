@@ -1,9 +1,5 @@
 # T3 provider adapter
 
-This procedure carries mechanics for a rule in
-[`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts A–B,
-and a rule here that contradicts one there is the rule that is wrong.
-
 **Trigger:** Working through T3, including local, delegated and linked-environment tasks.
 
 **Owner:** The task lead; each delivery owner verifies its execution route and checkout.
@@ -12,6 +8,10 @@ and a rule here that contradicts one there is the rule that is wrong.
 
 **Stop:** Stop only an operation with no supported authorized route; name its restoration owner
 under B2. Provider login or a successful fixture does not qualify every repository or remote route.
+
+This procedure carries mechanics for a rule in
+[`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts A–B,
+and a rule here that contradicts one there is the rule that is wrong.
 
 Read Parts A–B and the selected agreement's actual provider appendix: canonically
 `clients/codex.md` or `clients/claude-code.md`; in a single-file scaffold, the corresponding

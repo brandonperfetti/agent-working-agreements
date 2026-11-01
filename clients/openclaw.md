@@ -75,7 +75,7 @@ this agreement repository, an amendment uses one isolated feature worktree off `
 wave. A delivery worktree is created only through OpenClaw's managed worktree facility, from a
 freshly fetched `develop` OID verified against `ls-remote`, bound explicitly to the Gateway
 service's state directory, config and profile, placed per [lifecycle](../procedures/worktree-lifecycle.md),
-outside `_agent/` and the protected root; it is removed losslessly after merge, and the root is
+outside `_agent/` and the protected root. Post-merge cleanup follows lifecycle checks; the root is
 fast-forwarded to `origin/master` after each release. Commands, checks and the audit fields:
 [`../procedures/openclaw/managed-worktrees.md`](../procedures/openclaw/managed-worktrees.md),
 read at pickup; any overlap of those paths stops the delivery.
