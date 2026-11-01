@@ -53,8 +53,10 @@ in the existing handoff or task receipt. Native session cwd must agree with that
 4. Use the owning manager's recoverable archive/lossless removal, or non-forced Git removal for
    an unmanaged tree. Preserve needed ignored files separately when the snapshot excludes them.
    Check the operation's result and inventory; a refused removal means retain and report.
-   Delete a local branch only after successful retirement and integration checks, using safe
-   deletion. Keep remote branches and unrelated snapshots outside this cleanup action.
+   Delete a local branch only after successful retirement and reachability-based integration
+   checks, using `git branch -d`; retain and report it if that refuses. A squash or rebase
+   equivalence disposition alone does not permit branch deletion. Keep remote branches and
+   unrelated snapshots outside this cleanup action.
 
 For automatic cleanup, verify actual retention, local-file protection and active-owner behavior
 before enabling it. Protect unique ignored content; default-branch heuristics may differ from
