@@ -54,10 +54,10 @@ deliveries still carry independent review, verification and the owner's decision
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; role, deliverable, mode, fence, model and effort follow.
-- **Continuity (A4):** keep Camina's conversation stable. Checkpoint at 30%, refresh it at 40%; at
-  60% assess actual pressure at a clean pause. Prefer runtime compaction and verified same-key
-  recovery per [`session-rotation.md`](../procedures/openclaw/session-rotation.md); new roots are
-  exceptional. Record identity, context and resumed advancement; preserve owners and tool boundaries.
+- **Continuity (A4):** keep Camina's conversation stable. Treat 30/40/60% as planning heuristics:
+  checkpoint, refresh, then assess pressure at a clean pause. Prefer compaction and verified
+  same-key recovery per [`session-rotation.md`](../procedures/openclaw/session-rotation.md); new roots
+  are exceptional. Record identity, context and advancement; preserve owners and tool boundaries.
 - **Models and routes:** Codex OAuth for thinking; the established Claude Code wrapper for coding.
   Leads choose model/effort within approved routes; respect wrapper pins rather than bypass them.
   On exhaustion, coding falls back from Claude to Codex OAuth, then to an approved API model within
