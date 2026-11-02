@@ -12,11 +12,11 @@ name its restoration owner under B2 while independent work continues.
 This procedure implements the canonical agreement; it never overrides Parts A–B, and
 a rule here that contradicts one there is the rule that is wrong.
 
-## Keep Camina's conversation stable
+## Keep ongoing conversations stable
 
-Keep one user-facing Camina conversation and session key as the chief-of-staff entry point.
-Initiative ownership, staff sessions and their bounded worker lanes remain distinct from that
-conversation's context maintenance. Save their current receipts and pointers on disk.
+Brandon may keep separate Camina conversations for different topics or initiatives, with staff
+and lanes delegated from each. Preserve the conversation he is using through ordinary context
+maintenance, with current receipts and pointers on disk.
 
 Prefer the runtime's automatic in-place compaction. Context growth alone does not require a new
 sidebar session, ownership transfer or collector retarget. Use supported idle compaction when
