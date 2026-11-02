@@ -10,6 +10,11 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-01 — Camina conversations remain independent.** Brandon clarified that stable
+  continuity preserves each conversation, rather than making Camina one global inbox. Separate
+  topics may have separate conversations and delegated staff; ordinary compaction remains.
+  [Owner correction](https://github.com/brandonperfetti/agent-working-agreements/issues/220#issuecomment-6569188577).
+
 - **2026-11-01 — Stable Camina conversation.** Brandon approved in-place context maintenance
   after repeated root rotations cluttered the sidebar and required outside recovery. Prefer native
   compaction, verify checkpoint pickup, and reserve same-key reset or root replacement for recovery.

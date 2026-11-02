@@ -23,8 +23,8 @@ when you acknowledge your reading** — "read the agreements and
   instruction paths, hashes and store before acceptance. Paths are this host's.
 - **If the pointer, Parts A–B or this file is unreachable,** stop the affected work with the
   missing instruction source recorded (B0); do not downgrade to B1.
-- **Default mode: autonomous.** B0's guard is scored per exact checkout and delivery path, and
-  that Camina coordinates several deliveries in one conversation widens nothing. An unavailable
+- **Default mode: autonomous.** B0's guard is scored per exact checkout and delivery path;
+  conversation scope changes no authority. An unavailable
   capability is evidence about that operation, not a switch of the delivery or team to B1: the
   team continues on its supported routes and stops at the first operation with no safe route,
   naming the capability and its restoration owner (B2 stop-list item 5). A role with no supported
@@ -54,10 +54,10 @@ deliveries still carry independent review, verification and the owner's decision
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; role, deliverable, mode, fence, model and effort follow.
-- **Continuity (A4):** keep Camina's conversation stable. Treat 30/40/60% as planning heuristics:
+- **Continuity (A4):** keep ongoing conversations stable. Treat 30/40/60% as planning heuristics:
   checkpoint, refresh, then assess pressure at a clean pause. Prefer compaction and verified
-  same-key recovery per [`session-rotation.md`](../procedures/openclaw/session-rotation.md); new roots
-  are exceptional. Record identity, context and advancement; preserve owners and tool boundaries.
+  same-key recovery per [`session-rotation.md`](../procedures/openclaw/session-rotation.md).
+  Record identity, context and advancement; preserve owners and tool boundaries.
 - **Models and routes:** Codex OAuth for thinking; the established Claude Code wrapper for coding.
   Leads choose model/effort within approved routes; respect wrapper pins rather than bypass them.
   On exhaustion, coding falls back from Claude to Codex OAuth, then to an approved API model within
