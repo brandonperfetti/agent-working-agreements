@@ -45,9 +45,15 @@ EOF
 | When | Read |
 | --- | --- |
 | x | [\`one.md\`](../procedures/one.md) |
+
+## Notes
+
+Other profile text.
 EOF
   cat >"$repo/procedures/README.md" <<EOF
 # Procedures
+
+Each procedure is a row below.
 
 | Procedure |
 | --- |
@@ -103,6 +109,39 @@ expect_fail "procedure missing the precedence clause" "precedence clause"
 
 good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
 expect_fail "procedure absent from the profile's Triggers table" "profile's Triggers table"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+printf 'Prose naming [one](../procedures/one.md).\n' >>"$repo/profiles/studio.md"
+expect_fail "procedure linked only in profile prose" "profile's Triggers table"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+printf '\n| y | [one](../procedures/one.md) |\n' >>"$repo/profiles/studio.md"
+expect_fail "procedure linked only in another section's table" "profile's Triggers table"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+perl -0pi -e 's{\n## Notes}{\nRetired:\n\n| When | Read |\n| --- | --- |\n| y | [one](../procedures/one.md) |\n\n## Notes}' \
+  "$repo/profiles/studio.md"
+expect_fail "procedure linked only in another table of the Triggers section" "profile's Triggers table"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+perl -0pi -e 's#(\| --- \| --- \|\n)#$1\n| y | [one](../procedures/one.md) |\n#' "$repo/profiles/studio.md"
+expect_fail "procedure in a pipe line after the Triggers table ends" "profile's Triggers table"
+
+good; sed -i.bak '/](one.md)/d' "$repo/procedures/README.md"; rm -f "$repo/procedures/README.md.bak"
+printf '\nSee also [one](one.md).\n' >>"$repo/procedures/README.md"
+expect_fail "procedure linked only in README prose" "one.md is not listed in procedures/README.md"
+
+good; sed -i.bak '/](one.md)/d' "$repo/procedures/README.md"; rm -f "$repo/procedures/README.md.bak"
+printf '\n| Retired |\n| --- |\n| [one](one.md) |\n' >>"$repo/procedures/README.md"
+expect_fail "procedure linked only in another README table" "one.md is not listed in procedures/README.md"
+
+good; sed -i.bak '/](one.md)/d' "$repo/procedures/README.md"; rm -f "$repo/procedures/README.md.bak"
+printf '\n## Elsewhere\n\n| Procedure |\n| --- |\n| [one](one.md) |\n' >>"$repo/procedures/README.md"
+expect_fail "procedure in a second Procedure table" "one.md is not listed in procedures/README.md"
+
+good; perl -0pi -e 's#(Each procedure is a row below\.\n)#$1\n| Note |\n| --- |\n| a table before the index |\n#' \
+  "$repo/procedures/README.md"
+expect_pass "another table before the README index"
 
 good; printf '| y | [`gone.md`](../procedures/gone.md) |\n' >>"$repo/profiles/studio.md"
 expect_fail "dangling profile link" "profiles/studio.md links procedures/gone.md"

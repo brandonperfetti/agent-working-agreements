@@ -35,10 +35,16 @@ good() {
 
 Read AGENT-WORKING-AGREEMENTS.md first, $clause
 
-## Client adapters
+## Client adapters (read only yours)
 
-- [\`clients/with-sections.md\`](../clients/with-sections.md)
-- [\`clients/without-sections.md\`](../clients/without-sections.md)
+| You are | Read |
+| --- | --- |
+| With | [\`clients/with-sections.md\`](../clients/with-sections.md) |
+| Without | [\`clients/without-sections.md\`](../clients/without-sections.md) |
+
+## Notes
+
+Other profile text.
 EOF
 
   cat >"$repo/clients/with-sections.md" <<EOF
@@ -134,13 +140,46 @@ good; printf 'Studio callers read [the profile](profiles/studio.md).\n' \
 expect_fail "core names a profile" \
   "FAIL: the core names a profile file (above); adapter openers bind profiles"
 
-good; perl -0pi -e 's#^- \[`clients/without-sections\.md`\].*\n##m' "$repo/profiles/studio.md"
-expect_fail "client missing from the profile's index" \
-  "FAIL: clients/without-sections.md exists but no profile's client index points at it"
+unindexed="FAIL: clients/without-sections.md exists but no profile's client index points at it"
+drop_row='s#^\| Without \|.*\n##m'
 
-good; printf -- '- [`clients/gone.md`](../clients/gone.md)\n' >>"$repo/profiles/studio.md"
+good; perl -0pi -e "$drop_row" "$repo/profiles/studio.md"
+expect_fail "client missing from the profile's index" "$unindexed"
+
+good; perl -0pi -e "$drop_row" "$repo/profiles/studio.md"
+printf 'Prose naming [it](../clients/without-sections.md).\n' >>"$repo/profiles/studio.md"
+expect_fail "client linked only in profile prose" "$unindexed"
+
+good; perl -0pi -e "$drop_row" "$repo/profiles/studio.md"
+printf '\n| Other | [x](../clients/without-sections.md) |\n' >>"$repo/profiles/studio.md"
+expect_fail "client linked only in another section's table" "$unindexed"
+
+good; perl -0pi -e "$drop_row" "$repo/profiles/studio.md"
+perl -0pi -e 's{\n## Notes}{\nRetired:\n\n| You were | Read |\n| --- | --- |\n| Without | [x](../clients/without-sections.md) |\n\n## Notes}' \
+  "$repo/profiles/studio.md"
+expect_fail "client linked only in another table of the Client adapters section" "$unindexed"
+
+good; perl -0pi -e "$drop_row" "$repo/profiles/studio.md"
+perl -0pi -e 's{\n## Notes}{\n| Without | [x](../clients/without-sections.md) |\n\n## Notes}' \
+  "$repo/profiles/studio.md"
+expect_fail "client in a pipe line after the index table ends" "$unindexed"
+
+good; perl -0pi -e 's{(## Client adapters \(read only yours\)\n)}{$1\n| Note |\n| --- |\n| a table before the index |\n}' \
+  "$repo/profiles/studio.md"
+expect_pass "another table before the client index"
+
+good; perl -0pi -e "$drop_row" "$repo/profiles/studio.md"
+perl -0pi -e 's#(Read AGENT-WORKING-AGREEMENTS\.md first)#$1, see clients/without-sections.md#' \
+  "$repo/profiles/studio.md"
+expect_fail "client linked only in the profile opener" "$unindexed"
+
+good; perl -0pi -e 's#(\| Without \|.*\n)#$1| Gone | [`clients/gone.md`](../clients/gone.md) |\n#' \
+  "$repo/profiles/studio.md"
 expect_fail "profile index names a missing client" \
   "FAIL: a profile's client index references clients/gone.md, which does not exist"
+
+good; printf 'A retired [`clients/gone.md`](../clients/gone.md).\n' >>"$repo/profiles/studio.md"
+expect_pass "a missing client named outside the index is no index row"
 
 good; perl -0pi -e 's/^## B1\. /## B9. /m' "$repo/AGENT-WORKING-AGREEMENTS.md"
 expect_fail "stable anchor renamed" "FAIL: stable anchor B1 missing from the core"

@@ -2,8 +2,8 @@
 #
 # check-index.sh — verify the composition contract: core → profile → client adapter.
 #
-# 1. Every clients/*.md has a row in a profile's client index, and every row names a file
-#    that exists: an unindexed adapter is never read.
+# 1. Every clients/*.md has a row in a profile's "## Client adapters" table, and every row names
+#    a file that exists: an unindexed adapter is never read, and a link elsewhere indexes nothing.
 # 2. Openers of the root AGENTS.md, each profile and each client send the reader to the core
 #    and keep the standard precedence clause; root and client openers also name an existing
 #    profile, and each client opener names its own file: the opener alone carries the whole
@@ -25,9 +25,31 @@ fail=0
 profiles=()
 for p in "$ROOT"/profiles/*.md; do [ -e "$p" ] && profiles+=("$p"); done
 
+# Only the body rows of a profile's client index table index a client: the first table under
+# "## Client adapters" whose header row starts "| You are |", from the row after its separator to
+# the first line that is not a row. A link in prose, or in any other table, is never the index.
+client_rows() {
+  awk '
+    function first_cell(s) {
+      sub(/^[[:space:]]*\|[[:space:]]*/, "", s); sub(/[[:space:]]*\|.*$/, "", s); return s
+    }
+    done { next }
+    /^#/ { if (state == 2) done = 1; else { in_sec = ($0 ~ /^## Client adapters/); state = 0 }; next }
+    !in_sec { prev_row = 0; next }
+    {
+      row = ($0 ~ /^[[:space:]]*\|.*\|[[:space:]]*$/)
+      if (state == 2) { if (row) print; else done = 1 }
+      else if (state == 1) { state = ($0 ~ /^[[:space:]]*\|[[:space:]:|-]*-[[:space:]:|-]*\|[[:space:]]*$/) ? 2 : 0 }
+      else if (row && !prev_row && first_cell($0) == "You are") state = 1
+      prev_row = row
+    }
+  ' "$1"
+}
+
 indexed="$(
-  for p in ${profiles[@]+"${profiles[@]}"}; do grep -o 'clients/[a-z0-9-]*\.md' "$p" || true; done |
-    sort -u
+  for p in ${profiles[@]+"${profiles[@]}"}; do
+    client_rows "$p" | grep -o 'clients/[a-z0-9-]*\.md' || true
+  done | sort -u
 )"
 present="$(cd "$ROOT" && ls clients/*.md 2>/dev/null | sort -u || true)"
 

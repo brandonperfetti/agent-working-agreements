@@ -58,8 +58,10 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   commits. Board intake is a repository's `add-to-project` workflow; the orchestrator moves "In
   Review" by hand.
 - **B0.** Never ask Brandon the mode at session start. Base protection by role: `develop` blocks
-  force-pushes and deletions with no PR rule; `master` requires a PR and the gate. Where the core
-  is unreachable, attended rules apply. **Route-scoped adapter:** `clients/openclaw.md`
+  force-pushes and deletions with no PR rule; `master` requires a PR and the gate. Where the core,
+  this profile or an adapter is named but unreachable, every client but OpenClaw continues the
+  affected delivery under attended rules (B1); OpenClaw stops it, as its adapter says (core
+  *Composition*). **Route-scoped adapter:** `clients/openclaw.md`
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3].
 - **B2.** The delivery owner runs `coderabbit-preflight` before a push carrying new work where the
   CLI is available, works the round with `coderabbit-response`, and files real work as

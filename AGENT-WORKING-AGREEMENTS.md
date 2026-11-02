@@ -11,8 +11,10 @@ owner's conventions, an optional **client adapter** for one environment, then re
 instructions and procedures at their triggers. A lower layer adds or narrows, never weakens; a
 rule contradicting a higher layer is wrong. Elsewhere, "Parts A–B" means this core plus the
 selected profile, if any. An adapter's opener names every layer it depends on, so a pointer naming
-only this core and that adapter still reaches every layer; a named layer that is unreadable stops
-the affected work, with the missing source recorded.
+only this core and that adapter still reaches every layer. A layer nothing names is absent, which
+is ordinary (below). A layer a pointer or opener names but that is unreadable is not absence: the
+work depending on it stops, with the missing source recorded, unless the profile or adapter
+documents an attended fallback (B1) for it.
 
 **The core stands alone.** A rule's **binding** is the profile's. Without a profile, whatever a
 rule leaves to it (identity, attribution, branches, protection, store, ritual, route-scoped
@@ -55,13 +57,19 @@ owner decision.
   did not produce the work. One session may hold the first two, never its own review. Only the
   owner merges base branches. Without a reviewer route, routine reversible work may push first,
   disclosing it; bot and owner review precede base merge.
-- **Continuity lives in files**, carrying existing authority; a packet never invents gates or
-  narrows the objective. Lanes keep to named files and their own worktree.
+- **Initiative continuity lives in files** (kickoffs, addenda, lane reports, rotation packets), as
+  does any other handoff continuity needs; bounded delegation reports in its return, with no
+  handoff scaffolding. A record carries existing authority, never invents gates or narrows the
+  objective. Lanes keep to named files and their own worktree.
 - **Model and effort are chosen per task**; reports separate requested from attested.
 - **Authorship:** every agent commit carries the bound author identity, checked before push,
   merge and presentation; attribution follows the binding. No credit footer is required anywhere.
-- **Two-axis review (Standards + Spec) before acceptance**, no size exemption; the verdict names
-  the exact head. Later fixes get scoped review (#193); close-out review precedes promotion.
+- **Independent two-axis review (Standards + Spec)** through the bound review route before
+  acceptance, fixes and conflict resolutions included, no size exemption; a producer's own report
+  is never the review. A later fix gets scoped review, renewing the whole-branch verdict only when
+  it materially stales it (#193). **Before presentation for the owner's merge**, the whole branch's
+  diff against its base is reviewed at the exact final head, and the verdict names that head;
+  close-out review precedes promotion. See [`review-findings.md`](procedures/review-findings.md).
 - **Verified harmful review findings are fixed before merge**; disproved ones are declined with
   receipts.
 - **Distrust the issue until you've read the code.** Tests ship with the change.
@@ -93,10 +101,12 @@ Every git rule names the step of the profile's Git ritual it serves.
 
 The environment picks; the adapter names the default; the owner's word wins. At pickup, per
 checkout and delivery path, a failed item downgrades only that delivery to attended (item 4 is
-recorded instead): 1. the `pre-push` hook proven by dry run, or none recorded; 2. the full gate
-runs locally; 3. feature work on its own branch, never a base branch; 4. base branches protected
-per the binding; 5. no owner override. A **route-scoped** adapter the profile names continues on
-supported routes instead and stops only an operation with no safe route (B2 item 5).
+recorded instead): 1. native Git on a real checkout, hooks firing: the `pre-push` hook proven by
+dry run from the checkout you will push from, or its absence recorded; 2. the full gate (A5)
+actually run locally once at pickup, a probe always permitted; 3. feature work on its own branch,
+never a base branch; 4. base branches protected per the binding; 5. no owner override. A
+**route-scoped** adapter the profile names continues on supported routes instead and stops only an
+operation with no safe route (B2 item 5). See [`pickup-guard.md`](procedures/pickup-guard.md).
 
 ## B1. Attended mode
 

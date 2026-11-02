@@ -21,15 +21,14 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
   mirrored, symlinked, moved, deleted or otherwise rewritten. A role on a changed pointer holds the
   store provisionally, runs the create/readback canary on its supported route and reports its exact
   instruction paths, hashes and store before acceptance. Paths are this host's.
-- **If the pointer, Parts A–B or this file is unreachable,** stop the affected work with the
-  missing instruction source recorded (B0); do not downgrade to B1.
+- **If the pointer, the core, the profile or this file is unreachable,** stop the affected work
+  with the missing instruction source recorded (B0); do not downgrade to B1.
 - **Default mode: autonomous.** B0's guard is scored per exact checkout and delivery path;
-  conversation scope changes no authority. An unavailable
-  capability is evidence about that operation, not a switch of the delivery or team to B1: the
-  team continues on its supported routes and stops at the first operation with no safe route,
-  naming the capability and its restoration owner (B2 stop-list item 5). A role with no supported
-  execution route stops only the affected operation, naming its restoration owner. Use approved
-  fallback routes below; Brandon is never the command runner and alone merges base-branch PRs.
+  conversation scope changes no authority. An unavailable capability is evidence about that
+  operation, not a switch of the delivery or team to B1: the team continues on its supported
+  routes and stops at the first operation with no safe route, naming the capability and its
+  restoration owner (B2 stop-list item 5); so does a role with no supported execution route. Use
+  approved fallback routes below; Brandon is never the command runner and alone merges base PRs.
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 - **Resolve the active workspace and target checkout from live inventory**; do not assume every
   specialist shares main's working directory.
@@ -88,8 +87,7 @@ and the worktree bindings the procedure lists. Reset is unmeasured; require a de
 
 Use the selected store's `evidence/` and `analysis/` per A2 and A6; date-name artifacts and label
 material findings. The Gateway executable-check scratch root takes no scratch clone; where one
-goes on this host, and whether specialists share that space, is **unmeasured** — measure and
-record.
+goes on this host, and whether specialists share it, is **unmeasured** — measure and record.
 
 ## Dormant: the native sandbox breaker
 
@@ -104,6 +102,5 @@ bwrap: No permissions to create a new namespace, likely because the kernel does 
 
 ## History
 
-Measurements, source readings with their hashes, the route census, superseded claims and the
-migration dispositions, in the shared client history archive; none required reading:
-[`../history/openclaw.md#openclaw`](../history/openclaw.md#openclaw).
+Measurements, source readings, route census, superseded claims and migration dispositions, in the
+shared client archive; none required: [`../history/openclaw.md#openclaw`](../history/openclaw.md#openclaw).

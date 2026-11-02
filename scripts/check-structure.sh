@@ -6,8 +6,8 @@
 #    progressive disclosure only works while what is read up front is short enough to be read
 #    whole and attended to.
 # 2. Every procedures/*.md carries Trigger / Owner / Implements / Stop and the precedence
-#    clause, and is linked from both procedures/README.md and a profile's Triggers table:
-#    an unindexed procedure is never read.
+#    clause, and is a row of both procedures/README.md's table and a profile's "## Triggers"
+#    table: an unindexed procedure is never read, and a link in prose indexes nothing.
 # 3. Core, profiles, clients and procedures hold no 40- or 64-hex pin: a hash of a mutable file
 #    goes stale on the next edit and the rule that cites it is then wrong. CHANGELOG.md and
 #    _agent evidence are exempt. `history/` is exempt: it exists to hold them.
@@ -55,6 +55,31 @@ for f in "$ROOT"/clients/*.md; do
 done
 
 precedence='a rule here that contradicts one there is the rule that is wrong'
+
+# The body rows of the actual index: the first table under the heading that starts with $2 (any
+# heading when $2 is empty) whose header row's first cell is $3, from the row after its separator
+# to the first line that is not a row. A link in prose, or in any other table of the same section
+# or file, is no row of the index.
+index_rows() {
+  awk -v h="$2" -v c="$3" '
+    function first_cell(s) {
+      sub(/^[[:space:]]*\|[[:space:]]*/, "", s); sub(/[[:space:]]*\|.*$/, "", s); return s
+    }
+    done { next }
+    /^#/ { if (state == 2) done = 1; else { in_sec = (h == "" || index($0, h) == 1); state = 0 }; next }
+    !in_sec { prev_row = 0; next }
+    {
+      row = ($0 ~ /^[[:space:]]*\|.*\|[[:space:]]*$/)
+      if (state == 2) { if (row) print; else done = 1 }
+      else if (state == 1) { state = ($0 ~ /^[[:space:]]*\|[[:space:]:|-]*-[[:space:]:|-]*\|[[:space:]]*$/) ? 2 : 0 }
+      else if (row && !prev_row && first_cell($0) == c) state = 1
+      prev_row = row
+    }
+  ' "$1"
+}
+readme_rows="$(index_rows "$PROC/README.md" '' 'Procedure')"
+trigger_rows="$(for p in ${profiles[@]+"${profiles[@]}"}; do index_rows "$p" '## Triggers' 'When'; done)"
+
 for f in "$PROC"/*.md "$PROC"/*/*.md; do
   [ -e "$f" ] || continue
   name="$(basename "$f")"
@@ -64,13 +89,10 @@ for f in "$PROC"/*.md "$PROC"/*/*.md; do
     grep -q "^\*\*$field:\*\*" "$f" || { echo "FAIL: $rel lacks **$field:**" >&2; fail=1; }
   done
   grep -q "$precedence" "$f" || { echo "FAIL: $rel lacks the precedence clause" >&2; fail=1; }
-  grep -q "]($rel)" "$PROC/README.md" || { echo "FAIL: $rel is not listed in procedures/README.md" >&2; fail=1; }
+  grep -qF "]($rel)" <<<"$readme_rows" || { echo "FAIL: $rel is not listed in procedures/README.md" >&2; fail=1; }
   if [ "$rel" = "$name" ]; then
-    found=0
-    for p in ${profiles[@]+"${profiles[@]}"}; do
-      grep -q "](../procedures/$rel)" "$p" && found=1
-    done
-    [ "$found" -eq 1 ] || { echo "FAIL: $rel is not in a profile's Triggers table" >&2; fail=1; }
+    grep -qF "](../procedures/$rel)" <<<"$trigger_rows" ||
+      { echo "FAIL: $rel is not in a profile's Triggers table" >&2; fail=1; }
   else
     client="$ROOT/clients/${rel%%/*}.md"
     if [ -f "$client" ]; then

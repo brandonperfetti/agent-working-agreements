@@ -54,13 +54,13 @@ npx --yes markdownlint-cli2
 
 `check-structure.sh` holds the core plus each profile, and each client file,
 under their line ceilings, keeps studio-specific text out of the core, requires
-every file under `procedures/` to carry its four fields and be indexed in
-`procedures/README.md` and in a profile's *Triggers* table (or, for
-`procedures/<client>/`, in that client's appendix), and rejects a 40- or
+every file under `procedures/` to carry its four fields and be a row of
+`procedures/README.md`'s table and a profile's *Triggers* table (or, for
+`procedures/<client>/`, linked from that client's appendix), and rejects a 40- or
 64-hex pin in normative text; `history/` is exempt from the pin rule.
-`check-index.sh` proves the composition: every client indexed by a profile,
-every root and client opener naming core and profile (a client's also its own
-file), the core naming no profile, and the stable anchors present.
+`check-index.sh` proves the composition: every client a row of a profile's
+*Client adapters* table, every root and client opener naming core and profile (a
+client's also its own file), the core naming no profile, the anchors present.
 
 No environment export is needed. They are the steps of the job `check` in
 `.github/workflows/check.yml`, and `check` is the required status check on

@@ -8,9 +8,11 @@ when its trigger occurs, not at session start. A procedure never overrides Parts
 here that contradicts one there is the rule that is wrong.
 
 Every procedure opens with four fields — **Trigger**, **Owner**, **Implements**, **Stop** — and
-`scripts/check-structure.sh` checks that each file here is listed below and in the profile's
-*Triggers* table (a client-specific one under `<client>/` is linked from that client's appendix
-instead), carries those fields, and holds no hash or line-number pin of a mutable file.
+`scripts/check-structure.sh` checks that each file here is a row of the table below and of the
+profile's *Triggers* table (a client-specific one under `<client>/` is linked from that client's
+appendix instead), carries those fields, and holds no hash or line-number pin of a mutable file.
+The core links `review-findings.md` and `pickup-guard.md` directly; each says how its studio
+names read without a profile, and its studio-only rules open **Selected studio profile only**.
 
 | Procedure | Implements | Trigger |
 | --- | --- | --- |
