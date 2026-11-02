@@ -10,6 +10,16 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-02 — Portable core, studio profile (#226).** The agreement becomes a portable core
+  (A1–A8, B0–B2) plus `profiles/sansfaux.md`, which carries Brandon's identity, the git ritual, the
+  store, the trigger and client indexes. The core names no profile; each client opener binds core,
+  profile and itself. An unnamed profile is ordinary absence; a named, unreadable layer stops the
+  affected work, or runs attended where documented, OpenClaw excepted. The core keeps independent
+  whole-branch exact-head review and B0's hook and pickup-gate probes, linking procedures whose
+  studio rules bind only with the profile; handoffs bind initiatives and needed continuity only. A2
+  labels only material findings; RULE ZERO forbids attribution lines. Client observations move to
+  `history/`; checks read only each index table's rows. Brandon's owner corrections. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/226).
+
 - **2026-11-01 — Camina conversations remain independent.** Brandon clarified that stable
   continuity preserves each conversation, rather than making Camina one global inbox. Separate
   topics may have separate conversations and delegated staff; ordinary compaction remains.

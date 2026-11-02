@@ -13,9 +13,9 @@ This procedure carries mechanics for a rule in
 [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts A–B,
 and a rule here that contradicts one there is the rule that is wrong.
 
-Read Parts A–B and the selected agreement's actual provider appendix: canonically
+Read Parts A–B, the selected profile and the actual provider adapter: canonically
 `clients/codex.md` or `clients/claude-code.md`; in a single-file scaffold, the corresponding
-filled-in Part C appendix. Do not require files that scaffold does not ship. Use this adapter for
+filled-in client appendix. Do not require files that scaffold does not ship. Use this adapter for
 T3 mechanics and remeasure desktop-specific capability claims. Triggered procedures still apply,
 including evidence capture and artifact placement when writing receipts.
 

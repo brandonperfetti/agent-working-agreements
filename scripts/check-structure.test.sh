@@ -10,7 +10,7 @@ cleanup() { rm -rf -- "$fixture"; }
 trap cleanup EXIT
 
 repo="$fixture/repo"
-mkdir -p "$repo/procedures/acme" "$repo/clients" "$repo/scripts"
+mkdir -p "$repo/procedures/acme" "$repo/clients" "$repo/profiles" "$repo/scripts"
 cp "$ROOT/scripts/check-structure.sh" "$repo/scripts/"
 chmod 755 "$repo/scripts/check-structure.sh"
 
@@ -35,14 +35,25 @@ EOF
   cat >"$repo/AGENT-WORKING-AGREEMENTS.md" <<EOF
 # Agreement
 
+The owner merges base branches; adapter openers name any profile.
+EOF
+  cat >"$repo/profiles/studio.md" <<EOF
+# Studio profile
+
 ## Triggers
 
 | When | Read |
 | --- | --- |
-| x | [\`one.md\`](procedures/one.md) |
+| x | [\`one.md\`](../procedures/one.md) |
+
+## Notes
+
+Other profile text.
 EOF
   cat >"$repo/procedures/README.md" <<EOF
 # Procedures
+
+Each procedure is a row below.
 
 | Procedure |
 | --- |
@@ -96,8 +107,65 @@ expect_fail "40-hex pin in a procedure" "hex pin"
 good; sed -i.bak '/contradicts one there/d' "$repo/procedures/one.md"; rm -f "$repo/procedures/one.md.bak"
 expect_fail "procedure missing the precedence clause" "precedence clause"
 
-good; sed -i.bak '/procedures\/one.md/d' "$repo/AGENT-WORKING-AGREEMENTS.md"; rm -f "$repo/AGENT-WORKING-AGREEMENTS.md.bak"
-expect_fail "procedure absent from the Triggers table" "Triggers table"
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+expect_fail "procedure absent from the profile's Triggers table" "profile's Triggers table"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+printf 'Prose naming [one](../procedures/one.md).\n' >>"$repo/profiles/studio.md"
+expect_fail "procedure linked only in profile prose" "profile's Triggers table"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+printf '\n| y | [one](../procedures/one.md) |\n' >>"$repo/profiles/studio.md"
+expect_fail "procedure linked only in another section's table" "profile's Triggers table"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+perl -0pi -e 's{\n## Notes}{\nRetired:\n\n| When | Read |\n| --- | --- |\n| y | [one](../procedures/one.md) |\n\n## Notes}' \
+  "$repo/profiles/studio.md"
+expect_fail "procedure linked only in another table of the Triggers section" "profile's Triggers table"
+
+good; sed -i.bak '/procedures\/one.md/d' "$repo/profiles/studio.md"; rm -f "$repo/profiles/studio.md.bak"
+perl -0pi -e 's#(\| --- \| --- \|\n)#$1\n| y | [one](../procedures/one.md) |\n#' "$repo/profiles/studio.md"
+expect_fail "procedure in a pipe line after the Triggers table ends" "profile's Triggers table"
+
+good; sed -i.bak '/](one.md)/d' "$repo/procedures/README.md"; rm -f "$repo/procedures/README.md.bak"
+printf '\nSee also [one](one.md).\n' >>"$repo/procedures/README.md"
+expect_fail "procedure linked only in README prose" "one.md is not listed in procedures/README.md"
+
+good; sed -i.bak '/](one.md)/d' "$repo/procedures/README.md"; rm -f "$repo/procedures/README.md.bak"
+printf '\n| Retired |\n| --- |\n| [one](one.md) |\n' >>"$repo/procedures/README.md"
+expect_fail "procedure linked only in another README table" "one.md is not listed in procedures/README.md"
+
+good; sed -i.bak '/](one.md)/d' "$repo/procedures/README.md"; rm -f "$repo/procedures/README.md.bak"
+printf '\n## Elsewhere\n\n| Procedure |\n| --- |\n| [one](one.md) |\n' >>"$repo/procedures/README.md"
+expect_fail "procedure in a second Procedure table" "one.md is not listed in procedures/README.md"
+
+good; perl -0pi -e 's#(Each procedure is a row below\.\n)#$1\n| Note |\n| --- |\n| a table before the index |\n#' \
+  "$repo/procedures/README.md"
+expect_pass "another table before the README index"
+
+good; printf '| y | [`gone.md`](../procedures/gone.md) |\n' >>"$repo/profiles/studio.md"
+expect_fail "dangling profile link" "profiles/studio.md links procedures/gone.md"
+
+good; printf '%.0s\n' $(seq 1 300) >>"$repo/profiles/studio.md"
+expect_fail "core plus profile over the ceiling" "core plus profiles/studio.md"
+
+good; printf 'Brandon merges.\n' >>"$repo/AGENT-WORKING-AGREEMENTS.md"
+expect_fail "owner identity in the portable core" "studio-specific text"
+
+good; printf 'Branch off `develop`.\n' >>"$repo/AGENT-WORKING-AGREEMENTS.md"
+expect_fail "studio base-branch name in the portable core" "studio-specific text"
+
+good; printf 'Write to _agent/notes/.\n' >>"$repo/AGENT-WORKING-AGREEMENTS.md"
+expect_fail "studio path in the portable core" "studio-specific text"
+
+good; printf 'Studio callers read [the profile](profiles/sansfaux.md).\n' >>"$repo/AGENT-WORKING-AGREEMENTS.md"
+expect_fail "studio profile named in the portable core" "studio-specific text"
+
+good; printf 'Brandon and `develop` are fine here.\n' >>"$repo/profiles/studio.md"
+expect_pass "studio text belongs in the profile"
+
+good; printf 'pinned at %s\n' "$(printf 'c%.0s' $(seq 1 40))" >>"$repo/profiles/studio.md"
+expect_fail "40-hex pin in a profile" "hex pin"
 
 good; printf '%.0s\n' $(seq 1 200) >>"$repo/clients/acme.md"
 expect_fail "client over the ceiling" "clients/acme.md"

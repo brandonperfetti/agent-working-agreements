@@ -47,8 +47,8 @@ objectives, or expansion of the authorized scope.
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
   neither seat makes it the reviewer of its own work, and neither merges a base branch — only
-  Brandon does (Part B ritual, step 6). A client appendix may name who fills each seat there
-  (Brandon, 2026-10-23, #173).
+  Brandon does (the profile's Git ritual, step 6). A client appendix may name who fills each
+  seat there (Brandon, 2026-10-23, #173).
 - **The MPD is the spine.** The owner conversation establishes the objective and decisions;
   `MASTER-PRIORITY-DOCUMENT.md` records them and §0's mode. The lead advances the next justified
   wave within that objective, reconciles outcomes and reprioritizes at wave close. Wave close is
@@ -59,9 +59,12 @@ objectives, or expansion of the authorized scope.
   reapproval. Reconcile changed priorities, ownership, dependencies and blockers with affected
   colleagues; the owner is not the relay. Share relevant receipts and decisions, preserving
   privacy and task-specific holds.
-- **Handoffs are files, not chat.** Save kickoffs, addenda and lane reports under `handoffs/`.
-  A rotation packet begins with shipped-vs-open reconciliation and names decisions, owners,
-  receipts, governing constraints and the next authorized action. Carry existing authority;
+- **Initiative handoffs are files, not chat.** In an initiative, save kickoffs, addenda and lane
+  reports under its `handoffs/`. Outside one, write a handoff file only where continuity needs it —
+  a rotation, or a lane outliving the session that dispatched it; a bounded delegation returns its
+  report in its response and needs no handoff scaffolding (A1). A rotation packet begins with
+  shipped-vs-open reconciliation and names decisions, owners, receipts, governing constraints and
+  the next authorized action. Carry existing authority;
   a packet cannot invent approval gates or narrow the owner's objective. A pasted summary is a
   pointer plus highlights. Verify successor capability, receipt, acceptance and actual advancement
   before retiring the predecessor; preserve any still-active lanes, worktrees and unique decisions.

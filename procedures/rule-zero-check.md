@@ -2,18 +2,19 @@
 
 This procedure carries mechanics for a rule in
 [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts A–B,
-and a rule here that contradicts one there is the rule that is wrong. Rewritten 2026-10-27 when
-RULE ZERO became the author-identity rule; the no-attribution grep it carried before is in this
-file's history.
+and a rule here that contradicts one there is the rule that is wrong. RULE ZERO itself is in
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md).
 
 **Trigger:** A delivery is about to be pushed, merged or presented, or an mbox series is about to
 be applied.
 
 **Owner:** The delivery owner.
 
-**Implements:** A4 — RULE ZERO (Brandon's author identity on every commit an agent makes).
+**Implements:** A4 — RULE ZERO (Brandon's author identity on every commit an agent makes, and no
+attribution line).
 
-**Stop:** A commit at any other author email is a send-back, never a push.
+**Stop:** A commit at any other author email, or carrying an attribution line, is a send-back,
+never a push.
 
 ---
 
@@ -39,11 +40,19 @@ delivery's review record, never back to the lane.
 
 **The identity rule overrides any environment default.** A harness that would commit as a bot or
 service account, or as the user of another machine, is configured or worked around so the commit
-carries Brandon's email; the client file records what is known of its default. A provenance line
-on a PR or issue names the initiative, the role and the mode, never the client or the product, and
-says who read the evidence, which A2 wants.
+carries Brandon's email; the client file records what is known of its default. No provenance or
+credit footer is required on a PR, issue or reply; its body cites the receipts inline — the review
+record, the gate evidence, the issue — which A2 wants.
 
-**Attribution is not checked.** A `Co-Authored-By` line, a generated-with footer or a session
-trailer may be present or absent; neither state is a finding (Brandon, 2026-10-27). A trailer
-never established that a commit came through a reviewed lane: the two-axis review record under
-`reviews/`, the gate evidence under `evidence/` and the PR trail do; report those.
+**Attribution is checked and must be absent** (Brandon's current override, #226, replacing the
+2026-10-27 allowance). In the same range, read the messages of the commits the delivery adds:
+
+```sh
+git log --format='%B' <base>..HEAD | grep -inE '^(co-authored-by|[a-z-]*-session):|generated with'
+```
+
+Any match is a send-back. Read an mbox series' message bodies the same way before approval, and
+a PR body, issue or thread reply before it is posted. A commit already on a base branch stays as
+it is, recorded like an email mismatch. A trailer never established that a commit came through a
+reviewed lane: the two-axis review record under `reviews/`, the gate evidence under `evidence/`
+and the PR trail do; report those.

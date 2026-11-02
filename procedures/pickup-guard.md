@@ -3,7 +3,13 @@
 This procedure carries mechanics for a rule in
 [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts A–B,
 and a rule here that contradicts one there is the rule that is wrong. The text below was moved here
-verbatim on 2026-10-27; "above" and "below" in it refer to the agreement section it implements.
+verbatim on 2026-10-27 and split into portable and studio passages in #226; "above" and "below"
+in it refer to the agreement section it implements. The core links it directly, so it reads with
+or without a profile. Without one, follow only the portable mechanics here, with the owner's and
+repository's actual conventions (core *Composition*): a studio name stands for the core term it
+binds — Brandon the owner, `develop` and `master` the integration and release branches, MPD §0 the
+delivery's decision record — and a passage opening **Selected studio profile only** binds only
+when `profiles/sansfaux.md` is selected, through the end of its paragraph and any list under it.
 
 **Trigger:** Pickup of any delivery: before the first commit on a checkout, and again for each
 repository a session delivers to.
@@ -13,7 +19,7 @@ repository a session delivers to.
 **Implements:** B0 — Choosing the mode: the five guard items.
 
 **Stop:** A failed item downgrades that delivery to attended with a one-line reason, except item 4
-(recorded) and OpenClaw (B0's exception; stop-list item 5).
+(recorded) and a route-scoped adapter (B0; stop-list item 5).
 
 ---
 
@@ -52,28 +58,35 @@ repository a session delivers to.
    base branch. Scored when a commit would land, not by the checkout's current branch: a session
    that commits none does not fail it.
    What may be pushed to `develop` is B2's, not this item's.
-4. The base branches are protected on GitHub **by role**:
+4. The base branches are protected per the binding (B0). Without a selected profile, that is the
+   protection the repository actually has: query it on its host, never assume it, and record what
+   you found. **Until protection exists on a repo, a failed item 4 is
+   *recorded* in MPD §0, or in the PR body for work with no initiative (B2; in attended mode, its
+   one-off review record until a PR exists, B1), not a downgrade.** **Feature work never lands on
+   a base branch, and only Brandon merges** are rules of this agreement, not repo settings; report
+   a measured breach. A settings PASS is never proof that agents cannot act as the owner or that
+   the human-merge boundary is mechanically enforced.
+
+   **Selected studio profile only:** the base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and
      **deliberately no pull-request rule and no required check**. `develop` is the *head* of the
      `develop → master` PR, so working that PR's review findings means pushing to `develop`; a PR
      rule there makes the CodeRabbit ritual impossible on every repo (Brandon, 2026-09-12).
    - **Release branch (`master`)** — a pull request is required, the CI gate is a required status
      check, force pushes and deletions blocked, no bypass actors.
-   **A required approving review is not part of either profile**: agents open PRs as Brandon, GitHub
-   forbids approving your own PR, and no bot here submits approvals, so a required approval enforces
-   "nobody merges", never "only Brandon merges". Audit with the `branch-protection` skill, not by
-   reading a settings page; a 404 on the classic endpoint is not "unprotected" when a ruleset covers
-   the branch. **Until protection exists on a repo, a failed item 4 is *recorded* in MPD §0, or
-   in the PR body for work with no initiative (B2; in attended mode, its one-off review record
-   until a PR exists, B1), not a downgrade.**
-   **What protection cannot enforce here.** Nothing in the repo settings stops an agent pushing
-   straight to `develop`, or merging its own PR into `master` once the gate is green `[inference —
-   untested, since testing it means merging into a protected branch]`. **Feature work never lands
-   on a base branch, and only Brandon merges** are therefore rules of this agreement, not repo settings.
-   Brandon explicitly accepts the shared-identity risk for now (2026-10-31). Separate agent
-   identities remain a future goal; this agreement does not initiate that migration. Preserve the
-   branch protections and Git ritual, and report a measured breach. A settings PASS is never proof
-   that agents cannot act as the owner or that the human-merge boundary is mechanically enforced.
+
+   **Selected studio profile only:** **a required approving review is not part of either
+   profile**: agents open PRs as Brandon, GitHub forbids approving your own PR, and no bot here
+   submits approvals, so a required approval enforces "nobody merges", never "only Brandon
+   merges". Audit with the `branch-protection` skill, not by reading a settings page; a 404 on the
+   classic endpoint is not "unprotected" when a ruleset covers the branch.
+
+   **Selected studio profile only:** **what protection cannot enforce here.** Nothing in the repo
+   settings stops an agent pushing straight to `develop`, or merging its own PR into `master` once
+   the gate is green `[inference — untested, since testing it means merging into a protected
+   branch]`; hence the two rules above. Brandon explicitly accepts the shared-identity risk for now
+   (2026-10-31). Separate agent identities remain a future goal; this agreement does not initiate
+   that migration. Preserve the branch protections and Git ritual.
 5. Brandon has not overridden the mode to attended for this session.
 
 By environment: each client's appendix records how that client scores against these items and
