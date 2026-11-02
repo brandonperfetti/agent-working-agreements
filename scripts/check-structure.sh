@@ -1,36 +1,50 @@
 #!/usr/bin/env bash
 #
-# check-structure.sh — keep the agreement small and the procedures reachable.
+# check-structure.sh — keep the agreement small, portable and the procedures reachable.
 #
-# 1. The core (Parts A–C) stays under CORE_MAX lines: progressive disclosure only works
-#    while the always-loaded file is short enough to be read whole and attended to.
+# 1. The always-read load — the core plus one profile — stays under CORE_MAX lines:
+#    progressive disclosure only works while what is read up front is short enough to be read
+#    whole and attended to.
 # 2. Every procedures/*.md carries Trigger / Owner / Implements / Stop and the precedence
-#    clause, and is linked from both procedures/README.md and the core's Triggers table:
+#    clause, and is linked from both procedures/README.md and a profile's Triggers table:
 #    an unindexed procedure is never read.
-# 3. Core and procedures hold no 40- or 64-hex pin: a hash of a mutable file goes stale on
-#    the next edit and the rule that cites it is then wrong. CHANGELOG.md, clients/ and
+# 3. Core, profiles, clients and procedures hold no 40- or 64-hex pin: a hash of a mutable file
+#    goes stale on the next edit and the rule that cites it is then wrong. CHANGELOG.md and
 #    _agent evidence are exempt. `history/` is exempt: it exists to hold them.
 # 4. Each clients/*.md stays under CLIENT_MAX lines, for the same reason as 1.
 # 5. A client-specific procedure lives at procedures/<client>/<name>.md, carries the same
 #    fields, is listed in procedures/README.md, and is linked from clients/<client>.md
-#    rather than from the core's Triggers table.
+#    rather than from a profile's Triggers table.
+# 6. The core stays portable: no owner identity, studio staff, accounts, paths, client names
+#    or base-branch names. Those belong to a profile or a client adapter.
 #
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AWA="$ROOT/AGENT-WORKING-AGREEMENTS.md"
 PROC="$ROOT/procedures"
-# 300 is the ceiling Brandon accepted on 2026-10-27 (hardening decision 3); lower it as
-# procedures are trimmed, never raise it without his word.
+# 300 is the ceiling Brandon accepted on 2026-10-27 (hardening decision 3) for the always-read
+# file; since #226 it bounds the core plus each profile together. Lower it as text is trimmed,
+# never raise it without his word.
 : "${CORE_MAX:=300}"
 # 150 is the per-client ceiling Brandon accepted on 2026-10-27 (hardening decision 3).
 : "${CLIENT_MAX:=150}"
 fail=0
 
+profiles=()
+for p in "$ROOT"/profiles/*.md; do [ -e "$p" ] && profiles+=("$p"); done
+
 lines="$(wc -l <"$AWA" | tr -d ' ')"
 if [ "$lines" -gt "$CORE_MAX" ]; then
   echo "FAIL: AGENT-WORKING-AGREEMENTS.md is $lines lines; the ceiling is $CORE_MAX" >&2; fail=1
 fi
+for p in ${profiles[@]+"${profiles[@]}"}; do
+  n="$(( lines + $(wc -l <"$p" | tr -d ' ') ))"
+  if [ "$n" -gt "$CORE_MAX" ]; then
+    echo "FAIL: the core plus profiles/$(basename "$p") is $n lines; the ceiling is $CORE_MAX" >&2
+    fail=1
+  fi
+done
 
 for f in "$ROOT"/clients/*.md; do
   [ -e "$f" ] || continue
@@ -52,7 +66,11 @@ for f in "$PROC"/*.md "$PROC"/*/*.md; do
   grep -q "$precedence" "$f" || { echo "FAIL: $rel lacks the precedence clause" >&2; fail=1; }
   grep -q "]($rel)" "$PROC/README.md" || { echo "FAIL: $rel is not listed in procedures/README.md" >&2; fail=1; }
   if [ "$rel" = "$name" ]; then
-    grep -q "](procedures/$rel)" "$AWA" || { echo "FAIL: $rel is not in the core's Triggers table" >&2; fail=1; }
+    found=0
+    for p in ${profiles[@]+"${profiles[@]}"}; do
+      grep -q "](../procedures/$rel)" "$p" && found=1
+    done
+    [ "$found" -eq 1 ] || { echo "FAIL: $rel is not in a profile's Triggers table" >&2; fail=1; }
   else
     client="$ROOT/clients/${rel%%/*}.md"
     if [ -f "$client" ]; then
@@ -63,11 +81,17 @@ for f in "$PROC"/*.md "$PROC"/*/*.md; do
   fi
 done
 
-# Every procedure the core or a client links must exist.
+# Every procedure the core, a profile or a client links must exist.
 while read -r link; do
   [ -z "$link" ] && continue
   [ -f "$ROOT/$link" ] || { echo "FAIL: core links $link, which does not exist" >&2; fail=1; }
-done < <(grep -o 'procedures/[a-z0-9-]*\.md' "$AWA" | sort -u)
+done < <(grep -o 'procedures/[a-z0-9/-]*\.md' "$AWA" | sort -u)
+for p in ${profiles[@]+"${profiles[@]}"}; do
+  while read -r link; do
+    [ -z "$link" ] && continue
+    [ -f "$ROOT/$link" ] || { echo "FAIL: profiles/$(basename "$p") links $link, which does not exist" >&2; fail=1; }
+  done < <(grep -o '\.\./procedures/[a-z0-9/-]*\.md' "$p" | sed 's#^\.\./##' | sort -u)
+done
 for c in "$ROOT"/clients/*.md; do
   [ -e "$c" ] || continue
   while read -r link; do
@@ -76,10 +100,21 @@ for c in "$ROOT"/clients/*.md; do
   done < <(grep -o 'procedures/[a-z0-9-]*/[a-z0-9-]*\.md' "$c" | sort -u)
 done
 
+# The core is portable: studio identity, staff, accounts, paths, clients and base-branch names
+# live in a profile or a client adapter. The studio profile's own path is the one allowed name.
+studio='Brandon|brandonperfetti|Sans Faux|Camina|Judy|Amos|Ashford|Kody|CodeRabbit|OpenClaw'
+studio+='|Claude Code|Cowork|Codex|~/|_agent/|`develop`|`master`|[a-z0-9._-]+@[a-z0-9-]+\.[a-z]'
+if grep -nE "$studio" "$AWA"; then
+  echo "FAIL: studio-specific text in the portable core (above); move it to a profile or client" >&2
+  fail=1
+fi
+
 # No mutable-file pins in normative text. `git` SHAs in a commit citation are 7–12 hex; the
 # pattern catches only full object or SHA-256 digests.
 normative=("$AWA")
-for f in "$PROC"/*.md "$PROC"/*/*.md "$ROOT"/clients/*.md; do [ -e "$f" ] && normative+=("$f"); done
+for f in "$PROC"/*.md "$PROC"/*/*.md "$ROOT"/clients/*.md "$ROOT"/profiles/*.md; do
+  [ -e "$f" ] && normative+=("$f")
+done
 if grep -nE '\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b' "${normative[@]}"; then
   echo "FAIL: a 40- or 64-hex pin appears in normative text (above); cite a learning or issue" >&2
   fail=1
@@ -87,6 +122,6 @@ fi
 
 if [ "$fail" -eq 0 ]; then
   n=0; for f in "$PROC"/*.md "$PROC"/*/*.md; do [ -e "$f" ] && [ "$(basename "$f")" != README.md ] && n=$((n + 1)); done
-  echo "ok: core $lines/$CORE_MAX lines; clients under $CLIENT_MAX; $n procedures indexed; no pins"
+  echo "ok: core $lines lines, core plus each profile under $CORE_MAX; clients under $CLIENT_MAX; $n procedures indexed; core portable; no pins"
 fi
 exit "$fail"

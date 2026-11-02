@@ -1,9 +1,10 @@
 # Claude Code
 
-**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B first.**
-This appendix adds only what is specific to this client; it never overrides Parts A–B, and a rule
-here that contradicts one there is the rule that is wrong. **Name this file when you acknowledge
-your reading** — "read the agreements and `clients/claude-code.md`" — so a skipped read is visible.
+**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B, then
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md), first.** This appendix adds only what is
+specific to this client; it never overrides Parts A–B, and a rule here that contradicts one there
+is the rule that is wrong. **Name the profile and this file when you acknowledge your reading** —
+"read the agreements, `profiles/sansfaux.md` and `clients/claude-code.md`".
 
 **Default mode: autonomous.** The capability guard (B0) still decides; this is where it starts.
 
@@ -61,13 +62,12 @@ Claude Code fact.
   read there, not inferred from that listing. A permission rule or a reference to a Kody tool uses
   the name the session reports, read before it is written, because a name taken from another
   client matches nothing here.
-- **Attribution (RULE ZERO, A4): this environment injects it by default** — `Co-Authored-By` and
-  `Claude-Session` trailers on commits, a "Generated with Claude Code" footer on PR bodies, and with
-  Auto-fix on, a line crediting Claude Code on each PR thread reply. The agreement allows all of it
-  since 2026-10-27; whether `includeCoAuthoredBy` is set in `~/.claude/settings.json` is Brandon's
-  choice per machine, and the author email is what the check reads.
+- **Attribution (RULE ZERO): this environment injects it by default, and the profile forbids it** —
+  `Co-Authored-By` and `Claude-Session` trailers on commits, a "Generated with Claude Code" PR-body
+  footer, and with Auto-fix on, a crediting line on each PR thread reply. Disable it in settings
+  where available, otherwise remove each line before the commit, body or reply is written;
+  [`rule-zero-check.md`](../procedures/rule-zero-check.md) reads the author email and the messages.
 - Rotate at a context-driven clean pause through the supported session route, using A4's packet
   (or `handoff`); verify successor capability, receipt, acceptance and advancement before retirement.
-- This file is reached from the one-line pointer in the user-level `~/.claude/CLAUDE.md` (created
-  2026-09-10), which Claude Code sessions on this machine load [measured 2026-10-28]; the repo's own
-  `CLAUDE.md` adds project specifics.
+- Reached from the one-line pointer in `~/.claude/CLAUDE.md` [measured 2026-10-28], which names the
+  core and this file; the core and opener above route it through the profile until it is refreshed.

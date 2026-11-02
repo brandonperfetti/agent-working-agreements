@@ -1,9 +1,10 @@
 # Repository instructions
 
-Read [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md) on the
-trigger its opening paragraph sets: before your first write or GitHub action
-in this repository; a read-only look needs no read. This file adds only what
-is specific to this repository; it never overrides Parts A–B, and a rule here
+Read [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md), then
+[`profiles/sansfaux.md`](profiles/sansfaux.md), on the trigger the core's
+opening paragraph sets: before your first write or GitHub action in this
+repository; a read-only look needs no read. This file adds only what is
+specific to this repository; it never overrides Parts A–B, and a rule here
 that contradicts one there is the rule that is wrong.
 
 ## Commit subjects
@@ -24,8 +25,9 @@ The agreement stays small on purpose; these rules are what keep it small.
   meets a rule's cost records friction (A6) and opens no amendment in that session. Brandon
   decides which friction becomes a rule, and batches the amendments: one agreement PR at a
   time.
-- **An amendment replaces or shortens; it layers nothing on top.** Parts A–B and each client
-  file do not grow net lines. Procedure goes to `procedures/` (read when its trigger occurs;
+- **An amendment replaces or shortens; it layers nothing on top.** The core, each profile and
+  each client file do not grow net lines; studio-specific text goes to the profile, never the
+  portable core. Procedure goes to `procedures/` (read when its trigger occurs;
   four fields on top, indexed in two places) or the skill that owns it; the agreement keeps the
   invariant and a pointer. A rule moves only once its destination carries it, is linked from
   where it stood, and has been reviewed.
@@ -50,11 +52,15 @@ exiting 0:
 npx --yes markdownlint-cli2
 ```
 
-`check-structure.sh` holds the core and each client file under their line
-ceilings, requires every file under `procedures/` to carry its four fields and
-be indexed in `procedures/README.md` and in the core's *Triggers* table (or,
-for `procedures/<client>/`, in that client's appendix), and rejects a 40- or
+`check-structure.sh` holds the core plus each profile, and each client file,
+under their line ceilings, keeps studio-specific text out of the core, requires
+every file under `procedures/` to carry its four fields and be indexed in
+`procedures/README.md` and in a profile's *Triggers* table (or, for
+`procedures/<client>/`, in that client's appendix), and rejects a 40- or
 64-hex pin in normative text; `history/` is exempt from the pin rule.
+`check-index.sh` proves the composition: every client indexed by a profile,
+every root and client opener naming core and profile, the core routing callers
+to that profile, and the stable anchors present.
 
 No environment export is needed. They are the steps of the job `check` in
 `.github/workflows/check.yml`, and `check` is the required status check on

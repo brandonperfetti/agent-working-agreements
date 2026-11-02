@@ -47,8 +47,8 @@ objectives, or expansion of the authorized scope.
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
   neither seat makes it the reviewer of its own work, and neither merges a base branch — only
-  Brandon does (Part B ritual, step 6). A client appendix may name who fills each seat there
-  (Brandon, 2026-10-23, #173).
+  Brandon does (the profile's Git ritual, step 6). A client appendix may name who fills each
+  seat there (Brandon, 2026-10-23, #173).
 - **The MPD is the spine.** The owner conversation establishes the objective and decisions;
   `MASTER-PRIORITY-DOCUMENT.md` records them and §0's mode. The lead advances the next justified
   wave within that objective, reconciles outcomes and reprioritizes at wave close. Wave close is

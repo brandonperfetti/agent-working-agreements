@@ -1,10 +1,11 @@
 # OpenClaw (studio staff)
 
-**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B first, then
-the target repository's instructions.** This appendix adds client mechanics only; it never overrides
-Parts A–B, and a rule here that contradicts one there is the rule that is wrong. **Name this file
-when you acknowledge your reading** — "read the agreements and
-`clients/openclaw.md`" — so a skipped read is visible.
+**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B, then
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md), first, then the target repository's
+instructions.** This appendix adds client mechanics only; it never overrides Parts A–B, and a rule
+here that contradicts one there is the rule that is wrong. **Name the profile and this file when
+you acknowledge your reading** — "read the agreements, `profiles/sansfaux.md` and
+`clients/openclaw.md`".
 
 ## Host and startup
 

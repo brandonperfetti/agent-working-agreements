@@ -1,9 +1,10 @@
 # Cowork (Claude desktop, device bridge)
 
-**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B first.**
-This appendix adds only what is specific to this client; it never overrides Parts A–B, and a rule
-here that contradicts one there is the rule that is wrong. **Name this file when you acknowledge
-your reading** — "read the agreements and `clients/cowork.md`" — so a skipped read is visible.
+**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B, then
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md), first.** This appendix adds only what is
+specific to this client; it never overrides Parts A–B, and a rule here that contradicts one there
+is the rule that is wrong. **Name the profile and this file when you acknowledge your reading** —
+"read the agreements, `profiles/sansfaux.md` and `clients/cowork.md`".
 
 **Default mode: attended.** The capability guard (B0) still decides; this is where it starts.
 
@@ -59,16 +60,15 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   share a scratch space, is **unmeasured** — measure and record. The session scratch named under
   "Evidence store" is discarded [source 2026-09-22, as there], which costs a rebuildable clone
   nothing; whether a clone can be made there has not been measured. Never under `_agent/`.
-- **Attribution (RULE ZERO, A4):** the harness carries the same attribution instruction as Claude
+- **Attribution (RULE ZERO):** the harness carries the same attribution instruction as Claude
   Code's [source: this session, 2026-09-17], with no setting here that switches it off; the
-  agreement allows it since 2026-10-27. A commit over the bridge is one you make after approval, and
-  Brandon pushes it from his clone (B1); the author email is what the check reads
-  (`procedures/rule-zero-check.md`).
+  profile forbids it, so remove each line before the commit, body or reply is written. A commit
+  over the bridge is one you make after approval, and Brandon pushes it from his clone (B1); the
+  check reads the author email and the messages (`procedures/rule-zero-check.md`).
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]
 - **Kody tool names (A7):** in Cowork the server segment of a Kody tool's name is the connector's
   display name; Claude Code's desktop Code tab names the same connector by its id, and the
-  terminal CLI lists the connector by its display name [measured 2026-10-03, all three]. The tool
-  names a terminal session reports are read there, not inferred from that listing. A permission
-  rule or a reference to a Kody tool uses the name the session reports, read before it is
-  written, because a name taken from another client matches nothing here.
+  terminal CLI lists it by its display name [measured 2026-10-03, all three]. A permission rule or
+  a reference to a Kody tool uses the name the session reports, read before it is written, never
+  one inferred from a listing or taken from another client.

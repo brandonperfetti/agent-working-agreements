@@ -1,9 +1,10 @@
 # Codex (ChatGPT desktop, local shell)
 
-**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B first.**
-This appendix adds only what is specific to this client; it never overrides Parts A–B, and a rule
-here that contradicts one there is the rule that is wrong. **Name this file when you acknowledge
-your reading** — "read the agreements and `clients/codex.md`" — so a skipped read is visible.
+**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B, then
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md), first.** This appendix adds only what is
+specific to this client; it never overrides Parts A–B, and a rule here that contradicts one there
+is the rule that is wrong. **Name the profile and this file when you acknowledge your reading** —
+"read the agreements, `profiles/sansfaux.md` and `clients/codex.md`".
 
 **Default mode: autonomous.** The capability guard (B0) still decides; this is where it starts.
 
@@ -76,11 +77,10 @@ conversation.
     **measure and record**.
   - **A task can keep a stale MCP catalog after a config change, even across an app restart**
     `[source: 2026-09-06 setup record]` — start a fresh task rather than trusting the old one.
-  - Truncated tool output is a general hazard, not a Codex one — see A2.
 - **Worktrees:** use native create/archive for app-managed trees; follow [lifecycle](../procedures/worktree-lifecycle.md).
   Scratch placement remains unmeasured, outside `_agent/`. T3: [adapter](../procedures/t3-adapter.md).
-- **Attribution (RULE ZERO, A4):** allowed since 2026-10-27, so whether this environment injects a
-  trailer no longer needs measuring; the author email on each commit is what the check reads.
+- **Attribution (RULE ZERO):** the profile forbids it. Whether this environment injects a trailer
+  is **measure and record**; remove any before writing, and the check reads email and messages.
 - **Measure and record:** whether a dispatched worker keeps issuing tool calls while the app window
   is closed (distinct from window-close, app-quit and sleep; a proposed experiment is in the
   2026-09-13 audit).

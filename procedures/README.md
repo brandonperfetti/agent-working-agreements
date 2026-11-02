@@ -1,12 +1,14 @@
 # Procedures
 
-The mechanics behind the rules in [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md).
-The agreement holds the invariant and a one-line pointer; a procedure holds the steps, the edge
-cases and the measurements, and is read when its trigger occurs, not at session start. A procedure
-never overrides Parts A–B, and a rule here that contradicts one there is the rule that is wrong.
+The Sans Faux mechanics behind the rules in
+[`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) and
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md). Core and profile hold the invariant and a
+one-line pointer; a procedure holds the steps, the edge cases and the measurements, and is read
+when its trigger occurs, not at session start. A procedure never overrides Parts A–B, and a rule
+here that contradicts one there is the rule that is wrong.
 
 Every procedure opens with four fields — **Trigger**, **Owner**, **Implements**, **Stop** — and
-`scripts/check-structure.sh` checks that each file here is listed below and in the agreement's
+`scripts/check-structure.sh` checks that each file here is listed below and in the profile's
 *Triggers* table (a client-specific one under `<client>/` is linked from that client's appendix
 instead), carries those fields, and holds no hash or line-number pin of a mutable file.
 
