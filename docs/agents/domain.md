@@ -69,4 +69,4 @@ repository: find the one it already uses. Or the vocabulary has a gap: leave a n
 When your output goes against a reason the changelog records, the output itself says so, names
 the entry and makes the case for reopening it:
 
-> _This departs from the changelog's entry for #N; it is worth reopening because…_
+> *This departs from the changelog's entry for #N; it is worth reopening because…*
