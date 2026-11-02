@@ -6,9 +6,10 @@
 #    that exists: an unindexed adapter is never read.
 # 2. Openers of the root AGENTS.md, each profile and each client send the reader to the core
 #    and keep the standard precedence clause; root and client openers also name an existing
-#    profile, so a studio reader never reaches an adapter without its profile.
-# 3. The core's Composition section links every profile an opener requires: a caller whose
-#    pointer names only the core and a client file is still routed to the profile.
+#    profile, and each client opener names its own file: the opener alone carries the whole
+#    core + profile + client binding, so a pointer naming only the core and a client file still
+#    reaches the profile.
+# 3. The core names no profile file: it stays portable and usable with no profile at all.
 # 4. The core keeps Parts A and B and the stable anchors A1–A8 and B0–B2.
 #
 # Progressive disclosure makes each failure easy to miss: an unindexed file is never read,
@@ -64,18 +65,6 @@ opener() {
   ' "$1"
 }
 
-# A markdown section's body, from its heading to the next heading of the same or higher level.
-section() {
-  awk -v want="$2" '
-    $0 == want { on = 1; next }
-    on && /^##? / { exit }
-    on { print }
-  ' "$1"
-}
-
-composition="$(section "$AWA" '## Composition')"
-[ -n "$composition" ] || { echo "FAIL: the core has no ## Composition section" >&2; fail=1; }
-
 for f in "$ROOT/AGENTS.md" ${profiles[@]+"${profiles[@]}"} "$ROOT"/clients/*.md; do
   [ -e "$f" ] || continue
   name="$(basename "$f")"
@@ -86,16 +75,23 @@ for f in "$ROOT/AGENTS.md" ${profiles[@]+"${profiles[@]}"} "$ROOT"/clients/*.md;
   [[ "$text" == *"$precedence_clause"* ]] || {
     echo "FAIL: $name opener is missing: $precedence_clause" >&2; fail=1; }
   case "$f" in "$ROOT"/profiles/*) continue ;; esac
+  case "$f" in "$ROOT"/clients/*)
+    [[ "$text" == *"clients/$name"* ]] || {
+      echo "FAIL: $name opener does not name its own file" >&2; fail=1; } ;;
+  esac
   required="$(grep -o 'profiles/[a-z0-9-]*\.md' <<<"$text" | sort -u || true)"
   if [ -z "$required" ]; then
     echo "FAIL: $name opener does not name its profile" >&2; fail=1; continue
   fi
   while read -r p; do
     [ -f "$ROOT/$p" ] || { echo "FAIL: $name opener names $p, which does not exist" >&2; fail=1; }
-    grep -qF "]($p)" <<<"$composition" || {
-      echo "FAIL: the core's Composition section does not route callers to $p" >&2; fail=1; }
   done <<<"$required"
 done
+
+# The core is portable: it names no profile, so it reads whole with none.
+if grep -nE 'profiles/[A-Za-z0-9._-]+' "$AWA" >&2; then
+  echo "FAIL: the core names a profile file (above); adapter openers bind profiles" >&2; fail=1
+fi
 
 # Parts A and B and the stable anchors stay whole in the core.
 grep -q '^# Part A' "$AWA" || { echo "FAIL: Part A missing from the root file" >&2; fail=1; }

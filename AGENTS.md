@@ -59,8 +59,8 @@ every file under `procedures/` to carry its four fields and be indexed in
 `procedures/<client>/`, in that client's appendix), and rejects a 40- or
 64-hex pin in normative text; `history/` is exempt from the pin rule.
 `check-index.sh` proves the composition: every client indexed by a profile,
-every root and client opener naming core and profile, the core routing callers
-to that profile, and the stable anchors present.
+every root and client opener naming core and profile (a client's also its own
+file), the core naming no profile, and the stable anchors present.
 
 No environment export is needed. They are the steps of the job `check` in
 `.github/workflows/check.yml`, and `check` is the required status check on

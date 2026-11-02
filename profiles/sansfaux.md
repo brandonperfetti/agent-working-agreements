@@ -39,11 +39,11 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 - **RULE ZERO: a commit carries Brandon's author identity.** Every commit an agent makes on his
   behalf has the author email `brandon@brandonperfetti.com`, exactly; an outside contribution
   carries its author's own identity, and a PR whose commits carry Brandon's identity from another
-  account is not merged until re-authored (Brandon, 2026-10-13). **No attribution:**
-  no `Co-Authored-By` or session trailer, generated-with footer or crediting line on a commit, PR
-  body, issue or thread reply (Brandon's current override, #226, replacing the 2026-10-27
-  allowance). A provenance line names initiative, role and mode. RULE ZERO is line one of every
-  dispatch prompt. Check before every push, merge and presentation.
+  account is not merged until re-authored (Brandon, 2026-10-13). **No attribution:** no
+  `Co-Authored-By` or session trailer, generated-with footer or crediting line on a commit, PR body,
+  issue or thread reply (Brandon's override, #226), and no provenance footer is required; receipts
+  and inline references carry the evidence. RULE ZERO is line one of every dispatch prompt. Check
+  before every push, merge and presentation.
 - **Review.** Verdicts go under `reviews/`, naming the head SHA; the procedure carries scoping,
   staleness and the bot's three outcomes. Close-out review is where the big finds happen
   [learnings: 2026-08-30 §9]. Paid reviews use an approved funded allowance only (B2).

@@ -3,8 +3,8 @@
 The working agreement between Brandon Perfetti and every AI agent he works with — Claude Code,
 Cowork, Codex, OpenClaw (Camina) — across the repositories he runs under Sans Faux. It is the
 written form of deciding what gets built and holding agents to it: how orchestrated work is
-specified (a grilling session, a master priority document, tickets, waves of agents), how every
-claim is labelled as measured, read from source or inferred, which branch a change may land on
+specified (a grilling session, a master priority document, tickets, waves of agents), how material
+findings are labelled as measured, read from source or inferred, which branch a change may land on
 and who merges it, and what an agent must stop and ask about rather than decide. **The agreement
 itself is [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md)** — start there, not here.
 This README is for a human reader: the maintainer, or someone arriving from outside.
@@ -18,7 +18,8 @@ before a session's first delivery, and a path an agent can follow is worth more 
 stranger finds tidy. What is portable is the core:
 [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md) holds the evidence labels, the seats,
 the two modes and the guard that picks between them, and the stop-list, with no owner, staff,
-account or path in it. Brandon's studio — his identity, the git ritual, the store, the trigger
+account, path or profile name in it; used without a profile, it follows the conventions the owner
+and repository actually use. Brandon's studio — his identity, the git ritual, the store, the trigger
 index and the client index — is bound in [`profiles/sansfaux.md`](profiles/sansfaux.md). This is
 the real thing, not a template. The changelog is the record of these rules being exercised: an
 entry names what produced it, and a rule earns its place only after something bit. The
@@ -36,7 +37,7 @@ AGENT-WORKING-AGREEMENTS.md          the portable core: composition, Parts A (di
 profiles/sansfaux.md                 the studio profile: bindings, studio authority, ritual, indexes
 procedures/<name>.md                 the mechanics behind a rule, read when its trigger occurs
 procedures/<client>/<name>.md        the same, for one client, linked from its appendix
-history/<client>.md                  measurements, pinned source readings, superseded claims: never required reading
+history/openclaw.md                  the shared client history archive, one section per client: never required reading
 clients/<client>.md                  one appendix per environment — read only your own
 docs/agents/issue-tracker.md         repository-specific issue/spec fetch and PR-linkage rules
 docs/agents/triage-labels.md         the triage roles mapped to this repository's labels
@@ -45,7 +46,7 @@ docs/agents/commit-subject-audit.md  the 2026-09-23 audit of commit-subject conv
 CHANGELOG.md                         why each rule changed, newest first
 LICENSE                              the CC BY 4.0 legal code; it covers the documentation
 LICENSE-MIT                          the MIT text; it covers scripts/ and the GitHub workflows
-scripts/check-index.sh               CI: core → profile → client composition, indexes, openers, anchors
+scripts/check-index.sh               CI: client openers bind core → profile → client; profile-free core; anchors
 scripts/check-structure.sh           CI: ceilings, a portable core, procedure fields and index, no pins
 .markdownlint-cli2.jsonc             CI: markdown lint rules, each exception with its reason
 ```
@@ -55,10 +56,12 @@ discipline, authority boundaries, stop conditions, the review invariant. What bi
 Brandon's studio — owner, author identity, branch names, store, the git ritual — is in the
 profile. Both are short enough to be read whole before the first delivery. The mechanics that
 carry a rule out live in `procedures/`, each behind a named trigger, read when that trigger
-occurs. What is specific to one client — its selectors, its measured limits, who fills which seat
-— is in that client's appendix: an agent reads the core, the profile, then the one appendix the
-profile's [client index](profiles/sansfaux.md#client-adapters-read-only-yours) names for its
-environment, and no other. A rule moves out of the core or profile only once its
+occurs. What is specific to one client — its selectors, its limits, who fills which seat — is in
+that client's appendix, and the dated measurements behind it in that client's section of the
+shared, optional archive `history/openclaw.md`: an agent reads the core, the profile, then the one
+appendix the profile's
+[client index](profiles/sansfaux.md#client-adapters-read-only-yours) names for its environment,
+and no other. A rule moves out of the core or profile only once its
 destination carries it, is linked from where it stood and has been reviewed, because a rule moved
 without a destination is broken silently by whoever did not follow the link. Repository gates and
 conventions stay in each repository's own `AGENTS.md`, and workflow procedures in the skills Part A
@@ -72,8 +75,9 @@ who fills each seat there.
 
 Each client is pointed at the agreement by one line it loads at startup. The pointer is the only
 per-client configuration; the agreement itself is identical for all of them. Existing pointers
-name the core and a client file; both route the reader through `profiles/sansfaux.md`, so no
-studio session omits it before the pointers are refreshed to name it.
+name the core and a client file; the client file's opener names the core, `profiles/sansfaux.md`
+and itself, so no studio session omits the profile before the pointers are refreshed to name it.
+The core names no profile.
 
 | Client | Pointer lives in | Notes |
 | --- | --- | --- |

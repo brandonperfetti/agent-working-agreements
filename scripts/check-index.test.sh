@@ -22,8 +22,8 @@ pattern+='/and conflicts are resolved elsewhere./'
 good() {
   rm -f "$repo/clients"/*.md "$repo/profiles"/*.md
   {
-    printf '# Agreement\n\nRead the core, the profile, then your adapter.\n\n## Composition\n\n'
-    printf 'Studio callers read [`profiles/studio.md`](profiles/studio.md).\n\n'
+    printf '# Agreement\n\nRead the core, then any profile and adapter named.\n\n## Composition\n\n'
+    printf 'Adapter openers name every layer they depend on.\n\n'
     printf '# Part A\n\n'
     for a in A1 A2 A3 A4 A5 A6 A7 A8; do printf '## %s. Rule\n\nText.\n\n' "$a"; done
     printf '# Part B\n\n'
@@ -44,7 +44,8 @@ EOF
   cat >"$repo/clients/with-sections.md" <<EOF
 # Client with sections
 
-Read AGENT-WORKING-AGREEMENTS.md, then [the profile](../profiles/studio.md), first, $clause
+Read AGENT-WORKING-AGREEMENTS.md, [the profile](../profiles/studio.md), then
+clients/with-sections.md, $clause
 
 ## Later section
 
@@ -54,7 +55,8 @@ EOF
   cat >"$repo/clients/without-sections.md" <<EOF
 # Client without sections
 
-Read AGENT-WORKING-AGREEMENTS.md and ../profiles/studio.md first, and a rule
+Read AGENT-WORKING-AGREEMENTS.md, ../profiles/studio.md and clients/without-sections.md
+first, and a rule
 here that contradicts one there is the rule that is wrong.
 
 Client mechanics without subheadings.
@@ -107,6 +109,11 @@ for target in with-sections.md without-sections.md; do
   printf '\nRead ../profiles/studio.md later.\n' >>"$repo/clients/$target"
   expect_fail "$target profile pointer outside its opener" \
     "FAIL: $target opener does not name its profile"
+
+  good; perl -0pi -e "s#clients/\Q$target\E#this file#" "$repo/clients/$target"
+  printf '\nThis is clients/%s.\n' "$target" >>"$repo/clients/$target"
+  expect_fail "$target own-file pointer outside its opener" \
+    "FAIL: $target opener does not name its own file"
 done
 
 good; perl -0pi -e "$pattern" "$repo/AGENTS.md"; printf '\n%s\n' "$clause" >>"$repo/AGENTS.md"
@@ -122,10 +129,10 @@ good; perl -0pi -e 's#studio\.md\)#gone.md)#' "$repo/clients/with-sections.md"
 expect_fail "client names a missing profile" \
   "FAIL: with-sections.md opener names profiles/gone.md, which does not exist"
 
-good; perl -0pi -e 's#\[`profiles/studio\.md`\]\(profiles/studio\.md\)#the studio profile#' \
-  "$repo/AGENT-WORKING-AGREEMENTS.md"
-expect_fail "core no longer routes core-plus-client callers to the profile" \
-  "FAIL: the core's Composition section does not route callers to profiles/studio.md"
+good; printf 'Studio callers read [the profile](profiles/studio.md).\n' \
+  >>"$repo/AGENT-WORKING-AGREEMENTS.md"
+expect_fail "core names a profile" \
+  "FAIL: the core names a profile file (above); adapter openers bind profiles"
 
 good; perl -0pi -e 's#^- \[`clients/without-sections\.md`\].*\n##m' "$repo/profiles/studio.md"
 expect_fail "client missing from the profile's index" \

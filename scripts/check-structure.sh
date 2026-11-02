@@ -15,8 +15,8 @@
 # 5. A client-specific procedure lives at procedures/<client>/<name>.md, carries the same
 #    fields, is listed in procedures/README.md, and is linked from clients/<client>.md
 #    rather than from a profile's Triggers table.
-# 6. The core stays portable: no owner identity, studio staff, accounts, paths, client names
-#    or base-branch names. Those belong to a profile or a client adapter.
+# 6. The core stays portable: no owner identity, studio staff, accounts, paths, client names,
+#    base-branch names or studio profile name. Those belong to a profile or a client adapter.
 #
 set -euo pipefail
 
@@ -101,8 +101,8 @@ for c in "$ROOT"/clients/*.md; do
 done
 
 # The core is portable: studio identity, staff, accounts, paths, clients and base-branch names
-# live in a profile or a client adapter. The studio profile's own path is the one allowed name.
-studio='Brandon|brandonperfetti|Sans Faux|Camina|Judy|Amos|Ashford|Kody|CodeRabbit|OpenClaw'
+# live in a profile or a client adapter; the core names no studio profile either.
+studio='Brandon|brandonperfetti|Sans Faux|[Ss]ansfaux|Camina|Judy|Amos|Ashford|Kody|CodeRabbit|OpenClaw'
 studio+='|Claude Code|Cowork|Codex|~/|_agent/|`develop`|`master`|[a-z0-9._-]+@[a-z0-9-]+\.[a-z]'
 if grep -nE "$studio" "$AWA"; then
   echo "FAIL: studio-specific text in the portable core (above); move it to a profile or client" >&2

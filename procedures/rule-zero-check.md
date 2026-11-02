@@ -40,9 +40,9 @@ delivery's review record, never back to the lane.
 
 **The identity rule overrides any environment default.** A harness that would commit as a bot or
 service account, or as the user of another machine, is configured or worked around so the commit
-carries Brandon's email; the client file records what is known of its default. A provenance line
-on a PR or issue names the initiative, the role and the mode, never the client or the product, and
-says who read the evidence, which A2 wants.
+carries Brandon's email; the client file records what is known of its default. No provenance or
+credit footer is required on a PR, issue or reply; its body cites the receipts inline — the review
+record, the gate evidence, the issue — which A2 wants.
 
 **Attribution is checked and must be absent** (Brandon's current override, #226, replacing the
 2026-10-27 allowance). In the same range, read the messages of the commits the delivery adds:

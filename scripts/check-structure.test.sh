@@ -35,7 +35,7 @@ EOF
   cat >"$repo/AGENT-WORKING-AGREEMENTS.md" <<EOF
 # Agreement
 
-The owner merges base branches; studio callers read [the profile](profiles/studio.md).
+The owner merges base branches; adapter openers name any profile.
 EOF
   cat >"$repo/profiles/studio.md" <<EOF
 # Studio profile
@@ -118,6 +118,9 @@ expect_fail "studio base-branch name in the portable core" "studio-specific text
 
 good; printf 'Write to _agent/notes/.\n' >>"$repo/AGENT-WORKING-AGREEMENTS.md"
 expect_fail "studio path in the portable core" "studio-specific text"
+
+good; printf 'Studio callers read [the profile](profiles/sansfaux.md).\n' >>"$repo/AGENT-WORKING-AGREEMENTS.md"
+expect_fail "studio profile named in the portable core" "studio-specific text"
 
 good; printf 'Brandon and `develop` are fine here.\n' >>"$repo/profiles/studio.md"
 expect_pass "studio text belongs in the profile"

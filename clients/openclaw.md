@@ -1,17 +1,16 @@
 # OpenClaw (studio staff)
 
 **Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B, then
-[`../profiles/sansfaux.md`](../profiles/sansfaux.md), first, then the target repository's
-instructions.** This appendix adds client mechanics only; it never overrides Parts A–B, and a rule
-here that contradicts one there is the rule that is wrong. **Name the profile and this file when
-you acknowledge your reading** — "read the agreements, `profiles/sansfaux.md` and
-`clients/openclaw.md`".
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md), then this file — all three, even when your
+pointer names only the core and this file — then the target repository's instructions.** This
+appendix adds client mechanics only; it never overrides Parts A–B, and a rule here that contradicts
+one there is the rule that is wrong. **Name all three when you acknowledge your reading** — "read
+the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
 
 ## Host and startup
 
-- **Host:** Brandon's Mac mini, native macOS, user `brandonperfetti`, since 2026-10-21
-  [measured 2026-10-27, #186: no Bubblewrap or AppArmor on PATH; Docker present, use unresolved].
-  The former VPS and its sandbox are history; their recovery procedure is dormant (below).
+- **Host:** Brandon's Mac mini, native macOS, user `brandonperfetti` (#186). The former VPS and
+  its sandbox are history; their recovery procedure is dormant (below).
 - **Agent root** `~/dev/sansfaux`, set here: A6's upward walk from a role workspace finds its own
   `_agent/` or none. **Protected instruction-source root** `$AGENT_ROOT/agent-working-agreements/`:
   clean, on `master`, equal to `origin/master` after the post-release refresh, never a delivery
@@ -63,7 +62,7 @@ deliveries still carry independent review, verification and the owner's decision
   Leads choose model/effort within approved routes; respect wrapper pins rather than bypass them.
   On exhaustion, coding falls back from Claude to Codex OAuth, then to an approved API model within
   an existing funded allowance (B2). No automatic top-up; report an unavailable selector honestly.
-- **Restoration owners (B2 stop-list item 5)** [decision 2026-10-27, Brandon, #194]: **Ashford** for
+- **Restoration owners (B2 stop-list item 5)** (#194): **Ashford** for
 OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
 instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
 **delivery owner** for repository and worktree capability, the protected root's post-release refresh
@@ -88,8 +87,9 @@ and the worktree bindings the procedure lists. Reset is unmeasured; require a de
 ## Evidence store
 
 Use the selected store's `evidence/` and `analysis/` per A2 and A6; date-name artifacts and label
-claims. The Gateway executable-check scratch root takes no scratch clone; where one goes on this
-host, and whether specialists share that space, is **unmeasured** — measure and record.
+material findings. The Gateway executable-check scratch root takes no scratch clone; where one
+goes on this host, and whether specialists share that space, is **unmeasured** — measure and
+record.
 
 ## Dormant: the native sandbox breaker
 
@@ -105,4 +105,5 @@ bwrap: No permissions to create a new namespace, likely because the kernel does 
 ## History
 
 Measurements, source readings with their hashes, the route census, superseded claims and the
-migration dispositions; none required reading: [`../history/openclaw.md`](../history/openclaw.md).
+migration dispositions, in the shared client history archive; none required reading:
+[`../history/openclaw.md#openclaw`](../history/openclaw.md#openclaw).

@@ -1,26 +1,24 @@
 # Agent working agreements
 
 **Before a session's first delivery, dispatch, repository write or GitHub action, read** this
-core, the selected profile if any, then your client adapter if any. A resumed step or later turn
-needs no re-read. **Say what you read, naming each file.**
+core, then any profile and client adapter your pointer or adapter names. A resumed step or later
+turn needs no re-read. **Say what you read, naming each file.**
 
 ## Composition
 
 Layers, highest first: this **core** (Parts A–B, portable), an optional **profile** binding one
-owner's studio, an optional **client adapter** for one environment, then repository instructions
-and procedures at their triggers. A lower layer adds or narrows, never weakens; a rule
-contradicting a higher layer is wrong. Elsewhere, "Parts A–B" means this core plus the selected
-profile, if any.
+owner's conventions, an optional **client adapter** for one environment, then repository
+instructions and procedures at their triggers. A lower layer adds or narrows, never weakens; a
+rule contradicting a higher layer is wrong. Elsewhere, "Parts A–B" means this core plus the
+selected profile, if any. An adapter's opener names every layer it depends on, so a pointer naming
+only this core and that adapter still reaches every layer; a named layer that is unreadable stops
+the affected work, with the missing source recorded.
 
-**The core stands alone.** Without a profile, whatever a rule leaves to "the profile" (identity,
-attribution, branches, protection, store, ritual, route-scoped adapters) comes from the owner's
-instructions or the repository's; where neither states it, record the gap and proceed per A8.
-
-**Studio callers load the studio profile.** Every adapter under this repository's `clients/` is a
-studio adapter: a session reading this core and one of them also reads
-[`profiles/sansfaux.md`](profiles/sansfaux.md), even when its pointer names only the core and a
-client file, until reviewed pointer refreshes name it. If it is unreadable, stop the affected work
-and record the missing source.
+**The core stands alone.** A rule's **binding** is the profile's. Without a profile, whatever a
+rule leaves to it (identity, attribution, branches, protection, store, ritual, route-scoped
+adapters) follows the conventions the owner and repository actually use: configured identity,
+existing branches and protection, existing artifact locations. No written policy is needed and
+its absence is no gate; record the convention you followed.
 
 # Part A — Portable discipline (every client, every mode)
 
@@ -33,12 +31,12 @@ its records, and every route keeps the original requested outcome.
 
 ## A2. Evidence discipline
 
-**Label material findings and uncertainty** in user-facing updates **[measured]** (observed),
+**Explicit labels mark only material findings and uncertainty:** **[measured]** (observed),
 **[source]** (read from code or config: what it says, not does) or **[inference]** (naming what
-would verify it); ordinary progress prose stays plain. Receipts keep provenance and the three
-kinds apart: a right measurement never carries a wrong mechanism. A label states its boundary and
-is never inherited across revisions. A summary, or a successful tool call, is not proof the
-output reached you. Correct in place, marked and dated; say "I don't know". Evidence is
+would verify it). Ordinary progress stays plain prose, unlabelled. Receipts keep provenance and
+the three kinds apart: a right measurement never carries a wrong mechanism. A label states its
+boundary and is never inherited across revisions. A summary, or a successful tool call, is not
+proof the output reached you. Correct in place, marked and dated; say "I don't know". Evidence is
 proportional to the claim (#185).
 
 ## A3. Do the work inside the turn
@@ -60,8 +58,8 @@ owner decision.
 - **Continuity lives in files**, carrying existing authority; a packet never invents gates or
   narrows the objective. Lanes keep to named files and their own worktree.
 - **Model and effort are chosen per task**; reports separate requested from attested.
-- **Authorship:** every agent commit carries the profile's author identity, checked before push,
-  merge and presentation; attribution follows the profile.
+- **Authorship:** every agent commit carries the bound author identity, checked before push,
+  merge and presentation; attribution follows the binding. No credit footer is required anywhere.
 - **Two-axis review (Standards + Spec) before acceptance**, no size exemption; the verdict names
   the exact head. Later fixes get scoped review (#193); close-out review precedes promotion.
 - **Verified harmful review findings are fixed before merge**; disproved ones are declined with
@@ -97,7 +95,7 @@ The environment picks; the adapter names the default; the owner's word wins. At 
 checkout and delivery path, a failed item downgrades only that delivery to attended (item 4 is
 recorded instead): 1. the `pre-push` hook proven by dry run, or none recorded; 2. the full gate
 runs locally; 3. feature work on its own branch, never a base branch; 4. base branches protected
-per the profile; 5. no owner override. A **route-scoped** adapter the profile names continues on
+per the binding; 5. no owner override. A **route-scoped** adapter the profile names continues on
 supported routes instead and stops only an operation with no safe route (B2 item 5).
 
 ## B1. Attended mode

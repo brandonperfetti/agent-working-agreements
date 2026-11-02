@@ -1,10 +1,11 @@
 # Cowork (Claude desktop, device bridge)
 
 **Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B, then
-[`../profiles/sansfaux.md`](../profiles/sansfaux.md), first.** This appendix adds only what is
-specific to this client; it never overrides Parts A–B, and a rule here that contradicts one there
-is the rule that is wrong. **Name the profile and this file when you acknowledge your reading** —
-"read the agreements, `profiles/sansfaux.md` and `clients/cowork.md`".
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md), then this file — all three, even when your
+pointer names only the core and this file.** This appendix adds only what is specific to this
+client; it never overrides Parts A–B, and a rule here that contradicts one there is the rule that
+is wrong. **Name all three when you acknowledge your reading** — "read the agreements,
+`profiles/sansfaux.md` and `clients/cowork.md`".
 
 **Default mode: attended.** The capability guard (B0) still decides; this is where it starts.
 
@@ -12,10 +13,10 @@ is the rule that is wrong. **Name the profile and this file when you acknowledge
 
 ## Evidence store
 
-[source 2026-09-22, device-bridge model] With the Sans Faux root linked, Cowork writes to the
-desktop's per-machine store at `~/dev/sansfaux/_agent/`. An unlinked cloud workspace has no durable
-store: do not take an irreproducible measurement there. Link the folder first, because session
-scratch is discarded and cannot satisfy A2's preserve-before-summarizing rule.
+With the Sans Faux root linked, Cowork writes to the desktop's per-machine store at
+`~/dev/sansfaux/_agent/`. An unlinked cloud workspace has no durable store: do not take an
+irreproducible measurement there. Link the folder first, because session scratch is discarded and
+cannot satisfy A2's preserve-before-summarizing rule.
 
 The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-filesystem `rename`.
 
@@ -26,12 +27,11 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   `tmp_obj_*`). `sweep && git add … && sweep && git commit …` in one shell call; a `git status`
   between sweep and commit re-blocks it. `./organize.sh --git-locks --apply` sweeps every repo into
   `.git/_agent_trash/` keeping filenames. `tmp_obj_*` unlink warnings during `git add` are noise.
-- **Git hooks fire over the bridge** [measured 2026-09-13, a `pre-commit` sentinel]: item 1 fails
-  here for `rm`, worktrees and `branch -d`, not for hooks firing; item 2 usually fails too.
-  Whether a hook that itself needs those, or a truncating write, also *passes* is unmeasured.
-  That is not item 1's `pre-push` probe, which is unmeasured here. Brandon pushes from his clone
-  (B1: "He pushes himself"), so the probe is about his checkout and, like any install it calls
-  for, his to run — tell him exactly what to run (B1).
+- **Git hooks fire over the bridge**: item 1 fails here for `rm`, worktrees and `branch -d`, not
+  for hooks firing; item 2 usually fails too. Whether a hook that itself needs those, or a
+  truncating write, also *passes* is unmeasured. That is not item 1's `pre-push` probe, which is
+  unmeasured here. Brandon pushes from his clone (B1), so the probe is about his checkout and, like
+  any install it calls for, his to run — tell him exactly what to run (B1).
 - **Merge-state files linger** after a bridge merge (`MERGE_HEAD`, `MERGE_MSG`, `MERGE_MODE`) —
   `mv` them to `.git/_agent_trash/`. `git checkout -- <file>` and `git branch -d` fail; restore with
   `git show HEAD:<file> > <file>`; leave dead branches for Brandon to `-D`.
@@ -53,22 +53,22 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
 - **The Agent tool blocks until the lane returns** — two lanes is sequential wall-clock.
   [learnings: 2026-09-06 wave-6 §8] **Unattended Agent-tool dispatches die with the tab.**
   [learnings: 2026-08-30 §10]
-- **Model and effort (A4):** choose among the client's available approved selectors for the task;
-  record requested versus attested settings. If the tool forces inheritance or a pinned model,
-  report that limitation rather than a role-to-selector guarantee.
+- **Model and effort (A4):** choose among available approved selectors per task; record requested
+  versus attested settings, reporting forced inheritance or a pinned model as a limitation.
 - **Scratch clones (A6, "Clones"):** where a scratch clone goes here, and whether sub-agents
   share a scratch space, is **unmeasured** — measure and record. The session scratch named under
-  "Evidence store" is discarded [source 2026-09-22, as there], which costs a rebuildable clone
-  nothing; whether a clone can be made there has not been measured. Never under `_agent/`.
-- **Attribution (RULE ZERO):** the harness carries the same attribution instruction as Claude
-  Code's [source: this session, 2026-09-17], with no setting here that switches it off; the
-  profile forbids it, so remove each line before the commit, body or reply is written. A commit
-  over the bridge is one you make after approval, and Brandon pushes it from his clone (B1); the
-  check reads the author email and the messages (`procedures/rule-zero-check.md`).
+  "Evidence store" is discarded, which costs a rebuildable clone nothing; whether a clone can be
+  made there has not been measured. Never under `_agent/`.
+- **Attribution (RULE ZERO):** the harness carries Claude Code's attribution instruction, with no
+  setting here that switches it off; the profile forbids it, so remove each line before the
+  commit, body or reply is written. A commit over the bridge is one you make after approval, and
+  Brandon pushes it from his clone (B1); the check reads the author email and the messages
+  (`procedures/rule-zero-check.md`).
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]
-- **Kody tool names (A7):** in Cowork the server segment of a Kody tool's name is the connector's
-  display name; Claude Code's desktop Code tab names the same connector by its id, and the
-  terminal CLI lists it by its display name [measured 2026-10-03, all three]. A permission rule or
-  a reference to a Kody tool uses the name the session reports, read before it is written, never
-  one inferred from a listing or taken from another client.
+- **Kody tool names (A7):** the same connector is named differently per client. A permission rule
+  or a reference to a Kody tool uses the name the session reports, read before it is written,
+  never one inferred from a listing or taken from another client.
+
+Dated measurements behind these rules, in the shared client history archive; none required
+reading: [`../history/openclaw.md#cowork`](../history/openclaw.md#cowork).
