@@ -1,11 +1,29 @@
-# OpenClaw — history and evidence
+# Client history and evidence (OpenClaw, Claude Code, Codex, Cowork)
+
+The shared historical archive for every client appendix under `clients/`. It began as OpenClaw's
+history file, which is why it keeps this path; on 2026-11-02 (#226) the dated observations the
+other client appendixes carried moved here too, each under its own client section. Nothing here is
+startup reading or required reading for any client; a rule cites a learning or an issue, and the
+receipts live here or under `_agent/evidence/`. Text is verbatim as moved; headings say which
+client and which appendix section it came from.
+
+- [OpenClaw](#openclaw)
+- [Claude Code](#claude-code)
+- [Codex](#codex)
+- [Cowork](#cowork)
+
+## OpenClaw
 
 Measurements, source readings with their hashes, the route census, superseded claims and the
-migration dispositions that `clients/openclaw.md` carried until 2026-10-27. Nothing here is startup
-reading; a rule cites a learning or an issue, and the receipts live here or under
-`_agent/evidence/`. Text is verbatim as moved; headings say where it came from.
+migration dispositions that `clients/openclaw.md` carried until 2026-10-27.
 
-## From *Startup and mode*: acceptance narrative
+### From *Host and startup*: host measurement (moved 2026-11-02, #226)
+
+**Host:** Brandon's Mac mini, native macOS, user `brandonperfetti`, since 2026-10-21 [measured
+2026-10-27, #186: no Bubblewrap or AppArmor on PATH; Docker present, use unresolved]. Restoration
+owners: [decision 2026-10-27, Brandon, #194].
+
+### From *Startup and mode*: acceptance narrative
 
 **Configured native agent root.** On Brandon's native macOS OpenClaw installation, the configured
 agent root is `~/dev/sansfaux`, currently resolving for the live account to
@@ -42,7 +60,7 @@ canonical policy decision, not a claim that every capability has been measured. 
 workspace-local layer adds client mechanics only; it never copies or overrides Parts A–B. B2 still
 reserves merging to Brandon alone. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 
-## From *Runtime and workspace*: wrapper selector and route census (2026-10-24)
+### From *Runtime and workspace*: wrapper selector and route census (2026-10-24)
 
 Resolve the active workspace and target checkout from live inventory; do not assume every specialist
 shares main's CWD. When delegation is needed, use canonical role IDs and the supported native or
@@ -133,7 +151,7 @@ the amendment exemption in its README means an autonomous amendment uses one iso
 worktree branched from `develop`, rather than a wave branch; do not invent a wave merely to obtain
 isolation.
 
-## From *Staff operating model*: the prose the seat table replaced
+### From *Staff operating model*: the prose the seat table replaced
 
 This is an OpenClaw-only operating model. It does not change B0's guard, B1/B2's delivery rules,
 the Part B ritual, or another client's appendix.
@@ -211,11 +229,11 @@ instruction-source pointer and its reachability); **Bull** for host and runtime 
 included. Camina routes the stop and keeps continuity; a stop that names its owner is complete and
 needs no packet.
 
-## From *Bubblewrap circuit breaker*: pinned evidence
+### From *Bubblewrap circuit breaker*: pinned evidence
 
 (none)
 
-## From *Instruction-source isolation and freshness*: source readings and captures
+### From *Instruction-source isolation and freshness*: source readings and captures
 
 OpenClaw documentation sources, all from the installed 2026.10.6 docs at
 `<runtime>/lib/node_modules/openclaw/docs/`, where `<runtime>` is
@@ -326,11 +344,11 @@ run, or prints any output, stop, and retain and report the worktree and branch w
 status and output. Only exit 0 with empty output permits cleanup to continue. Then pick the
 removal route from OpenClaw's registered inventory. Run:
 
-## From *Pickup guard and delivery audit*: pinned evidence
+### From *Pickup guard and delivery audit*: pinned evidence
 
 (none)
 
-## Evidence store (former wording)
+### Evidence store (former wording)
 
 **Configured native store.** For a fresh role started from a replaced pointer under the approved
 acceptance procedure in [Startup and mode][startup], the native artifact store resolves
@@ -350,7 +368,7 @@ check and is removed when that check completes [source: this appendix]. Where a 
 on this host, and whether specialists share a scratch space, is **unmeasured** — measure and
 record. Never under `_agent/`.
 
-## Migration dispositions
+### Migration dispositions
 
 The complete machine-local agreement that preceded the canonical route carried rules that Parts
 A–B now supersede. They are deliberately **not carried forward**, for these reasons:
@@ -379,6 +397,86 @@ fuller five-step pattern (`docs/team-operating-model.md` on the OpenClaw host) s
 documents or wrappers that already own them; only the one-strike circuit breaker above, the part
 that applies in-session, lives here. Do not copy them into this appendix or a replacement local
 agreement.
+
+## Claude Code
+
+Dated measurements and source readings that `clients/claude-code.md` carried until 2026-11-02
+(#226). The appendix keeps the mechanics and the safety triggers. Text is as it stood in the
+appendix.
+
+### From *Evidence store*
+
+- [measured 2026-09-15, Brandon's desktop] This client's per-machine `_agent` store is
+  `~/dev/sansfaux/_agent/`.
+- Native shell on Brandon's machine (or a cloud checkout): `rm`, worktrees, `git branch -d`, and
+  hook execution all work [measured 2026-09-10, on claude-skills].
+- Branch protection: on 2026-09-10 neither `develop` nor `master` on claude-skills carried
+  protection or rulesets [measured]. A record of that repository then, never of another.
+- A worktree made by `git worktree add` shares the main checkout's `.git/hooks` [measured
+  2026-09-17, as B0 item 1].
+- **Scratch clones:** the scratchpad directory rule [source 2026-10-12: the harness's session
+  instructions]. In the two dispatches measured, a sub-agent shared it: each one's own environment
+  named the directory its handoff's scratch subdirectory sat under [measured 2026-10-12: a lane and
+  its Spec reviewer, by reading the environment's scratchpad line against the handoff's path].
+- **Agent-tool dispatches in one message run concurrently — ≥ 3 measured** (2026-09-10).
+- **CodeRabbit CLI:** 0.8.2 at `~/.local/bin/coderabbit`, org `brandonperfetti` [measured
+  2026-09-29, Brandon's desktop].
+- **Kody tool names** [measured 2026-10-03]: in the desktop app's Code tab the server segment of a
+  Kody tool's name is the connector's id, not its display name; Cowork uses the display name
+  (`cowork.md`); the terminal CLI lists the connector by its display name, and the tool names a
+  terminal session reports are read there, not inferred from that listing.
+- **Pointer:** reached from the one-line pointer in `~/.claude/CLAUDE.md` [measured 2026-10-28],
+  which names the core and this file; the appendix opener routes it through the profile.
+
+## Codex
+
+Dated measurements and source readings that `clients/codex.md` carried until 2026-11-02 (#226).
+The appendix keeps the mechanics and the safety triggers. Text is as it stood in the appendix.
+
+### From *Evidence store*
+
+- [inference 2026-09-15] On Brandon's Mac, Codex uses `~/dev/sansfaux/_agent/`, the same
+  per-machine store as Claude Code because both clients run against the same desktop checkout
+  root; this was not separately measured in Codex.
+- Everything the appendix said was `[measured 2026-09-13]` on Brandon's Mac unless marked.
+- **Pointer surface:** editing the field rewrote the file's whole contents `[measured 2026-09-13,
+  Brandon]`; the asymmetric round trip was measured the same day. So the pointer can be changed by
+  script (the AWA repo migration included), as long as the app is restarted afterward. (No
+  `AGENTS.override.md`, `CODEX_HOME` unset.)
+- **Guard item 1:** `rm` succeeds, a truncating overwrite shrinks the file in place with no
+  surviving tail, `git worktree add`/`remove` work, `branch -d` refuses an unmerged branch while
+  `-D` takes it, and an executable `pre-commit` hook fires on commit (sentinel in the output). A
+  dry run contacts the remote [measured 2026-09-17, Claude Code, an https remote].
+- **Guard item 2:** node, pnpm and python3 are present, but the gate also wanted
+  `zip`/`unzip`/`mktemp` and a vendor CLI.
+- **Guard item 4:** `gh` is authenticated; scopes include `repo` and `workflow`.
+- **Default mode:** Brandon lifted the standing attended instruction on 2026-09-13.
+- **Sub-agents:** ≥ 2 workers ran concurrently alongside the parent (4 slots advertised, 3 workers
+  unverified).
+- **Sandbox denial:** `ps` was denied and a sandboxed `curl` failed DNS while the permitted route
+  returned HTTP 200.
+- **`claude plugin validate .`** stalled inside the sandbox `[measured 2026-09-13]`.
+- **Skills plugin lag:** `1.9.0` at `ea05754` while `master` was already `1.12.0`; refresh
+  commands `[source: --help]`.
+- **Stale MCP catalog** `[source: 2026-09-06 setup record]`.
+- **Window-closed workers:** a proposed experiment is in the 2026-09-13 audit.
+
+## Cowork
+
+Dated measurements and source readings that `clients/cowork.md` carried until 2026-11-02 (#226).
+The appendix keeps the mechanics, the hazards and the safety triggers, with their learnings
+citations.
+
+### From *Evidence store*
+
+- The linked-root store and the discarded session scratch [source 2026-09-22, device-bridge
+  model].
+- Git hooks fire over the bridge [measured 2026-09-13, a `pre-commit` sentinel].
+- **Attribution:** the harness carries the same attribution instruction as Claude Code's [source:
+  this session, 2026-09-17].
+- **Kody tool names** [measured 2026-10-03, all three]: in Cowork the server segment of a Kody
+  tool's name is the connector's display name; Claude Code's desktop Code tab names the same
+  connector by its id, and the terminal CLI lists it by its display name.
 
 [iso]: ../procedures/openclaw/managed-worktrees.md#instruction-source-isolation-and-freshness
 [startup]: ../clients/openclaw.md#host-and-startup

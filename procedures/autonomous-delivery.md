@@ -59,8 +59,9 @@ two-axis sequence applies; the delivery owner never claims independent review of
 - **Each lane works in its own git worktree on a branch off the delivery branch** (for work with no
   initiative, off that work's own branch, B0 item 3) and commits there with the repo's hooks
   firing (this replaces mboxes + `git am`). Lane commits keep RULE ZERO
-  (A4); the lane still writes its **on-disk handoff doc** (premise, files, tests, gate line
-  with the repro named, model it ran on).
+  (A4); the lane still reports its premise, files, tests, gate line with the repro named, and
+  the model it ran on — as an **on-disk handoff doc** in an initiative or where continuity needs
+  one (A4), otherwise in its return to a bounded delegation.
 - **The delivery owner merges a lane into the delivery branch** (for work with no initiative, into that
   work's own branch) **after two-axis review or A4's no-reviewer exception**, records the basis in
   `reviews/`, **re-runs the full CI gate on the merged branch, runs `coderabbit-preflight` when the
@@ -94,7 +95,7 @@ two-axis sequence applies; the delivery owner never claims independent review of
     learned. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
   - **A red that a side's own gate record already shows is that side's, not the merge's:**
     reported with that record, not fixed inside the merge — a lane may hand back with a gate step
-    red by design, named in its handoff, and a fix to it inside the merge would be an unreviewed
+    red by design, named in its report, and a fix to it inside the merge would be an unreviewed
     change to that side's work. The delivery owner's merged-tree gate before the push is unchanged.
 - **The preflight runs once before each push that carries new work** — a lane landing, a release
   cut — and never before a push that only answers review findings, which the PR's own review
@@ -103,8 +104,8 @@ two-axis sequence applies; the delivery owner never claims independent review of
   a run, the checks that decide whether the CLI is available among them.
 - **Open the ready-for-review PR against `develop` at the first push. CodeRabbit runs on that ready
   PR, and the delivery owner completes the round before hand-back.** The PR uses the
-  `writing-pull-requests` shape; its body is seeded under the initiative's `pull-requests/` and
-  grown as lanes land.
+  `writing-pull-requests` shape; in an initiative its body is seeded under the initiative's
+  `pull-requests/` and grown as lanes land.
 - **Run independent lanes in parallel within available capacity.** Record advertised limits
   separately from measured concurrency. File ownership, shared mutations, application access and
   resource limits determine what can overlap; contention serializes the affected work only.

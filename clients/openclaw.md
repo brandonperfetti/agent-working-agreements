@@ -1,16 +1,16 @@
 # OpenClaw (studio staff)
 
-**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B first, then
-the target repository's instructions.** This appendix adds client mechanics only; it never overrides
-Parts A–B, and a rule here that contradicts one there is the rule that is wrong. **Name this file
-when you acknowledge your reading** — "read the agreements and
-`clients/openclaw.md`" — so a skipped read is visible.
+**Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B, then
+[`../profiles/sansfaux.md`](../profiles/sansfaux.md), then this file — all three, even when your
+pointer names only the core and this file — then the target repository's instructions.** This
+appendix adds client mechanics only; it never overrides Parts A–B, and a rule here that contradicts
+one there is the rule that is wrong. **Name all three when you acknowledge your reading** — "read
+the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
 
 ## Host and startup
 
-- **Host:** Brandon's Mac mini, native macOS, user `brandonperfetti`, since 2026-10-21
-  [measured 2026-10-27, #186: no Bubblewrap or AppArmor on PATH; Docker present, use unresolved].
-  The former VPS and its sandbox are history; their recovery procedure is dormant (below).
+- **Host:** Brandon's Mac mini, native macOS, user `brandonperfetti` (#186). The former VPS and
+  its sandbox are history; their recovery procedure is dormant (below).
 - **Agent root** `~/dev/sansfaux`, set here: A6's upward walk from a role workspace finds its own
   `_agent/` or none. **Protected instruction-source root** `$AGENT_ROOT/agent-working-agreements/`:
   clean, on `master`, equal to `origin/master` after the post-release refresh, never a delivery
@@ -21,15 +21,14 @@ when you acknowledge your reading** — "read the agreements and
   mirrored, symlinked, moved, deleted or otherwise rewritten. A role on a changed pointer holds the
   store provisionally, runs the create/readback canary on its supported route and reports its exact
   instruction paths, hashes and store before acceptance. Paths are this host's.
-- **If the pointer, Parts A–B or this file is unreachable,** stop the affected work with the
-  missing instruction source recorded (B0); do not downgrade to B1.
+- **If the pointer, the core, the profile or this file is unreachable,** stop the affected work
+  with the missing instruction source recorded (B0); do not downgrade to B1.
 - **Default mode: autonomous.** B0's guard is scored per exact checkout and delivery path;
-  conversation scope changes no authority. An unavailable
-  capability is evidence about that operation, not a switch of the delivery or team to B1: the
-  team continues on its supported routes and stops at the first operation with no safe route,
-  naming the capability and its restoration owner (B2 stop-list item 5). A role with no supported
-  execution route stops only the affected operation, naming its restoration owner. Use approved
-  fallback routes below; Brandon is never the command runner and alone merges base-branch PRs.
+  conversation scope changes no authority. An unavailable capability is evidence about that
+  operation, not a switch of the delivery or team to B1: the team continues on its supported
+  routes and stops at the first operation with no safe route, naming the capability and its
+  restoration owner (B2 stop-list item 5); so does a role with no supported execution route. Use
+  approved fallback routes below; Brandon is never the command runner and alone merges base PRs.
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 - **Resolve the active workspace and target checkout from live inventory**; do not assume every
   specialist shares main's working directory.
@@ -62,7 +61,7 @@ deliveries still carry independent review, verification and the owner's decision
   Leads choose model/effort within approved routes; respect wrapper pins rather than bypass them.
   On exhaustion, coding falls back from Claude to Codex OAuth, then to an approved API model within
   an existing funded allowance (B2). No automatic top-up; report an unavailable selector honestly.
-- **Restoration owners (B2 stop-list item 5)** [decision 2026-10-27, Brandon, #194]: **Ashford** for
+- **Restoration owners (B2 stop-list item 5)** (#194): **Ashford** for
 OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
 instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
 **delivery owner** for repository and worktree capability, the protected root's post-release refresh
@@ -87,8 +86,8 @@ and the worktree bindings the procedure lists. Reset is unmeasured; require a de
 ## Evidence store
 
 Use the selected store's `evidence/` and `analysis/` per A2 and A6; date-name artifacts and label
-claims. The Gateway executable-check scratch root takes no scratch clone; where one goes on this
-host, and whether specialists share that space, is **unmeasured** — measure and record.
+material findings. The Gateway executable-check scratch root takes no scratch clone; where one
+goes on this host, and whether specialists share it, is **unmeasured** — measure and record.
 
 ## Dormant: the native sandbox breaker
 
@@ -103,5 +102,5 @@ bwrap: No permissions to create a new namespace, likely because the kernel does 
 
 ## History
 
-Measurements, source readings with their hashes, the route census, superseded claims and the
-migration dispositions; none required reading: [`../history/openclaw.md`](../history/openclaw.md).
+Measurements, source readings, route census, superseded claims and migration dispositions, in the
+shared client archive; none required: [`../history/openclaw.md#openclaw`](../history/openclaw.md#openclaw).
