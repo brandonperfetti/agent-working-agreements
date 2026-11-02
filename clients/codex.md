@@ -7,7 +7,7 @@ client; it never overrides Parts A–B, and a rule here that contradicts one the
 is wrong. **Name all three when you acknowledge your reading** — "read the agreements,
 `profiles/sansfaux.md` and `clients/codex.md`".
 
-**Default mode: autonomous.** The capability guard (B0) still decides; this is where it starts.
+**Default mode: autonomous**, where B0's guard starts; attended (B1) if the profile is unreadable.
 
 ---
 
@@ -28,13 +28,13 @@ Measurements behind it are in the history file; **re-measure on yours**.
   Whether a cloud Codex task without this filesystem gets the same text is **measure and record**.
   **Following the pointer is a read you must perform** — not an automatic include, so a session
   that skipped it looks identical to one that complied. Read the files, then say you did.
-- **Guard items:** 1 **passes by demonstration** (`rm`, truncating overwrite, `git worktree
-  add`/`remove`, `branch -d` refusing an unmerged branch, a firing `pre-commit` hook). **That is
-  not item 1's hook probe**, which is per checkout and about `pre-push`: run `git push --dry-run
-  origin HEAD` at pickup in the checkout you will push from. A dry run sends no objects but still
-  contacts the remote — see the sandbox-denial hazard below. 2 is **measure and record** per repo:
-  the gate may want tools beyond node, pnpm and python3 — run it once. 4 is queryable through `gh`
-  and is **still checked per repository**: an earlier measurement never stands for this one.
+- **Guard items:** 1's capabilities are **shown by demonstration** (`rm`, truncating overwrite,
+  `git worktree add`/`remove`, `branch -d` refusing an unmerged branch, a firing `pre-commit`
+  hook); **item 1 passes only after its per-checkout `pre-push` probe** (`git push --dry-run
+  origin HEAD` at pickup in the checkout you will push from) or a record that no hook is installed.
+  A dry run sends no objects but contacts the remote (sandbox-denial hazard below). 2 is **measure
+  and record** per repo: the gate may want tools beyond node, pnpm and python3 — run it once. 4 is
+  queryable through `gh`, **still checked per repository**: no earlier measurement stands for it.
 - **Default mode is autonomous**, decided by the guard alone, exactly as in `claude-code.md`. The
   hook probe and item 2 are still yours to run at pickup, and item 4 is checked per repository. A
   failure downgrades what B0 says a failed check downgrades, with a one-line reason; a failed

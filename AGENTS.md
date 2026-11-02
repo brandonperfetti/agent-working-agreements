@@ -2,10 +2,10 @@
 
 Read [`AGENT-WORKING-AGREEMENTS.md`](AGENT-WORKING-AGREEMENTS.md), then
 [`profiles/sansfaux.md`](profiles/sansfaux.md), on the trigger the core's
-opening paragraph sets: before your first write or GitHub action in this
-repository; a read-only look needs no read. This file adds only what is
-specific to this repository; it never overrides Parts A–B, and a rule here
-that contradicts one there is the rule that is wrong.
+opening paragraph sets: before your first delivery, dispatch, write or GitHub
+action in this repository; a read-only look needs no read. This file adds
+only what is specific to this repository; it never overrides Parts A–B, and a
+rule here that contradicts one there is the rule that is wrong.
 
 ## Commit subjects
 
@@ -54,8 +54,8 @@ npx --yes markdownlint-cli2
 
 `check-structure.sh` holds the core plus each profile, and each client file,
 under their line ceilings, keeps studio-specific text out of the core, requires
-every file under `procedures/` to carry its four fields and be a row of
-`procedures/README.md`'s table and a profile's *Triggers* table (or, for
+every file under `procedures/` but `README.md` to carry its four fields and be
+a row of `procedures/README.md`'s table and a profile's *Triggers* table (or, for
 `procedures/<client>/`, linked from that client's appendix), and rejects a 40- or
 64-hex pin in normative text; `history/` is exempt from the pin rule.
 `check-index.sh` proves the composition: every client a row of a profile's

@@ -7,7 +7,7 @@ client; it never overrides Parts A–B, and a rule here that contradicts one the
 is wrong. **Name all three when you acknowledge your reading** — "read the agreements,
 `profiles/sansfaux.md` and `clients/claude-code.md`".
 
-**Default mode: autonomous.** The capability guard (B0) still decides; this is where it starts.
+**Default mode: autonomous**, where B0's guard starts; attended (B1) if the profile is unreadable.
 
 ---
 
