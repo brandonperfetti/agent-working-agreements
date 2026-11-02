@@ -2,13 +2,16 @@
 #
 # check-index.sh — verify the composition contract: core → profile → client adapter.
 #
-# 1. Every clients/*.md has a row in a profile's "## Client adapters" table, and every row names
-#    a file that exists: an unindexed adapter is never read, and a link elsewhere indexes nothing.
+# 1. Every clients/*.md is the Markdown link destination in the Read cell of a row in a profile's
+#    "## Client adapters" table, and every such destination is ../clients/<name>.md and exists:
+#    an unindexed adapter is never read, and a row's label, a note or a link elsewhere indexes
+#    nothing.
 # 2. Openers of the root AGENTS.md, each profile and each client send the reader to the core
 #    and keep the standard precedence clause; root and client openers also name an existing
-#    profile, and each client opener names its own file: the opener alone carries the whole
-#    core + profile + client binding, so a pointer naming only the core and a client file still
-#    reaches the profile.
+#    profile, each client opener names its own file, and every profile a client opener names
+#    indexes that client, and every profile indexing a client is named by that client's opener:
+#    the opener alone carries the whole core + profile + client binding, so
+#    a pointer naming only the core and a client file still reaches the profile that indexes it.
 # 3. The core names no profile file: it stays portable and usable with no profile at all.
 # 4. The core keeps Parts A and B and the stable anchors A1–A8 and B0–B2.
 #
@@ -28,29 +31,56 @@ for p in "$ROOT"/profiles/*.md; do [ -e "$p" ] && profiles+=("$p"); done
 # Only the body rows of a profile's client index table index a client: the first table under
 # "## Client adapters" whose header row starts "| You are |", from the row after its separator to
 # the first line that is not a row. A link in prose, or in any other table, is never the index.
+# Each body row prints its first cell (the label) and its cell under the "Read" header, tab-split.
 client_rows() {
   awk '
-    function first_cell(s) {
-      sub(/^[[:space:]]*\|[[:space:]]*/, "", s); sub(/[[:space:]]*\|.*$/, "", s); return s
+    function cells(s, out,   n, i) {
+      sub(/^[[:space:]]*\|/, "", s); sub(/\|[[:space:]]*$/, "", s)
+      n = split(s, out, "|")
+      for (i = 1; i <= n; i++) { sub(/^[[:space:]]+/, "", out[i]); sub(/[[:space:]]+$/, "", out[i]) }
+      return n
     }
     done { next }
     /^#/ { if (state == 2) done = 1; else { in_sec = ($0 ~ /^## Client adapters/); state = 0 }; next }
     !in_sec { prev_row = 0; next }
     {
       row = ($0 ~ /^[[:space:]]*\|.*\|[[:space:]]*$/)
-      if (state == 2) { if (row) print; else done = 1 }
+      if (state == 2) {
+        if (row) { cells($0, c); print c[1] "\t" (read_col ? c[read_col] : "") } else done = 1
+      }
       else if (state == 1) { state = ($0 ~ /^[[:space:]]*\|[[:space:]:|-]*-[[:space:]:|-]*\|[[:space:]]*$/) ? 2 : 0 }
-      else if (row && !prev_row && first_cell($0) == "You are") state = 1
+      else if (row && !prev_row) {
+        n = cells($0, h)
+        if (h[1] == "You are") {
+          state = 1; read_col = 0
+          for (i = 1; i <= n; i++) if (h[i] == "Read") { read_col = i; break }
+        }
+      }
       prev_row = row
     }
   ' "$1"
 }
 
-indexed="$(
-  for p in ${profiles[@]+"${profiles[@]}"}; do
-    client_rows "$p" | grep -o 'clients/[a-z0-9-]*\.md' || true
-  done | sort -u
-)"
+# "profiles/<p>.md clients/<c>.md" per row: the Read cell's link destination, resolved from the
+# profile, keeps which profile indexes which client.
+link_re='\[[^]]*\]\(([^()[:space:]]+)\)'
+pairs=""
+for p in ${profiles[@]+"${profiles[@]}"}; do
+  prel="profiles/$(basename "$p")"
+  while IFS=$'\t' read -r label cell; do
+    if ! [[ "$cell" =~ $link_re ]]; then
+      echo "FAIL: $prel client index row \"$label\" has no Markdown link in its Read cell" >&2
+      fail=1; continue
+    fi
+    dest="${BASH_REMATCH[1]}"
+    if ! [[ "$dest" =~ ^\.\./clients/[a-z0-9-]+\.md$ ]]; then
+      echo "FAIL: $prel client index row \"$label\" links $dest, not ../clients/<name>.md" >&2
+      fail=1; continue
+    fi
+    pairs+="$prel ${dest#../}"$'\n'
+  done < <(client_rows "$p")
+done
+indexed="$(awk 'NF { print $2 }' <<<"$pairs" | sort -u)"
 present="$(cd "$ROOT" && ls clients/*.md 2>/dev/null | sort -u || true)"
 
 while read -r f; do
@@ -106,8 +136,21 @@ for f in "$ROOT/AGENTS.md" ${profiles[@]+"${profiles[@]}"} "$ROOT"/clients/*.md;
     echo "FAIL: $name opener does not name its profile" >&2; fail=1; continue
   fi
   while read -r p; do
-    [ -f "$ROOT/$p" ] || { echo "FAIL: $name opener names $p, which does not exist" >&2; fail=1; }
+    [ -f "$ROOT/$p" ] || { echo "FAIL: $name opener names $p, which does not exist" >&2; fail=1; continue; }
+    case "$f" in "$ROOT"/clients/*)
+      grep -qxF "$p clients/$name" <<<"$pairs" || {
+        echo "FAIL: $name opener names $p, whose client index does not point at it" >&2; fail=1; } ;;
+    esac
   done <<<"$required"
+  # The reverse: every profile whose index points at this client is one its opener names, so a
+  # reader arriving from any indexing profile is bound to that profile, not only to another one.
+  case "$f" in "$ROOT"/clients/*)
+    while read -r p; do
+      [ -z "$p" ] && continue
+      grep -qxF "$p" <<<"$required" || {
+        echo "FAIL: $name is indexed by $p, which its opener does not name" >&2; fail=1; }
+    done < <(awk -v c="clients/$name" '$2 == c { print $1 }' <<<"$pairs" | sort -u) ;;
+  esac
 done
 
 # The core is portable: it names no profile, so it reads whole with none.

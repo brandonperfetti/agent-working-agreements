@@ -37,10 +37,10 @@ Read AGENT-WORKING-AGREEMENTS.md first, $clause
 
 ## Client adapters (read only yours)
 
-| You are | Read |
-| --- | --- |
-| With | [\`clients/with-sections.md\`](../clients/with-sections.md) |
-| Without | [\`clients/without-sections.md\`](../clients/without-sections.md) |
+| You are | Read | Default mode |
+| --- | --- | --- |
+| With | [\`clients/with-sections.md\`](../clients/with-sections.md) | autonomous |
+| Without | [\`clients/without-sections.md\`](../clients/without-sections.md) | attended |
 
 ## Notes
 
@@ -180,6 +180,76 @@ expect_fail "profile index names a missing client" \
 
 good; printf 'A retired [`clients/gone.md`](../clients/gone.md).\n' >>"$repo/profiles/studio.md"
 expect_pass "a missing client named outside the index is no index row"
+
+# Only the Read cell's link destination indexes a client: never the row label, the link text,
+# a note, or a path with no link.
+set_without_row() {
+  WITHOUT_ROW="$1" perl -0pi -e 's#^\| Without \|.*$#$ENV{WITHOUT_ROW}#m' "$repo/profiles/studio.md"
+}
+
+good; set_without_row '| clients/without-sections.md | [x](../clients/with-sections.md) | attended |'
+expect_fail "client named only in the row label" "$unindexed"
+
+good; set_without_row '| Without | [`clients/without-sections.md`](../clients/with-sections.md) | attended |'
+expect_fail "client named only in the Read cell's link text" "$unindexed"
+
+good; set_without_row '| Without | [x](../clients/with-sections.md) | see clients/without-sections.md |'
+expect_fail "client named only in a note column" "$unindexed"
+
+no_link='FAIL: profiles/studio.md client index row "Without" has no Markdown link in its Read cell'
+good; set_without_row '| Without | `clients/without-sections.md` | attended |'
+expect_fail "Read cell names the client with no link" "$no_link"
+
+good; set_without_row '| Without | [`clients/without-sections.md`](../clients/without-sections.md | attended |'
+expect_fail "Read cell link is broken" "$no_link"
+
+good; set_without_row '| Without | [`clients/without-sections.md`](clients/without-sections.md) | attended |'
+expect_fail "Read cell link does not resolve from the profile" \
+  'FAIL: profiles/studio.md client index row "Without" links clients/without-sections.md, not ../clients/<name>.md'
+
+# Two profiles: each client's opener names the profile whose index points at it.
+second_profile() {
+  cat >"$repo/profiles/lab.md" <<EOF
+# Lab profile
+
+Read AGENT-WORKING-AGREEMENTS.md first, $clause
+
+## Client adapters (read only yours)
+
+| You are | Read | Default mode |
+| --- | --- | --- |
+| Lab | [\`clients/lab-client.md\`](../clients/lab-client.md) | attended |
+EOF
+
+  cat >"$repo/clients/lab-client.md" <<EOF
+# Lab client
+
+Read AGENT-WORKING-AGREEMENTS.md, [the profile](../profiles/$1), then
+clients/lab-client.md, $clause
+EOF
+}
+
+good; second_profile lab.md
+expect_pass "two profiles, each client naming the profile that indexes it"
+
+good; second_profile studio.md
+expect_fail "client opener names a profile whose index does not point at it" \
+  "FAIL: lab-client.md opener names profiles/studio.md, whose client index does not point at it"
+
+# Two profiles index one client: its opener must name each, not only one of them.
+share_client() {
+  printf '| Shared | [`clients/with-sections.md`](../clients/with-sections.md) | attended |\n' \
+    >>"$repo/profiles/lab.md"
+}
+
+good; second_profile lab.md; share_client
+expect_fail "two profiles index a client whose opener names only one" \
+  "FAIL: with-sections.md is indexed by profiles/lab.md, which its opener does not name"
+
+good; second_profile lab.md; share_client
+perl -0pi -e 's#(\(\.\./profiles/studio\.md\))#$1 or [the lab profile](../profiles/lab.md)#' \
+  "$repo/clients/with-sections.md"
+expect_pass "two profiles index a client whose opener names both"
 
 good; perl -0pi -e 's/^## B1\. /## B9. /m' "$repo/AGENT-WORKING-AGREEMENTS.md"
 expect_fail "stable anchor renamed" "FAIL: stable anchor B1 missing from the core"
