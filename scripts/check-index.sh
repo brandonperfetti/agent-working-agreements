@@ -8,10 +8,11 @@
 #    nothing.
 # 2. Openers of the root AGENTS.md, each profile and each client send the reader to the core
 #    and keep the standard precedence clause; root and client openers also name an existing
-#    profile, each client opener names its own file, and every profile a client opener names
-#    indexes that client, and every profile indexing a client is named by that client's opener:
-#    the opener alone carries the whole core + profile + client binding, so
-#    a pointer naming only the core and a client file still reaches the profile that indexes it.
+#    profile, each client opener names its own file, every profile an opener names exists, and
+#    every profile indexing a client is named by that client's opener: the opener alone carries
+#    the whole core + profile + client binding, so a pointer naming only the core and a client
+#    file still reaches each profile that indexes it. An opener may name further existing
+#    profiles; they need not index the client.
 # 3. The core names no profile file: it stays portable and usable with no profile at all.
 # 4. The core keeps Parts A and B and the stable anchors A1–A8 and B0–B2.
 #
@@ -136,14 +137,10 @@ for f in "$ROOT/AGENTS.md" ${profiles[@]+"${profiles[@]}"} "$ROOT"/clients/*.md;
     echo "FAIL: $name opener does not name its profile" >&2; fail=1; continue
   fi
   while read -r p; do
-    [ -f "$ROOT/$p" ] || { echo "FAIL: $name opener names $p, which does not exist" >&2; fail=1; continue; }
-    case "$f" in "$ROOT"/clients/*)
-      grep -qxF "$p clients/$name" <<<"$pairs" || {
-        echo "FAIL: $name opener names $p, whose client index does not point at it" >&2; fail=1; } ;;
-    esac
+    [ -f "$ROOT/$p" ] || { echo "FAIL: $name opener names $p, which does not exist" >&2; fail=1; }
   done <<<"$required"
-  # The reverse: every profile whose index points at this client is one its opener names, so a
-  # reader arriving from any indexing profile is bound to that profile, not only to another one.
+  # Every profile whose index points at this client is one its opener names, so a reader
+  # arriving from any indexing profile is bound to that profile, not only to another one.
   case "$f" in "$ROOT"/clients/*)
     while read -r p; do
       [ -z "$p" ] && continue

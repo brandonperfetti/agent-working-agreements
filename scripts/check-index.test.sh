@@ -233,8 +233,14 @@ good; second_profile lab.md
 expect_pass "two profiles, each client naming the profile that indexes it"
 
 good; second_profile studio.md
-expect_fail "client opener names a profile whose index does not point at it" \
-  "FAIL: lab-client.md opener names profiles/studio.md, whose client index does not point at it"
+expect_fail "client opener omits the profile whose index points at it" \
+  "FAIL: lab-client.md is indexed by profiles/lab.md, which its opener does not name"
+
+# An opener may name a further existing profile that does not index the client.
+good; second_profile lab.md
+perl -0pi -e 's#(\(\.\./profiles/studio\.md\))#$1 or [the lab profile](../profiles/lab.md)#' \
+  "$repo/clients/with-sections.md"
+expect_pass "client opener names an extra existing profile that does not index it"
 
 # Two profiles index one client: its opener must name each, not only one of them.
 share_client() {
