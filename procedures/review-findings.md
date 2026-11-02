@@ -45,14 +45,14 @@ allowance holds the paid review, never the push (B2).
 
   **Before a delivery is presented for Brandon's merge, the independent reviewer runs the two-axis
   review over the whole branch** — its full diff against the base, not only the latest change —
-  **at the exact final head SHA**, and the verdict names that SHA. A later fix to the
-  head gets its scoped review (above). **The whole-branch verdict is renewed only when the fix
-  materially stales it:** observable scope or behaviour changed, reviewed logic was substantially
-  rewritten, a conflict resolution changed semantics, the base moved the reviewed surface, or the
-  verification basis changed. A fix that stales none of these rides the existing verdict, and the
-  presentation names the verdict's SHA and each later fix SHA (Brandon, 2026-10-27, #193; this
-  replaces the renewal-after-every-change rule of 2026-10-23, #173). A client's own documents
-  point here and set no stricter timing.
+  **at an exact head SHA**, and the verdict names that SHA. Each later fix gets its own independent
+  two-axis review scoped to it (above), naming its SHA. **The whole-branch verdict is renewed only
+  when the fix materially stales it:** observable scope or behaviour changed, reviewed logic was
+  substantially rewritten, a conflict resolution changed semantics, the base moved the reviewed
+  surface, or the verification basis changed. A fix that stales none of these rides the existing
+  verdict, and the presentation names the verdict's SHA and each later fix SHA (Brandon,
+  2026-10-27, #193; this replaces the renewal-after-every-change rule of 2026-10-23, #173). A
+  client's own documents point here and set no stricter timing.
 
 - **A review-bot finding is fixed before the merge when it is verified and does real harm:** wrong
   behaviour, a result reported as clean that was not, a leak, a signal or write to something not

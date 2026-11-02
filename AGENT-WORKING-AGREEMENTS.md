@@ -64,12 +64,12 @@ owner decision.
 - **Model and effort are chosen per task**; reports separate requested from attested.
 - **Authorship:** every agent commit carries the bound author identity, checked before push,
   merge and presentation; attribution follows the binding. No credit footer is required anywhere.
-- **Independent two-axis review (Standards + Spec)** through the bound review route before
-  acceptance, fixes and conflict resolutions included, no size exemption; a producer's own report
-  is never the review. A later fix gets scoped review, renewing the whole-branch verdict only when
-  it materially stales it (#193). **Before presentation for the owner's merge**, the whole branch's
-  diff against its base is reviewed at the exact final head, and the verdict names that head;
-  close-out review precedes promotion. See [`review-findings.md`](procedures/review-findings.md).
+- **Independent two-axis review (Standards + Spec)** via the bound route before acceptance, fixes
+  and conflict resolutions included, no size exemption; never a producer's own report. **Before
+  presentation for the owner's merge**, review the whole-branch base diff at an exact head the
+  verdict names; close-out review precedes promotion. Each later fix gets independent scoped review
+  at its SHA, renewal only if materially stale (#193); presentation names verdict and fix SHAs. See
+  [procedure](procedures/review-findings.md).
 - **Verified harmful review findings are fixed before merge**; disproved ones are declined with
   receipts.
 - **Distrust the issue until you've read the code.** Tests ship with the change.
