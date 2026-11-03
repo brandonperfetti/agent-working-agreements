@@ -52,9 +52,10 @@ class LookAgainTest(unittest.TestCase):
              "message": {"content": [{"type": "tool_result", "tool_use_id": use_id, "is_error": error}]}}
         )
 
-    def prompt(self, at, kind="human", meta=False):
-        entry = {"type": "user", "timestamp": stamp(at), "origin": {"kind": kind},
-                 "message": {"role": "user", "content": "next question"}}
+    def prompt(self, at, kind="human", meta=False, text="next question"):
+        entry = {"type": "user", "timestamp": stamp(at), "message": {"role": "user", "content": text}}
+        if kind:
+            entry["origin"] = {"kind": kind}
         if meta:
             entry["isMeta"] = True
         self.entries.append(entry)
@@ -79,7 +80,9 @@ class LookAgainTest(unittest.TestCase):
         reply = self.decide()
         self.assertEqual(reply["decision"], "block")
         self.assertIn(path, reply["reason"])
-        self.assertIn(datetime.date.fromtimestamp(START + 10).isoformat(), reply["reason"], "not today: dated")
+        last_look = datetime.date.fromtimestamp(START + 10)
+        if last_look != datetime.date.today():
+            self.assertIn(last_look.isoformat(), reply["reason"], "not today: dated")
         self.assertIsNone(self.decide(active=True), "the same change is reported once")
 
     def test_reading_it_again_clears_it(self):
@@ -201,6 +204,8 @@ class LookAgainTest(unittest.TestCase):
         self.prompt(START + 20, kind="peer", meta=True)
         self.prompt(START + 21, kind="task-notification")
         self.prompt(START + 22, meta=True)
+        self.prompt(START + 23, kind=None, text="<system-reminder>\nThe session you started finished.")
+        self.prompt(START + 24, kind=None, text="<ci-monitor-event>check failed</ci-monitor-event>")
         os.utime(path, (START + 60, START + 60))
         self.assertIn(path, self.decide()["reason"])
 
@@ -210,6 +215,24 @@ class LookAgainTest(unittest.TestCase):
         self.tool("Read", {"file_path": path}, START + 10)
         os.utime(path, (START + 60, START + 60))
         self.assertIn(path, self.decide()["reason"])
+
+    def test_a_prompt_without_origin_still_counts(self):
+        path = self.file("plan.md", START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.prompt(START + 20, kind=None, text="Background: the task from another session")
+        os.utime(path, (START + 60, START + 60))
+        self.assertIsNone(self.decide())
+
+    def test_a_file_gone_again_after_it_came_back_is_reported_again(self):
+        path = self.file("draft.md", START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        os.remove(path)
+        self.assertIn("now gone", self.decide()["reason"])
+        self.prompt(START + 20)
+        self.file("draft.md", START + 25)
+        self.tool("Read", {"file_path": path}, START + 30)
+        os.remove(path)
+        self.assertIn("now gone", self.decide()["reason"])
 
     def test_a_removed_folder_is_cleanup_not_a_change(self):
         folder = os.path.join(self.root, "worktree")

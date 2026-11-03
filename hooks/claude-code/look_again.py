@@ -12,7 +12,8 @@ Only files touched since the last prompt a person typed count. The stop checks
 the answer to that prompt, and a file read for an earlier prompt was checked at
 that prompt's own stops. Compaction is not the boundary, since a long session
 can run for days without one. Hook feedback, messages from other sessions,
-task notifications and compaction summaries are not prompts. The cost: a file
+task notifications, system notices, CI events and compaction summaries are not
+prompts. The cost: a file
 the agent leans on from an earlier prompt without touching it again is not
 checked.
 
@@ -25,7 +26,7 @@ A file gone after a Bash command removed or moved it is the agent's own
 deletion: it was named in a part of the command that starts with rm, unlink,
 trash or git rm, or as a source of mv or git mv. A file gone after any other
 command is reported, unless its folder is gone too: a removed worktree or
-temp tree is routine cleanup.
+temp tree is routine cleanup (a folder renamed by someone else reads the same).
 
 Claude Code's own temp tree (/tmp/claude-<uid>: scratchpads, task output) and
 ~/.claude/projects are skipped.
@@ -48,6 +49,7 @@ SLACK = 2.0  # seconds: a formatter hook may touch a file just after the agent's
 MAX_BLOCKS = 3
 MAX_LISTED = 10
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-look-again")
+NOT_TYPED = ("<system-reminder>", "<ci-monitor-event>", "<task-notification>")  # injected, origin-less
 SKIP = (
     os.path.join(os.path.expanduser("~"), ".claude", "projects") + os.sep,
     "/tmp/claude-{}/".format(os.getuid()),
@@ -100,8 +102,10 @@ def is_prompt(entry):
         return False
     content = (entry.get("message") or {}).get("content")
     if isinstance(content, list):
-        return not any(isinstance(block, dict) and block.get("type") == "tool_result" for block in content)
-    return isinstance(content, str)
+        if any(isinstance(block, dict) and block.get("type") == "tool_result" for block in content):
+            return False
+        content = "".join(block.get("text", "") for block in content if isinstance(block, dict))
+    return isinstance(content, str) and not content.lstrip().startswith(NOT_TYPED)
 
 
 def last_seen(transcript_path):
@@ -167,7 +171,7 @@ def changed_files(seen):
             mtime = os.stat(path).st_mtime
         except FileNotFoundError:
             if tool != OWN_REMOVAL and os.path.isdir(os.path.dirname(path)):
-                found.append((path, "now gone", "gone"))
+                found.append((path, "now gone", "gone after {}".format(when)))
             continue
         except OSError:
             continue
