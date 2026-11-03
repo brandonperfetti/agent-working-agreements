@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-03 — Independent topics have a reachable creation route.** Camina qualification found
+  ordinary topic creation hidden inside exceptional root replacement. The OpenClaw Continuity
+  bullet now points to one shared *Create a root conversation* section, which ordinary topics use
+  without predecessor evidence, retirement or transfer; replacement links it and keeps its own
+  safeguards. Server-allocated keys and encoded, shell-quoted parameters avoid adoption races and
+  title parsing errors; the index includes the trigger. Brandon's decision, 2026-11-03. Receipt:
+  `_agent/analysis/2026-11-03-camina-session-creation-qualification-result.md`.
+
 - **2026-11-02 — Portable core, studio profile (#226).** The agreement becomes a portable core
   (A1–A8, B0–B2) plus `profiles/sansfaux.md`, which carries Brandon's identity, the git ritual, the
   store, the trigger and client indexes. The core names no profile; each client opener binds core,
