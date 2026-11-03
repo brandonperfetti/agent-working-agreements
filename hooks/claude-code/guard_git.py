@@ -160,10 +160,13 @@ def check_commit(args, directory, configs, env):
     return None
 
 
-def check_push_authors(refspecs, directory):
+def check_push_authors(refspecs, directory, tags=False):
     """Read the authors of the commits this push sends that no remote has yet."""
     sources = [refspec.lstrip("+").partition(":")[0] for refspec in refspecs] or ["HEAD"]
-    sources = [source for source in sources if source]
+    # `git push origin tag v1` names refs/tags/v1; the word `tag` is not a revision.
+    sources = [source for source in sources if source and source != "tag"]
+    # `--tags` sends every local tag too, and the commits only a tag reaches.
+    sources += ["--tags"] if tags else []
     if not sources:
         return None
     lines = git_lines(directory, ["log", "--format=%ae"] + sources + ["--not", "--remotes", "--"])
@@ -212,7 +215,7 @@ def check_push(args, directory):
             return "a push to a release branch ({})".format(target)
     if "--delete" in options or "-d" in options:
         return None
-    return check_push_authors(refspecs, directory)
+    return check_push_authors(refspecs, directory, "--tags" in options)
 
 
 def check_git(tokens, directory, env):

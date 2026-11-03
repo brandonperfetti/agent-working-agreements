@@ -301,6 +301,24 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.mine))
 
+    def test_tags_push_reads_commits_only_a_tag_reaches(self):
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        git(self.mine, "push", "-q", "origin", "feature")
+        git(self.mine, "checkout", "-q", "-b", "side")
+        commit_as(self.mine, self.OTHER)
+        git(self.mine, "tag", "v-other")
+        git(self.mine, "checkout", "-q", "feature")
+        git(self.mine, "branch", "-q", "-D", "side")
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+        for command in (
+            "git push --tags",
+            "git push --tags origin feature",
+            "git push origin v-other",
+            "git push origin tag v-other",
+        ):
+            with self.subTest(command=command):
+                self.assertIn(self.OTHER, guard_git.check_command(command, self.mine) or "")
+
     def test_commits_a_remote_already_has_pass(self):
         commit_as(self.mine, self.OTHER)
         git(self.mine, "push", "-q", "origin", "feature")
