@@ -30,6 +30,11 @@ temp tree is routine cleanup (a folder renamed by someone else reads the same).
 Claude Code's own temp tree (/tmp/claude-<uid>: scratchpads, task output) and
 ~/.claude/projects are skipped.
 
+Claude Code writes the transcript asynchronously, so at a stop it may not yet
+hold the turn's last entries. Before reading it, the hook waits up to CATCH_UP
+seconds for the turn's last message (last_assistant_message) to appear; entries
+are appended in order, so the tool results before that message are there too.
+
 Each change is reported once, and a chain of stops is sent back at most
 MAX_BLOCKS times, so a file that never stops changing cannot hold the agent.
 
@@ -42,11 +47,14 @@ import os
 import re
 import sys
 import tempfile
+import time
 
 FILE_TOOLS = {"Read", "Write", "Edit", "MultiEdit", "NotebookEdit"}
 SLACK = 2.0  # seconds: a formatter hook may touch a file just after the agent's write
 MAX_BLOCKS = 3
 MAX_LISTED = 10
+CATCH_UP = 2.0  # seconds to wait for the transcript to hold the turn's last message
+TAIL = 1 << 20  # bytes read from the transcript's end to find that message
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-look-again")
 NOT_TYPED = ("<system-reminder>", "<ci-monitor-event>", "<task-notification>")  # injected, origin-less
 SKIP = (
@@ -93,7 +101,12 @@ def named(command, by_base, cwd, loose):
 
 
 def is_prompt(entry):
-    """True for a prompt a person typed, not a tool result, hook feedback, message or summary."""
+    """True for a prompt a person typed, not a tool result, hook feedback, message or summary.
+
+    An entry with no origin that opens with an injected notice is machine-sent, whatever follows
+    the notice: in local transcripts that text is a side-session event, a peer message or a task
+    from another session, never typed text. A typed prompt carries an origin.
+    """
     if entry.get("type") != "user" or entry.get("isMeta") or entry.get("isCompactSummary"):
         return False
     origin = entry.get("origin")
@@ -166,6 +179,31 @@ def last_seen(transcript_path):
     return seen
 
 
+def caught_up(transcript_path, message):
+    """True when the transcript's last entry with text is this turn's, and ends the turn's last message."""
+    with open(transcript_path, "rb") as handle:
+        handle.seek(0, os.SEEK_END)
+        handle.seek(max(0, handle.tell() - TAIL))
+        lines = handle.read().decode("utf-8", "replace").splitlines()
+    for line in reversed(lines):
+        try:
+            entry = json.loads(line)
+        except ValueError:  # the cut first line, or a line still being written
+            continue
+        if entry.get("isSidechain"):
+            continue
+        if entry.get("type") == "user":
+            return False  # a prompt or tool result after the last text: that text is not this turn's end
+        content = (entry.get("message") or {}).get("content") if entry.get("type") == "assistant" else None
+        if isinstance(content, list):
+            content = "".join(
+                block.get("text", "") for block in content if isinstance(block, dict) and block.get("type") == "text"
+            )
+        if isinstance(content, str) and content.strip():
+            return " ".join(message.split()).endswith(" ".join(content.split()))
+    return False
+
+
 def changed_files(seen):
     """(path, detail, key) for each file changed or gone since the agent last touched it."""
     found = []
@@ -217,6 +255,11 @@ def decide(payload):
     session = os.path.basename(str(payload.get("session_id") or "unknown"))
     if not transcript or not os.path.exists(transcript):
         return None
+    message = payload.get("last_assistant_message")
+    if isinstance(message, str) and message.strip():
+        deadline = time.time() + CATCH_UP
+        while not caught_up(transcript, message) and time.time() < deadline:
+            time.sleep(0.05)  # still behind: past the deadline, check what it holds
     state_path = os.path.join(STATE_DIR, session + ".json")
     state = load_state(state_path)
     reported = state.get("reported", {})

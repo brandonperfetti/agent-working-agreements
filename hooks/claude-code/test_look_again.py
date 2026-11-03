@@ -6,6 +6,8 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -28,9 +30,11 @@ class LookAgainTest(unittest.TestCase):
         self.calls = 0
         look_again.STATE_DIR = os.path.join(self.root, "state")
         self.skip = look_again.SKIP
+        self.catch_up = look_again.CATCH_UP
 
     def tearDown(self):
         look_again.SKIP = self.skip
+        look_again.CATCH_UP = self.catch_up
         self.tmp.cleanup()
 
     def file(self, name, mtime):
@@ -60,13 +64,23 @@ class LookAgainTest(unittest.TestCase):
             entry["isMeta"] = True
         self.entries.append(entry)
 
-    def decide(self, active=False):
+    def say(self, text, at):
+        self.entries.append({"type": "assistant", "timestamp": stamp(at),
+                             "message": {"content": [{"type": "text", "text": text}]}})
+
+    def append(self, entries):
+        with open(self.transcript, "a") as handle:
+            for entry in entries:
+                handle.write(json.dumps(entry) + "\n")
+
+    def decide(self, active=False, message=None):
         with open(self.transcript, "w") as handle:
             for entry in self.entries:
                 handle.write(json.dumps(entry) + "\n")
-        return look_again.decide(
-            {"session_id": "s1", "transcript_path": self.transcript, "stop_hook_active": active}
-        )
+        payload = {"session_id": "s1", "transcript_path": self.transcript, "stop_hook_active": active}
+        if message is not None:
+            payload["last_assistant_message"] = message
+        return look_again.decide(payload)
 
     def test_unchanged_file_lets_the_agent_stop(self):
         path = self.file("plan.md", START)
@@ -206,6 +220,10 @@ class LookAgainTest(unittest.TestCase):
         self.prompt(START + 22, meta=True)
         self.prompt(START + 23, kind=None, text="<system-reminder>\nThe session you started finished.")
         self.prompt(START + 24, kind=None, text="<ci-monitor-event>check failed</ci-monitor-event>")
+        self.prompt(START + 25, kind=None, text="<system-reminder>context</system-reminder>\n"
+                    "<side-sessions-event>None of the sessions you started is working now.")
+        self.prompt(START + 26, kind=None, text="<system-reminder>context</system-reminder>\n"
+                    '<cross-session-message from="local_1">Please fix it.</cross-session-message>')
         os.utime(path, (START + 60, START + 60))
         self.assertIn(path, self.decide()["reason"])
 
@@ -223,6 +241,56 @@ class LookAgainTest(unittest.TestCase):
                                       {"type": "text", "text": "next question"}])
         os.utime(path, (START + 60, START + 60))
         self.assertIsNone(self.decide())
+
+    def test_a_read_not_yet_in_the_transcript_at_the_stop_is_still_checked(self):
+        path = self.file("plan.md", START)
+        self.prompt(START + 5)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.say("The port is 5432.", START + 11)
+        late, self.entries = self.entries[1:], self.entries[:1]  # written after the hook starts
+        os.utime(path, (START + 60, START + 60))
+        timer = threading.Timer(0.3, self.append, [late])
+        timer.start()
+        reply = self.decide(message="The port is 5432.")
+        timer.join()
+        self.assertIsNotNone(reply)
+        self.assertIn(path, reply["reason"])
+
+    def test_the_same_words_from_an_earlier_turn_do_not_end_the_wait(self):
+        path = self.file("plan.md", START)
+        self.say("Done.", START + 1)
+        self.prompt(START + 5)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.say("Checked again. Done.", START + 11)
+        late, self.entries = self.entries[2:], self.entries[:2]  # this turn's prompt and later entries
+        os.utime(path, (START + 60, START + 60))
+        timer = threading.Timer(0.3, self.append, [late])
+        timer.start()
+        reply = self.decide(message="Checked again. Done.")
+        timer.join()
+        self.assertIsNotNone(reply)
+        self.assertIn(path, reply["reason"])
+
+    def test_a_message_matches_its_transcript_text_across_whitespace(self):
+        path = self.file("plan.md", START)
+        self.prompt(START + 5)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.say("Port:  5432\n", START + 11)
+        began = time.time()
+        self.assertIsNone(self.decide(message="Port: 5432"))
+        self.assertLess(time.time() - began, 1.0)
+
+    def test_a_transcript_that_never_catches_up_holds_the_stop_no_longer_than_the_wait(self):
+        look_again.CATCH_UP = 0.2
+        path = self.file("plan.md", START)
+        self.prompt(START + 5)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.say("Looking.", START + 11)
+        os.utime(path, (START + 60, START + 60))
+        began = time.time()
+        reply = self.decide(message="An answer the transcript never gets.")
+        self.assertLess(time.time() - began, 1.5)
+        self.assertIn(path, reply["reason"])
 
     def test_a_gone_file_named_again_in_bash_is_reported_once(self):
         path = self.file("draft.md", START)
