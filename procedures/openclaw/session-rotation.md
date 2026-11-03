@@ -80,23 +80,36 @@ step of an exceptional root replacement (below). An ordinary topic needs no evid
 predecessor, no retirement and no ownership transfer: existing conversations continue as they
 are, and the new one carries only scope Brandon or the authorizing owner already granted.
 
-1. Choose a key under the current lead's canonical agent ID and verify it is absent.
-2. Create an empty named root through the native `exec` route, keeping its native exec marker:
+1. Select the lead's canonical agent ID; omit `key` so the server allocates a fresh key rather
+   than adopting a caller-selected entry. Retain the returned key and session ID as authoritative.
+2. Create an empty root through native `exec`, preserving its exec marker. With `leadId` and
+   `title` already held as data in Code Mode, JSON-encode them and shell-quote the single argument:
 
-   ```sh
-   openclaw gateway call sessions.create --params '{"key":"agent:<lead-id>:<fresh-key>","agentId":"<lead-id>","displayName":"<title>"}' --json
+   ```js
+   const params = JSON.stringify({ agentId: leadId, displayName: title });
+   const quote = value => "'" + value.replaceAll("'", "'\\''") + "'";
+   const result = await exec({
+     command: "openclaw gateway call sessions.create --params " + quote(params) + " --json",
+     title: "Create empty topic root"
+   });
    ```
 
-   Pass no message, task, attachments or parent.
-3. Verify the exact requested key and agent ID, returned session ID, operator rather than system
-   or spawn provenance, depth zero, no parent or `spawnedBy`, empty history and
-   `pendingInputs.total` of 0.
+   Pass no message, task, attachments or parent. Keep task values out of shell source except
+   through the encoder and quoting function; apostrophes, quotes, backslashes and shell-like text
+   remain literal data.
+3. Read back the returned key/session ID, selected agent ID, exact title, operator rather than
+   system/spawn provenance, depth zero, no `spawnedBy`, empty history and `pendingInputs.total` of 0.
+   A dashboard `parentSessionKey` may link to the agent's Home for navigation; distinguish that
+   link from actual spawn lineage using provenance, depth and `spawnedBy` before kickoff.
 4. Deliver the kickoff through native attributed `sessions_send`, using the team dispatch
    procedure's structured preflight. Verify the recipient has the required current control and
    messaging tools and receipt access, then its acceptance and actual first advancement. A nested
    worker retains its own tool boundaries; naming it Camina does not grant chief-of-staff tools.
 
-On an ambiguous result, inspect live state (key, history, pending inputs) before any retry.
+On an ambiguous result, inspect live state before any retry. If the returned identity was lost,
+list recent roots for the selected agent and exact title, then inspect candidate identities,
+provenance, history and pending inputs. A title match alone does not prove identity. If creation
+cannot be uniquely reconciled, stop and report the uncertainty; do not retry or send a kickoff.
 Having no first-class native creation tool is not, by itself, a failure of this CLI route. When
 an operation is actually refused or unavailable, stop that operation, report its exact result and
 name its restoration owner per `clients/openclaw.md`; independent work continues.

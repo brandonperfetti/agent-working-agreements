@@ -14,7 +14,8 @@ being retrofitted onto the other.
   ordinary topic creation hidden inside exceptional root replacement. The OpenClaw Continuity
   bullet now points to one shared *Create a root conversation* section, which ordinary topics use
   without predecessor evidence, retirement or transfer; replacement links it and keeps its own
-  safeguards. Brandon's decision, 2026-11-03. Receipt:
+  safeguards. Server-allocated keys and encoded, shell-quoted parameters avoid adoption races and
+  title parsing errors; the index includes the trigger. Brandon's decision, 2026-11-03. Receipt:
   `_agent/analysis/2026-11-03-camina-session-creation-qualification-result.md`.
 
 - **2026-11-02 — Portable core, studio profile (#226).** The agreement becomes a portable core
