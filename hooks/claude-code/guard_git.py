@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """PreToolUse guard for the Bash tool: the git rules no agent may break.
 
-Denies force-pushes, pushes to a release branch and PR merges, per the working
-agreements (Part B, "The ritual"), and commits or pushes whose author is not
-Brandon's email (RULE ZERO). It parses the command rather than grepping
+Denies force-pushes, pushes to a release branch and PR merges into develop,
+main or master (or whose base it cannot read), per the Sans Faux profile's Git
+ritual and merge boundary, and commits or pushes whose author is not Brandon's
+email (RULE ZERO). Merges between feature, wave, lane and hotfix branches pass. It parses the command rather than grepping
 it, so a commit message that mentions `git push --force` passes. It stops honest
 mistakes, not a determined bypass: git aliases, refspecs in shell variables and
 commands inside a quoted "$(...)" are not resolved.
@@ -16,6 +17,7 @@ import subprocess
 import sys
 
 RELEASE_BRANCHES = {"master", "main"}
+PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
@@ -24,6 +26,8 @@ SEPARATORS = ";&|()\n"
 GIT_VALUE_OPTS = {"-C", "-c", "--git-dir", "--namespace", "--work-tree"}
 PUSH_VALUE_OPTS = {"-o", "--exec", "--push-option", "--receive-pack", "--repo"}
 GH_VALUE_OPTS = {"-R", "--repo"}
+MERGE_VALUE_OPTS = {"-A", "--author-email", "-b", "--body", "-F", "--body-file",
+                    "--match-head-commit", "-t", "--subject"}
 FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
 HEREDOC = re.compile(
     r"^(?P<head>[^\n]*<<-?[ \t]*['\"]?(?P<tag>\w+)['\"]?[^\n]*)\n.*?^\s*(?P=tag)\s*$",
@@ -218,26 +222,72 @@ def check_git(tokens, directory, env):
     return None
 
 
-def check_gh(tokens):
-    positional, skip = [], False
-    for token in tokens[1:]:
+def gh_read(args, directory, env):
+    """Run a read-only gh command; its output, or None when it fails or says nothing."""
+    try:
+        result = subprocess.run(
+            ["gh"] + args,
+            capture_output=True,
+            text=True,
+            timeout=6,
+            cwd=directory,
+            env=dict(os.environ, **env),
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    output = result.stdout.strip()
+    return output if result.returncode == 0 and output else None
+
+
+def check_merge_base(base):
+    """A merge into a protected base, or one whose base is unknown, stays with Brandon."""
+    if base is None:
+        return "a PR merge whose base branch could not be read"
+    if base in PROTECTED_BASES:
+        return "a PR merge into {}".format(base)
+    return None
+
+
+def check_gh(tokens, directory, env):
+    positional, repo, skip, value_opts = [], [], False, GH_VALUE_OPTS
+    for index, token in enumerate(tokens[1:], 1):
         if skip:
             skip = False
         elif token.startswith("-"):
-            skip = token in GH_VALUE_OPTS
+            name = token.split("=")[0]
+            if name in GH_VALUE_OPTS:
+                value = token.split("=", 1)[1] if "=" in token else None
+                if value is None and index + 1 < len(tokens):
+                    value = tokens[index + 1]
+                repo = ["--repo", value] if value else repo
+            skip = token in value_opts
         else:
             positional.append(token)
+            if positional[:2] == ["pr", "merge"]:
+                value_opts = GH_VALUE_OPTS | MERGE_VALUE_OPTS
     if positional[:2] == ["pr", "merge"]:
-        return "a PR merge"
+        # The guard's documented live probe: answered here, with no lookup.
+        if "--help" in tokens or "-h" in tokens:
+            return "a PR merge"
+        selector = positional[2:3]
+        base = gh_read(
+            ["pr", "view"] + selector + repo + ["--json", "baseRefName", "--jq", ".baseRefName"],
+            directory,
+            env,
+        )
+        return check_merge_base(base)
     if positional[:1] == ["api"]:
         call = " ".join(tokens[1:])
         if re.search(r"mergePullRequest|enablePullRequestAutoMerge", call):
             return "a PR merge"
         if re.search(r"repos/[^/\s]+/[^/\s]+/merges\b", call):
             return "a branch merge through the API"
-        merge_url = re.search(r"/pulls/[^/\s]+/merge\b", call)
+        merge_url = re.search(r"(repos/[^/\s]+/[^/\s]+/pulls/[^/\s]+)/merge\b", call)
         if merge_url and re.search(r"(-X|--method)[ =]?PUT", call):
-            return "a PR merge"
+            base = gh_read(["api", merge_url.group(1), "--jq", ".base.ref"], directory, env)
+            return check_merge_base(base)
+        if re.search(r"/pulls/[^/\s]+/merge\b", call) and re.search(r"(-X|--method)[ =]?PUT", call):
+            return "a PR merge whose base branch could not be read"
     return None
 
 
@@ -264,7 +314,7 @@ def check_command(command, directory):
         elif head == "git":
             reason = check_git(tokens, directory, env)
         elif head == "gh":
-            reason = check_gh(tokens)
+            reason = check_gh(tokens, directory, env)
         if reason:
             return reason
     return None
