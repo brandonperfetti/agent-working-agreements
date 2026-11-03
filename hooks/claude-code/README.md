@@ -51,4 +51,6 @@ Edit it here, never in `~/.claude/hooks/`, then run the tests and reinstall:
 
 A live probe that the guard is loaded: `gh pr merge --help` in a Claude Code session is denied.
 The guard reads a PR's base with `gh pr view` (or `gh api` for a REST merge), so a merge between
-feature, wave, lane or hotfix branches passes; it refuses when that read fails.
+feature, wave, lane or hotfix branches passes; it refuses when that read fails. `gh pr merge
+--auto` is refused whatever the base, since a stacked PR can be retargeted to `develop` before
+it lands.

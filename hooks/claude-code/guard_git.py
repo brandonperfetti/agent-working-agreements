@@ -5,9 +5,10 @@ Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
 ritual and merge boundary, and commits or pushes whose author is not Brandon's
 email (RULE ZERO). Merges between feature, wave, lane and hotfix branches pass.
-It parses the command rather than grepping it, so a commit message that mentions `git push --force` passes. It stops honest
-mistakes, not a determined bypass: git aliases, refspecs in shell variables and
-commands inside a quoted "$(...)" are not resolved.
+It parses the command rather than grepping it, so a commit message that
+mentions `git push --force` passes. It stops honest mistakes, not a determined
+bypass: git aliases, refspecs in shell variables and commands inside a quoted
+"$(...)" are not resolved.
 """
 import json
 import os
@@ -332,8 +333,9 @@ def check_gh(tokens, directory, env):
     return None
 
 
-def check_command(command, directory):
-    exported = {}
+def check_command(command, directory, inherited=None):
+    """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
+    exported = dict(inherited or {})
     for tokens in segments(command):
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
@@ -350,11 +352,11 @@ def check_command(command, directory):
         elif head == "cd" and len(tokens) == 2:
             directory = os.path.join(directory, os.path.expanduser(tokens[1]))
         elif head == "eval":
-            reason = check_command(" ".join(tokens[1:]), directory)
+            reason = check_command(" ".join(tokens[1:]), directory, env)
         elif head in SHELLS:
             for index, token in enumerate(tokens[:-1]):
                 if re.fullmatch(r"-[a-z]*c", token):
-                    reason = check_command(tokens[index + 1], directory)
+                    reason = check_command(tokens[index + 1], directory, env)
                     break
         elif head == "git":
             reason = check_git(tokens, directory, env)

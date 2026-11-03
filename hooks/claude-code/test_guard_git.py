@@ -230,6 +230,8 @@ class MergeBaseTest(unittest.TestCase):
             ("GH_TOKEN=x gh pr merge 1", {"GH_TOKEN": "x"}),
             ("export GH_REPO=o/r && gh pr merge 3", {"GH_REPO": "o/r"}),
             ("export GH_REPO=o/r; GH_HOST=h gh pr merge 3", {"GH_REPO": "o/r", "GH_HOST": "h"}),
+            ("export GH_REPO=o/r; eval gh pr merge 3", {"GH_REPO": "o/r"}),
+            ("GH_REPO=o/r bash -c 'gh pr merge 3'", {"GH_REPO": "o/r"}),
         ):
             with self.subTest(command=command):
                 _, read = self.check(command, "feature")
@@ -285,6 +287,8 @@ class AuthorTest(unittest.TestCase):
             (self.other, "git -c user.email={} commit -m x".format(brandon), False),
             (self.other, "git commit --dry-run", False),
             (self.mine, 'git commit -m "GIT_AUTHOR_EMAIL={}"'.format(self.OTHER), False),
+            (self.mine, "export GIT_AUTHOR_EMAIL={}; git commit -m x".format(self.OTHER), True),
+            (self.mine, 'export GIT_AUTHOR_EMAIL={}; bash -c "git commit -m y"'.format(self.OTHER), True),
         ):
             with self.subTest(directory=os.path.basename(directory), command=command):
                 reason = guard_git.check_command(command, directory)
