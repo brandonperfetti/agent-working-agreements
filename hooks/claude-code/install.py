@@ -46,6 +46,25 @@ def runs_script(command, script):
     return re.search(r"(^|[/\s\"'])" + re.escape(script) + r"($|[\s\"'])", command) is not None
 
 
+def well_formed(settings):
+    """True when the hooks block has the shape merge_hooks walks: events of groups of hooks."""
+    if not isinstance(settings, dict):
+        return False
+    events = settings.get("hooks", {})
+    if not isinstance(events, dict):
+        return False
+    for groups in events.values():
+        if not isinstance(groups, list):
+            return False
+        for group in groups:
+            if not isinstance(group, dict) or not isinstance(group.get("hooks", []), list):
+                return False
+            for hook in group.get("hooks", []):
+                if not isinstance(hook, dict) or not isinstance(hook.get("command", ""), str):
+                    return False
+    return True
+
+
 def merge_hooks(settings):
     """Return a copy of settings with every hook in HOOKS registered once."""
     merged = copy.deepcopy(settings)
@@ -71,7 +90,6 @@ def merge_hooks(settings):
 
 
 def write_atomic(path, data, mode=0o644):
-    path = os.path.realpath(path)  # write through a symlink, as into a dotfiles repo
     directory = os.path.dirname(path)
     fd, temp = tempfile.mkstemp(dir=directory, prefix=".install-")
     try:
@@ -107,8 +125,7 @@ def main(argv=None):
                 settings = json.load(handle)
         except ValueError as error:
             sys.exit("{} is not valid JSON ({}); nothing written.".format(settings_path, error))
-    hooks = settings.get("hooks", {}) if isinstance(settings, dict) else None
-    if not isinstance(hooks, dict) or not all(isinstance(g, list) for g in hooks.values()):
+    if not well_formed(settings):
         sys.exit("{} has no hooks block of the expected shape; nothing written.".format(settings_path))
     merged = merge_hooks(settings)
     if merged != settings:
@@ -138,7 +155,8 @@ def main(argv=None):
             backup = "{}.bak-{}".format(settings_path, time.strftime("%Y%m%d-%H%M%S"))
             shutil.copy2(settings_path, backup)
             print("backup {}".format(backup))
-        write_atomic(settings_path, json.dumps(merged, indent=2, ensure_ascii=False) + "\n", mode)
+        # Through a symlink, as into a dotfiles repo; the hook copies above replace theirs.
+        write_atomic(os.path.realpath(settings_path), json.dumps(merged, indent=2, ensure_ascii=False) + "\n", mode)
     print("Installed. Start a new Claude Code session for the settings change to load.")
     return 0
 

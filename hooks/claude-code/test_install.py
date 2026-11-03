@@ -108,8 +108,26 @@ class InstallTest(unittest.TestCase):
         with open(target) as handle:
             self.assertIn("PreToolUse", json.load(handle)["hooks"])
 
+    def test_a_linked_hook_copy_is_replaced_not_written_through(self):
+        clone = os.path.join(self.claude, "clone-guard_git.py")
+        with open(clone, "w") as handle:
+            handle.write("# a clone's tracked file\n")
+        os.makedirs(os.path.join(self.claude, "hooks"))
+        os.symlink(clone, os.path.join(self.claude, "hooks", "guard_git.py"))
+        self.run_install()
+        self.assertFalse(os.path.islink(os.path.join(self.claude, "hooks", "guard_git.py")))
+        with open(clone) as handle:
+            self.assertEqual(handle.read(), "# a clone's tracked file\n")
+
     def test_unexpected_shape_is_left_alone(self):
-        for settings in ([], {"hooks": None}, {"hooks": {"PreToolUse": {}}}):
+        for settings in (
+            [],
+            {"hooks": None},
+            {"hooks": {"PreToolUse": {}}},
+            {"hooks": {"PreToolUse": ["x"]}},
+            {"hooks": {"PreToolUse": [{"hooks": None}]}},
+            {"hooks": {"PreToolUse": [{"hooks": [{"command": None}]}]}},
+        ):
             with self.subTest(settings=settings):
                 self.write_settings(settings)
                 with self.assertRaises(SystemExit):
