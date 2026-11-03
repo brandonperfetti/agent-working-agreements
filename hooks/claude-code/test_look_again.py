@@ -27,8 +27,10 @@ class LookAgainTest(unittest.TestCase):
         self.entries = []
         self.calls = 0
         look_again.STATE_DIR = os.path.join(self.root, "state")
+        self.skip = look_again.SKIP
 
     def tearDown(self):
+        look_again.SKIP = self.skip
         self.tmp.cleanup()
 
     def file(self, name, mtime):
@@ -50,6 +52,13 @@ class LookAgainTest(unittest.TestCase):
              "message": {"content": [{"type": "tool_result", "tool_use_id": use_id, "is_error": error}]}}
         )
 
+    def prompt(self, at, kind="human", meta=False):
+        entry = {"type": "user", "timestamp": stamp(at), "origin": {"kind": kind},
+                 "message": {"role": "user", "content": "next question"}}
+        if meta:
+            entry["isMeta"] = True
+        self.entries.append(entry)
+
     def decide(self, active=False):
         with open(self.transcript, "w") as handle:
             for entry in self.entries:
@@ -70,6 +79,7 @@ class LookAgainTest(unittest.TestCase):
         reply = self.decide()
         self.assertEqual(reply["decision"], "block")
         self.assertIn(path, reply["reason"])
+        self.assertIn(datetime.date.fromtimestamp(START + 10).isoformat(), reply["reason"], "not today: dated")
         self.assertIsNone(self.decide(active=True), "the same change is reported once")
 
     def test_reading_it_again_clears_it(self):
@@ -177,6 +187,47 @@ class LookAgainTest(unittest.TestCase):
         for path in paths:
             self.assertTrue(any(path + " (" in reason for reason in reasons), path)
         self.assertIsNone(self.decide(active=True))
+
+    def test_a_file_touched_before_the_last_prompt_does_not_count(self):
+        path = self.file("AGENTS.md", START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.prompt(START + 20)
+        os.utime(path, (START + 60, START + 60))
+        self.assertIsNone(self.decide())
+
+    def test_hook_feedback_messages_and_notifications_are_not_prompts(self):
+        path = self.file("plan.md", START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.prompt(START + 20, kind="peer", meta=True)
+        self.prompt(START + 21, kind="task-notification")
+        self.prompt(START + 22, meta=True)
+        os.utime(path, (START + 60, START + 60))
+        self.assertIn(path, self.decide()["reason"])
+
+    def test_a_file_touched_after_the_prompt_counts(self):
+        path = self.file("plan.md", START)
+        self.prompt(START + 5)
+        self.tool("Read", {"file_path": path}, START + 10)
+        os.utime(path, (START + 60, START + 60))
+        self.assertIn(path, self.decide()["reason"])
+
+    def test_a_removed_folder_is_cleanup_not_a_change(self):
+        folder = os.path.join(self.root, "worktree")
+        os.mkdir(folder)
+        path = self.file(os.path.join("worktree", "draft.md"), START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        os.remove(path)
+        os.rmdir(folder)
+        self.assertIsNone(self.decide())
+
+    def test_claude_code_temp_tree_is_skipped(self):
+        self.assertIn("/private/tmp/claude-{}/".format(os.getuid()), look_again.SKIP)
+        look_again.SKIP = look_again.SKIP + (os.path.join(self.root, "scratch") + os.sep,)
+        os.mkdir(os.path.join(self.root, "scratch"))
+        path = self.file(os.path.join("scratch", "notes.md"), START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        os.utime(path, (START + 60, START + 60))
+        self.assertIsNone(self.decide())
 
     def test_a_deleted_file_is_reported(self):
         path = self.file("draft.md", START)

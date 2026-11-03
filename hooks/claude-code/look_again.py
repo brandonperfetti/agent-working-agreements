@@ -8,6 +8,14 @@ last time the agent touched it. A file changed since then (by another session,
 a person or a job) blocks the stop once, naming the file, so the agent reads it
 again before it reports.
 
+Only files touched since the last prompt a person typed count. The stop checks
+the answer to that prompt, and a file read for an earlier prompt was checked at
+that prompt's own stops. Compaction is not the boundary, since a long session
+can run for days without one. Hook feedback, messages from other sessions,
+task notifications and compaction summaries are not prompts. The cost: a file
+the agent leans on from an earlier prompt without touching it again is not
+checked.
+
 A file the agent touched through Bash after reading it counts as seen, since
 Bash edits are the agent's own: the command must name a path that resolves to
 it from the session's directory, or, when the command may change directory,
@@ -16,7 +24,11 @@ its bare name or a path ending in it.
 A file gone after a Bash command removed or moved it is the agent's own
 deletion: it was named in a part of the command that starts with rm, unlink,
 trash or git rm, or as a source of mv or git mv. A file gone after any other
-command is reported.
+command is reported, unless its folder is gone too: a removed worktree or
+temp tree is routine cleanup.
+
+Claude Code's own temp tree (/tmp/claude-<uid>: scratchpads, task output) and
+~/.claude/projects are skipped.
 
 Each change is reported once, and a chain of stops is sent back at most
 MAX_BLOCKS times, so a file that never stops changing cannot hold the agent.
@@ -36,7 +48,11 @@ SLACK = 2.0  # seconds: a formatter hook may touch a file just after the agent's
 MAX_BLOCKS = 3
 MAX_LISTED = 10
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-look-again")
-SKIP = os.path.join(os.path.expanduser("~"), ".claude", "projects") + os.sep
+SKIP = (
+    os.path.join(os.path.expanduser("~"), ".claude", "projects") + os.sep,
+    "/tmp/claude-{}/".format(os.getuid()),
+    "/private/tmp/claude-{}/".format(os.getuid()),
+)
 WORD = re.compile(r"""[^\s'"`;|&<>()=]+""")
 MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\b(git|make)\s+-C\s")
 REMOVES = re.compile(r"\s*(sudo\s+)?(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
@@ -75,18 +91,34 @@ def named(command, by_base, cwd, loose):
     return found
 
 
+def is_prompt(entry):
+    """True for a prompt a person typed, not a tool result, hook feedback, message or summary."""
+    if entry.get("type") != "user" or entry.get("isMeta") or entry.get("isCompactSummary"):
+        return False
+    origin = entry.get("origin")
+    if isinstance(origin, dict) and origin.get("kind") != "human":
+        return False
+    content = (entry.get("message") or {}).get("content")
+    if isinstance(content, list):
+        return not any(isinstance(block, dict) and block.get("type") == "tool_result" for block in content)
+    return isinstance(content, str)
+
+
 def last_seen(transcript_path):
-    """Map each file the agent touched to (epoch seconds of the last touch, tool name)."""
+    """Map each file the agent touched since the last prompt to (epoch seconds of the last touch, tool name)."""
     pending, seen = {}, {}
     with open(transcript_path, encoding="utf-8") as handle:
         for line in handle:
-            if '"tool_use"' not in line and '"tool_result"' not in line:
+            if '"tool_use"' not in line and '"tool_result"' not in line and '"user"' not in line:
                 continue
             try:
                 entry = json.loads(line)
             except ValueError:
                 continue
             if entry.get("isSidechain"):
+                continue
+            if is_prompt(entry):
+                seen.clear()
                 continue
             content = (entry.get("message") or {}).get("content")
             if not isinstance(content, list):
@@ -134,7 +166,7 @@ def changed_files(seen):
         try:
             mtime = os.stat(path).st_mtime
         except FileNotFoundError:
-            if tool != OWN_REMOVAL:
+            if tool != OWN_REMOVAL and os.path.isdir(os.path.dirname(path)):
                 found.append((path, "now gone", "gone"))
             continue
         except OSError:
@@ -146,7 +178,11 @@ def changed_files(seen):
 
 
 def clock(epoch):
-    return datetime.datetime.fromtimestamp(epoch).strftime("%H:%M:%S")
+    """The time today, or the date and time for an earlier day."""
+    moment = datetime.datetime.fromtimestamp(epoch)
+    if moment.date() == datetime.date.today():
+        return moment.strftime("%H:%M:%S")
+    return moment.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def load_state(path):

@@ -9,12 +9,13 @@ other clients, git aliases).
 | --- | --- | --- |
 | `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main`, PR merges, and commits or pushes whose author is not `brandon@brandonperfetti.com` (RULE ZERO) |
 | `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode and the agreement paths after each compaction |
-| `look_again.py` | `Stop` | Sends the agent back once when a file it read or wrote this session has changed since, naming the file, so it reads it again before it reports |
+| `look_again.py` | `Stop` | Sends the agent back once when a file it read or wrote since your last prompt has changed since, naming the file, so it reads it again before it reports |
 
-`look_again.py` sees only the files the agent touched with its file tools; a file it later named
-in a Bash command counts as seen. It reports each change once and sends one chain of stops back at
-most three times. A check that needs more, such as re-fetching an index or running the tests,
-belongs in that project's own `Stop` hook in its `.claude/settings.json`.
+`look_again.py` sees only the files the agent touched with its file tools since your last prompt;
+a file it later named in a Bash command counts as seen. A file gone with its folder (a removed
+worktree) and Claude Code's own temp tree are not reported. It reports each change once and sends
+one chain of stops back at most three times. A check that needs more, such as re-fetching an index
+or running the tests, belongs in that project's own `Stop` hook in its `.claude/settings.json`.
 
 ## Install or update
 
