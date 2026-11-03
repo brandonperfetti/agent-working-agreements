@@ -4,8 +4,8 @@
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
 ritual and merge boundary, and commits or pushes whose author is not Brandon's
-email (RULE ZERO). Merges between feature, wave, lane and hotfix branches pass. It parses the command rather than grepping
-it, so a commit message that mentions `git push --force` passes. It stops honest
+email (RULE ZERO). Merges between feature, wave, lane and hotfix branches pass.
+It parses the command rather than grepping it, so a commit message that mentions `git push --force` passes. It stops honest
 mistakes, not a determined bypass: git aliases, refspecs in shell variables and
 commands inside a quoted "$(...)" are not resolved.
 """
@@ -26,8 +26,16 @@ SEPARATORS = ";&|()\n"
 GIT_VALUE_OPTS = {"-C", "-c", "--git-dir", "--namespace", "--work-tree"}
 PUSH_VALUE_OPTS = {"-o", "--exec", "--push-option", "--receive-pack", "--repo"}
 GH_VALUE_OPTS = {"-R", "--repo"}
-MERGE_VALUE_OPTS = {"-A", "--author-email", "-b", "--body", "-F", "--body-file",
-                    "--match-head-commit", "-t", "--subject"}
+# Options that take a value, for `gh pr merge` and `gh api` alike; none is a flag in the other.
+GH_ARG_VALUE_OPTS = GH_VALUE_OPTS | {
+    "-A", "--author-email", "-b", "--body", "-F", "--body-file", "--field",
+    "--match-head-commit", "-t", "--subject", "--template", "-f", "--raw-field",
+    "-H", "--header", "--hostname", "--input", "-p", "--preview", "-q", "--jq",
+    "--cache", "-X", "--method",
+}
+GH_MERGE_MUTATIONS = re.compile(
+    r"mergePullRequest|enablePullRequestAutoMerge|mergeBranch|enqueuePullRequest"
+)
 FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
 HEREDOC = re.compile(
     r"^(?P<head>[^\n]*<<-?[ \t]*['\"]?(?P<tag>\w+)['\"]?[^\n]*)\n.*?^\s*(?P=tag)\s*$",
@@ -248,27 +256,49 @@ def check_merge_base(base):
     return None
 
 
-def check_gh(tokens, directory, env):
-    positional, repo, skip, value_opts = [], [], False, GH_VALUE_OPTS
-    for index, token in enumerate(tokens[1:], 1):
-        if skip:
-            skip = False
-        elif token.startswith("-"):
-            name = token.split("=")[0]
-            if name in GH_VALUE_OPTS:
-                value = token.split("=", 1)[1] if "=" in token else None
-                if value is None and index + 1 < len(tokens):
-                    value = tokens[index + 1]
-                repo = ["--repo", value] if value else repo
-            skip = token in value_opts
+def gh_options(tokens):
+    """Split gh arguments as gh reads them: `-sb x` clusters, `--opt=x`, and `--`."""
+    positional, options, index = [], {}, 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "--":
+            positional.extend(tokens[index + 1 :])
+            break
+        if token.startswith("--"):
+            name, equals, value = token.partition("=")
+            if name in GH_ARG_VALUE_OPTS and not equals:
+                index += 1
+                value = tokens[index] if index < len(tokens) else ""
+            options.setdefault(name, []).append(value)
+        elif token.startswith("-") and len(token) > 1:
+            for position in range(1, len(token)):
+                name = "-" + token[position]
+                value = ""
+                if name in GH_ARG_VALUE_OPTS:
+                    value = token[position + 1 :]
+                    if not value:
+                        index += 1
+                        value = tokens[index] if index < len(tokens) else ""
+                options.setdefault(name, []).append(value)
+                if name in GH_ARG_VALUE_OPTS:
+                    break
         else:
             positional.append(token)
-            if positional[:2] == ["pr", "merge"]:
-                value_opts = GH_VALUE_OPTS | MERGE_VALUE_OPTS
+        index += 1
+    return positional, options
+
+
+def check_gh(tokens, directory, env):
+    positional, options = gh_options(tokens[1:])
+    repos = options.get("-R", []) + options.get("--repo", [])
+    repo = ["--repo", repos[-1]] if repos else []
     if positional[:2] == ["pr", "merge"]:
         # The guard's documented live probe: answered here, with no lookup.
-        if "--help" in tokens or "-h" in tokens:
+        if "--help" in options or "-h" in options:
             return "a PR merge"
+        # An auto-merge lands later, after a stacked PR may have been retargeted to develop.
+        if "--auto" in options:
+            return "an auto-merge, whose base can change before it lands"
         selector = positional[2:3]
         base = gh_read(
             ["pr", "view"] + selector + repo + ["--json", "baseRefName", "--jq", ".baseRefName"],
@@ -278,31 +308,43 @@ def check_gh(tokens, directory, env):
         return check_merge_base(base)
     if positional[:1] == ["api"]:
         call = " ".join(tokens[1:])
-        if re.search(r"mergePullRequest|enablePullRequestAutoMerge", call):
+        if GH_MERGE_MUTATIONS.search(call):
             return "a PR merge"
         if re.search(r"repos/[^/\s]+/[^/\s]+/merges\b", call):
             return "a branch merge through the API"
-        merge_url = re.search(r"(repos/[^/\s]+/[^/\s]+/pulls/[^/\s]+)/merge\b", call)
-        if merge_url and re.search(r"(-X|--method)[ =]?PUT", call):
-            base = gh_read(["api", merge_url.group(1), "--jq", ".base.ref"], directory, env)
+        methods = [m.upper() for m in options.get("-X", []) + options.get("--method", [])]
+        if "PUT" not in methods:
+            return None
+        endpoint = positional[1] if len(positional) > 1 else ""
+        merge_url = re.fullmatch(r"(.*\brepos/[^/]+/[^/]+/pulls/[^/]+)/merge/?", endpoint)
+        if merge_url:
+            hosts = options.get("--hostname", [])
+            host = ["--hostname", hosts[-1]] if hosts else []
+            base = gh_read(
+                ["api", merge_url.group(1)] + host + ["--jq", ".base.ref"], directory, env
+            )
             return check_merge_base(base)
-        if re.search(r"/pulls/[^/\s]+/merge\b", call) and re.search(r"(-X|--method)[ =]?PUT", call):
+        if re.search(r"/pulls/[^/\s]+/merge\b", call):
             return "a PR merge whose base branch could not be read"
     return None
 
 
 def check_command(command, directory):
+    exported = {}
     for tokens in segments(command):
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
-        env = dict(token.split("=", 1) for token in prefix if ASSIGNMENT.match(token))
+        env = dict(exported)
+        env.update(token.split("=", 1) for token in prefix if ASSIGNMENT.match(token))
         tokens = command_tokens
         if not tokens:
             continue
         head = os.path.basename(tokens[0])
         reason = None
-        if head == "cd" and len(tokens) == 2:
+        if head == "export":
+            exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
+        elif head == "cd" and len(tokens) == 2:
             directory = os.path.join(directory, os.path.expanduser(tokens[1]))
         elif head == "eval":
             reason = check_command(" ".join(tokens[1:]), directory)

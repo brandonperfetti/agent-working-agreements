@@ -163,7 +163,8 @@ class GuardTest(unittest.TestCase):
                 check=True,
             ).stdout
 
-        decision = json.loads(run("gh pr merge 1"))["hookSpecificOutput"]
+        # `--help` is denied with no lookup, so no real gh call decides this test.
+        decision = json.loads(run("gh pr merge --help"))["hookSpecificOutput"]
         self.assertEqual(decision["permissionDecision"], "deny")
         self.assertEqual(run("git status"), "")
 
@@ -173,9 +174,10 @@ class MergeBaseTest(unittest.TestCase):
 
     MERGES = (
         "gh pr merge 12",
-        "gh pr merge --squash --auto",
+        "gh pr merge --squash",
         "gh -R owner/repo pr merge 1",
         "gh api -X PUT repos/o/r/pulls/1/merge",
+        "gh api -X put repos/o/r/pulls/1/merge",
     )
 
     def check(self, command, base):
@@ -204,20 +206,43 @@ class MergeBaseTest(unittest.TestCase):
             ("gh -R owner/repo pr merge 7", ["pr", "view", "7", "--repo", "owner/repo"] + jq),
             ("gh pr merge --repo=o/r 7", ["pr", "view", "7", "--repo", "o/r"] + jq),
             ("gh pr merge --body 'merge 12' -t subj 7", ["pr", "view", "7"] + jq),
+            ("gh pr merge -sb 42 7", ["pr", "view", "7"] + jq),
+            ("gh pr merge -sb42 7", ["pr", "view", "7"] + jq),
+            ("gh pr merge -dR o/r 7", ["pr", "view", "7", "--repo", "o/r"] + jq),
+            ("gh pr merge -- 7", ["pr", "view", "7"] + jq),
             ("gh api -X PUT repos/o/r/pulls/3/merge", ["api", "repos/o/r/pulls/3", "--jq", ".base.ref"]),
+            ("gh api -XPUT /repos/o/r/pulls/3/merge", ["api", "/repos/o/r/pulls/3", "--jq", ".base.ref"]),
+            (
+                "gh api -X PUT -f commit_title=repos/o/r/pulls/2/merge repos/o/r/pulls/1/merge",
+                ["api", "repos/o/r/pulls/1", "--jq", ".base.ref"],
+            ),
+            (
+                "gh api --hostname ghe.example.com --method=PUT repos/o/r/pulls/4/merge",
+                ["api", "repos/o/r/pulls/4", "--hostname", "ghe.example.com", "--jq", ".base.ref"],
+            ),
         ):
             with self.subTest(command=command):
                 _, read = self.check(command, "feature")
                 self.assertEqual(read.call_args[0][0], args)
 
     def test_env_prefix_reaches_the_lookup(self):
-        _, read = self.check("GH_TOKEN=x gh pr merge 1", "feature")
-        self.assertEqual(read.call_args[0][2], {"GH_TOKEN": "x"})
+        for command, env in (
+            ("GH_TOKEN=x gh pr merge 1", {"GH_TOKEN": "x"}),
+            ("export GH_REPO=o/r && gh pr merge 3", {"GH_REPO": "o/r"}),
+            ("export GH_REPO=o/r; GH_HOST=h gh pr merge 3", {"GH_REPO": "o/r", "GH_HOST": "h"}),
+        ):
+            with self.subTest(command=command):
+                _, read = self.check(command, "feature")
+                self.assertEqual(read.call_args[0][2], env)
 
     def test_probe_and_unresolvable_merges_stay_blocked_without_a_lookup(self):
         for command in (
             "gh pr merge --help",
             "gh pr merge -h",
+            "gh pr merge --auto --squash 7",
+            "gh api graphql -f query='mutation { mergeBranch(input: {}) { clientMutationId } }'",
+            "gh api graphql -f query='mutation { enqueuePullRequest(input: {}) { clientMutationId } }'",
+            "gh api -X PUT -f x=repos/o/r/pulls/1/merge repos/o/r/pulls/1/merged",
             "gh api graphql -f query='mutation { mergePullRequest(input: {}) { clientMutationId } }'",
             "gh api repos/o/r/merges -f base=feature -f head=other",
             "gh api -X PUT /pulls/1/merge",
