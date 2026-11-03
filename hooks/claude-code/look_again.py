@@ -187,12 +187,14 @@ def decide(payload):
             )
         }
     else:
-        for path, _, key in fresh[:MAX_LISTED]:
+        # the last block the chain allows names every file; earlier ones name MAX_LISTED
+        listed = fresh if blocks + 1 >= MAX_BLOCKS else fresh[:MAX_LISTED]
+        for path, _, key in listed:
             reported[path] = key
         blocks += 1
-        lines = ["- {} ({})".format(path, detail) for path, detail, _ in fresh[:MAX_LISTED]]
-        if len(fresh) > MAX_LISTED:
-            lines.append("- and {} more, listed when you stop again".format(len(fresh) - MAX_LISTED))
+        lines = ["- {} ({})".format(path, detail) for path, detail, _ in listed]
+        if len(fresh) > len(listed):
+            lines.append("- and {} more, listed when you stop again".format(len(fresh) - len(listed)))
         reply = {
             "decision": "block",
             "reason": "Look again before you stop. These files changed after you last read or wrote them:\n"

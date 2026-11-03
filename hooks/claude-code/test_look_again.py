@@ -166,6 +166,18 @@ class LookAgainTest(unittest.TestCase):
         self.entries[-1]["cwd"] = self.root
         self.assertIn(path, self.decide()["reason"])
 
+    def test_the_last_block_names_every_file_left(self):
+        count = look_again.MAX_LISTED * look_again.MAX_BLOCKS + 5
+        paths = [self.file("f{:02}.md".format(n), START) for n in range(count)]
+        for path in paths:
+            self.tool("Read", {"file_path": path}, START + 10)
+            os.utime(path, (START + 60, START + 60))
+        reasons = [self.decide(active=look > 0)["reason"] for look in range(look_again.MAX_BLOCKS)]
+        self.assertNotIn("more", reasons[-1])
+        for path in paths:
+            self.assertTrue(any(path + " (" in reason for reason in reasons), path)
+        self.assertIsNone(self.decide(active=True))
+
     def test_a_deleted_file_is_reported(self):
         path = self.file("draft.md", START)
         self.tool("Read", {"file_path": path}, START + 10)
