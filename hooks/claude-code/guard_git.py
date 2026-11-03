@@ -1,0 +1,306 @@
+#!/usr/bin/python3
+"""PreToolUse guard for the Bash tool: the git rules no agent may break.
+
+Denies force-pushes, pushes to a release branch and PR merges, per the working
+agreements (Part B, "The ritual"), and commits or pushes whose author is not
+Brandon's email (RULE ZERO). It parses the command rather than grepping
+it, so a commit message that mentions `git push --force` passes. It stops honest
+mistakes, not a determined bypass: git aliases, refspecs in shell variables and
+commands inside a quoted "$(...)" are not resolved.
+"""
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+
+RELEASE_BRANCHES = {"master", "main"}
+AUTHOR_EMAIL = "brandon@brandonperfetti.com"
+ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
+WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
+SHELLS = {"bash", "sh", "zsh"}
+SEPARATORS = ";&|()\n"
+GIT_VALUE_OPTS = {"-C", "-c", "--git-dir", "--namespace", "--work-tree"}
+PUSH_VALUE_OPTS = {"-o", "--exec", "--push-option", "--receive-pack", "--repo"}
+GH_VALUE_OPTS = {"-R", "--repo"}
+FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
+HEREDOC = re.compile(
+    r"^(?P<head>[^\n]*<<-?[ \t]*['\"]?(?P<tag>\w+)['\"]?[^\n]*)\n.*?^\s*(?P=tag)\s*$",
+    re.DOTALL | re.MULTILINE,
+)
+
+
+def drop_heredoc(match):
+    """Blank a heredoc body, unless a shell is reading it as commands."""
+    head = match.group("head")
+    if re.search(r"\b(ba|z)?sh\b", head):
+        return match.group(0)
+    return head
+
+
+def segments(command):
+    """Split a command line into one token list per simple command."""
+    command = HEREDOC.sub(drop_heredoc, command)
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=SEPARATORS)
+        lexer.whitespace = " \t\r"
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        tokens = list(lexer)
+    except ValueError:
+        # Unbalanced quotes: read it as plain words so a real push still shows.
+        parts = re.split(r"&&|\|\||[;|\n()]", command)
+        return [part.replace('"', " ").replace("'", " ").split() for part in parts]
+    result, current = [], []
+    for token in tokens:
+        if token and set(token) <= set(SEPARATORS):
+            result.append(current)
+            current = []
+        else:
+            current.append(token)
+    result.append(current)
+    return result
+
+
+def strip_redirects(tokens):
+    kept, skip = [], False
+    for token in tokens:
+        if skip:
+            skip = False
+        elif re.fullmatch(r"\d*[<>]+", token):
+            skip = True
+        elif not re.match(r"\d*[<>]", token):
+            kept.append(token)
+    return kept
+
+
+def strip_prefix(tokens):
+    """Drop env assignments and wrappers such as `env` or `sudo`."""
+    while tokens:
+        if ASSIGNMENT.match(tokens[0]):
+            tokens = tokens[1:]
+        elif os.path.basename(tokens[0]) in WRAPPERS:
+            tokens = tokens[1:]
+            while tokens and tokens[0].startswith("-"):
+                tokens = tokens[1:]
+        else:
+            break
+    return tokens
+
+
+def current_branch(directory):
+    try:
+        result = subprocess.run(
+            ["git", "-C", directory, "symbolic-ref", "--short", "-q", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return result.stdout.strip()
+
+
+def git_lines(directory, args, env=None):
+    """Run a read-only git command; None when it fails, so git reports its own error."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", directory] + args,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            env=env,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode:
+        return None
+    return result.stdout.splitlines()
+
+
+def email_of(ident):
+    match = re.search(r"<([^>]*)>", ident)
+    return match.group(1) if match else ident.strip()
+
+
+def check_commit(args, directory, configs, env):
+    """Resolve the author the commit will carry, as git would."""
+    if "--dry-run" in args:
+        return None
+    author = None
+    for index, arg in enumerate(args):
+        if arg == "--":
+            break
+        if arg.startswith("--author="):
+            author = arg.split("=", 1)[1]
+        elif arg == "--author" and index + 1 < len(args):
+            author = args[index + 1]
+    if author is None:
+        options = [part for config in configs for part in ("-c", config)]
+        lines = git_lines(directory, options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
+        if not lines:
+            return None
+        author = lines[0]
+    email = email_of(author)
+    if email != AUTHOR_EMAIL:
+        return "a commit authored as {}".format(email or "an empty email")
+    return None
+
+
+def check_push_authors(refspecs, directory):
+    """Read the authors of the commits this push sends that no remote has yet."""
+    sources = [refspec.lstrip("+").partition(":")[0] for refspec in refspecs] or ["HEAD"]
+    sources = [source for source in sources if source]
+    if not sources:
+        return None
+    lines = git_lines(directory, ["log", "--format=%ae"] + sources + ["--not", "--remotes", "--"])
+    others = sorted(set(lines or []) - {AUTHOR_EMAIL})
+    if others:
+        return "a push of commits authored as {}".format(", ".join(others))
+    return None
+
+
+def destination(refspec, directory):
+    source, _, target = refspec.lstrip("+").partition(":")
+    branch = target or source
+    if branch in ("HEAD", "@"):
+        return current_branch(directory)
+    return re.sub(r"^(refs/)?heads/", "", branch)
+
+
+def check_push(args, directory):
+    positional, options, skip = [], [], False
+    for index, arg in enumerate(args):
+        if skip:
+            skip = False
+        elif arg == "--":
+            positional.extend(args[index + 1 :])
+            break
+        elif arg.startswith("-"):
+            options.append(arg.split("=")[0])
+            skip = arg in PUSH_VALUE_OPTS
+        else:
+            positional.append(arg)
+
+    # A dry run writes nothing, and the pickup guard's hook probe is one.
+    if "--dry-run" in options or "-n" in options:
+        return None
+    short_force = any(re.fullmatch(r"-[a-zA-Z]*f[a-zA-Z]*", opt) for opt in options)
+    refspecs = positional[1:]
+    if short_force or FORCE_FLAGS & set(options) or any(r.startswith("+") for r in refspecs):
+        return "a force-push"
+    if "--all" in options or "--branches" in options:
+        return "a push of every branch, release branches included"
+    targets = [destination(r, directory) for r in refspecs]
+    if not refspecs:
+        targets = [current_branch(directory)]
+    for target in targets:
+        if target in RELEASE_BRANCHES or "*" in target:
+            return "a push to a release branch ({})".format(target)
+    if "--delete" in options or "-d" in options:
+        return None
+    return check_push_authors(refspecs, directory)
+
+
+def check_git(tokens, directory, env):
+    index, configs = 1, []
+    while index < len(tokens) and tokens[index].startswith("-"):
+        if tokens[index] == "-C" and index + 1 < len(tokens):
+            directory = os.path.join(directory, os.path.expanduser(tokens[index + 1]))
+        elif tokens[index] == "-c" and index + 1 < len(tokens):
+            configs.append(tokens[index + 1])
+        index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
+    if index < len(tokens) and tokens[index] == "push":
+        return check_push(tokens[index + 1 :], directory)
+    if index < len(tokens) and tokens[index] == "commit":
+        return check_commit(tokens[index + 1 :], directory, configs, env)
+    return None
+
+
+def check_gh(tokens):
+    positional, skip = [], False
+    for token in tokens[1:]:
+        if skip:
+            skip = False
+        elif token.startswith("-"):
+            skip = token in GH_VALUE_OPTS
+        else:
+            positional.append(token)
+    if positional[:2] == ["pr", "merge"]:
+        return "a PR merge"
+    if positional[:1] == ["api"]:
+        call = " ".join(tokens[1:])
+        if re.search(r"mergePullRequest|enablePullRequestAutoMerge", call):
+            return "a PR merge"
+        if re.search(r"repos/[^/\s]+/[^/\s]+/merges\b", call):
+            return "a branch merge through the API"
+        merge_url = re.search(r"/pulls/[^/\s]+/merge\b", call)
+        if merge_url and re.search(r"(-X|--method)[ =]?PUT", call):
+            return "a PR merge"
+    return None
+
+
+def check_command(command, directory):
+    for tokens in segments(command):
+        tokens = strip_redirects(tokens)
+        command_tokens = strip_prefix(tokens)
+        prefix = tokens[: len(tokens) - len(command_tokens)]
+        env = dict(token.split("=", 1) for token in prefix if ASSIGNMENT.match(token))
+        tokens = command_tokens
+        if not tokens:
+            continue
+        head = os.path.basename(tokens[0])
+        reason = None
+        if head == "cd" and len(tokens) == 2:
+            directory = os.path.join(directory, os.path.expanduser(tokens[1]))
+        elif head == "eval":
+            reason = check_command(" ".join(tokens[1:]), directory)
+        elif head in SHELLS:
+            for index, token in enumerate(tokens[:-1]):
+                if re.fullmatch(r"-[a-z]*c", token):
+                    reason = check_command(tokens[index + 1], directory)
+                    break
+        elif head == "git":
+            reason = check_git(tokens, directory, env)
+        elif head == "gh":
+            reason = check_gh(tokens)
+        if reason:
+            return reason
+    return None
+
+
+def main():
+    payload = json.load(sys.stdin)
+    command = payload.get("tool_input", {}).get("command", "")
+    reason = check_command(command, payload.get("cwd") or os.getcwd())
+    if reason:
+        if reason.startswith(("a commit", "a push of commits")):
+            advice = (
+                "RULE ZERO: every agent commit carries the author email {}. Fix the "
+                "identity (git config user.email, or git commit --amend --reset-author "
+                "for a commit already made) and retry; an outside contributor's commits "
+                "go back to Brandon."
+            ).format(AUTHOR_EMAIL)
+        else:
+            advice = (
+                "The working agreements keep that with Brandon; "
+                "hand it back rather than routing around this."
+            )
+        print(
+            json.dumps(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PreToolUse",
+                        "permissionDecision": "deny",
+                        "permissionDecisionReason": (
+                            "Blocked by ~/.claude/hooks/guard_git.py: this is {}. {}"
+                        ).format(reason, advice),
+                    }
+                }
+            )
+        )
+
+
+if __name__ == "__main__":
+    main()

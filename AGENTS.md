@@ -41,7 +41,7 @@ The agreement stays small on purpose; these rules are what keep it small.
 
 ## CI gate
 
-Green is these five commands, run in this order from the repository root, each
+Green is these six commands, run in this order from the repository root, each
 exiting 0:
 
 ```bash
@@ -49,6 +49,7 @@ exiting 0:
 ./scripts/check-index.test.sh
 ./scripts/check-structure.sh
 ./scripts/check-structure.test.sh
+/usr/bin/python3 -m unittest discover -s hooks/claude-code
 npx --yes markdownlint-cli2
 ```
 
@@ -58,6 +59,8 @@ every file under `procedures/` but `README.md` to carry its four fields and be
 a row of `procedures/README.md`'s table and a profile's *Triggers* table (or, for
 `procedures/<client>/`, linked from that client's appendix), and rejects a 40- or
 64-hex pin in normative text; `history/` is exempt from the pin rule.
+The `unittest` run tests the Claude Code hooks under `hooks/claude-code/` and their
+installer.
 `check-index.sh` proves the composition: every client a row of a profile's
 *Client adapters* table, every root and client opener naming core and profile (a
 client's also its own file), the core naming no profile, the anchors present.
