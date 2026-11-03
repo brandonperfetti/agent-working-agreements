@@ -17,6 +17,7 @@ import copy
 import filecmp
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -40,6 +41,11 @@ def hook_entry(script, extra):
     return entry
 
 
+def runs_script(command, script):
+    """True when the command runs this script by name, not one whose name ends in it."""
+    return re.search(r"(^|[/\s\"'])" + re.escape(script) + r"($|[\s\"'])", command) is not None
+
+
 def merge_hooks(settings):
     """Return a copy of settings with every hook in HOOKS registered once."""
     merged = copy.deepcopy(settings)
@@ -50,7 +56,7 @@ def merge_hooks(settings):
         found = False
         for group in groups:
             for index, hook in enumerate(group.get("hooks", [])):
-                if script in hook.get("command", ""):
+                if runs_script(hook.get("command", ""), script):
                     if group.get("matcher") == matcher:
                         group["hooks"][index] = wanted
                         found = True
@@ -65,10 +71,11 @@ def merge_hooks(settings):
 
 
 def write_atomic(path, data, mode=0o644):
+    path = os.path.realpath(path)  # write through a symlink, as into a dotfiles repo
     directory = os.path.dirname(path)
     fd, temp = tempfile.mkstemp(dir=directory, prefix=".install-")
     try:
-        with os.fdopen(fd, "w") as handle:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(data)
         os.chmod(temp, mode)
         os.replace(temp, path)
@@ -96,10 +103,13 @@ def main(argv=None):
     settings = {}
     if os.path.exists(settings_path):
         try:
-            with open(settings_path) as handle:
+            with open(settings_path, encoding="utf-8") as handle:
                 settings = json.load(handle)
         except ValueError as error:
             sys.exit("{} is not valid JSON ({}); nothing written.".format(settings_path, error))
+    hooks = settings.get("hooks", {}) if isinstance(settings, dict) else None
+    if not isinstance(hooks, dict) or not all(isinstance(g, list) for g in hooks.values()):
+        sys.exit("{} has no hooks block of the expected shape; nothing written.".format(settings_path))
     merged = merge_hooks(settings)
     if merged != settings:
         changes.append(("settings", settings_path, None))
@@ -119,7 +129,7 @@ def main(argv=None):
     os.makedirs(hooks_dir, exist_ok=True)
     for kind, path, target in changes:
         if kind == "copy":
-            with open(path) as handle:
+            with open(path, encoding="utf-8") as handle:
                 write_atomic(target, handle.read())
     if merged != settings:
         mode = 0o644
@@ -128,7 +138,7 @@ def main(argv=None):
             backup = "{}.bak-{}".format(settings_path, time.strftime("%Y%m%d-%H%M%S"))
             shutil.copy2(settings_path, backup)
             print("backup {}".format(backup))
-        write_atomic(settings_path, json.dumps(merged, indent=2) + "\n", mode)
+        write_atomic(settings_path, json.dumps(merged, indent=2, ensure_ascii=False) + "\n", mode)
     print("Installed. Start a new Claude Code session for the settings change to load.")
     return 0
 

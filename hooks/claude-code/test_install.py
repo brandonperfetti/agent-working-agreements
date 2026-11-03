@@ -91,6 +91,37 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(len(hooks), 1)
         self.assertEqual(hooks[0]["hooks"], [install.hook_entry("guard_git.py", install.HOOKS[0][3])])
 
+    def test_a_hook_whose_name_ends_in_ours_is_left_alone(self):
+        theirs = {"type": "command", "command": "python3 ~/bin/my_guard_git.py --strict"}
+        self.write_settings({"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [theirs]}]}})
+        self.run_install()
+        self.assertEqual(self.read_settings()["hooks"]["PreToolUse"][0]["hooks"][0], theirs)
+        self.assertEqual(len(commands(self.read_settings(), "PreToolUse")), 2)
+
+    def test_settings_symlink_is_written_through(self):
+        target = os.path.join(self.claude, "dotfiles-settings.json")
+        with open(target, "w") as handle:
+            json.dump({"theme": "dark"}, handle)
+        os.symlink(target, self.settings_path)
+        self.run_install()
+        self.assertTrue(os.path.islink(self.settings_path))
+        with open(target) as handle:
+            self.assertIn("PreToolUse", json.load(handle)["hooks"])
+
+    def test_unexpected_shape_is_left_alone(self):
+        for settings in ([], {"hooks": None}, {"hooks": {"PreToolUse": {}}}):
+            with self.subTest(settings=settings):
+                self.write_settings(settings)
+                with self.assertRaises(SystemExit):
+                    self.run_install()
+                self.assertEqual(self.read_settings(), settings)
+
+    def test_non_ascii_is_kept_as_written(self):
+        self.write_settings({"note": "café →"})
+        self.run_install()
+        with open(self.settings_path, encoding="utf-8") as handle:
+            self.assertIn("café →", handle.read())
+
     def test_dry_run_and_check_write_nothing(self):
         self.write_settings(OTHER_SETTINGS)
         before = self.read_settings()

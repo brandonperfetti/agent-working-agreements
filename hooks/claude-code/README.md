@@ -7,7 +7,7 @@ other clients, git aliases).
 
 | Hook | Event | What it does |
 | --- | --- | --- |
-| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed | Denies force-pushes, pushes to `master` or `main`, PR merges, and commits or pushes whose author is not `brandon@brandonperfetti.com` (RULE ZERO) |
+| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main`, PR merges, and commits or pushes whose author is not `brandon@brandonperfetti.com` (RULE ZERO) |
 | `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode and the agreement paths after each compaction |
 
 ## Install or update
@@ -23,6 +23,10 @@ block of `~/.claude/settings.json`. Every other setting and every other hook sta
 `settings.json` is backed up beside itself before it changes. Re-running it updates a hook
 already registered rather than adding it twice. Start a new session afterwards.
 
+Fail-closed rests on the hook's `onFailure: "block"`, which Claude Code reads from 2.1.295 on;
+an older version lets a Bash call through when the guard crashes or times out. Check
+`claude --version` on a Mac before relying on it.
+
 It copies rather than links: a branch switched in this clone never changes the hooks a running
 session uses. To see whether a Mac has drifted from this folder, run it with `--check` (exit 1 on
 any difference); `--dry-run` says what an install would change and writes nothing.
@@ -34,7 +38,7 @@ git -C ~/dev/sansfaux/agent-working-agreements fetch origin
 ```
 
 ```bash
-tmp=$(mktemp -d) && git -C ~/dev/sansfaux/agent-working-agreements archive origin/develop hooks/claude-code | tar -x -C "$tmp" && /usr/bin/python3 "$tmp/hooks/claude-code/install.py"
+tmp=$(mktemp -d) && git -C ~/dev/sansfaux/agent-working-agreements archive origin/develop hooks/claude-code | tar -x -C "$tmp" && /usr/bin/python3 "$tmp/hooks/claude-code/install.py"; rm -r "$tmp"
 ```
 
 ## Change a hook
