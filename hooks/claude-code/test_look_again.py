@@ -146,7 +146,8 @@ class LookAgainTest(unittest.TestCase):
     def test_a_file_named_in_bash_then_deleted_elsewhere_is_reported(self):
         for command in ("wc -l draft.md", "rm -f draft.md.bak && cat draft.md",
                         "sed -i x draft.md; rm -rf node_modules", "git rm --cached draft.md",
-                        "jq . a > tmp && mv tmp draft.md", "git mv old.md draft.md"):
+                        "jq . a > tmp && mv tmp draft.md", "git mv old.md draft.md",
+                        "mv tmp draft.md 2>/dev/null", "mv -f tmp draft.md >log # done"):
             self.entries = []
             path = self.file("draft.md", START)
             self.tool("Read", {"file_path": path}, START + 10)

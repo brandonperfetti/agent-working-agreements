@@ -42,6 +42,7 @@ MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\b(git|make)\s+-C\s")
 REMOVES = re.compile(r"\s*(sudo\s+)?(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
 MOVERS = re.compile(r"\s*(sudo\s+)?(mv|git(\s+-C\s+\S+)?\s+mv)\s")
 PARTS = re.compile(r"[;&|\n]+")
+TRAILERS = re.compile(r"\s#.*$|\s*\d*[<>]+&?\s*\S*")  # comments and redirections, not operands
 OWN_REMOVAL = "Bash rm"
 
 
@@ -115,7 +116,8 @@ def last_seen(transcript_path):
                             removes = REMOVES.match(part) and "--cached" not in part
                             kept = ""
                             if removes and MOVERS.match(part):  # mv's last operand stays
-                                part, _, kept = part.rstrip().rpartition(" ")
+                                words = TRAILERS.sub("", part).split()
+                                part, kept = " ".join(words[:-1]), words[-1]
                             for path in named(part, by_base, cwd, loose):
                                 seen[path] = (when, OWN_REMOVAL if removes else name)
                             for path in named(kept, by_base, cwd, loose):
