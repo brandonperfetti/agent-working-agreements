@@ -216,6 +216,22 @@ class LookAgainTest(unittest.TestCase):
         os.utime(path, (START + 60, START + 60))
         self.assertIn(path, self.decide()["reason"])
 
+    def test_a_typed_prompt_after_an_injected_notice_still_counts(self):
+        path = self.file("plan.md", START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.prompt(START + 20, text=[{"type": "text", "text": "<system-reminder>context</system-reminder>"},
+                                      {"type": "text", "text": "next question"}])
+        os.utime(path, (START + 60, START + 60))
+        self.assertIsNone(self.decide())
+
+    def test_a_gone_file_named_again_in_bash_is_reported_once(self):
+        path = self.file("draft.md", START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        os.remove(path)
+        self.assertIn("now gone", self.decide()["reason"])
+        self.tool("Bash", {"command": "test -e draft.md || echo gone"}, START + 20)
+        self.assertIsNone(self.decide(active=True))
+
     def test_a_prompt_without_origin_still_counts(self):
         path = self.file("plan.md", START)
         self.tool("Read", {"file_path": path}, START + 10)

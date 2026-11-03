@@ -13,9 +13,8 @@ the answer to that prompt, and a file read for an earlier prompt was checked at
 that prompt's own stops. Compaction is not the boundary, since a long session
 can run for days without one. Hook feedback, messages from other sessions,
 task notifications, system notices, CI events and compaction summaries are not
-prompts. The cost: a file
-the agent leans on from an earlier prompt without touching it again is not
-checked.
+prompts. The cost: a file the agent leans on from an earlier prompt without
+touching it again is not checked.
 
 A file the agent touched through Bash after reading it counts as seen, since
 Bash edits are the agent's own: the command must name a path that resolves to
@@ -105,11 +104,17 @@ def is_prompt(entry):
         if any(isinstance(block, dict) and block.get("type") == "tool_result" for block in content):
             return False
         content = "".join(block.get("text", "") for block in content if isinstance(block, dict))
-    return isinstance(content, str) and not content.lstrip().startswith(NOT_TYPED)
+    if not isinstance(content, str):
+        return False
+    return origin is not None or not content.lstrip().startswith(NOT_TYPED)
 
 
 def last_seen(transcript_path):
-    """Map each file the agent touched since the last prompt to (epoch seconds of the last touch, tool name)."""
+    """Map each file the agent touched since the last prompt to (last touch, tool name, last file-tool touch).
+
+    Times are epoch seconds. A Bash command naming a file moves its last touch but
+    not its last file-tool touch.
+    """
     pending, seen = {}, {}
     with open(transcript_path, encoding="utf-8") as handle:
         for line in handle:
@@ -140,7 +145,7 @@ def last_seen(transcript_path):
                     if name in FILE_TOOLS:
                         path = args.get("file_path") or args.get("notebook_path")
                         if path:
-                            seen[os.path.abspath(path)] = (when, name)
+                            seen[os.path.abspath(path)] = (when, name, when)
                     elif name == "Bash":
                         command = args.get("command", "")
                         cwd = entry.get("cwd")
@@ -155,23 +160,23 @@ def last_seen(transcript_path):
                                 words = TRAILERS.sub("", part).split()
                                 part, kept = " ".join(words[:-1]), words[-1]
                             for path in named(part, by_base, cwd, loose):
-                                seen[path] = (when, OWN_REMOVAL if removes else name)
+                                seen[path] = (when, OWN_REMOVAL if removes else name, seen[path][2])
                             for path in named(kept, by_base, cwd, loose):
-                                seen[path] = (when, name)
+                                seen[path] = (when, name, seen[path][2])
     return seen
 
 
 def changed_files(seen):
     """(path, detail, key) for each file changed or gone since the agent last touched it."""
     found = []
-    for path, (when, tool) in sorted(seen.items()):
+    for path, (when, tool, opened) in sorted(seen.items()):
         if path.startswith(SKIP):
             continue
         try:
             mtime = os.stat(path).st_mtime
         except FileNotFoundError:
             if tool != OWN_REMOVAL and os.path.isdir(os.path.dirname(path)):
-                found.append((path, "now gone", "gone after {}".format(when)))
+                found.append((path, "now gone", "gone after {}".format(opened)))
             continue
         except OSError:
             continue
