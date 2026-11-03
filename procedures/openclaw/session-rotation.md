@@ -1,6 +1,7 @@
 # OpenClaw conversation continuity
 
-**Trigger:** Routine context maintenance, context pressure, compaction, or recovery of an OpenClaw orchestrator.
+**Trigger:** Opening an authorized independent topic conversation, routine context maintenance,
+context pressure, compaction, or recovery of an OpenClaw orchestrator.
 
 **Owner:** The current orchestrator; Ashford owns control-plane maintenance routes.
 
@@ -16,7 +17,8 @@ a rule here that contradicts one there is the rule that is wrong.
 
 Brandon may keep separate Camina conversations for different topics or initiatives, with staff
 and lanes delegated from each. Preserve the conversation he is using through ordinary context
-maintenance, with current receipts and pointers on disk.
+maintenance, with current receipts and pointers on disk. Open a new authorized topic with
+[Create a root conversation](#create-a-root-conversation).
 
 Prefer the runtime's automatic in-place compaction. Context growth alone does not require a new
 sidebar session, ownership transfer or collector retarget. Use supported idle compaction when
@@ -71,6 +73,34 @@ does not prove every old callback remains valid.
 On a partial, refused or ambiguous result, inspect live state before another operation. Preserve
 the checkpoint and name the affected route's restoration owner; avoid repeated reset attempts.
 
+## Create a root conversation
+
+These steps serve an authorized independent topic or initiative and, unchanged, the creation
+step of an exceptional root replacement (below). An ordinary topic needs no evidence of a broken
+predecessor, no retirement and no ownership transfer: existing conversations continue as they
+are, and the new one carries only scope Brandon or the authorizing owner already granted.
+
+1. Choose a key under the current lead's canonical agent ID and verify it is absent.
+2. Create an empty named root through the native `exec` route, keeping its native exec marker:
+
+   ```sh
+   openclaw gateway call sessions.create --params '{"key":"agent:main:<fresh-key>","agentId":"main","displayName":"<title>"}' --json
+   ```
+
+   Pass no message, task, attachments or parent.
+3. Verify the exact requested key and agent ID, returned session ID, operator rather than system
+   or spawn provenance, depth zero, no parent or `spawnedBy`, empty history and
+   `pendingInputs.total` of 0.
+4. Deliver the kickoff through native attributed `sessions_send`, using the team dispatch
+   procedure's structured preflight. Verify the recipient has the required current control and
+   messaging tools and receipt access, then its acceptance and actual first advancement. A nested
+   worker retains its own tool boundaries; naming it Camina does not grant chief-of-staff tools.
+
+On an ambiguous result, inspect live state (key, history, pending inputs) before any retry.
+Having no first-class native creation tool is not, by itself, a failure of this CLI route. When
+an operation is actually refused or unavailable, stop that operation, report its exact result and
+name its restoration owner per `clients/openclaw.md`; independent work continues.
+
 ## Exceptional root replacement
 
 Use a new root when measured evidence shows the existing conversation cannot safely recover
@@ -78,20 +108,9 @@ through its supported in-place routes. Record the reason and preserve the A4 pac
 initiative's `handoffs/`, or `_agent/handoffs/` for one-off work. Retain the predecessor until
 the replacement is accepted and actually advances the authorized objective.
 
-Choose an absent key under the current lead's canonical agent ID. Create an empty named root:
-
-```sh
-openclaw gateway call sessions.create --params '{"key":"agent:main:<fresh-key>","agentId":"main","displayName":"<title>"}' --json
-```
-
-Pass no message, task, attachments or parent. Verify new/empty state, operator rather than system
-or spawn provenance, depth zero, required control/messaging tools and receipt access. A nested
-worker retains its own tool boundaries; naming it Camina does not grant chief-of-staff tools.
-On an unsafe or unavailable creation route, stop that operation with its exact result.
-
-Deliver the saved kickoff through native attributed `sessions_send` under the team dispatch
-procedure. Verify receipt, acceptance and actual advancement before explicitly transferring
-ownership. Reconcile the existing continuation route and observe its actual pickup.
+Create the replacement per [Create a root conversation](#create-a-root-conversation), delivering
+the saved kickoff. After its acceptance and actual advancement, explicitly transfer ownership and
+the continuation binding; reconcile the existing continuation route and observe its actual pickup.
 
 Once no spawned work is running or queued, no worktree remains in use by the predecessor, and
 no decision lives only there, archive it through the supported lifecycle route and move the

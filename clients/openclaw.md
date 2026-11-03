@@ -53,10 +53,10 @@ deliveries still carry independent review, verification and the owner's decision
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
   is one, not a requirement). RULE ZERO first; role, deliverable, mode, fence, model and effort follow.
-- **Continuity (A4):** keep ongoing conversations stable. Treat 30/40/60% as planning heuristics:
-  checkpoint, refresh, then assess pressure at a clean pause. Prefer compaction and verified
-  same-key recovery per [`session-rotation.md`](../procedures/openclaw/session-rotation.md).
-  Record identity, context and advancement; preserve owners and tool boundaries.
+- **Continuity (A4):** preserve owners and tool boundaries. Authorized independent topics use
+  [create root](../procedures/openclaw/session-rotation.md#create-a-root-conversation). Keep stable
+  conversations per [continuity](../procedures/openclaw/session-rotation.md): prefer compaction, then
+  verified same-key recovery; 30/40/60% are heuristics. Record identity, context and advancement.
 - **Models and routes:** Codex OAuth for thinking; the established Claude Code wrapper for coding.
   Leads choose model/effort within approved routes; respect wrapper pins rather than bypass them.
   On exhaustion, coding falls back from Claude to Codex OAuth, then to an approved API model within
