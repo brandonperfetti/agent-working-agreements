@@ -11,12 +11,15 @@ again before it reports.
 A file the agent touched through Bash after reading it counts as seen, since
 Bash edits are the agent's own: the command must name a path that resolves to
 it from the session's directory, or, when the command may change directory,
-its bare name or a path ending in it. A file gone after a Bash command
-removed or moved it (named in a part of the command that starts with rm,
-unlink, mv, trash, git rm or git mv) is the agent's own deletion; one gone
-after any other command is reported. Each change is
-reported once, and a chain of stops is sent back at most MAX_BLOCKS times, so a
-file that never stops changing cannot hold the agent.
+its bare name or a path ending in it.
+
+A file gone after a Bash command removed or moved it is the agent's own
+deletion: it was named in a part of the command that starts with rm, unlink,
+trash or git rm, or as a source of mv or git mv. A file gone after any other
+command is reported.
+
+Each change is reported once, and a chain of stops is sent back at most
+MAX_BLOCKS times, so a file that never stops changing cannot hold the agent.
 
 Checks that need more than file times (re-fetching an index, a test run) belong
 in the project's own Stop hook in its .claude/settings.json.
@@ -37,6 +40,7 @@ SKIP = os.path.join(os.path.expanduser("~"), ".claude", "projects") + os.sep
 WORD = re.compile(r"""[^\s'"`;|&<>()=]+""")
 MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\b(git|make)\s+-C\s")
 REMOVES = re.compile(r"\s*(sudo\s+)?(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
+MOVERS = re.compile(r"\s*(sudo\s+)?(mv|git(\s+-C\s+\S+)?\s+mv)\s")
 PARTS = re.compile(r"[;&|\n]+")
 OWN_REMOVAL = "Bash rm"
 
@@ -109,8 +113,13 @@ def last_seen(transcript_path):
                             by_base.setdefault(os.path.basename(path), []).append(path)
                         for part in PARTS.split(command):
                             removes = REMOVES.match(part) and "--cached" not in part
+                            kept = ""
+                            if removes and MOVERS.match(part):  # mv's last operand stays
+                                part, _, kept = part.rstrip().rpartition(" ")
                             for path in named(part, by_base, cwd, loose):
                                 seen[path] = (when, OWN_REMOVAL if removes else name)
+                            for path in named(kept, by_base, cwd, loose):
+                                seen[path] = (when, name)
     return seen
 
 
