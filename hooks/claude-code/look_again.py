@@ -42,7 +42,7 @@ MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\b(git|make)\s+-C\s")
 REMOVES = re.compile(r"\s*(sudo\s+)?(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
 MOVERS = re.compile(r"\s*(sudo\s+)?(mv|git(\s+-C\s+\S+)?\s+mv)\s")
 PARTS = re.compile(r"[;&|\n]+")
-TRAILERS = re.compile(r"\s#.*$|\s*\d*[<>]+&?\s*\S*")  # comments and redirections, not operands
+TRAILERS = re.compile(r"\s#.*$|\s*\d*[<>]+&?\s*\S*|\s\\$")  # comments, redirections, a line continuation
 OWN_REMOVAL = "Bash rm"
 
 
