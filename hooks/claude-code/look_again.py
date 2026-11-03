@@ -11,9 +11,10 @@ again before it reports.
 A file the agent touched through Bash after reading it counts as seen, since
 Bash edits are the agent's own: the command must name a path that resolves to
 it from the session's directory, or, when the command may change directory,
-its bare name or a path ending in it. A file gone after a Bash command that
-removes or moves files (rm, unlink, mv, trash, git rm, git mv) is the agent's
-own deletion; one gone after any other command is reported. Each change is
+its bare name or a path ending in it. A file gone after a Bash command
+removed or moved it (named in a part of the command that starts with rm,
+unlink, mv, trash, git rm or git mv) is the agent's own deletion; one gone
+after any other command is reported. Each change is
 reported once, and a chain of stops is sent back at most MAX_BLOCKS times, so a
 file that never stops changing cannot hold the agent.
 
@@ -34,8 +35,9 @@ MAX_LISTED = 10
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-look-again")
 SKIP = os.path.join(os.path.expanduser("~"), ".claude", "projects") + os.sep
 WORD = re.compile(r"""[^\s'"`;|&<>()=]+""")
-MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\s-C\s")
-REMOVES = re.compile(r"(^|[\s;&|(])(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
+MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\b(git|make)\s+-C\s")
+REMOVES = re.compile(r"\s*(sudo\s+)?(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
+PARTS = re.compile(r"[;&|\n]+")
 OWN_REMOVAL = "Bash rm"
 
 
@@ -44,16 +46,13 @@ def seconds(stamp):
     return datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
 
 
-def named(command, paths, cwd):
-    """The tracked paths a Bash command names.
+def named(command, by_base, cwd, loose):
+    """The tracked paths a Bash command names, from by_base (file name -> paths).
 
-    A word must resolve to the path from cwd. When cwd is unknown or the command
-    may change directory, a bare name or a path ending in the word also counts.
+    A word must resolve to the path from cwd. When loose (cwd unknown, or the
+    command may change directory), a bare name or a path ending in the word
+    also counts.
     """
-    loose = not cwd or MOVES.search(command)
-    by_base = {}
-    for path in paths:
-        by_base.setdefault(os.path.basename(path), []).append(path)
     found = set()
     for word in WORD.findall(command):
         candidates = by_base.get(os.path.basename(word))
@@ -103,9 +102,15 @@ def last_seen(transcript_path):
                             seen[os.path.abspath(path)] = (when, name)
                     elif name == "Bash":
                         command = args.get("command", "")
-                        tool = OWN_REMOVAL if REMOVES.search(command) else name
-                        for path in named(command, list(seen), entry.get("cwd")):
-                            seen[path] = (when, tool)
+                        cwd = entry.get("cwd")
+                        loose = not cwd or bool(MOVES.search(command))
+                        by_base = {}
+                        for path in seen:
+                            by_base.setdefault(os.path.basename(path), []).append(path)
+                        for part in PARTS.split(command):
+                            removes = REMOVES.match(part) and "--cached" not in part
+                            for path in named(part, by_base, cwd, loose):
+                                seen[path] = (when, OWN_REMOVAL if removes else name)
     return seen
 
 

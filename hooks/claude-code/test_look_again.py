@@ -144,11 +144,24 @@ class LookAgainTest(unittest.TestCase):
             self.assertIsNone(self.decide(), command)
 
     def test_a_file_named_in_bash_then_deleted_elsewhere_is_reported(self):
-        path = self.file("draft.md", START)
+        for command in ("wc -l draft.md", "rm -f draft.md.bak && cat draft.md",
+                        "sed -i x draft.md; rm -rf node_modules", "git rm --cached draft.md"):
+            self.entries = []
+            path = self.file("draft.md", START)
+            self.tool("Read", {"file_path": path}, START + 10)
+            self.tool("Bash", {"command": command}, START + 20)
+            os.remove(path)
+            self.assertIn("now gone", self.decide()["reason"], command)
+            os.remove(os.path.join(look_again.STATE_DIR, "s1.json"))
+
+    def test_a_dash_c_that_does_not_change_directory_keeps_the_match_strict(self):
+        os.mkdir(os.path.join(self.root, "a"))
+        path = self.file(os.path.join("a", "config.json"), START)
         self.tool("Read", {"file_path": path}, START + 10)
-        self.tool("Bash", {"command": "wc -l draft.md"}, START + 20)
-        os.remove(path)
-        self.assertIn("now gone", self.decide()["reason"])
+        os.utime(path, (START + 30, START + 30))
+        self.tool("Bash", {"command": "grep -C 3 port config.json"}, START + 31)
+        self.entries[-1]["cwd"] = self.root
+        self.assertIn(path, self.decide()["reason"])
 
     def test_a_deleted_file_is_reported(self):
         path = self.file("draft.md", START)
