@@ -47,7 +47,8 @@ HEREDOC = re.compile(
 def drop_heredoc(match):
     """Blank a heredoc body, unless a shell is reading it as commands."""
     head = match.group("head")
-    if re.search(r"\b(ba|z)?sh\b", head):
+    # A shell as a command word (`bash`, `/bin/zsh -s`), not a script name such as `check.sh`.
+    if re.search(r"(^|[\s;&|(/])(ba|z)?sh(?=\s|$)", head):
         return match.group(0)
     return head
 

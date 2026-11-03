@@ -44,6 +44,8 @@ BLOCKED_ANYWHERE = [
     "eval git push -f",
     "echo don't; git push -f",
     "bash <<EOF\ngit push -f\nEOF",
+    "/bin/zsh -s <<EOF\ngh pr merge 1\nEOF",
+    "cd /tmp && sh <<'EOF'\ngit push origin master\nEOF",
     "gh pr merge 12",
     "gh pr merge --squash --auto",
     "gh -R owner/repo pr merge 1",
@@ -81,6 +83,8 @@ ALLOWED_ANYWHERE = [
     "gh api repos/o/r/pulls/1",
     "git commit -F - <<'EOF'\nfix: don't run this\ngit push --force\ngh pr merge 1\nEOF",
     "cat <<EOF > notes.md\ngit push origin master\nEOF",
+    "./scripts/check.sh && git commit -F - <<'EOF'\nfix: x\n\ngh pr merge 3\nEOF",
+    "./scripts/a.sh; ./b.zsh && git commit -F - <<'EOF'\nfix: x\ngit push -f\nEOF",
     "ls -la",
     "",
 ]
