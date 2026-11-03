@@ -232,6 +232,17 @@ class LookAgainTest(unittest.TestCase):
         self.tool("Bash", {"command": "test -e draft.md || echo gone"}, START + 20)
         self.assertIsNone(self.decide(active=True))
 
+    def test_a_gone_file_restored_in_bash_and_deleted_again_is_reported_again(self):
+        path = self.file("draft.md", START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        os.remove(path)
+        self.assertIn("now gone", self.decide()["reason"])
+        self.tool("Bash", {"command": "git checkout draft.md"}, START + 20)
+        self.file("draft.md", START + 20)
+        self.assertIsNone(self.decide(active=True))
+        os.remove(path)
+        self.assertIn("now gone", self.decide(active=True)["reason"])
+
     def test_a_prompt_without_origin_still_counts(self):
         path = self.file("plan.md", START)
         self.tool("Read", {"file_path": path}, START + 10)

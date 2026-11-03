@@ -222,6 +222,8 @@ def decide(payload):
     reported = state.get("reported", {})
     blocks = state.get("blocks", 0) if payload.get("stop_hook_active") else 0
 
+    for path in [p for p, key in reported.items() if key.startswith("gone") and os.path.exists(p)]:
+        del reported[path]  # back again, so a later deletion is news
     fresh = [f for f in changed_files(last_seen(transcript)) if reported.get(f[0]) != f[2]]
     if not fresh:
         reply = None
