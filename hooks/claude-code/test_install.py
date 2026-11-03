@@ -98,6 +98,32 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(self.read_settings()["hooks"]["PreToolUse"][0]["hooks"][0], theirs)
         self.assertEqual(len(commands(self.read_settings(), "PreToolUse")), 2)
 
+    def test_a_hook_that_only_names_our_script_is_left_alone(self):
+        theirs = [
+            {"type": "command", "command": "echo guard_git.py"},
+            {"type": "command", "command": "python3 -c 'print(\"guard_git.py\")'"},
+            {"type": "command", "command": "python3 ~/bin/lint.py guard_git.py"},
+        ]
+        self.write_settings({"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": list(theirs)}]}})
+        self.run_install()
+        hooks = self.read_settings()["hooks"]["PreToolUse"][0]["hooks"]
+        self.assertEqual(hooks[:3], theirs)
+        self.assertEqual(len(hooks), 4)
+
+    def test_runs_script_reads_the_executed_script(self):
+        for command, runs in (
+            ('/usr/bin/python3 -I "$HOME/.claude/hooks/guard_git.py"', True),
+            ("python3 ~/.claude/hooks/guard_git.py", True),
+            ("python3 -W ignore -I guard_git.py", True),
+            ("~/.claude/hooks/guard_git.py", True),
+            ("echo guard_git.py", False),
+            ("python3 -m guard_git.py", False),
+            ("python3 ~/bin/my_guard_git.py", False),
+            ("python3 'unbalanced", False),
+        ):
+            with self.subTest(command=command):
+                self.assertEqual(install.runs_script(command, "guard_git.py"), runs)
+
     def test_settings_symlink_is_written_through(self):
         target = os.path.join(self.claude, "dotfiles-settings.json")
         with open(target, "w") as handle:

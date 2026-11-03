@@ -17,7 +17,7 @@ import copy
 import filecmp
 import json
 import os
-import re
+import shlex
 import shutil
 import sys
 import tempfile
@@ -42,8 +42,18 @@ def hook_entry(script, extra):
 
 
 def runs_script(command, script):
-    """True when the command runs this script by name, not one whose name ends in it."""
-    return re.search(r"(^|[/\s\"'])" + re.escape(script) + r"($|[\s\"'])", command) is not None
+    """True when the command executes this script, directly or as python's script operand."""
+    try:
+        argv = shlex.split(command)
+    except ValueError:
+        return False
+    if argv and os.path.basename(argv[0]).startswith("python"):
+        argv = argv[1:]
+        while argv and argv[0].startswith("-"):
+            if argv[0] in ("-c", "-m"):
+                return False
+            argv = argv[2:] if argv[0] in ("-W", "-X") else argv[1:]
+    return bool(argv) and os.path.basename(argv[0]) == script
 
 
 def well_formed(settings):
