@@ -1,0 +1,166 @@
+#!/usr/bin/python3
+"""Stop hook: send the agent back when a file it read has changed since.
+
+An answer is only as current as the last read of its sources. Before the agent
+stops, this reads the session's transcript for every file the agent read or
+wrote with its file tools, and compares each file's modification time with the
+last time the agent touched it. A file changed since then (by another session,
+a person or a job) blocks the stop once, naming the file, so the agent reads it
+again before it reports.
+
+A file the agent touched through Bash after reading it (its name in the
+command) counts as seen, since Bash edits are the agent's own. Each change is
+reported once, and a chain of stops is sent back at most MAX_BLOCKS times, so
+a file that never stops changing cannot hold the agent.
+
+Checks that need more than file times (re-fetching an index, a test run) belong
+in the project's own Stop hook in its .claude/settings.json.
+"""
+import datetime
+import json
+import os
+import sys
+import tempfile
+
+FILE_TOOLS = {"Read", "Write", "Edit", "MultiEdit", "NotebookEdit"}
+SLACK = 2.0  # seconds: a formatter hook may touch a file just after the agent's write
+MAX_BLOCKS = 3
+MAX_LISTED = 10
+STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-look-again")
+SKIP = os.path.join(os.path.expanduser("~"), ".claude", "projects") + os.sep
+
+
+def seconds(stamp):
+    """Epoch seconds from a transcript timestamp such as 2026-11-03T00:55:06.449Z."""
+    return datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+
+
+def last_seen(transcript_path):
+    """Map each file the agent touched to (epoch seconds of the last touch, tool name)."""
+    pending, seen = {}, {}
+    with open(transcript_path, encoding="utf-8") as handle:
+        for line in handle:
+            if '"tool_use"' not in line and '"tool_result"' not in line:
+                continue
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if entry.get("isSidechain"):
+                continue
+            content = (entry.get("message") or {}).get("content")
+            if not isinstance(content, list):
+                continue
+            for block in content:
+                if not isinstance(block, dict):
+                    continue
+                if block.get("type") == "tool_use":
+                    pending[block.get("id")] = (block.get("name"), block.get("input") or {})
+                elif block.get("type") == "tool_result" and "timestamp" in entry:
+                    name, args = pending.pop(block.get("tool_use_id"), (None, {}))
+                    if block.get("is_error") or name is None:
+                        continue
+                    when = seconds(entry["timestamp"])
+                    if name in FILE_TOOLS:
+                        path = args.get("file_path") or args.get("notebook_path")
+                        if path:
+                            seen[os.path.abspath(path)] = (when, name)
+                    elif name == "Bash":
+                        command = args.get("command", "")
+                        for path in seen:
+                            if os.path.basename(path) in command:
+                                seen[path] = (when, name)
+    return seen
+
+
+def changed_files(seen):
+    """(path, detail, key) for each file changed or gone since the agent last touched it."""
+    found = []
+    for path, (when, tool) in sorted(seen.items()):
+        if path.startswith(SKIP):
+            continue
+        try:
+            mtime = os.stat(path).st_mtime
+        except FileNotFoundError:
+            if tool != "Bash":
+                found.append((path, "now gone", "gone"))
+            continue
+        except OSError:
+            continue
+        if mtime > when + SLACK:
+            detail = "changed {}, your last look {}".format(clock(mtime), clock(when))
+            found.append((path, detail, str(mtime)))
+    return found
+
+
+def clock(epoch):
+    return datetime.datetime.fromtimestamp(epoch).strftime("%H:%M:%S")
+
+
+def load_state(path):
+    try:
+        with open(path, encoding="utf-8") as handle:
+            state = json.load(handle)
+        if isinstance(state, dict):
+            return state
+    except (OSError, ValueError):
+        pass
+    return {}
+
+
+def save_state(path, state):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(state, handle)
+
+
+def decide(payload):
+    """The hook's JSON reply, or None to let the agent stop."""
+    transcript = payload.get("transcript_path")
+    session = os.path.basename(str(payload.get("session_id") or "unknown"))
+    if not transcript or not os.path.exists(transcript):
+        return None
+    state_path = os.path.join(STATE_DIR, session + ".json")
+    state = load_state(state_path)
+    reported = state.get("reported", {})
+    blocks = state.get("blocks", 0) if payload.get("stop_hook_active") else 0
+
+    fresh = [f for f in changed_files(last_seen(transcript)) if reported.get(f[0]) != f[2]]
+    if not fresh:
+        reply = None
+    elif blocks >= MAX_BLOCKS:
+        reply = {
+            "systemMessage": "look_again: {} file(s) still changed after {} looks; stopping anyway.".format(
+                len(fresh), MAX_BLOCKS
+            )
+        }
+    else:
+        for path, _, key in fresh:
+            reported[path] = key
+        blocks += 1
+        lines = ["- {} ({})".format(path, detail) for path, detail, _ in fresh[:MAX_LISTED]]
+        if len(fresh) > MAX_LISTED:
+            lines.append("- and {} more".format(len(fresh) - MAX_LISTED))
+        reply = {
+            "decision": "block",
+            "reason": "Look again before you stop. These files changed after you last read or wrote them:\n"
+            + "\n".join(lines)
+            + "\nRead each one again. If a change alters your answer or your work, update it; if not, say so in one line.",
+        }
+    save_state(state_path, {"reported": reported, "blocks": blocks})
+    return reply
+
+
+def main():
+    try:
+        reply = decide(json.load(sys.stdin))
+    except Exception as error:  # a broken check must never trap the agent
+        print("look_again: {}".format(error), file=sys.stderr)
+        return 1
+    if reply:
+        print(json.dumps(reply))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -54,12 +54,14 @@ class InstallTest(unittest.TestCase):
 
     def test_fresh_install_copies_and_registers(self):
         self.assertEqual(self.run_install()[0], 0)
-        for script in ("guard_git.py", "agreements_after_compact.py"):
+        for script in ("guard_git.py", "agreements_after_compact.py", "look_again.py"):
             self.assertTrue(os.path.exists(os.path.join(self.claude, "hooks", script)))
         settings = self.read_settings()
         self.assertEqual(settings["hooks"]["PreToolUse"][0]["matcher"], "Bash")
         self.assertEqual(settings["hooks"]["PreToolUse"][0]["hooks"][0]["onFailure"], "block")
         self.assertEqual(settings["hooks"]["SessionStart"][0]["matcher"], "compact")
+        self.assertNotIn("matcher", settings["hooks"]["Stop"][0])
+        self.assertIn("look_again.py", settings["hooks"]["Stop"][0]["hooks"][0]["command"])
         self.assertEqual(self.run_install("--check")[0], 0)
 
     def test_keeps_other_settings_and_hooks(self):
@@ -69,7 +71,8 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(settings["theme"], "dark")
         self.assertIs(settings["includeCoAuthoredBy"], False)
         self.assertIn("echo edit", commands(settings, "PreToolUse"))
-        self.assertEqual(commands(settings, "Stop"), ["say done"])
+        self.assertEqual(commands(settings, "Stop")[0], "say done")
+        self.assertEqual(len(settings["hooks"]["Stop"]), 1, "joins the existing matcherless group")
         backups = [name for name in os.listdir(self.claude) if ".bak-" in name]
         self.assertEqual(len(backups), 1)
 
