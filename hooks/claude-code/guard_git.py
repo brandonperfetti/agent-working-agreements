@@ -151,7 +151,8 @@ def check_commit(args, directory, configs, env):
 def check_push_authors(refspecs, directory, tags=False):
     """Read the authors of the commits this push sends that no remote has yet."""
     sources = [refspec.lstrip("+").partition(":")[0] for refspec in refspecs] or ["HEAD"]
-    sources = [source for source in sources if source]
+    # `git push origin tag v1` names refs/tags/v1; the word `tag` is not a revision.
+    sources = [source for source in sources if source and source != "tag"]
     # `--tags` sends every local tag too, and the commits only a tag reaches.
     sources += ["--tags"] if tags else []
     if not sources:

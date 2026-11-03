@@ -215,7 +215,12 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "checkout", "-q", "feature")
         git(self.mine, "branch", "-q", "-D", "side")
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
-        for command in ("git push --tags", "git push --tags origin feature", "git push origin v-other"):
+        for command in (
+            "git push --tags",
+            "git push --tags origin feature",
+            "git push origin v-other",
+            "git push origin tag v-other",
+        ):
             with self.subTest(command=command):
                 self.assertIn(self.OTHER, guard_git.check_command(command, self.mine) or "")
 

@@ -17,6 +17,7 @@ import copy
 import filecmp
 import json
 import os
+import re
 import shlex
 import shutil
 import sys
@@ -47,7 +48,7 @@ def runs_script(command, script):
         argv = shlex.split(command)
     except ValueError:
         return False
-    if argv and os.path.basename(argv[0]).startswith("python"):
+    if argv and re.fullmatch(r"python[0-9.]*", os.path.basename(argv[0])):
         argv = argv[1:]
         while argv and argv[0].startswith("-"):
             if argv[0] in ("-c", "-m"):

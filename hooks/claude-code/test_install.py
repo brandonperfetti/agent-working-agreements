@@ -119,6 +119,7 @@ class InstallTest(unittest.TestCase):
             ("echo guard_git.py", False),
             ("python3 -m guard_git.py", False),
             ("python3 ~/bin/my_guard_git.py", False),
+            ("python-lint guard_git.py", False),
             ("python3 'unbalanced", False),
         ):
             with self.subTest(command=command):
