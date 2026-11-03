@@ -92,6 +92,39 @@ class LookAgainTest(unittest.TestCase):
         self.tool("Bash", {"command": "sed -i '' 's/16/17/' compose.yaml"}, START + 31)
         self.assertIsNone(self.decide())
 
+    def test_a_bash_command_naming_another_file_of_the_same_name_does_not_count(self):
+        os.mkdir(os.path.join(self.root, "a"))
+        path = self.file(os.path.join("a", "config.json"), START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        os.utime(path, (START + 30, START + 30))
+        self.tool("Bash", {"command": "cat /elsewhere/b/config.json"}, START + 31)
+        self.tool("Bash", {"command": "cat b/config.json config.json.bak"}, START + 32)
+        self.assertIn(path, self.decide()["reason"])
+
+    def test_a_bash_command_naming_its_path_counts_as_seen(self):
+        os.mkdir(os.path.join(self.root, "a"))
+        path = self.file(os.path.join("a", "config.json"), START)
+        for command in ("cat {}".format(path), "cat a/config.json", "cd x && cat ../a/config.json"):
+            self.entries = []
+            self.tool("Read", {"file_path": path}, START + 10)
+            os.utime(path, (START + 30, START + 30))
+            self.tool("Bash", {"command": command}, START + 31)
+            self.entries[-1]["cwd"] = os.path.join(self.root, "x") if "cd x" in command else self.root
+            self.assertIsNone(self.decide(), command)
+
+    def test_files_past_the_list_are_named_at_the_next_stop(self):
+        paths = [self.file("f{:02}.md".format(n), START) for n in range(look_again.MAX_LISTED + 2)]
+        for path in paths:
+            self.tool("Read", {"file_path": path}, START + 10)
+            os.utime(path, (START + 60, START + 60))
+        first = self.decide()["reason"]
+        self.assertIn("and 2 more", first)
+        second = self.decide(active=True)["reason"]
+        for path in paths[-2:]:
+            self.assertNotIn(path, first)
+            self.assertIn(path, second)
+        self.assertIsNone(self.decide(active=True))
+
     def test_a_deleted_file_is_reported(self):
         path = self.file("draft.md", START)
         self.tool("Read", {"file_path": path}, START + 10)

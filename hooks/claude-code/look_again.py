@@ -8,8 +8,9 @@ last time the agent touched it. A file changed since then (by another session,
 a person or a job) blocks the stop once, naming the file, so the agent reads it
 again before it reports.
 
-A file the agent touched through Bash after reading it (its name in the
-command) counts as seen, since Bash edits are the agent's own. Each change is
+A file the agent touched through Bash after reading it (its bare name, or a
+path that resolves to it, in the command) counts as seen, since Bash edits are
+the agent's own. Each change is
 reported once, and a chain of stops is sent back at most MAX_BLOCKS times, so
 a file that never stops changing cannot hold the agent.
 
@@ -19,6 +20,7 @@ in the project's own Stop hook in its .claude/settings.json.
 import datetime
 import json
 import os
+import re
 import sys
 import tempfile
 
@@ -28,11 +30,31 @@ MAX_BLOCKS = 3
 MAX_LISTED = 10
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-look-again")
 SKIP = os.path.join(os.path.expanduser("~"), ".claude", "projects") + os.sep
+WORD = re.compile(r"""[^\s'"`;|&<>()=]+""")
 
 
 def seconds(stamp):
     """Epoch seconds from a transcript timestamp such as 2026-11-03T00:55:06.449Z."""
     return datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+
+
+def names(command, path, cwd):
+    """True when a word in the command is this file: its bare name, or a path that leads to it."""
+    base = os.path.basename(path)
+    for word in WORD.findall(command):
+        if os.path.basename(word) != base:
+            continue
+        if word == base:
+            return True
+        word = os.path.expandvars(os.path.expanduser(word))
+        if os.path.isabs(word):
+            if os.path.normpath(word) == path:
+                return True
+        elif cwd and os.path.normpath(os.path.join(cwd, word)) == path:
+            return True
+        elif path.endswith(os.sep + os.path.normpath(word)):
+            return True
+    return False
 
 
 def last_seen(transcript_path):
@@ -68,7 +90,7 @@ def last_seen(transcript_path):
                     elif name == "Bash":
                         command = args.get("command", "")
                         for path in seen:
-                            if os.path.basename(path) in command:
+                            if names(command, path, entry.get("cwd")):
                                 seen[path] = (when, name)
     return seen
 
@@ -135,12 +157,12 @@ def decide(payload):
             )
         }
     else:
-        for path, _, key in fresh:
+        for path, _, key in fresh[:MAX_LISTED]:
             reported[path] = key
         blocks += 1
         lines = ["- {} ({})".format(path, detail) for path, detail, _ in fresh[:MAX_LISTED]]
         if len(fresh) > MAX_LISTED:
-            lines.append("- and {} more".format(len(fresh) - MAX_LISTED))
+            lines.append("- and {} more, listed when you stop again".format(len(fresh) - MAX_LISTED))
         reply = {
             "decision": "block",
             "reason": "Look again before you stop. These files changed after you last read or wrote them:\n"

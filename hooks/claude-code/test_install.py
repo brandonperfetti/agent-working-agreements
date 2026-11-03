@@ -72,6 +72,7 @@ class InstallTest(unittest.TestCase):
         self.assertIs(settings["includeCoAuthoredBy"], False)
         self.assertIn("echo edit", commands(settings, "PreToolUse"))
         self.assertEqual(commands(settings, "Stop")[0], "say done")
+        self.assertIn("look_again.py", commands(settings, "Stop")[1])
         self.assertEqual(len(settings["hooks"]["Stop"]), 1, "joins the existing matcherless group")
         backups = [name for name in os.listdir(self.claude) if ".bak-" in name]
         self.assertEqual(len(backups), 1)
