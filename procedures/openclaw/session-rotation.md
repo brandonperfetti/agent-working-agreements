@@ -84,7 +84,7 @@ are, and the new one carries only scope Brandon or the authorizing owner already
 2. Create an empty named root through the native `exec` route, keeping its native exec marker:
 
    ```sh
-   openclaw gateway call sessions.create --params '{"key":"agent:main:<fresh-key>","agentId":"main","displayName":"<title>"}' --json
+   openclaw gateway call sessions.create --params '{"key":"agent:<lead-id>:<fresh-key>","agentId":"<lead-id>","displayName":"<title>"}' --json
    ```
 
    Pass no message, task, attachments or parent.
