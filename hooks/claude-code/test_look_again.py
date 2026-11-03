@@ -125,6 +125,31 @@ class LookAgainTest(unittest.TestCase):
             self.assertIn(path, second)
         self.assertIsNone(self.decide(active=True))
 
+    def test_a_bare_name_in_the_session_directory_is_that_directory_s_file(self):
+        os.mkdir(os.path.join(self.root, "a"))
+        path = self.file(os.path.join("a", "config.json"), START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        os.utime(path, (START + 30, START + 30))
+        self.tool("Bash", {"command": "cat config.json"}, START + 31)
+        self.entries[-1]["cwd"] = self.root
+        self.assertIn(path, self.decide()["reason"])
+
+    def test_a_file_the_agent_removed_in_bash_is_not_reported(self):
+        for command in ("rm draft.md", "git mv draft.md old.md", "cat x && unlink draft.md"):
+            self.entries = []
+            path = self.file("draft.md", START)
+            self.tool("Read", {"file_path": path}, START + 10)
+            self.tool("Bash", {"command": command}, START + 20)
+            os.remove(path)
+            self.assertIsNone(self.decide(), command)
+
+    def test_a_file_named_in_bash_then_deleted_elsewhere_is_reported(self):
+        path = self.file("draft.md", START)
+        self.tool("Read", {"file_path": path}, START + 10)
+        self.tool("Bash", {"command": "wc -l draft.md"}, START + 20)
+        os.remove(path)
+        self.assertIn("now gone", self.decide()["reason"])
+
     def test_a_deleted_file_is_reported(self):
         path = self.file("draft.md", START)
         self.tool("Read", {"file_path": path}, START + 10)

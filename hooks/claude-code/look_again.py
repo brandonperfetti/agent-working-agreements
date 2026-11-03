@@ -8,11 +8,14 @@ last time the agent touched it. A file changed since then (by another session,
 a person or a job) blocks the stop once, naming the file, so the agent reads it
 again before it reports.
 
-A file the agent touched through Bash after reading it (its bare name, or a
-path that resolves to it, in the command) counts as seen, since Bash edits are
-the agent's own. Each change is
-reported once, and a chain of stops is sent back at most MAX_BLOCKS times, so
-a file that never stops changing cannot hold the agent.
+A file the agent touched through Bash after reading it counts as seen, since
+Bash edits are the agent's own: the command must name a path that resolves to
+it from the session's directory, or, when the command may change directory,
+its bare name or a path ending in it. A file gone after a Bash command that
+removes or moves files (rm, unlink, mv, trash, git rm, git mv) is the agent's
+own deletion; one gone after any other command is reported. Each change is
+reported once, and a chain of stops is sent back at most MAX_BLOCKS times, so a
+file that never stops changing cannot hold the agent.
 
 Checks that need more than file times (re-fetching an index, a test run) belong
 in the project's own Stop hook in its .claude/settings.json.
@@ -31,6 +34,9 @@ MAX_LISTED = 10
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-look-again")
 SKIP = os.path.join(os.path.expanduser("~"), ".claude", "projects") + os.sep
 WORD = re.compile(r"""[^\s'"`;|&<>()=]+""")
+MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\s-C\s")
+REMOVES = re.compile(r"(^|[\s;&|(])(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
+OWN_REMOVAL = "Bash rm"
 
 
 def seconds(stamp):
@@ -38,23 +44,31 @@ def seconds(stamp):
     return datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
 
 
-def names(command, path, cwd):
-    """True when a word in the command is this file: its bare name, or a path that leads to it."""
-    base = os.path.basename(path)
+def named(command, paths, cwd):
+    """The tracked paths a Bash command names.
+
+    A word must resolve to the path from cwd. When cwd is unknown or the command
+    may change directory, a bare name or a path ending in the word also counts.
+    """
+    loose = not cwd or MOVES.search(command)
+    by_base = {}
+    for path in paths:
+        by_base.setdefault(os.path.basename(path), []).append(path)
+    found = set()
     for word in WORD.findall(command):
-        if os.path.basename(word) != base:
+        candidates = by_base.get(os.path.basename(word))
+        if not candidates:
             continue
-        if word == base:
-            return True
-        word = os.path.expandvars(os.path.expanduser(word))
-        if os.path.isabs(word):
-            if os.path.normpath(word) == path:
-                return True
-        elif cwd and os.path.normpath(os.path.join(cwd, word)) == path:
-            return True
-        elif path.endswith(os.sep + os.path.normpath(word)):
-            return True
-    return False
+        word = os.path.normpath(os.path.expandvars(os.path.expanduser(word)))
+        for path in candidates:
+            if os.path.isabs(word):
+                hit = word == path
+            else:
+                hit = bool(cwd) and os.path.normpath(os.path.join(cwd, word)) == path
+                hit = hit or bool(loose and path.endswith(os.sep + word))
+            if hit:
+                found.add(path)
+    return found
 
 
 def last_seen(transcript_path):
@@ -89,9 +103,9 @@ def last_seen(transcript_path):
                             seen[os.path.abspath(path)] = (when, name)
                     elif name == "Bash":
                         command = args.get("command", "")
-                        for path in seen:
-                            if names(command, path, entry.get("cwd")):
-                                seen[path] = (when, name)
+                        tool = OWN_REMOVAL if REMOVES.search(command) else name
+                        for path in named(command, list(seen), entry.get("cwd")):
+                            seen[path] = (when, tool)
     return seen
 
 
@@ -104,7 +118,7 @@ def changed_files(seen):
         try:
             mtime = os.stat(path).st_mtime
         except FileNotFoundError:
-            if tool != "Bash":
+            if tool != OWN_REMOVAL:
                 found.append((path, "now gone", "gone"))
             continue
         except OSError:
