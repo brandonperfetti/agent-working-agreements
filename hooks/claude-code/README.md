@@ -7,7 +7,7 @@ other clients, git aliases).
 
 | Hook | Event | What it does |
 | --- | --- | --- |
-| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main`, PR merges, and commits or pushes whose author is not `brandon@brandonperfetti.com` (RULE ZERO) |
+| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main`, PR merges into `develop`, `main` or `master` (or whose base it cannot read), and commits or pushes whose author is not `brandon@brandonperfetti.com` (RULE ZERO) |
 | `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode and the agreement paths after each compaction |
 
 ## Install or update
@@ -50,3 +50,7 @@ Edit it here, never in `~/.claude/hooks/`, then run the tests and reinstall:
 ```
 
 A live probe that the guard is loaded: `gh pr merge --help` in a Claude Code session is denied.
+The guard reads a PR's base with `gh pr view` (or `gh api` for a REST merge), so a merge between
+feature, wave, lane or hotfix branches passes; it refuses when that read fails. `gh pr merge
+--auto` is refused whatever the base, since a stacked PR can be retargeted to `develop` before
+it lands.

@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 """PreToolUse guard for the Bash tool: the git rules no agent may break.
 
-Denies force-pushes, pushes to a release branch and PR merges, per the working
-agreements (Part B, "The ritual"), and commits or pushes whose author is not
-Brandon's email (RULE ZERO). It parses the command rather than grepping
-it, so a commit message that mentions `git push --force` passes. It stops honest
-mistakes, not a determined bypass: git aliases, refspecs in shell variables and
-commands inside a quoted "$(...)" are not resolved.
+Denies force-pushes, pushes to a release branch and PR merges into develop,
+main or master (or whose base it cannot read), per the Sans Faux profile's Git
+ritual and merge boundary, and commits or pushes whose author is not Brandon's
+email (RULE ZERO). Merges between feature, wave, lane and hotfix branches pass.
+It parses the command rather than grepping it, so a commit message that
+mentions `git push --force` passes. It stops honest mistakes, not a determined
+bypass: git aliases, refspecs in shell variables and commands inside a quoted
+"$(...)" are not resolved.
 """
 import json
 import os
@@ -16,6 +18,7 @@ import subprocess
 import sys
 
 RELEASE_BRANCHES = {"master", "main"}
+PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
@@ -24,6 +27,16 @@ SEPARATORS = ";&|()\n"
 GIT_VALUE_OPTS = {"-C", "-c", "--git-dir", "--namespace", "--work-tree"}
 PUSH_VALUE_OPTS = {"-o", "--exec", "--push-option", "--receive-pack", "--repo"}
 GH_VALUE_OPTS = {"-R", "--repo"}
+# Options that take a value, for `gh pr merge` and `gh api` alike; none is a flag in the other.
+GH_ARG_VALUE_OPTS = GH_VALUE_OPTS | {
+    "-A", "--author-email", "-b", "--body", "-F", "--body-file", "--field",
+    "--match-head-commit", "-t", "--subject", "--template", "-f", "--raw-field",
+    "-H", "--header", "--hostname", "--input", "-p", "--preview", "-q", "--jq",
+    "--cache", "-X", "--method",
+}
+GH_MERGE_MUTATIONS = re.compile(
+    r"mergePullRequest|enablePullRequestAutoMerge|mergeBranch|enqueuePullRequest"
+)
 FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
 HEREDOC = re.compile(
     r"^(?P<head>[^\n]*<<-?[ \t]*['\"]?(?P<tag>\w+)['\"]?[^\n]*)\n.*?^\s*(?P=tag)\s*$",
@@ -34,7 +47,8 @@ HEREDOC = re.compile(
 def drop_heredoc(match):
     """Blank a heredoc body, unless a shell is reading it as commands."""
     head = match.group("head")
-    if re.search(r"\b(ba|z)?sh\b", head):
+    # A shell as a command word (`bash`, `/bin/zsh -s`), not a script name such as `check.sh`.
+    if re.search(r"(^|[\s;&|(/\"'])(ba|z)?sh(?=[\s<\"']|$)", head):
         return match.group(0)
     return head
 
@@ -221,53 +235,134 @@ def check_git(tokens, directory, env):
     return None
 
 
-def check_gh(tokens):
-    positional, skip = [], False
-    for token in tokens[1:]:
-        if skip:
-            skip = False
-        elif token.startswith("-"):
-            skip = token in GH_VALUE_OPTS
-        else:
-            positional.append(token)
-    if positional[:2] == ["pr", "merge"]:
-        return "a PR merge"
-    if positional[:1] == ["api"]:
-        call = " ".join(tokens[1:])
-        if re.search(r"mergePullRequest|enablePullRequestAutoMerge", call):
-            return "a PR merge"
-        if re.search(r"repos/[^/\s]+/[^/\s]+/merges\b", call):
-            return "a branch merge through the API"
-        merge_url = re.search(r"/pulls/[^/\s]+/merge\b", call)
-        if merge_url and re.search(r"(-X|--method)[ =]?PUT", call):
-            return "a PR merge"
+def gh_read(args, directory, env):
+    """Run a read-only gh command; its output, or None when it fails or says nothing."""
+    try:
+        result = subprocess.run(
+            ["gh"] + args,
+            capture_output=True,
+            text=True,
+            timeout=6,
+            cwd=directory,
+            env=dict(os.environ, **env),
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    output = result.stdout.strip()
+    return output if result.returncode == 0 and output else None
+
+
+def check_merge_base(base):
+    """A merge into a protected base, or one whose base is unknown, stays with Brandon."""
+    if base is None:
+        return "a PR merge whose base branch could not be read"
+    if base in PROTECTED_BASES:
+        return "a PR merge into {}".format(base)
     return None
 
 
-def check_command(command, directory):
+def gh_options(tokens):
+    """Split gh arguments as gh reads them: `-sb x` clusters, `--opt=x`, and `--`."""
+    positional, options, index = [], {}, 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "--":
+            positional.extend(tokens[index + 1 :])
+            break
+        if token.startswith("--"):
+            name, equals, value = token.partition("=")
+            if name in GH_ARG_VALUE_OPTS and not equals:
+                index += 1
+                value = tokens[index] if index < len(tokens) else ""
+            options.setdefault(name, []).append(value)
+        elif token.startswith("-") and len(token) > 1:
+            for position in range(1, len(token)):
+                name = "-" + token[position]
+                value = ""
+                if name in GH_ARG_VALUE_OPTS:
+                    value = token[position + 1 :]
+                    if not value:
+                        index += 1
+                        value = tokens[index] if index < len(tokens) else ""
+                options.setdefault(name, []).append(value)
+                if name in GH_ARG_VALUE_OPTS:
+                    break
+        else:
+            positional.append(token)
+        index += 1
+    return positional, options
+
+
+def check_gh(tokens, directory, env):
+    positional, options = gh_options(tokens[1:])
+    repos = options.get("-R", []) + options.get("--repo", [])
+    repo = ["--repo", repos[-1]] if repos else []
+    if positional[:2] == ["pr", "merge"]:
+        # The guard's documented live probe: answered here, with no lookup.
+        if "--help" in options or "-h" in options:
+            return "a PR merge"
+        # An auto-merge lands later, after a stacked PR may have been retargeted to develop.
+        if "--auto" in options:
+            return "an auto-merge, whose base can change before it lands"
+        selector = positional[2:3]
+        base = gh_read(
+            ["pr", "view"] + selector + repo + ["--json", "baseRefName", "--jq", ".baseRefName"],
+            directory,
+            env,
+        )
+        return check_merge_base(base)
+    if positional[:1] == ["api"]:
+        call = " ".join(tokens[1:])
+        if GH_MERGE_MUTATIONS.search(call):
+            return "a PR merge"
+        if re.search(r"repos/[^/\s]+/[^/\s]+/merges\b", call):
+            return "a branch merge through the API"
+        methods = [m.upper() for m in options.get("-X", []) + options.get("--method", [])]
+        if "PUT" not in methods:
+            return None
+        endpoint = positional[1] if len(positional) > 1 else ""
+        merge_url = re.fullmatch(r"(.*\brepos/[^/]+/[^/]+/pulls/[^/]+)/merge/?", endpoint)
+        if merge_url:
+            hosts = options.get("--hostname", [])
+            host = ["--hostname", hosts[-1]] if hosts else []
+            base = gh_read(
+                ["api", merge_url.group(1)] + host + ["--jq", ".base.ref"], directory, env
+            )
+            return check_merge_base(base)
+        if re.search(r"/pulls/[^/\s]+/merge\b", call):
+            return "a PR merge whose base branch could not be read"
+    return None
+
+
+def check_command(command, directory, inherited=None):
+    """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
+    exported = dict(inherited or {})
     for tokens in segments(command):
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
-        env = dict(token.split("=", 1) for token in prefix if ASSIGNMENT.match(token))
+        env = dict(exported)
+        env.update(token.split("=", 1) for token in prefix if ASSIGNMENT.match(token))
         tokens = command_tokens
         if not tokens:
             continue
         head = os.path.basename(tokens[0])
         reason = None
-        if head == "cd" and len(tokens) == 2:
+        if head == "export":
+            exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
+        elif head == "cd" and len(tokens) == 2:
             directory = os.path.join(directory, os.path.expanduser(tokens[1]))
         elif head == "eval":
-            reason = check_command(" ".join(tokens[1:]), directory)
+            reason = check_command(" ".join(tokens[1:]), directory, env)
         elif head in SHELLS:
             for index, token in enumerate(tokens[:-1]):
                 if re.fullmatch(r"-[a-z]*c", token):
-                    reason = check_command(tokens[index + 1], directory)
+                    reason = check_command(tokens[index + 1], directory, env)
                     break
         elif head == "git":
             reason = check_git(tokens, directory, env)
         elif head == "gh":
-            reason = check_gh(tokens)
+            reason = check_gh(tokens, directory, env)
         if reason:
             return reason
     return None
