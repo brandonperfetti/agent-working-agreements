@@ -24,8 +24,8 @@ index and the client index — is bound in [`profiles/sansfaux.md`](profiles/san
 the real thing, not a template. The changelog is the record of these rules being exercised: an
 entry names what produced it, and a rule earns its place only after something bit. The
 documentation is licensed CC BY 4.0 (the text is in `LICENSE`); the shell scripts under
-`scripts/` and the GitHub workflows are MIT (the text is in `LICENSE-MIT`), copyright 2026
-Brandon Perfetti.
+`scripts/`, the Claude Code hooks under `hooks/claude-code/` and the GitHub workflows are MIT
+(the text is in `LICENSE-MIT`), copyright 2026 Brandon Perfetti.
 
 ## Layout
 
@@ -45,7 +45,8 @@ docs/agents/domain.md                the agreement's terms, and GLOSSARY.md as w
 docs/agents/commit-subject-audit.md  the 2026-09-23 audit of commit-subject conventions across active repositories
 CHANGELOG.md                         why each rule changed, newest first
 LICENSE                              the CC BY 4.0 legal code; it covers the documentation
-LICENSE-MIT                          the MIT text; it covers scripts/ and the GitHub workflows
+LICENSE-MIT                          the MIT text; it covers scripts/, hooks/claude-code/ and the GitHub workflows
+hooks/claude-code/                   the user-level Claude Code hooks, their tests and installer
 scripts/check-index.sh               CI: client openers bind core → profile → client; profile-free core; anchors
 scripts/check-structure.sh           CI: ceilings, a portable core, procedure fields and index, no pins
 .markdownlint-cli2.jsonc             CI: markdown lint rules, each exception with its reason
