@@ -233,6 +233,24 @@ class LookAgainTest(unittest.TestCase):
             self.assertIn(first, reason, restore)
             self.assertNotIn(second, reason, restore)
 
+    def test_a_git_c_directory_with_spaces_resolves(self):
+        os.mkdir(os.path.join(self.root, "my dir"))
+        os.mkdir(os.path.join(self.root, "b"))
+        first = self.file(os.path.join("my dir", "config.json"), START)
+        second = self.file(os.path.join("b", "config.json"), START)
+        self.tool("Read", {"file_path": first}, START + 10)
+        self.tool("Read", {"file_path": second}, START + 11)
+        for offset, folder in enumerate(("my dir", "b")):
+            self.tool("Bash", {"command": "rm config.json"}, START + 20 + offset)
+            self.entries[-1]["cwd"] = os.path.join(self.root, folder)
+        self.tool("Bash", {"command": 'git -C "my dir" restore config.json'}, START + 22)
+        self.entries[-1]["cwd"] = self.root
+        os.remove(first)  # restored by the agent, then deleted by someone else
+        os.remove(second)
+        reason = self.decide()["reason"]
+        self.assertIn(first, reason)
+        self.assertNotIn(second, reason)
+
     def test_a_file_named_in_bash_then_deleted_elsewhere_is_reported(self):
         for command in ("wc -l draft.md", "rm -f draft.md.bak && cat draft.md",
                         "sed -i x draft.md; rm -rf node_modules", "git rm --cached draft.md",
