@@ -171,6 +171,16 @@ class LookAgainTest(unittest.TestCase):
             os.remove(path)
             self.assertIsNone(self.decide(), command)
 
+    def test_a_later_mention_keeps_the_agent_s_own_removal(self):
+        for commands in (["rm draft.md; echo draft.md"], ["rm draft.md", "echo removed draft.md"]):
+            self.entries = []
+            path = self.file("draft.md", START)
+            self.tool("Read", {"file_path": path}, START + 10)
+            for offset, command in enumerate(commands):
+                self.tool("Bash", {"command": command}, START + 20 + offset)
+            os.remove(path)
+            self.assertIsNone(self.decide(), commands)
+
     def test_a_file_named_in_bash_then_deleted_elsewhere_is_reported(self):
         for command in ("wc -l draft.md", "rm -f draft.md.bak && cat draft.md",
                         "sed -i x draft.md; rm -rf node_modules", "git rm --cached draft.md",

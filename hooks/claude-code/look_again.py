@@ -172,8 +172,10 @@ def last_seen(transcript_path):
                             if removes and MOVERS.match(part):  # mv's last operand stays
                                 words = TRAILERS.sub("", part).split()
                                 part, kept = " ".join(words[:-1]), words[-1]
+                            # A later mention keeps a removal; so does a Bash recreate, which a mention can't be told from.
                             for path in named(part, by_base, cwd, loose):
-                                seen[path] = (when, OWN_REMOVAL if removes else name, seen[path][2])
+                                own = removes or seen[path][1] == OWN_REMOVAL
+                                seen[path] = (when, OWN_REMOVAL if own else name, seen[path][2])
                             for path in named(kept, by_base, cwd, loose):
                                 seen[path] = (when, name, seen[path][2])
     return seen
