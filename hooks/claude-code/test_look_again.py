@@ -9,6 +9,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -398,6 +399,15 @@ class LookAgainTest(unittest.TestCase):
         self.assertEqual(run.returncode, 1)
         self.assertEqual(run.stdout, "")
         self.assertIn("look_again:", run.stderr)
+
+    def test_a_failed_state_write_keeps_the_previous_state(self):
+        path = os.path.join(look_again.STATE_DIR, "s1.json")
+        look_again.save_state(path, {"blocks": 2})
+        with mock.patch.object(look_again.os, "replace", side_effect=OSError("disk full")):
+            with self.assertRaises(OSError):
+                look_again.save_state(path, {"blocks": 3})
+        self.assertEqual(look_again.load_state(path), {"blocks": 2})
+        self.assertEqual(os.listdir(look_again.STATE_DIR), ["s1.json"])
 
 
 if __name__ == "__main__":

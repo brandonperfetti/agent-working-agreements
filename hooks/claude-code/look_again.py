@@ -244,9 +244,20 @@ def load_state(path):
 
 
 def save_state(path, state):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(state, handle)
+    """Replace the state file whole, so a concurrent read never sees it half written."""
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+    fd, temp = tempfile.mkstemp(dir=directory, prefix=".state-")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(state, handle)
+        os.replace(temp, path)
+    except BaseException:
+        try:
+            os.unlink(temp)
+        except OSError:
+            pass
+        raise
 
 
 def decide(payload):
