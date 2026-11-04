@@ -27,9 +27,11 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # event, matcher, script, extra fields. The command runs the copy in ~/.claude/hooks.
+# A matcher of None is an event without matchers; its group carries no matcher key.
 HOOKS = [
     ("PreToolUse", "Bash", "guard_git.py", {"timeout": 10, "onFailure": "block"}),
     ("SessionStart", "compact", "agreements_after_compact.py", {"timeout": 10}),
+    ("Stop", None, "look_again.py", {"timeout": 30}),
 ]
 
 
@@ -94,7 +96,7 @@ def merge_hooks(settings):
             continue
         group = next((g for g in groups if g.get("matcher") == matcher), None)
         if group is None:
-            groups.append({"matcher": matcher, "hooks": [wanted]})
+            groups.append({"hooks": [wanted]} if matcher is None else {"matcher": matcher, "hooks": [wanted]})
         else:
             group.setdefault("hooks", []).append(wanted)
     return merged
