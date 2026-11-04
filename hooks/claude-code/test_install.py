@@ -4,6 +4,7 @@ import contextlib
 import io
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -64,6 +65,13 @@ class InstallTest(unittest.TestCase):
         self.assertIn("look_again.py", settings["hooks"]["Stop"][0]["hooks"][0]["command"])
         self.assertEqual(self.run_install("--check")[0], 0)
 
+    def test_a_custom_claude_dir_registers_its_own_hooks(self):
+        self.run_install()
+        command = self.read_settings()["hooks"]["Stop"][0]["hooks"][0]["command"]
+        script = os.path.join(os.path.abspath(self.claude), "hooks", "look_again.py")
+        self.assertEqual(shlex.split(command), ["/usr/bin/python3", "-I", script])
+        self.assertIn('"$HOME/.claude/hooks/look_again.py"', install.hook_entry("look_again.py", {})["command"])
+
     def test_keeps_other_settings_and_hooks(self):
         self.write_settings(OTHER_SETTINGS)
         self.run_install()
@@ -93,7 +101,8 @@ class InstallTest(unittest.TestCase):
         self.run_install()
         hooks = self.read_settings()["hooks"]["PreToolUse"]
         self.assertEqual(len(hooks), 1)
-        self.assertEqual(hooks[0]["hooks"], [install.hook_entry("guard_git.py", install.HOOKS[0][3])])
+        hooks_dir = os.path.join(self.claude, "hooks")
+        self.assertEqual(hooks[0]["hooks"], [install.hook_entry("guard_git.py", install.HOOKS[0][3], hooks_dir)])
 
     def test_a_hook_whose_name_ends_in_ours_is_left_alone(self):
         theirs = {"type": "command", "command": "python3 ~/bin/my_guard_git.py --strict"}

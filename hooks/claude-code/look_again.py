@@ -66,7 +66,8 @@ WORD = re.compile(r"""[^\s'"`;|&<>()=]+""")
 MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\b(git|make)\s+-C\s")
 REMOVES = re.compile(r"\s*(sudo\s+)?(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
 MOVERS = re.compile(r"\s*(sudo\s+)?(mv|git(\s+-C\s+\S+)?\s+mv)\s")
-RESTORES = re.compile(r"\s*(sudo\s+)?git(\s+-C\s+\S+)?\s+(restore|checkout)\s")
+RESTORES = re.compile(r"\s*(sudo\s+)?git(\s+-C\s+(?P<dir>\S+))?\s+(restore|checkout)\s")
+CHDIR = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)")
 STAGED = re.compile(r"\s(--staged|-[a-zA-Z]*S[a-zA-Z]*)(\s|$)")
 WORKTREE = re.compile(r"\s(--worktree|-[a-zA-Z]*W[a-zA-Z]*)(\s|$)")
 PARTS = re.compile(r"[;&|\n]+")
@@ -125,6 +126,25 @@ def is_prompt(entry):
     return origin is not None or not content.lstrip().startswith(NOT_TYPED)
 
 
+def restored_paths(part, directory, command, by_base, cwd):
+    """The tracked paths a git restore part brings back.
+
+    Resolved from cwd and git -C's directory when both are known and the command
+    changes no directory; otherwise a loose match counts only where its name is unique.
+    """
+    if directory:
+        directory = os.path.expanduser(directory.strip("'\""))
+        if "$" in directory:  # a shell variable: leave it to the loose match below
+            base = None
+        else:
+            base = directory if os.path.isabs(directory) else (os.path.join(cwd, directory) if cwd else None)
+    else:
+        base = cwd
+    if base and not CHDIR.search(command):
+        return named(part, by_base, os.path.normpath(base), False)
+    return {path for path in named(part, by_base, cwd, True) if len(by_base[os.path.basename(path)]) == 1}
+
+
 def last_seen(transcript_path):
     """Map each file the agent touched since the last prompt to (last touch, tool name, last file-tool touch).
 
@@ -171,8 +191,10 @@ def last_seen(transcript_path):
                             by_base.setdefault(os.path.basename(path), []).append(path)
                         for part in PARTS.split(command):
                             removes = REMOVES.match(part) and "--cached" not in part
-                            restores = RESTORES.match(part) and (  # --staged / -S alone leaves the file gone
-                                not STAGED.search(part) or bool(WORKTREE.search(part)))
+                            restore = RESTORES.match(part)
+                            restored = set()
+                            if restore and (not STAGED.search(part) or WORKTREE.search(part)):  # -S alone leaves it gone
+                                restored = restored_paths(part, restore.group("dir"), command, by_base, cwd)
                             kept = ""
                             if removes and MOVERS.match(part):  # mv's last operand stays
                                 words = TRAILERS.sub("", part).split()
@@ -180,7 +202,7 @@ def last_seen(transcript_path):
                             # A later mention keeps a removal and a git restore clears it; any other Bash
                             # recreate keeps it too, since it can't be told from a mention.
                             for path in named(part, by_base, cwd, loose):
-                                own = removes or (seen[path][1] == OWN_REMOVAL and not restores)
+                                own = removes or (seen[path][1] == OWN_REMOVAL and path not in restored)
                                 seen[path] = (when, OWN_REMOVAL if own else name, seen[path][2])
                             for path in named(kept, by_base, cwd, loose):
                                 seen[path] = (when, name, seen[path][2])

@@ -35,11 +35,13 @@ HOOKS = [
 ]
 
 
-def hook_entry(script, extra):
-    entry = {
-        "type": "command",
-        "command": '/usr/bin/python3 -I "$HOME/.claude/hooks/{}"'.format(script),
-    }
+def hook_entry(script, extra, hooks_dir=None):
+    """The settings entry; hooks_dir is given only for a Claude directory other than ~/.claude."""
+    if hooks_dir is None:
+        command = '/usr/bin/python3 -I "$HOME/.claude/hooks/{}"'.format(script)
+    else:
+        command = "/usr/bin/python3 -I {}".format(shlex.quote(os.path.join(os.path.abspath(hooks_dir), script)))
+    entry = {"type": "command", "command": command}
     entry.update(extra)
     return entry
 
@@ -78,12 +80,12 @@ def well_formed(settings):
     return True
 
 
-def merge_hooks(settings):
+def merge_hooks(settings, hooks_dir=None):
     """Return a copy of settings with every hook in HOOKS registered once."""
     merged = copy.deepcopy(settings)
     events = merged.setdefault("hooks", {})
     for event, matcher, script, extra in HOOKS:
-        wanted = hook_entry(script, extra)
+        wanted = hook_entry(script, extra, hooks_dir)
         groups = events.setdefault(event, [])
         found = False
         for group in groups:
@@ -140,7 +142,8 @@ def main(argv=None):
             sys.exit("{} is not valid JSON ({}); nothing written.".format(settings_path, error))
     if not well_formed(settings):
         sys.exit("{} has no hooks block of the expected shape; nothing written.".format(settings_path))
-    merged = merge_hooks(settings)
+    default = os.path.realpath(os.path.expanduser("~/.claude")) == os.path.realpath(args.claude_dir)
+    merged = merge_hooks(settings, None if default else hooks_dir)
     if merged != settings:
         changes.append(("settings", settings_path, None))
 
