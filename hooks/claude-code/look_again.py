@@ -66,6 +66,9 @@ WORD = re.compile(r"""[^\s'"`;|&<>()=]+""")
 MOVES = re.compile(r"(^|[\s;&|(])(cd|pushd|popd)(\s|$)|\b(git|make)\s+-C\s")
 REMOVES = re.compile(r"\s*(sudo\s+)?(rm|unlink|mv|trash|git(\s+-C\s+\S+)?\s+(rm|mv))\s")
 MOVERS = re.compile(r"\s*(sudo\s+)?(mv|git(\s+-C\s+\S+)?\s+mv)\s")
+RESTORES = re.compile(r"\s*(sudo\s+)?git(\s+-C\s+\S+)?\s+(restore|checkout)\s")
+STAGED = re.compile(r"\s(--staged|-[a-zA-Z]*S[a-zA-Z]*)(\s|$)")
+WORKTREE = re.compile(r"\s(--worktree|-[a-zA-Z]*W[a-zA-Z]*)(\s|$)")
 PARTS = re.compile(r"[;&|\n]+")
 TRAILERS = re.compile(r"\s#.*$|\s*\d*[<>]+&?\s*\S*|\s\\$")  # comments, redirections, a line continuation
 OWN_REMOVAL = "Bash rm"
@@ -168,13 +171,16 @@ def last_seen(transcript_path):
                             by_base.setdefault(os.path.basename(path), []).append(path)
                         for part in PARTS.split(command):
                             removes = REMOVES.match(part) and "--cached" not in part
+                            restores = RESTORES.match(part) and (  # --staged / -S alone leaves the file gone
+                                not STAGED.search(part) or bool(WORKTREE.search(part)))
                             kept = ""
                             if removes and MOVERS.match(part):  # mv's last operand stays
                                 words = TRAILERS.sub("", part).split()
                                 part, kept = " ".join(words[:-1]), words[-1]
-                            # A later mention keeps a removal; so does a Bash recreate, which a mention can't be told from.
+                            # A later mention keeps a removal and a git restore clears it; any other Bash
+                            # recreate keeps it too, since it can't be told from a mention.
                             for path in named(part, by_base, cwd, loose):
-                                own = removes or seen[path][1] == OWN_REMOVAL
+                                own = removes or (seen[path][1] == OWN_REMOVAL and not restores)
                                 seen[path] = (when, OWN_REMOVAL if own else name, seen[path][2])
                             for path in named(kept, by_base, cwd, loose):
                                 seen[path] = (when, name, seen[path][2])

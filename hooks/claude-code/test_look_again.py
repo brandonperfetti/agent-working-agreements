@@ -3,6 +3,7 @@
 import datetime
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -180,6 +181,23 @@ class LookAgainTest(unittest.TestCase):
                 self.tool("Bash", {"command": command}, START + 20 + offset)
             os.remove(path)
             self.assertIsNone(self.decide(), commands)
+
+    def test_a_git_restore_clears_the_agent_s_own_removal(self):
+        for restore, reported in (("git restore draft.md", True), ("git checkout -- draft.md", True),
+                                  ("git -C . restore -SW draft.md", True),
+                                  ("git restore --staged draft.md", False), ("git restore -S draft.md", False)):
+            self.entries = []
+            shutil.rmtree(look_again.STATE_DIR, ignore_errors=True)  # each case reports afresh
+            path = self.file("draft.md", START)
+            self.tool("Read", {"file_path": path}, START + 10)
+            self.tool("Bash", {"command": "rm draft.md"}, START + 20)
+            self.tool("Bash", {"command": restore}, START + 21)
+            os.remove(path)
+            reply = self.decide()
+            if reported:
+                self.assertIn("now gone", reply["reason"], restore)
+            else:
+                self.assertIsNone(reply, restore)
 
     def test_a_file_named_in_bash_then_deleted_elsewhere_is_reported(self):
         for command in ("wc -l draft.md", "rm -f draft.md.bak && cat draft.md",
