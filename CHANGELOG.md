@@ -10,13 +10,12 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-11-05 — T3 routes each delegated task (#237).** The T3 adapter now selects model and
-  effort per delegated task from provisional, adjustable starting defaults, with discretion,
-  owner-pinned settings winning and no per-dispatch approval; it keeps trivial work direct,
-  overlaps fenced lanes, carries the original objective through internal checkpoints and treats
-  usage headroom as a task-fit signal, never a savings claim or spending authority. Client files
-  point to it instead of restating the selection rule. Brandon approved defaults with discretion,
-  2026-11-05. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/237).
+- **2026-11-05 — T3 routes each delegated task (#237).** A4's per-task model and effort choice
+  had no actionable T3 guidance, and pilot checkpoints had narrowed continuation. The T3 adapter
+  now routes each delegate from provisional, adjustable starting defaults with discretion, keeps
+  trivial work direct and the original objective through checkpoints, and reads usage headroom as
+  task fit only; client files point to it instead of restating the rule. Brandon approved
+  defaults with discretion. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/237).
 
 - **2026-11-03 — Independent topics have a reachable creation route.** Camina qualification found
   ordinary topic creation hidden inside exceptional root replacement. The OpenClaw Continuity
