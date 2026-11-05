@@ -28,7 +28,7 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
   operation, not a switch of the delivery or team to B1: the team continues on its supported
   routes and stops at the first operation with no safe route, naming the capability and its
   restoration owner (B2 stop-list item 5); so does a role with no supported execution route. Use
-  approved fallback routes below; Brandon is never the command runner and alone merges base PRs.
+  approved fallback routes in the team operating model; Brandon is never the command runner and alone merges base PRs.
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 - **Resolve the active workspace and target checkout from live inventory**; do not assume every
   specialist shares main's working directory.
