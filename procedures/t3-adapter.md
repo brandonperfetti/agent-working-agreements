@@ -44,10 +44,11 @@ including evidence capture and artifact placement when writing receipts.
    [orchestration seats](orchestration-seats.md), setting both through the host's current
    delegation options, whose schemas stay the host's. Start from the defaults below; a default
    row is reason enough. Depart where difficulty, uncertainty, consequence, verification or likely
-   rework calls for it, saying why in the existing task result; escalate for a concrete risk or
-   failed approach, not by habit. An owner-pinned or owner-named setting wins; routing asks no
-   per-dispatch approval. A rejected route is a scoped limit (step 2): continue on a supported
-   approved route, never a paid or API one, and draw no model conclusion from it.
+   rework calls for it, saying why in the dispatch or its task result; escalate for a concrete
+   risk or failed approach, not by habit. An owner-pinned or owner-named setting wins; routing
+   asks no per-dispatch approval. A rejected route is a scoped limit (step 2): continue on a
+   supported approved route (a rejection authorizes no paid or API route) and draw no model
+   result from it.
 7. **Delegate where it pays.** Do trivial work, or work whose delegation costs more than it
    saves, directly. Overlap independent fenced lanes while dependencies and host resources
    allow; shared integration and heavy runtime stay with the delivery owner. Batch and trial
@@ -60,7 +61,7 @@ including evidence capture and artifact placement when writing receipts.
    an exhausted limit (B2 item 3).
 
 **Starting defaults** — provisional, adjusted here as evidence accrues; steps 6–8 are the stable
-rule. Names are the live T3 selectors when adopted; which rows have pilot use is recorded in
+rule. Names are the T3 selectors live at adoption; which rows have pilot use is recorded in
 [#237](https://github.com/brandonperfetti/agent-working-agreements/issues/237). Equal effort names
 do not imply equal compute.
 
@@ -69,8 +70,8 @@ do not imply equal compute.
 | Lead and coordination | Sol 6.1 medium | consequential dependency or API choice, ambiguous acceptance, hard integration |
 | Implementation from a clear brief | Claude Opus 5.5 medium | difficult bug, risky refactor, edge-case-heavy work |
 | Routine bounded edits, small migrations | Claude Sonnet 5.5 medium | a demonstrated need |
-| Narrow inventory, triage, extraction | deterministic tools first; Haiku 5.5 low or medium, or Luna low (untested) | — |
-| Independent Standards + Spec review | high, preferring a family other than the producer's (Sol 6.1 for Claude-authored work) | — |
+| Narrow inventory, triage, extraction | deterministic tools first; Haiku 5.5 low or medium, or Luna low (both untested) | — |
+| Independent Standards + Spec review | high, preferring a family other than the producer's (Sol 6.1 for Claude-authored work, a Claude reviewer for Codex-authored) | — |
 | Unresolved architecture, hard diagnosis | a bounded Astra high consultation, applied in the delivery lane | — |
 
 Final architecture, security and acceptance review use the review row. Rows are starting points
