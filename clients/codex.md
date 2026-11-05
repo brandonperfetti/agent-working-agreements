@@ -43,9 +43,9 @@ Measurements behind it are in the history file; **re-measure on yours**.
   instructions field applies to *every* ChatGPT and Codex chat, including ones with no shell and no
   repo; this appendix — and Part B — apply only to a session that has a local shell and is working
   a repo under `~/dev/sansfaux`. Elsewhere only Part A's honesty rules carry.
-- **Sub-agents:** choose model and effort per task using available approved selectors; record
-  requested settings separately from backend attestation. A full-history fork **inherits the
-  parent's model and cannot override**, and config is not attestation (A4).
+- **Sub-agents:** model and effort per [orchestration seats](../procedures/orchestration-seats.md),
+  in T3 `t3-adapter.md` step 6. A full-history fork **inherits the parent's model and cannot
+  override**, and config is not attestation (A4).
 - **Hazards:**
   - **A sandbox denial looks exactly like a missing capability** — preserve the execution boundary
     in the claim, and never report "this machine can't" from inside a restricted call.
