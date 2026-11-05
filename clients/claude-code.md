@@ -41,9 +41,8 @@ Claude Code fact.
   session's environment names, never under `_agent/`. Whether every dispatch shares it is
   unmeasured, so a dispatch names one subdirectory of it per sub-agent.
 - **Agent-tool dispatches in one message run concurrently**; the ceiling is unmeasured.
-- **Model and effort (A4):** leads choose approved selectors per task from live capabilities.
-  Distinguish requested, configured, inherited and backend-attested claims; backend identity is
-  unknown without evidence. Historical role-to-selector mappings do not restrict task-based choice.
+- **Model and effort (A4):** per [orchestration seats](../procedures/orchestration-seats.md), and
+  in T3 [its adapter](../procedures/t3-adapter.md); old role-to-selector maps restrict no task choice.
 - **CodeRabbit CLI, for B2's preflight:** `coderabbit-preflight` checks the CLI on every run; a
   recorded install is a record, not a guarantee.
 - **Kody tool names (A7):** the same Kody connector is named differently per client. A permission

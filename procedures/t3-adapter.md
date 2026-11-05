@@ -1,10 +1,12 @@
 # T3 provider adapter
 
-**Trigger:** Working through T3, including local, delegated and linked-environment tasks.
+**Trigger:** Working through T3 (local, delegated or linked-environment tasks), including each
+delegate's model and effort.
 
 **Owner:** The task lead; each delivery owner verifies its execution route and checkout.
 
-**Implements:** A2 evidence, A3 continuation, A6 receipts and B0 capability-based mode selection.
+**Implements:** A2 evidence, A3 continuation, A4 model and effort, A6 receipts and B0
+capability-based mode selection.
 
 **Stop:** Stop only an operation with no supported authorized route; name its restoration owner
 under B2. Provider login or a successful fixture does not qualify every repository or remote route.
@@ -20,8 +22,7 @@ T3 mechanics and remeasure desktop-specific capability claims. Triggered procedu
 including evidence capture and artifact placement when writing receipts.
 
 1. Identify the execution environment, host, provider and repository before using paths. Keep
-   each host's receipts in its selected store. Record configured model/effort separately from
-   unavailable backend attestation; use existing approved authentication and allowances.
+   each host's receipts in its selected store; use existing approved authentication and allowances.
 2. Bind repository work to its T3 project. Use native isolated delegation from a repo-bound
    parent; an umbrella/non-Git parent may not select another local project for its child.
    Treat rejection as a scoped route limit and continue independent work. Placement and retirement
@@ -39,6 +40,42 @@ including evidence capture and artifact placement when writing receipts.
    Use supported cancellation for an owned run and check its terminal state; reconnect is distinct
    from resumed execution, desktop quit, sleep or reboot recovery. Keep unqualified routes and
    their available fallbacks explicit without blocking unrelated qualified local work.
+6. **Route each delegated task.** Apply the model-and-effort rule of
+   [orchestration seats](orchestration-seats.md), setting both through the host's current
+   delegation options, whose schemas stay the host's. Start from the defaults below; a default
+   row is reason enough. Depart where difficulty, uncertainty, consequence, verification or likely
+   rework calls for it, saying why in the dispatch or its task result; escalate for a concrete
+   risk or failed approach, not by habit. An owner-pinned or owner-named setting wins; routing
+   asks no per-dispatch approval. A rejected route is a scoped limit (step 2): continue on a
+   supported approved route (a rejection authorizes no paid or API route) and draw no model
+   result from it.
+7. **Delegate where it pays.** Do trivial work, or work whose delegation costs more than it
+   saves, directly. Overlap independent fenced lanes while dependencies and host resources
+   allow; shared integration and heavy runtime stay with the delivery owner. Batch and trial
+   checkpoints are internal: carry the original objective onward under A3 and A4.
+8. **Treat headroom as a task-fit signal.** Read the provider's normal usage display where
+   exposed; an unexposed reading stays unknown. Cached and processed tokens, displayed or
+   API-estimated cost and subscription allowance are different quantities, and percentages from
+   different providers do not add or compare. Between equally fit routes, prefer the one with
+   visible headroom. Headroom never supports a savings claim, a purchase, API fallback or passing
+   an exhausted limit (B2 item 3).
+
+**Starting defaults** — provisional, adjusted here as evidence accrues; steps 6–8 are the stable
+rule. Names are the T3 selectors live at adoption; which rows have pilot use is recorded in
+[#237](https://github.com/brandonperfetti/agent-working-agreements/issues/237). Equal effort names
+do not imply equal compute.
+
+| Task | Start | Raise to high for |
+| --- | --- | --- |
+| Lead and coordination | Sol 6.1 medium | consequential dependency or API choice, ambiguous acceptance, hard integration |
+| Implementation from a clear brief | Claude Opus 5.5 medium | difficult bug, risky refactor, edge-case-heavy work |
+| Routine bounded edits, small migrations | Claude Sonnet 5.5 medium | a demonstrated need |
+| Narrow inventory, triage, extraction | deterministic tools first; Haiku 5.5 low or medium, or Luna low (both untested) | — |
+| Independent Standards + Spec review | high, preferring a family other than the producer's (Sol 6.1 for Claude-authored work, a Claude reviewer for Codex-authored) | — |
+| Unresolved architecture, hard diagnosis | a bounded Astra high consultation, applied in the delivery lane | — |
+
+Final architecture, security and acceptance review use the review row. Rows are starting points
+for step 6, and model diversity fits the required review seats rather than adding reviewers.
 
 The preliminary qualification and remaining probes are tracked in
 [AWA #217](https://github.com/brandonperfetti/agent-working-agreements/issues/217). This adapter

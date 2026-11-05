@@ -104,7 +104,7 @@ disagree, the rule is wrong.
 | You are about to push, merge, present, or apply an mbox series | [`rule-zero-check.md`](../procedures/rule-zero-check.md) |
 | A delivery is ready for review, or a bot or reviewer finding needs an outcome | [`review-findings.md`](../procedures/review-findings.md) |
 | You create, adopt, move or retire a worktree, or close out a delivery | [`worktree-lifecycle.md`](../procedures/worktree-lifecycle.md) |
-| You work through T3 | [`t3-adapter.md`](../procedures/t3-adapter.md) |
+| You work or delegate through T3 | [`t3-adapter.md`](../procedures/t3-adapter.md) |
 | You write any artifact, or need a scratch clone | [`agent-workspace-layout.md`](../procedures/agent-workspace-layout.md) |
 | You touch an issue, a PR, or the GitHub API | [`github-paths.md`](../procedures/github-paths.md) |
 | You pick up a delivery (first commit on a checkout, each repository) | [`pickup-guard.md`](../procedures/pickup-guard.md) |
