@@ -57,10 +57,10 @@ deliveries still carry independent review, verification and the owner's decision
   [create root](../procedures/openclaw/session-rotation.md#create-a-root-conversation). Keep stable
   conversations per [continuity](../procedures/openclaw/session-rotation.md): prefer compaction, then
   verified same-key recovery; 30/40/60% are heuristics. Record identity, context and advancement.
-- **Models and routes:** Codex OAuth for thinking; the established Claude Code wrapper for coding.
-  Leads choose model/effort within approved routes; respect wrapper pins rather than bypass them.
-  On exhaustion, coding falls back from Claude to Codex OAuth, then to an approved API model within
-  an existing funded allowance (B2). No automatic top-up; report an unavailable selector honestly.
+- **Models and routes:** select task-fit model and effort on qualified subscription routes; respect
+  owner pins and wrapper contracts. Conversation and worker choices are independent.
+  The team operating model above owns local runtime, qualification and fallback mechanics; preserve
+  selected tool/account boundaries, report unavailable selectors and apply B2 to spending.
 - **Restoration owners (B2 stop-list item 5)** (#194): **Ashford** for
 OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
 instruction-source pointer and its reachability); **Bull** for host and runtime capability; the

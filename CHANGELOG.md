@@ -10,6 +10,11 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-05 — OpenClaw task-based subscription routing.** Replaces fixed vendor roles with
+  task-fit model/effort and independent conversation/worker selection; local mechanics stay in
+  studio guidance, preserving wrapper contracts and B2 boundaries. Brandon approved implementation.
+  Receipt: `_agent/handoffs/2026-11-05-openclaw-task-routing-pilot-kickoff.md`.
+
 - **2026-11-05 — T3 routes each delegated task (#237).** A4's per-task model and effort choice
   had no actionable T3 guidance, and pilot checkpoints had narrowed continuation. The T3 adapter
   now routes each delegate from provisional, adjustable starting defaults with discretion, keeps
