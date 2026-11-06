@@ -186,7 +186,7 @@ def commit_message(args, directory):
         name, has_value, value = arg.partition("=")
         # A short-option cluster ends at its first value-taking letter: `-am msg`, `-aF file`,
         # `-mmsg`, `-F-`; `-tform` is -t with the value "form", and takes no message.
-        cluster = re.match(r"-([a-zA-Z]*?)([mFtCcu])(.*)", arg) if not arg.startswith("--") else None
+        cluster = re.match(r"-([a-zA-Z]*?)([mFtCc])(.*)", arg) if not arg.startswith("--") else None
         if cluster:
             letter, value = cluster.group(2), cluster.group(3)
             name = "-" + letter

@@ -356,6 +356,8 @@ class AuthorTest(unittest.TestCase):
             ("git commit -aF msg.txt", True),
             ('git commit -tform -m "{}"'.format(trailer), True),
             ('git commit -t form -m "fix: x"', False),
+            ('git commit -u -m "{}"'.format(trailer), True),
+            ('git commit -au -m "{}"'.format(trailer), True),
             ("git commit -F - <<-EOF\n\tfix: x\n\t{}\n\tEOF".format(trailer), True),
             ('git commit -m "docs: mention co-authored-by in prose"', False),
             ("git commit --dry-run -F msg.txt", False),
