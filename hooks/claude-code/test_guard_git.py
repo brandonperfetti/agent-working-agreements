@@ -622,6 +622,19 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
 
+    def test_r8_routes_are_closed(self):
+        trailer = "Co-Authored-By: A <a@b>"
+        self.assertIn("attribution trailer", guard_git.check_command('git commit --dry-run -m clean && git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)"'.format(trailer), self.mine) or "")
+        for command in ('git -c trailer.credit.key=Co-Authored-By commit -m clean --trailer "credit=A <a@b>"',
+                        'GIT_CONFIG_COUNT=1 git commit -m clean --trailer "credit=A <a@b>"',
+                        "git commit -F <(cat hooks/claude-code/test_guard_git.py)", "git commit -F",
+                        "git commit", "git commit -c HEAD", "git commit --amend", "git commit --fixup=amend:HEAD", "git commit --squash=HEAD", "git commit -a"):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
+        for command in ("git commit --amend --no-edit", 'git commit --amend -m "fix: x"', "git commit --fixup=HEAD", 'git commit --squash=HEAD -m "fix: x" --no-edit', 'git commit -C HEAD --no-edit'):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.mine))
+
     def test_ansi_c_quotes_hide_no_heredoc(self):
         command = "echo $'a\\' <<EOF b'\ngit push --force origin master\nEOF"
         reason = guard_git.check_command(command, self.mine) or ""

@@ -11,16 +11,13 @@ of amendments in that batch**, not an ordinal; the two notations predate each ot
 being retrofitted onto the other.
 
 - **2026-11-06 — The Claude Code git guard also rejects attribution trailers (#243).** RULE
-  ZERO's author-email half was already enforced by `hooks/claude-code/guard_git.py`; its
-  no-attribution half was prose plus a manual grep. The guard now denies a `git commit` whose
-  `-m`, `-F` or `--trailer` text carries a `Co-Authored-By`, `*-Session` or "generated with"
-  line, and a push whose unpushed commits do, using the same pattern as `rule-zero-check.md`.
-  A message fed on stdin (`-F -` with a heredoc, a here-string, a pipe) or expanded by the shell
-  (`-m "$MSG"`) is denied as uncheckable
-  rather than parsed: six review rounds kept finding shell corners, so the guard reads only `-m`,
-  `-F <file>`, reused messages and the exact `-m "$(cat <<'TAG' … TAG\n)"` form agents use, and
-  treats a `-F` file an earlier command in the line names as unreadable.
-  Controls are the hook's tests; the prose cut waits for the other routes' controls (#243).
+  ZERO's no-attribution half was prose plus a manual grep; `hooks/claude-code/guard_git.py` now
+  denies a `git commit` whose message carries a `Co-Authored-By`, `*-Session` or "generated with"
+  line, and a push whose unpushed commits do, with `rule-zero-check.md`'s pattern. It reads only
+  `-m`, `-F <file>`, reused messages and the exact `-m "$(cat <<'TAG' … TAG\n)"` form; anything
+  the shell, an editor, a template or a trailer setting fills in is denied as uncheckable, since
+  eight review rounds kept finding shell corners. Controls are the hook's tests; the prose cut
+  waits for the other routes' controls (#243).
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/243).
 
 - **2026-11-06 — Agent comments on repositories Brandon does not own carry one agent line (#245).**

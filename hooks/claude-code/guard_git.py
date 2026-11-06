@@ -333,9 +333,10 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
     message, stdin_used, dry_run = commit_message(args, directory, written=written)
     if dry_run:  # option-aware: `-m --dry-run` is a message, not a dry run; `-n` is --no-verify
         return None
-    editors = {"GIT_EDITOR", "VISUAL", "EDITOR"} & set(env)
-    settings = {c.partition("=")[0].lower() for c in configs} & {"core.editor", "commit.template", "sequence.editor"}
-    if editors or settings:  # an editor or template set for this command may add text after this check
+    editors = {"GIT_EDITOR", "VISUAL", "EDITOR"} & set(env) or {k for k in env if k.startswith("GIT_CONFIG")}
+    keys = {c.partition("=")[0].lower() for c in configs}
+    settings = keys & {"core.editor", "commit.template", "sequence.editor"} or {k for k in keys if k.startswith("trailer.")}
+    if editors or settings:  # an editor, template or trailer setting for this command may add text after this check
         return "a commit whose message cannot be checked for attribution trailers"
     author = None
     for index, arg in enumerate(args):
@@ -397,7 +398,7 @@ def commit_message(args, directory, read=True, written=()):
     here, and the push check reads the committed message instead.
     """
     parts, supplied, stdin_used, dry_run, template = [], False, False, False, False
-    unreadable = False  # a message source the hook cannot read: a special file, a timed-out revision
+    given, edits, no_edit, generated, unreadable = False, False, False, False, False  # a message source the hook cannot read: a special file, a timed-out revision
     index = 0
     while index < len(args) and args[index] != "--":
         arg = args[index]
@@ -430,6 +431,12 @@ def commit_message(args, directory, read=True, written=()):
         if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c",
                     "--reedit-message", "--fixup", "--squash"):
             supplied = True
+        if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message"):
+            given = True  # a message git takes as final: no editor unless asked for
+        if name in ("-c", "--reedit-message", "--squash"):
+            edits = True  # these open the editor on the reused text
+        if name == "--no-edit":
+            no_edit = True
         if name in ("-m", "--message"):
             parts.append(value)
         elif name in ("-e", "--edit") and read:
@@ -441,6 +448,8 @@ def commit_message(args, directory, read=True, written=()):
             parts.append(re.sub(r"^\s*([^:=]+?)\s*[:=]\s*", r"\1: ", value))
         elif name in ("-F", "--file") and value == "-":
             stdin_used = True
+        elif name in ("-F", "--file") and read and (not value or value in ("<", ">") or value.startswith(("<(", ">("))):
+            unreadable = True  # `-F <(cat x)`: the lexer split the process substitution; nothing to read
         elif name in ("-F", "--file") and value and read:
             path = os.path.join(directory, os.path.expanduser(value))
             # Only a regular file is read: /dev/stdin, a FIFO or a device could block the hook or
@@ -468,14 +477,21 @@ def commit_message(args, directory, read=True, written=()):
             # `--fixup=amend:<c>` / `reword:<c>` take the target's message; a plain fixup/squash
             # generates "fixup! <subject>" from it, which carries no trailer.
             kind, sep, target = value.partition(":")
-            if sep and kind in ("amend", "reword") and read:
-                reused = message_of(directory, target)
-                if reused is None:
-                    unreadable = True
-                else:
-                    parts.extend(reused)
+            if sep and kind in ("amend", "reword"):
+                edits = True  # the editor opens on the target's message unless --no-edit
+                if read:
+                    reused = message_of(directory, target)
+                    if reused is None:
+                        unreadable = True
+                    else:
+                        parts.extend(reused)
+            elif name == "--fixup":
+                generated = True  # "fixup! <subject>": written by git, no editor
         index += 1
-    if read and template and not supplied:
+    # Git opens the editor for a bare commit, `--amend` without a message, `-c`, `--squash` and
+    # `--fixup=amend:/reword:`; `--no-edit` keeps it closed, as does a final `-m`/`-F`/`-C` for the
+    # first two. Whatever the editor adds is not readable here, so those routes are uncheckable.
+    if read and ((edits and not no_edit) or (not given and not generated and not no_edit)):
         unreadable = True
     amended = any(canonical(a.partition("=")[0]) == "--amend" for a in args[: args.index("--") if "--" in args else len(args)])
     if read and amended and not supplied:
@@ -763,12 +779,13 @@ def heredoc_commit_messages(command):
             after = line_no + command.count("\n", entries[0][4][0], entries[0][4][1]) + 2  # past body and delimiter
             close = SUBSTITUTION_CLOSE.match(lines[after]) if after < len(lines) else None
             if close:
-                argv_line = match.group("pre") + match.group("opt") + ' "X"' + close.group("rest")
-                # The commit is the first `git commit` on that line (`./check.sh &&` may precede it);
-                # `&& git push` after it is the main loop's to check, and must not hide the body here.
+                argv_line = match.group("pre") + match.group("opt") + ' "__guard_message__"' + close.group("rest")
+                # The commit is the simple command holding the placeholder: not an earlier commit on
+                # the line (`git commit --dry-run … &&`), not a `&& git push` after it, which the main
+                # loop checks and which must not hide the body here.
                 first = next(
                     (t for t in (strip_prefix(strip_redirects(seg)) for seg in segments(argv_line) if seg)
-                     if t and os.path.basename(t[0]) == "git" and "commit" in t),
+                     if t and "__guard_message__" in t and os.path.basename(t[0]) == "git" and "commit" in t),
                     None,
                 )
                 if first:
@@ -818,7 +835,10 @@ def check_command(command, directory, inherited=None, written=()):
     command = strip_comments(command)
     reason = check_text(join_continuations(command), directory, inherited, written)
     if reason is None and CONTINUATION.search(command):
-        reason = check_text(command, directory, inherited, written)
+        # The raw reading exists to find a trailer, author or push the joining hid; a raw-text
+        # "cannot be checked" is only the lexer seeing an unjoined `git commit \` as a bare commit.
+        raw = check_text(command, directory, inherited, written)
+        reason = raw if raw and "cannot be checked" not in raw else None
     return reason
 
 
