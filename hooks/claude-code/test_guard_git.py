@@ -57,6 +57,7 @@ BLOCKED_ANYWHERE = [
     "gh pr --repo owner/repo merge 1",
     "GH_TOKEN=x gh pr merge 1",
     "gh api -X PUT repos/o/r/pulls/1/merge",
+    "git push origin :",
     "gh api --method PUT repos/o/r/pulls/1/merge",
     "gh api repos/o/r/merges -f base=master -f head=develop",
     "gh api graphql -f query='mutation { mergePullRequest(input: {}) { clientMutationId } }'",

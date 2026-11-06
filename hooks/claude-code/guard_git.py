@@ -568,7 +568,7 @@ def check_push(args, directory):
     refspecs = positional[1:]
     if short_force or FORCE_FLAGS & set(options) or any(r.startswith("+") for r in refspecs):
         return "a force-push"
-    if "--all" in options or "--branches" in options:
+    if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
     targets = [destination(r, directory) for r in refspecs]
     if not refspecs:
