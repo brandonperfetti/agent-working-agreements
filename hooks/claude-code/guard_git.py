@@ -731,11 +731,14 @@ def heredoc_commit_messages(command):
             close = SUBSTITUTION_CLOSE.match(lines[after]) if after < len(lines) else None
             if close:
                 argv_line = match.group("pre") + match.group("opt") + ' "X"' + close.group("rest")
-                # The commit is the first simple command on that line; `&& git push` after it is
-                # the main loop's to check, and must not hide the body here.
-                parsed = segments(argv_line)
-                first = strip_prefix(strip_redirects(parsed[0])) if parsed and parsed[0] else []
-                if first and os.path.basename(first[0]) == "git" and "commit" in first:
+                # The commit is the first `git commit` on that line (`./check.sh &&` may precede it);
+                # `&& git push` after it is the main loop's to check, and must not hide the body here.
+                first = next(
+                    (t for t in (strip_prefix(strip_redirects(seg)) for seg in segments(argv_line) if seg)
+                     if t and os.path.basename(t[0]) == "git" and "commit" in t),
+                    None,
+                )
+                if first:
                     if commit_message(first[first.index("commit") + 1 :], "", read=False)[2]:
                         continue  # a dry run commits nothing
                     substituted.append(body)
