@@ -11,7 +11,8 @@ be applied.
 **Owner:** The delivery owner.
 
 **Implements:** A4 — RULE ZERO (Brandon's author identity on every commit an agent makes, and no
-attribution line).
+attribution line, except the one-line agent label on comments posted to repositories he does not
+own).
 
 **Stop:** A commit at any other author email, or carrying an attribution line, is a send-back,
 never a push.

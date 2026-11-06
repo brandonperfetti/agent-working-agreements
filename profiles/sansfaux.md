@@ -42,7 +42,10 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   account is not merged until re-authored (Brandon, 2026-10-13). **No attribution:** no
   `Co-Authored-By` or session trailer, generated-with footer or crediting line on a commit, PR body,
   issue or thread reply (Brandon's override, #226), and no provenance footer is required; receipts
-  and inline references carry the evidence. RULE ZERO is line one of every dispatch prompt. Check
+  and inline references carry the evidence. One exception: a comment an agent posts on a
+  repository Brandon does not own carries the single line "Posted by an agent on Brandon
+  Perfetti's behalf." so other maintainers can tell it from his (Brandon, 2026-11-06, #245).
+  RULE ZERO is line one of every dispatch prompt. Check
   before every push, merge and presentation.
 - **Review.** Verdicts go under `reviews/`, naming the head SHA; the procedure carries scoping,
   staleness and the bot's three outcomes. Close-out review is where the big finds happen
