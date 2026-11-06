@@ -31,13 +31,16 @@ def expands(text):
     """True when the shell would expand something in `text`: a `$…` or backtick not escaped by an
     odd number of backslashes (`\\$M` is a literal backslash followed by an expansion)."""
     return bool(EXPANSION.search(re.sub(r"\\\\", "", text or "")))
+# What the exact `-m "$(cat <<'TAG' … TAG\n)"` form looks like once its body has been blanked and the
+# shell quotes removed: heredoc_commit_messages has already read that body.
+EXACT_FORM = re.compile(r"^\$\(cat <<['\"]?[^'\"\s]*['\"]?[ \t]*\n+\)$")  # `"TAG"` loses its quotes to the lexer
 COMMIT_VALUE_OPTS = {
     "-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
 }
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
-SHELLS = {"bash", "sh", "zsh"}
+SHELLS = {"ash", "bash", "dash", "ksh", "mksh", "sh", "zsh"}
 SEPARATORS = ";&|()\n"
 GIT_VALUE_OPTS = {"-C", "-c", "--git-dir", "--namespace", "--work-tree"}
 PUSH_VALUE_OPTS = {"-o", "--exec", "--push-option", "--receive-pack", "--repo"}
@@ -217,7 +220,7 @@ def drop_heredocs(command):
     for head, body, dash, quoted, (start, end), _line in reversed(heredocs(command)):
         # A shell as a command word (`bash`, `/bin/zsh -s`, `dash`, `source /dev/stdin`), not a
         # script name such as `check.sh`.
-        if re.search(r"(^|[\s;&|(/\"'])((ba|z|da|k)?sh|source|\.)(?=[\s<\"']|$)", head):
+        if re.search(r"(^|[\s;&|(/\"'])((ba|z|da|k|mk|a)?sh|source|\.)(?=[\s<\"']|$)", head):
             continue
         command = command[:start] + command[end:]  # body and delimiter line go; the head stays
     return command
@@ -289,9 +292,10 @@ def current_branch(directory):
 TIMEOUT = "timeout"  # git_lines' marker for a read that ran out of time (not a failure, not empty)
 
 
-def git_lines(directory, args, env=None):
+def git_lines(directory, args, env=None, raw=False):
     """Run a read-only git command; None when it fails (git reports its own error), TIMEOUT when
-    it ran out of time, else its output lines."""
+    it ran out of time, else its output lines (`raw`: the text itself, so a record separator such
+    as `\x1e`, which `splitlines` would read as a line break, survives)."""
     try:
         result = subprocess.run(
             ["git", "-C", directory] + args,
@@ -307,7 +311,7 @@ def git_lines(directory, args, env=None):
         return None
     if result.returncode:
         return None
-    return result.stdout.splitlines()
+    return result.stdout if raw else result.stdout.splitlines()
 
 
 def email_of(ident):
@@ -343,7 +347,7 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=froze
         # body of None means the shell would expand it (an unquoted `$VAR`), which cannot be read here.
         body = stdin_bodies.pop(0) if stdin_bodies else None
         if body is None:
-            return "a commit whose stdin message cannot be checked for attribution trailers"
+            return "a commit whose message cannot be checked for attribution trailers"
     return None
 
 
@@ -401,6 +405,8 @@ def commit_message(args, directory, read=True, written=frozenset()):
             index += 1
         if arg == "--dry-run":
             dry_run = True
+        if name in ("-m", "--message", "--trailer") and value and expands(value) and not EXACT_FORM.match(value):
+            unreadable = True  # `-m "$(cat msg.txt)"`, `-m "$MSG"`: the shell fills this in, not the text here
         if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c",
                     "--reedit-message", "--fixup", "--squash"):
             supplied = True
@@ -467,12 +473,12 @@ def check_push_authors(refspecs, directory, tags=False):
     # One read for authors and messages, so the hook stays well inside its timeout. A failed read is
     # None: git reports its own error, and a repo with nothing to log is not a blocked push.
     # `--not --remotes --not` excludes what any remote has; `--end-of-options` keeps a source a revision.
-    lines = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes", "--not"] + tag_option + ["--end-of-options"] + sources + ["--"])
-    if lines is TIMEOUT:
+    text = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes", "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True)
+    if text is TIMEOUT:
         return "a push whose history could not be read in time for the author and trailer checks"
-    if not lines:
+    if not text:
         return None
-    records = [r for r in "\n".join(lines).split("\x1e") if r.strip()]
+    records = [r for r in text.split("\x1e") if r.strip()]
     authors = {r.split("\x1f", 1)[0].strip() for r in records}
     others = sorted(authors - {AUTHOR_EMAIL})
     if others:
@@ -747,7 +753,7 @@ def check_command(command, directory, inherited=None):
     if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"
     if any(b is None for b in substituted):
-        return "a commit whose stdin message cannot be checked for attribution trailers"
+        return "a commit whose message cannot be checked for attribution trailers"
     exported = dict(inherited or {})
     earlier = []  # the words of the simple commands already run: a file they name may be rewritten
     for raw_tokens in segments(command):
@@ -790,8 +796,9 @@ def main():
     if reason:
         if "cannot be checked" in reason:
             advice = (
-                "RULE ZERO: the message must be readable here. Pass it with -m, -F <file> or a "
-                "heredoc (-F - <<'EOF'), not a pipe, so the guard can check for attribution lines."
+                "RULE ZERO: the message must be readable here. Pass literal text with -m or "
+                "-F <file>, or -m \"$(cat <<'EOF' … EOF\n)\" exactly; no pipe, -F -, $var or other "
+                "substitution, so the guard can check it for attribution lines."
             )
         elif "attribution trailer" in reason:
             advice = (

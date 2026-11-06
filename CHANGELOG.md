@@ -15,7 +15,8 @@ being retrofitted onto the other.
   no-attribution half was prose plus a manual grep. The guard now denies a `git commit` whose
   `-m`, `-F` or `--trailer` text carries a `Co-Authored-By`, `*-Session` or "generated with"
   line, and a push whose unpushed commits do, using the same pattern as `rule-zero-check.md`.
-  A message fed on stdin (`-F -` with a heredoc, a here-string, a pipe) is denied as uncheckable
+  A message fed on stdin (`-F -` with a heredoc, a here-string, a pipe) or expanded by the shell
+  (`-m "$MSG"`) is denied as uncheckable
   rather than parsed: six review rounds kept finding shell corners, so the guard reads only `-m`,
   `-F <file>`, reused messages and the exact `-m "$(cat <<'TAG' … TAG\n)"` form agents use, and
   treats a `-F` file an earlier command in the line names as unreadable.

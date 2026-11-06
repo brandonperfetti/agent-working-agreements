@@ -589,6 +589,22 @@ class AuthorTest(unittest.TestCase):
                 self.assertIsNone(guard_git.check_command(command, self.mine))
         self.assertIsNone(guard_git.check_command("git status \u00b2.txt <<EOF\nx\nEOF", self.mine))  # a non-ASCII digit is no descriptor
 
+    def test_push_checks_every_unpushed_author_not_the_first(self):
+        commit_as(self.mine, self.OTHER)  # an older foreign commit under a clean tip
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
+
+    def test_expanding_message_values_are_uncheckable(self):
+        for command in ('git commit -m "$(cat msg.txt)"', 'git commit -m "$MSG"', "git commit -m 'fix: $X'",
+                        'git commit -m "fix: `cat x`"', 'git commit -m x --trailer "$T"', 'git commit -m "${M}"'):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine) or ""
+                self.assertIn("cannot be checked", reason)
+        self.assertIsNone(guard_git.check_command('git commit -m "fix: costs 5 dollars" -m "body"', self.mine))
+        for command in ("dash -c 'git push -f origin feature'", "mksh -c 'git push origin master'", "ash <<EOF\ngit push -f origin feature\nEOF"):
+            with self.subTest(command=command):
+                self.assertTrue(guard_git.check_command(command, self.mine))
+
     def test_message_file_written_earlier_in_the_command_is_uncheckable(self):
         path = os.path.join(self.mine, "msg.txt")
         with open(path, "w") as handle:
