@@ -23,8 +23,9 @@ PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 # The profile's no-attribution rule, as `procedures/rule-zero-check.md` greps for it.
 TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
-EXPANSION = re.compile(r"(?<!\\)\$[\w{(]|`")
-HERESTRING = re.compile(r"<<<[ \t]*(?:'(?P<sq>[^']*)'|\"(?P<dq>[^\"]*)\"|(?P<bare>\S+))")
+# `$name`, `${…}`, `$(…)`, the special parameters (`$*`, `$@`, `$#`, `$?`, `$$`, `$!`, `$-`, `$0`…) and backticks.
+EXPANSION = re.compile(r"(?<!\\)\$(?:[\w{(]|[*@#?$!\-0-9])|`")
+HERESTRING_START = re.compile(r"<<<[ \t]*")
 COMMIT_VALUE_OPTS = {
     "-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
@@ -66,6 +67,35 @@ def heredoc_word(text):
             tag += text[index + 1 : end]; quoted = True; index = end + 1; continue
         tag += char; index += 1
     return tag, quoted, index
+
+
+def herestring_word(text):
+    """The whole shell word after `<<<` as git would read it: (text, expandable).
+
+    Quoted parts join into one word (`''"$M"`); anything outside single quotes may expand."""
+    word, expandable, index = "", False, 0
+    while index < len(text):
+        char = text[index]
+        if char in " \t\n;|&<>()":
+            break
+        if char == "\\" and index + 1 < len(text):
+            word += text[index + 1]; index += 2; continue
+        if char == "'":
+            end = text.find("'", index + 1)
+            if end == -1:
+                break
+            word += text[index + 1 : end]; index = end + 1; continue
+        if char == '"':
+            end = text.find('"', index + 1)
+            if end == -1:
+                break
+            part = text[index + 1 : end]
+            expandable = expandable or bool(EXPANSION.search(part))
+            word += part; index = end + 1; continue
+        word += char
+        expandable = expandable or bool(EXPANSION.search(char + text[index + 1 : index + 2]))
+        index += 1
+    return word, expandable
 
 
 def heredocs(command):
@@ -523,15 +553,11 @@ def heredoc_commit_messages(command):
             bodies.append(body)
         elif "$(" in reader and commit_reader(reader.rsplit("$(", 1)[0]):
             substituted.append(body)  # `git commit -m "$(cat <<'EOF' …)"`: the body is the message
-    for match in HERESTRING.finditer(command):
+    for match in HERESTRING_START.finditer(command):
         reader = command[: match.start()].split("\n")[-1]
         if reads_commit_stdin(reader):
-            text = match.group("sq")
-            if text is None:
-                text = match.group("dq") if match.group("dq") is not None else match.group("bare")
-                if EXPANSION.search(text or ""):
-                    text = None  # a double-quoted or bare here-string expands before git reads it
-            bodies.append(text if text is not None else None)
+            text, expandable = herestring_word(command[match.end() :])
+            bodies.append(None if expandable else text)  # an expanding word is not readable here
     return bodies, substituted
 
 
