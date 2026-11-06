@@ -382,6 +382,14 @@ class AuthorTest(unittest.TestCase):
             ("echo git commit -m \"$(cat <<'EOF'\n{}\nEOF\n)\"".format(trailer), False),
             ("git commit -F - <<'END.MSG'\nfix: clean\nEND.MSG", False),
             ("git commit -F - <<'END.MSG'\nfix: x\n{}\nEND.MSG".format(trailer), True),
+            ("git commit -F - <<'END MSG'\nfix: clean\nEND MSG", False),
+            ("git commit -F - <<'END MSG'\nfix: x\n{}\nEND MSG".format(trailer), True),
+            ("git commit -F - <<E\\OF\nfix: clean\nEOF", False),
+            ('git commit -F - <<E"OF"\nfix: clean\nEOF', False),
+            ("git commit -F - <<'END;MSG'\nfix: clean\nEND;MSG", False),
+            ("git commit --author 'Brandon | Perfetti <brandon@brandonperfetti.com>' -m \"$(cat <<'EOF'\nfix: x\n\n{}\nEOF\n)\"".format(trailer), True),
+            ("git commit --author 'B; P <brandon@brandonperfetti.com>' -m \"$(cat <<'EOF'\nfix: x\n{}\nEOF\n)\"".format(trailer), True),
+            ("git commit -m \"docs: git commit -F -\" <<'EOF'\n{}\nEOF".format(trailer), False),
             ('git commit -m --dry-run -m "{}"'.format(trailer), True),
             ('git commit -m "{}" --dry-run'.format(trailer), False),
             ("M='x'; git commit -F - <<EOF\nfix: $M\nEOF", True),
@@ -482,6 +490,15 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "fetch", "-q", "origin")
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+
+    def test_push_rejects_option_like_revisions(self):
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        sentinel = os.path.join(self.tmp.name, "guard-r3-must-not-exist")
+        # After `--`, git reads `--output=…` as a refspec; before it, git rejects it as an unknown
+        # option itself, so only the positional form reaches the log read.
+        self.assertIn("option-like revision", guard_git.check_command("git push -- origin --output={}".format(sentinel), self.mine) or "")
+        self.assertIn("option-like revision", guard_git.check_command("git push -- origin -r:feature", self.mine) or "")
+        self.assertFalse(os.path.exists(sentinel))
 
     def test_commits_a_remote_already_has_pass(self):
         commit_as(self.mine, self.OTHER)

@@ -25,7 +25,6 @@ AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
 EXPANSION = re.compile(r"(?<!\\)\$[\w{(]|`")
 HERESTRING = re.compile(r"<<<[ \t]*(?:'(?P<sq>[^']*)'|\"(?P<dq>[^\"]*)\"|(?P<bare>\S+))")
-STDIN_MESSAGE = re.compile(r"(^|\s)(-[a-zA-Z]*F|--file)(=| )?-(\s|$)")
 COMMIT_VALUE_OPTS = {
     "-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
@@ -48,25 +47,71 @@ GH_MERGE_MUTATIONS = re.compile(
     r"mergePullRequest|enablePullRequestAutoMerge|mergeBranch|enqueuePullRequest"
 )
 FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
-HEREDOC = re.compile(
-    # The delimiter line is exact for `<<`; `<<-` strips leading tabs only, as the shell does.
-    r"^(?P<head>[^\n]*<<(?P<dash>-)?[ \t]*['\"]?(?P<tag>[^\s'\"<>|&;()]+)['\"]?[^\n]*)\n.*?^(?(dash)\t*)(?P=tag)$",
-    re.DOTALL | re.MULTILINE,
-)
+HEREDOC_START = re.compile(r"<<(?P<dash>-)?(?!<)[ \t]*")
 
 
-def drop_heredoc(match):
-    """Blank a heredoc body, unless a shell is reading it as commands."""
-    head = match.group("head")
-    # A shell as a command word (`bash`, `/bin/zsh -s`), not a script name such as `check.sh`.
-    if re.search(r"(^|[\s;&|(/\"'])(ba|z)?sh(?=[\s<\"']|$)", head):
-        return match.group(0)
-    return head
+def heredoc_word(text):
+    """Read one shell word (the heredoc delimiter) with quote removal: (tag, quoted, length)."""
+    tag, quoted, index = "", False, 0
+    while index < len(text):
+        char = text[index]
+        if char in " \t\n;|&<>()":
+            break
+        if char == "\\" and index + 1 < len(text):
+            tag += text[index + 1]; quoted = True; index += 2; continue
+        if char in "'\"":
+            end = text.find(char, index + 1)
+            if end == -1:
+                break
+            tag += text[index + 1 : end]; quoted = True; index = end + 1; continue
+        tag += char; index += 1
+    return tag, quoted, index
+
+
+def heredocs(command):
+    """Each heredoc in the command as (head, body, dash, quoted, span); the body ends at the exact
+    delimiter line (`<<-` also strips leading tabs, as the shell does). Unterminated: to the end.
+    `span` is the (start, end) of the raw body and delimiter line, for blanking."""
+    found, pos = [], 0
+    while True:
+        match = HEREDOC_START.search(command, pos)
+        if not match:
+            return found
+        tag, quoted, used = heredoc_word(command[match.end() :])
+        line_end = command.find("\n", match.end() + used)
+        if not tag or line_end == -1:
+            pos = match.end(); continue
+        head = command[command.rfind("\n", 0, match.start()) + 1 : line_end]
+        dash = bool(match.group("dash"))
+        lines, cursor, body, end = [], line_end + 1, None, len(command)
+        for line in command[cursor:].split("\n"):
+            check = line.lstrip("\t") if dash else line
+            if check == tag:
+                body = "\n".join(lines) + ("\n" if lines else "")
+                end = cursor + len(body) + len(line)
+                break
+            lines.append(line)
+        if body is None:
+            body = "\n".join(lines)
+        if dash:
+            body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)
+        found.append((head, body, dash, quoted, (cursor, end)))
+        pos = line_end + 1
+
+
+def drop_heredocs(command):
+    """Blank each heredoc body, unless a shell is reading it as commands."""
+    for head, body, dash, quoted, (start, end) in reversed(heredocs(command)):
+        # A shell as a command word (`bash`, `/bin/zsh -s`), not a script name such as `check.sh`.
+        if re.search(r"(^|[\s;&|(/\"'])(ba|z)?sh(?=[\s<\"']|$)", head):
+            continue
+        command = command[:start] + command[end:]  # body and delimiter line go; the head stays
+    return command
 
 
 def segments(command):
     """Split a command line into one token list per simple command."""
-    command = HEREDOC.sub(drop_heredoc, command)
+    command = drop_heredocs(command)
     try:
         lexer = shlex.shlex(command, posix=True, punctuation_chars=SEPARATORS)
         lexer.whitespace = " \t\r"
@@ -249,13 +294,17 @@ def check_push_authors(refspecs, directory, tags=False):
     sources = [refspec.lstrip("+").partition(":")[0] for refspec in refspecs] or ["HEAD"]
     # `git push origin tag v1` names refs/tags/v1; the word `tag` is not a revision.
     sources = [source for source in sources if source and source != "tag"]
-    # `--tags` sends every local tag too, and the commits only a tag reaches.
-    sources += ["--tags"] if tags else []
-    if not sources:
+    if not sources and not tags:
         return None
+    if any(source.startswith("-") for source in sources):
+        return "a push naming an option-like revision"
+    # `--tags` sends every local tag too, and the commits only a tag reaches: an option for log,
+    # so it goes before `--end-of-options`; the sources after it are only ever revisions.
+    tag_option = ["--tags"] if tags else []
     # One read for authors and messages, so the hook stays well inside its timeout. A failed read is
     # None: git reports its own error, and a repo with nothing to log is not a blocked push.
-    lines = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B"] + sources + ["--not", "--remotes", "--"])
+    # `--not --remotes --not` excludes what any remote has; `--end-of-options` keeps a source a revision.
+    lines = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes", "--not"] + tag_option + ["--end-of-options"] + sources + ["--"])
     if not lines:
         return None
     records = [r for r in "\n".join(lines).split("\x1e") if r.strip()]
@@ -431,9 +480,15 @@ def commit_reader(reader):
     commits nothing and so reads nothing worth checking.
     """
     simple = None
-    for tokens in segments(reader + " <<EOF\nEOF"):  # terminate a dangling redirection for the lexer
-        if tokens:
-            simple = tokens
+    for candidate in (reader, reader + '"', reader + "'"):  # a reader cut inside `-m "$(` is unfinished
+        try:
+            parsed = list(segments(candidate + " <<EOF\nEOF"))  # terminate a dangling redirection
+        except Exception:  # pragma: no cover - the lexer raises inside segments
+            parsed = []
+        git_segments = [t for t in parsed if t and os.path.basename(strip_prefix(strip_redirects(t))[0] if strip_prefix(strip_redirects(t)) else "") == "git"]
+        if git_segments:
+            simple = git_segments[-1]
+            break
     if not simple:
         return None
     tokens = strip_prefix(strip_redirects(simple))
@@ -449,7 +504,7 @@ def reads_commit_stdin(reader):
     tokens = commit_reader(reader)
     if not tokens:
         return False
-    return bool(STDIN_MESSAGE.search(" " + " ".join(tokens[tokens.index("commit") :]) + " "))
+    return commit_message(tokens[tokens.index("commit") + 1 :], os.getcwd())[1]  # stdin_used
 
 
 def heredoc_commit_messages(command):
@@ -460,14 +515,9 @@ def heredoc_commit_messages(command):
     (`-m "$(cat <<'EOF' …)"`). A pipe into `-F -` cannot be read here, so check_commit denies it.
     """
     bodies, substituted = [], []
-    for match in HEREDOC.finditer(command):
-        head = match.group("head")
+    for head, body, dash, quoted, _span in heredocs(command):
         reader = head.split("<<", 1)[0]  # the command that consumes the body, not a trailing comment
-        body = match.group(0)[len(head) :]
-        if match.group("dash"):
-            body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)  # `<<-` strips leading tabs
-        quoted_tag = bool(re.search(r"<<-?[ \t]*['\"]", head))
-        if not quoted_tag and EXPANSION.search(body):
+        if not quoted and EXPANSION.search(body):
             body = None  # the shell would expand `$VAR`/`$(…)` into the message: not readable here
         if reads_commit_stdin(reader):
             bodies.append(body)
