@@ -2,6 +2,7 @@
 """Table tests for guard_git.py. Run: /usr/bin/python3 hooks/claude-code/test_guard_git.py"""
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -61,6 +62,14 @@ BLOCKED_ANYWHERE = [
     "gh api graphql -f query='mutation { mergePullRequest(input: {}) { clientMutationId } }'",
 ]
 
+# A commit whose message arrives on stdin is denied as uncheckable, whatever the body says: the
+# guard does not model the shell's stdin. The text after `<<` never reaches it as a command either.
+UNCHECKABLE_STDIN = [
+    "git commit -F - <<'EOF'\nfix: don't run this\ngit push --force\ngh pr merge 1\nEOF",
+    "./scripts/check.sh && git commit -F - <<'EOF'\nfix: x\n\ngh pr merge 3\nEOF",
+    "./scripts/a.sh; ./b.zsh && git commit -F - <<'EOF'\nfix: x\ngit push -f\nEOF",
+]
+
 ALLOWED_ANYWHERE = [
     "git push origin feature",
     "git push -u origin wave-1",
@@ -85,10 +94,7 @@ ALLOWED_ANYWHERE = [
     'gh pr create --title "gh pr merge" --body "git push -f"',
     "gh api repos/o/r/pulls/1/merge",
     "gh api repos/o/r/pulls/1",
-    "git commit -F - <<'EOF'\nfix: don't run this\ngit push --force\ngh pr merge 1\nEOF",
     "cat <<EOF > notes.md\ngit push origin master\nEOF",
-    "./scripts/check.sh && git commit -F - <<'EOF'\nfix: x\n\ngh pr merge 3\nEOF",
-    "./scripts/a.sh; ./b.zsh && git commit -F - <<'EOF'\nfix: x\ngit push -f\nEOF",
     "ls -la",
     "",
 ]
@@ -137,6 +143,13 @@ class GuardTest(unittest.TestCase):
         for command in ALLOWED_ANYWHERE:
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
+
+    def test_stdin_messages_are_uncheckable_and_hide_nothing(self):
+        for command in UNCHECKABLE_STDIN:
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.on_feature) or ""
+                self.assertIn("cannot be checked", reason)
+                self.assertNotIn("force", reason)  # the body's text is data, not a command
 
     def test_bare_push_reads_the_current_branch(self):
         for command in ("git push", "git push origin", "git push origin HEAD", "git push origin @"):
@@ -418,11 +431,18 @@ class AuthorTest(unittest.TestCase):
             ('git commit -m "docs: mention co-authored-by in prose"', False),
             ("git commit --dry-run -F msg.txt", False),
         ):
+            stdin_fed = (
+                re.search(r"git commit\b(?![^\n]*--dry-run)[^\n#]*(?:\s-[a-zA-Z]*F\s*-(?:\s|$)|-F-|--file=-|<<<)", command) is not None
+                and "$(cat" not in command and not command.startswith("echo ") and "docs: git commit" not in command
+            )
             with self.subTest(command=command):
                 reason = guard_git.check_command(command, self.mine)
+                if stdin_fed:  # the narrowed guard never reads stdin: denied whatever the body says
+                    self.assertIn("cannot be checked", reason or "")
+                    continue
                 self.assertEqual(reason is not None, blocked, reason)
                 if blocked:
-                    self.assertIn("attribution trailer", reason)
+                    self.assertTrue("attribution trailer" in reason or "cannot be checked" in reason, reason)
 
     def test_commit_reads_a_reused_message(self):
         git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: y\n\nCo-Authored-By: X <x@example.com>")
@@ -438,7 +458,7 @@ class AuthorTest(unittest.TestCase):
             ("git commit --amend --no-edit", True),
             ("git commit --amend", True),
             ('git commit --amend -m "fix: clean"', False),
-            ("git commit --amend -F - <<'EOF'\nfix: clean\nEOF", False),
+            ("git commit --amend -F - <<'EOF'\nfix: clean\nEOF", True),  # stdin: uncheckable
         ):
             with self.subTest(command=command):
                 reason = guard_git.check_command(command, self.mine)
@@ -473,15 +493,14 @@ class AuthorTest(unittest.TestCase):
 
     def test_here_string_quoting_forms(self):
         trailer = "Co-Authored-By: A <a@b>"
-        for command, blocked in (
-            ('git commit -F - <<<"fix: \\"quoted\\" x\n{}"'.format(trailer), True),
-            ('git commit -F - <<<"fix: \\"quoted\\" clean"', False),
-            ("git commit -F - <<<$'fix: x\\n{}'".format(trailer), True),  # ANSI-C: uncheckable → denied
-            ("git commit -F - <<<$'fix: clean'", True),
+        for command in (
+            'git commit -F - <<<"fix: \\"quoted\\" x\n{}"'.format(trailer),
+            'git commit -F - <<<"fix: \\"quoted\\" clean"',
+            "git commit -F - <<<$'fix: x\\n{}'".format(trailer),
+            "git commit -F - <<<$'fix: clean'",
         ):
             with self.subTest(command=command):
-                reason = guard_git.check_command(command, self.mine)
-                self.assertEqual(reason is not None, blocked, reason)
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
 
     def test_quoted_redirection_text_hides_nothing(self):
         for command in (
@@ -509,16 +528,48 @@ class AuthorTest(unittest.TestCase):
         ):
             with self.subTest(command=command):
                 self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
-        # two simple commits on two lines are read separately
-        self.assertIsNone(guard_git.check_command("git commit -F - <<'EOF'\nclean one\nEOF\ngit commit -F - <<'EOF'\nclean two\nEOF", self.mine))
-        self.assertIn("attribution trailer", guard_git.check_command("git commit -F - <<'EOF'\nclean one\nEOF\ngit commit -F - <<'EOF'\n{}\nEOF".format(trailer), self.mine) or "")
-        self.assertIsNone(guard_git.check_command("git commit -F - <<''\nfix: clean\n\n", self.mine))
-        self.assertIn("attribution trailer", guard_git.check_command("git commit -F - <<''\n{}\n\n".format(trailer), self.mine) or "")
+        # two stdin commits on two lines: both uncheckable, neither hides the other
+        self.assertIn("cannot be checked", guard_git.check_command("git commit -F - <<'EOF'\nclean one\nEOF\ngit commit -F - <<'EOF'\nclean two\nEOF", self.mine) or "")
+        # the empty quoted delimiter is legal shell, and stdin all the same: uncheckable either way
+        self.assertIn("cannot be checked", guard_git.check_command("git commit -F - <<''\nfix: clean\n\n", self.mine) or "")
+        self.assertIn("cannot be checked", guard_git.check_command("git commit -F - <<''\n{}\n\n".format(trailer), self.mine) or "")
 
     def test_substituted_expansions_are_uncheckable(self):
         reason = guard_git.check_command('MSG="x"; git commit -m "$(cat <<EOF\n$MSG\nEOF\n)"', self.mine) or ""
         self.assertIn("cannot be checked", reason)
-        self.assertIsNone(guard_git.check_command('git commit -m "$(cat <<EOF\nfix: literal\nEOF\n)"', self.mine))
+        # an unquoted delimiter is not the exact literal form: not readable here either
+        self.assertIn("cannot be checked", guard_git.check_command('git commit -m "$(cat <<EOF\nfix: literal\nEOF\n)"', self.mine) or "")
+
+    def test_exact_substitution_form(self):
+        trailer = "Co-Authored-By: A <a@b>"
+        clean = 'git commit -m "$(cat <<\'EOF\'\nfix: clean\n\nbody\nEOF\n)"'
+        self.assertIsNone(guard_git.check_command(clean, self.mine))
+        self.assertIsNone(guard_git.check_command(clean.replace("\'EOF\'", '"EOF"'), self.mine))
+        self.assertIsNone(guard_git.check_command('./check.sh && ' + clean, self.mine))
+        self.assertIsNone(guard_git.check_command(clean + " --dry-run", self.mine))  # argv parsed after the body
+        self.assertIn("attribution trailer", guard_git.check_command('git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)"'.format(trailer), self.mine) or "")
+        self.assertIn("attribution trailer", guard_git.check_command('git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)" --no-verify'.format(trailer), self.mine) or "")
+        # a stray heredoc after the closing quote feeds nothing the message uses: the -m text decides
+        self.assertIsNone(guard_git.check_command(clean + " <<'X'\nmore\nX", self.mine))
+        for command in (
+            'git commit -m "$(cat hooks/claude-code/test_guard_git.py <<\'EOF\'\nclean\nEOF\n)"',  # an operand: cat reads the file
+            'git commit -m "$(cat <<\'EOF\' | tr a-z A-Z\nclean\nEOF\n)"',
+            'git commit -m "$(cat <<\'EOF\'\nclean\nEOF\n) extra"',
+        ):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
+
+    def test_continuations_and_redirects_hide_nothing(self):
+        for command in (
+            "cat <<EOF\nEO\\\nF\ngit push --force origin feature",
+            "cat <<EOF\nEO\\\nF\ngit push origin master",
+            "cat <<EOF\nEO\\\nF\ngh pr merge 1",
+        ):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine) or ""
+                self.assertTrue(reason and "cannot be checked" not in reason, reason)
+        self.assertIn("cannot be checked", guard_git.check_command("git commit -F - <<'EOF' < hooks/claude-code/test_guard_git.py\nclean\nEOF", self.mine) or "")
+        self.assertIn("cannot be checked", guard_git.check_command("git commit -F - < hooks/claude-code/test_guard_git.py", self.mine) or "")
 
     def test_heredoc_bodies_are_data_not_more_heredocs(self):
         nested = "cat msg | git commit -F -\ncat <<'EOF' > notes\ngit commit -F - <<'X'\nclean\nX\nEOF\ngit push origin feature"

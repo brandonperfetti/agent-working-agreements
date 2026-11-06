@@ -15,6 +15,9 @@ being retrofitted onto the other.
   no-attribution half was prose plus a manual grep. The guard now denies a `git commit` whose
   `-m`, `-F` or `--trailer` text carries a `Co-Authored-By`, `*-Session` or "generated with"
   line, and a push whose unpushed commits do, using the same pattern as `rule-zero-check.md`.
+  A message fed on stdin (`-F -` with a heredoc, a here-string, a pipe) is denied as uncheckable
+  rather than parsed: six review rounds kept finding shell corners, so the guard reads only `-m`,
+  `-F <file>`, reused messages and the exact `-m "$(cat <<'TAG' … TAG\n)"` form agents use.
   Controls are the hook's tests; the prose cut waits for the other routes' controls (#243).
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/243).
 

@@ -658,13 +658,24 @@ def reads_commit_stdin(reader):
     return commit_message(tokens[tokens.index("commit") + 1 :], "", read=False)[1]  # stdin_used
 
 
-def heredoc_commit_messages(command):
-    """Message text reaching `git commit` through heredocs and here-strings.
+SUBSTITUTION = re.compile(r'^(?P<pre>.*?)(?P<opt>-m|--message)(?:=| +)"\$\(cat <<(?P<q>[\'"])(?P<tag>[^\'"]*)(?P=q)[ \t]*$')
+SUBSTITUTION_CLOSE = re.compile(r'^\)"(?P<rest>.*)$')
 
-    Returns (stdin_bodies, substituted): one entry per `git commit -F -` body, in order, each
-    consumed by the commit that reads it; and the text of heredocs substituted into a message
-    (`-m "$(cat <<'EOF' …)"`). A pipe into `-F -` cannot be read here, so check_commit denies it.
-    """
+
+def heredoc_commit_messages(command):
+    """Message text reaching `git commit` through the shell, in the one readable shape.
+
+    Returns (stdin_bodies, substituted). Every stdin-fed message (`-F -` with a heredoc, a
+    here-string, a pipe, any redirection) is recorded as None: the guard does not model the shell's
+    stdin, so check_commit denies it as uncheckable and asks for -m or -F <file>. A substituted
+    message is read only in the exact literal form
+
+        git commit … -m "$(cat <<'TAG'
+        …body…
+        TAG
+        )" [more options]
+
+    with a quoted delimiter and an operand-free `cat`; any other `$(` message is None too."""
     bodies, substituted = [], []
     found = heredocs(command)
     by_line, body_lines = {}, set()
@@ -673,41 +684,45 @@ def heredoc_commit_messages(command):
         start, end = entry[4]
         first = command.count("\n", 0, start)
         body_lines.update(range(first, first + command.count("\n", start, end) + 1))
-    quote, line_no = None, -1
-    for line in command.split("\n"):
-        line_no += 1
+    lines = command.split("\n")
+    quote = None
+    for line_no, line in enumerate(lines):
         if line_no in body_lines:
             continue  # heredoc body and delimiter lines are data
         ops, state = redirections(line, quote)
         quote = state["quote"]
-        entries = by_line.get(line_no, [])
         if not ops:
             continue
         first = ops[0]
-        reader = line[: first[4] if first[0] == "heredoc" else first[3]]  # the command before the first operator
-        stdin_ops = [op for op in ops if op[-1] == 0]
-        # The guard reads only the simple shapes agents use: one command on the line, one stdin
-        # redirection (a quoted-delimiter heredoc or a here-string). Anything else that feeds a
-        # commit's stdin — several commands or redirections on the line, a descriptor other than 0
-        # on a stdin-looking operator, an expanding body — is not readable here, so it is denied.
-        simple = not state["complex"] and len(stdin_ops) == 1 and len(ops) == 1
-        effective = None
-        if simple:
-            op = stdin_ops[0]
-            if op[0] == "heredoc":
-                body = entries[0][1] if entries else None
-                effective = body if (op[3] or not expands(body or "")) else None
-            else:
-                effective = None if op[2] else op[1]
+        reader = line[: first[4] if first[0] == "heredoc" else first[3]]
         if reads_commit_stdin(reader):
-            bodies.append(effective)
-        elif "$(" in reader and commit_reader(reader.rsplit("$(", 1)[0]):
-            substituted.append(effective)  # `git commit -m "$(cat <<'EOF' …)"`: the body is the message
+            bodies.append(None)  # stdin is never read here, whatever feeds it
+            continue
+        if "$(" not in reader or not commit_reader(reader.rsplit("$(", 1)[0]):
+            continue
+        match = SUBSTITUTION.match(line)
+        entries = by_line.get(line_no, [])
+        if match and len(ops) == 1 and ops[0][0] == "heredoc" and ops[0][3] and entries and not state["complex"]:
+            body = entries[0][1]
+            after = line_no + command.count("\n", entries[0][4][0], entries[0][4][1]) + 2  # past body and delimiter
+            close = SUBSTITUTION_CLOSE.match(lines[after]) if after < len(lines) else None
+            if close:
+                argv_line = match.group("pre") + match.group("opt") + ' "X"' + close.group("rest")
+                tokens = commit_reader(argv_line)
+                if tokens is None:
+                    continue  # a dry run, or not a commit after all: nothing to check
+                substituted.append(body)
+                continue
+        substituted.append(None)  # some other substituted message: not readable here
     return bodies, substituted
+
+
+CONTINUATION = re.compile(r"\\\n")
 
 
 def check_command(command, directory, inherited=None):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
+    command = CONTINUATION.sub("", command)  # bash joins `\`-newline before it reads anything else
     stdin_bodies, substituted = heredoc_commit_messages(command)
     if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"
