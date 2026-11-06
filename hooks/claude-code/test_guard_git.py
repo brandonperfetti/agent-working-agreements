@@ -395,7 +395,7 @@ class AuthorTest(unittest.TestCase):
             ("git commit -F - <<'EOF'\nfix: clean\nEOF\ncat msg.txt | git commit -F -", True),
             ("git commit -F - <<<''", False),
             ("git commit -m \"$(cat <<'EOF'\nfix: x\n{}\nEOF\n)\"".format(trailer), True),
-            ("git commit --allow-empty -C --output=/tmp/guard-should-not-write", False),
+            ("git commit --allow-empty -C --output=/tmp/guard-should-not-write", True),  # option-like: nothing was read, so it is uncheckable (and git refuses it)
             ('git commit -m x --trailer "Co-Authored-By = A <a@b>"', True),
             ('git commit -m x --trailer "Co-Authored-By : A <a@b>"', True),
             ('git commit -m "fix: x\n\nCo-Authored-By : A <a@b>"', True),
@@ -606,6 +606,21 @@ class AuthorTest(unittest.TestCase):
         self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
         self.assertIn(self.OTHER, guard_git.check_command("git push origin feature ^refs/heads/missing", self.mine) or "")
         self.assertIn("could not be read", guard_git.check_command("git push origin nonexistent-branch", self.mine) or "")
+
+    def test_comments_end_at_the_line_and_hide_nothing(self):
+        for command in ("echo first # note\\\ngit push -f origin feature", "echo first # note\\\ngit push origin master", "true # <<EOF\\\ngh pr merge 1"):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine) or ""
+                self.assertTrue(reason and "cannot be checked" not in reason, reason)
+        for command in ("echo first # note\\\ngit push origin feature", 'git commit -m "fix #12"', "git commit -m 'fix: x' # done", 'git commit -m "$(cat <<\'EOF\'\nfix: x\n\n# not a comment\nEOF\n)"'):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.mine))
+
+    def test_unreadable_revisions_and_lexed_dollars_are_uncheckable(self):
+        for command in ('git commit -m "a\\\\$M"', 'git commit -m x --trailer "\\\\$T"', "git commit -m 'costs $5'",
+                        'git commit -C "$SHA"', "git commit -C nonexistent-rev", "git commit --fixup=amend:$SHA", "git commit -c -- -m x"):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
 
     def test_ansi_c_quotes_hide_no_heredoc(self):
         command = "echo $'a\\' <<EOF b'\ngit push --force origin master\nEOF"

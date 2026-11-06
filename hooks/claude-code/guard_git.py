@@ -121,7 +121,7 @@ def redirections(line, quote=None):
     (0 unless a digit precedes the operator). `quote` is the quote still open from the previous
     line, so quoted text spanning lines is text. `state` carries the quote left open at the end and
     whether the line holds command separators outside quotes ("complex")."""
-    ops, index, outer, separators = [], 0, [], []  # `outer`: quotes suspended by `$(`
+    ops, index, outer, separators, comment = [], 0, [], [], None  # `outer`: quotes suspended by `$(`
     while index < len(line):
         char = line[index]
         if quote == "'":
@@ -158,6 +158,7 @@ def redirections(line, quote=None):
         if char in "'\"":
             quote = char; index += 1; continue
         if char == "#" and (index == 0 or line[index - 1] in " \t;|&("):
+            comment = index
             break  # a comment: nothing after it is an operator
         if char in ";|&" and not outer:
             separators.append(index)
@@ -182,7 +183,7 @@ def redirections(line, quote=None):
     # Separators before the first operator only prefix the command (`./check.sh && git commit …`);
     # a separator after it means another command shares the line with the redirection.
     complex_line = any(pos > first for pos in separators)
-    return ops, {"quote": quote if not outer else outer[0] or quote, "complex": complex_line}
+    return ops, {"quote": quote if not outer else outer[0] or quote, "complex": complex_line, "comment": comment}
 
 
 def heredocs(command):
@@ -366,9 +367,9 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
 def message_of(directory, revision):
     """The full message of one commit; a value that looks like an option is not a revision."""
     if not revision or revision.startswith("-"):
-        return []
+        return None  # git would refuse it too; nothing was read
     lines = git_lines(directory, ["log", "-1", "--format=%B", "--end-of-options", revision])
-    return None if lines is TIMEOUT else (lines or [])
+    return None if lines is TIMEOUT or lines is None else lines  # an unknown revision (`$SHA`) read nothing
 
 
 COMMIT_LONG_OPTS = (
@@ -421,9 +422,10 @@ def commit_message(args, directory, read=True, written=()):
             index += 1
         if arg == "--dry-run":
             dry_run = True
-        if read and name in ("-m", "--message", "--trailer") and value and (value.startswith("$") or expands(value)) and not EXACT_FORM.match(value):
+        if read and name in ("-m", "--message", "--trailer") and value and ("$" in value or "`" in value) and not EXACT_FORM.match(value):
             # `-m "$(cat msg.txt)"`, `-m "$MSG"`, `-m $'…'` (ANSI-C quoting, whose escapes the lexer
-            # leaves undecoded): the shell fills these in, not the text here.
+            # leaves undecoded): the shell fills these in, not the text here. The lexer has already
+            # collapsed `\\$M` and `\$M` to one spelling, so a literal `$` is not told apart either.
             unreadable = True
         if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c",
                     "--reedit-message", "--fixup", "--squash"):
@@ -778,6 +780,25 @@ def heredoc_commit_messages(command):
     return bodies, substituted
 
 
+def strip_comments(command):
+    """Drop `# …` to each line's end where `#` starts a word outside quotes; heredoc bodies are data.
+    Bash reads a comment before it joins lines, so a comment ending in `\\` continues nothing."""
+    body_lines = set()
+    for entry in heredocs(command):
+        start, end = entry[4]
+        first = command.count("\n", 0, start)
+        body_lines.update(range(first, first + command.count("\n", start, end) + 1))
+    out, quote = [], None
+    for number, line in enumerate(command.split("\n")):
+        if number in body_lines:
+            out.append(line)
+            continue
+        _ops, state = redirections(line, quote)
+        quote = state["quote"]
+        out.append(line if state["comment"] is None else line[: state["comment"]])
+    return "\n".join(out)
+
+
 CONTINUATION = re.compile(r"(\\+)\n")
 
 
@@ -794,6 +815,7 @@ def check_command(command, directory, inherited=None, written=()):
     whose delimiter is quoted, where the pair stays text: `Signed\` + newline + `Co-Authored-By:`
     is a trailer at a line start there. The joined text is read first; when the command holds a
     continuation at all, the raw text is read too, and either reading can deny."""
+    command = strip_comments(command)
     reason = check_text(join_continuations(command), directory, inherited, written)
     if reason is None and CONTINUATION.search(command):
         reason = check_text(command, directory, inherited, written)
@@ -852,7 +874,8 @@ def main():
                 "-F <file>, or -m \"$(cat <<'EOF' … EOF\n)\" exactly; no pipe, -F -, $var or other "
                 "substitution, so the guard can check it for attribution lines. An editor or "
                 "template route (-e, -t, GIT_EDITOR/VISUAL/EDITOR, core.editor) set in the same "
-                "command is denied too: drop it from the command."
+                "command is denied too: drop it from the command. A literal $ or backtick in the "
+                "message is denied as well: spell it out."
             )
         elif reason.startswith("a push whose history could not be read"):
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
