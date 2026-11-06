@@ -403,6 +403,10 @@ class AuthorTest(unittest.TestCase):
             ("git commit -F - <<EOF\nfix: $*\nEOF", True),
             ("git commit -F - <<EOF\nfix: $1 and $@\nEOF", True),
             ("git commit -F - <<EOF\nfix: costs \\$5\nEOF", False),
+            ("M='x'; git commit -F - <<EOF\nfix: \\\\$M\nEOF", True),  # two backslashes: `\\\\$M` expands
+            ("M='x'; git commit -F - <<EOF\nfix: \\\\\\$M\nEOF", False),  # three: literal backslash + literal $
+            ('M="x"; git commit -F - <<<"fix: \\\\$M"', True),
+            ('git commit -F - <<<"fix: \\$5 literal"', False),
             ("git commit --author 'Brandon | Perfetti <brandon@brandonperfetti.com>' -F - <<'EOF'\nfix: clean\nEOF", False),
             ("git commit --author 'Brandon | Perfetti <brandon@brandonperfetti.com>' -F - <<'EOF'\nfix: x\n{}\nEOF".format(trailer), True),
             ('git commit -au -m "{}"'.format(trailer), True),

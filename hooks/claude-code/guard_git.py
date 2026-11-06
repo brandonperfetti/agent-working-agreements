@@ -25,6 +25,12 @@ AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
 # `$name`, `${…}`, `$(…)`, the special parameters (`$*`, `$@`, `$#`, `$?`, `$$`, `$!`, `$-`, `$0`…) and backticks.
 EXPANSION = re.compile(r"(?<!\\)\$(?:[\w{(]|[*@#?$!\-0-9])|`")
+
+
+def expands(text):
+    """True when the shell would expand something in `text`: a `$…` or backtick not escaped by an
+    odd number of backslashes (`\\$M` is a literal backslash followed by an expansion)."""
+    return bool(EXPANSION.search(re.sub(r"\\\\", "", text or "")))
 COMMIT_VALUE_OPTS = {
     "-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
@@ -84,14 +90,14 @@ def herestring_word(text):
                 expandable = True; break
             word += text[index + 1 : end]; index = end + 1; continue
         if char == '"':
-            part, index = "", index + 1
+            part, raw_start, index = "", index + 1, index + 1
             while index < len(text) and text[index] != '"':
                 if text[index] == "\\" and index + 1 < len(text):
                     part += text[index + 1]; index += 2; continue
                 part += text[index]; index += 1
             if index >= len(text):  # unterminated on this line: not readable here
                 expandable = True; break
-            expandable = expandable or bool(EXPANSION.search(part))
+            expandable = expandable or expands(text[raw_start:index])  # parity on the raw text
             word += part; index += 1; continue
         if text.startswith("$'", index):  # ANSI-C quoting decodes escapes the hook does not model
             expandable = True
@@ -99,7 +105,7 @@ def herestring_word(text):
             index = len(text) if end == -1 else end + 1
             continue
         word += char
-        expandable = expandable or bool(EXPANSION.search(char + text[index + 1 : index + 2]))
+        expandable = expandable or expands(text[max(index - 2, 0) : index + 2])
         index += 1
     return word, expandable, index
 
@@ -629,7 +635,7 @@ def heredoc_commit_messages(command):
     found = heredocs(command)
     for head in dict.fromkeys(h for h, *_ in found):  # each line with heredocs, once, in order
         ops = redirections(head)
-        line_bodies = iter(h[1] if h[3] or not EXPANSION.search(h[1]) else None for h in found if h[0] == head)
+        line_bodies = iter(h[1] if h[3] or not expands(h[1]) else None for h in found if h[0] == head)
         effective = None  # the last stdin redirection on the line is the one the command reads
         for op in ops:
             if op[0] == "heredoc":
