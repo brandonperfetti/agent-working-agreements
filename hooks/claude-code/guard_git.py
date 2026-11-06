@@ -407,8 +407,10 @@ def commit_message(args, directory, read=True, written=frozenset()):
             index += 1
         if arg == "--dry-run":
             dry_run = True
-        if name in ("-m", "--message", "--trailer") and value and expands(value) and not EXACT_FORM.match(value):
-            unreadable = True  # `-m "$(cat msg.txt)"`, `-m "$MSG"`: the shell fills this in, not the text here
+        if read and name in ("-m", "--message", "--trailer") and value and (value.startswith("$") or expands(value)) and not EXACT_FORM.match(value):
+            # `-m "$(cat msg.txt)"`, `-m "$MSG"`, `-m $'…'` (ANSI-C quoting, whose escapes the lexer
+            # leaves undecoded): the shell fills these in, not the text here.
+            unreadable = True
         if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c",
                     "--reedit-message", "--fixup", "--squash"):
             supplied = True
@@ -757,8 +759,19 @@ def join_continuations(command):
 
 
 def check_command(command, directory, inherited=None):
-    """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
-    command = join_continuations(command)
+    """The first rule the command breaks, or None. `inherited` is a calling shell's environment.
+
+    Bash joins `\`-newline before reading a command, except inside single quotes and a heredoc
+    whose delimiter is quoted, where the pair stays text: `Signed\` + newline + `Co-Authored-By:`
+    is a trailer at a line start there. The joined text is read first; when the command holds a
+    continuation at all, the raw text is read too, and either reading can deny."""
+    reason = check_text(join_continuations(command), directory, inherited)
+    if reason is None and CONTINUATION.search(command):
+        reason = check_text(command, directory, inherited)
+    return reason
+
+
+def check_text(command, directory, inherited=None):
     stdin_bodies, substituted = heredoc_commit_messages(command)
     if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"

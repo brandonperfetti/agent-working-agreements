@@ -611,6 +611,19 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertTrue(guard_git.check_command(command, self.mine))
 
+    def test_quoted_continuations_stay_text(self):
+        for command in (
+            'git commit -m "$(cat <<\'EOF\'\nfix: x\n\nSigned\\\nCo-Authored-By: X <x@y>\nEOF\n)"',
+            "git commit -m 'fix: x\n\nSigned\\\nCo-Authored-By: X <x@y>'",
+        ):
+            with self.subTest(command=command):
+                self.assertIn("attribution trailer", guard_git.check_command(command, self.mine) or "")
+        self.assertIsNone(guard_git.check_command('git commit -m "fix: x \\\nmore"', self.mine))
+        self.assertIsNone(guard_git.check_command("git commit \\\n  -m 'fix: y'", self.mine))
+        for command in ("git commit -m $'fix: x\\n\\nCo-Authored-By: X <x@y>'", "git commit -m $'\\x66ix: x\\n\\nCo-Authored-By: X <x@y>'", "git commit -m $'fix: clean'"):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
+
     def test_message_file_written_earlier_in_the_command_is_uncheckable(self):
         path = os.path.join(self.mine, "msg.txt")
         with open(path, "w") as handle:
