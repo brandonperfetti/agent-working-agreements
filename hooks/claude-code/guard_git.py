@@ -184,10 +184,12 @@ def commit_message(args, directory):
     while index < len(args) and args[index] != "--":
         arg = args[index]
         name, has_value, value = arg.partition("=")
-        cluster = re.fullmatch(r"-[a-zA-Z]*?([mF])(.*)", arg) if not arg.startswith("--") else None
+        # A short-option cluster ends at its first value-taking letter: `-am msg`, `-aF file`,
+        # `-mmsg`, `-F-`; `-tform` is -t with the value "form", and takes no message.
+        cluster = re.match(r"-([a-zA-Z]*?)([mFtCcu])(.*)", arg) if not arg.startswith("--") else None
         if cluster:
-            # `-am msg`, `-aF file`, `-mmsg`, `-F-`: the last letter takes the value.
-            name, value = "-" + cluster.group(1), cluster.group(2)
+            letter, value = cluster.group(2), cluster.group(3)
+            name = "-" + letter
             has_value = bool(value)
         if not has_value and (arg in COMMIT_VALUE_OPTS or cluster) and index + 1 < len(args):
             value = args[index + 1]
