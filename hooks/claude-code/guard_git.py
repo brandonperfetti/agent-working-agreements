@@ -137,6 +137,12 @@ def redirections(line, quote=None):
                 depth += {"(": 1, ")": -1}.get(line[index], 0)
                 index += 1
             continue
+        if quote is None and line.startswith("$'", index):  # ANSI-C quoting: `\'` does not close it
+            index += 2
+            while index < len(line) and line[index] != "'":
+                index += 2 if line[index] == "\\" else 1
+            index += 1
+            continue
         if line.startswith("$(", index):  # a command substitution resets quoting inside it
             outer.append(quote); quote = None; index += 2; continue
         if char == ")" and outer and quote is None:
@@ -484,7 +490,7 @@ def check_push_authors(refspecs, directory, tags=False):
     """Read the authors of the commits this push sends that no remote has yet."""
     sources = [refspec.lstrip("+").partition(":")[0] for refspec in refspecs] or ["HEAD"]
     # `git push origin tag v1` names refs/tags/v1; the word `tag` is not a revision.
-    sources = [source for source in sources if source and source != "tag"]
+    sources = [source for source in sources if source and source != "tag" and not source.startswith("^")]  # `^ref` excludes
     if not sources and not tags:
         return None
     if any(source.startswith("-") for source in sources):
@@ -492,12 +498,14 @@ def check_push_authors(refspecs, directory, tags=False):
     # `--tags` sends every local tag too, and the commits only a tag reaches: an option for log,
     # so it goes before `--end-of-options`; the sources after it are only ever revisions.
     tag_option = ["--tags"] if tags else []
-    # One read for authors and messages, so the hook stays well inside its timeout. A failed read is
-    # None: git reports its own error, and a repo with nothing to log is not a blocked push.
+    # One read for authors and messages, so the hook stays well inside its timeout. An empty read is
+    # a repo with nothing to log, not a blocked push; a failed read checked nothing, so it denies.
     # `--not --remotes --not` excludes what any remote has; `--end-of-options` keeps a source a revision.
     text = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes", "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True)
     if text is TIMEOUT:
         return "a push whose history could not be read in time for the author and trailer checks"
+    if text is None:  # git could not resolve a source: the push would fail too, and nothing was checked
+        return "a push whose history could not be read for the author and trailer checks"
     if not text:
         return None
     records = [r for r in text.split("\x1e") if r.strip()]
@@ -842,8 +850,8 @@ def main():
                 "template route (-e, -t, GIT_EDITOR/VISUAL/EDITOR, core.editor) set in the same "
                 "command is denied too: drop it from the command."
             )
-        elif "could not be read in time" in reason:
-            advice = "RULE ZERO: the history read timed out. Retry once; if it keeps timing out, hand the push back to Brandon."
+        elif "could not be read" in reason:
+            advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
         elif "attribution trailer" in reason:
             advice = (
                 "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "

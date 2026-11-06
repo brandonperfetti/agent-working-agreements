@@ -105,6 +105,10 @@ def make_repo(root, name, branch, email=guard_git.AUTHOR_EMAIL):
     subprocess.run(["git", "init", "-q", "-b", branch, path], check=True)
     git(path, "config", "user.name", "Test")
     git(path, "config", "user.email", email)
+    git(path, "-c", "user.email=" + guard_git.AUTHOR_EMAIL, "commit", "-q", "--allow-empty", "-m", "init")  # a resolvable HEAD
+    for other in ("develop", "wave-1", "feature-master", "master-notes"):  # the branches the push shapes name
+        if other != branch:
+            git(path, "branch", other)
     return path
 
 
@@ -599,6 +603,13 @@ class AuthorTest(unittest.TestCase):
         commit_as(self.mine, self.OTHER)  # an older foreign commit under a clean tip
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
         self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature ^refs/heads/missing", self.mine) or "")
+        self.assertIn("could not be read", guard_git.check_command("git push origin nonexistent-branch", self.mine) or "")
+
+    def test_ansi_c_quotes_hide_no_heredoc(self):
+        command = "echo $'a\\' <<EOF b'\ngit push --force origin master\nEOF"
+        reason = guard_git.check_command(command, self.mine) or ""
+        self.assertTrue(reason and "cannot be checked" not in reason, reason)
 
     def test_expanding_message_values_are_uncheckable(self):
         for command in ('git commit -m "$(cat msg.txt)"', 'git commit -m "$MSG"', "git commit -m 'fix: $X'",
