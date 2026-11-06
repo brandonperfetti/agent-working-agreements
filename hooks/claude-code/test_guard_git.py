@@ -350,6 +350,10 @@ class AuthorTest(unittest.TestCase):
             ("git commit -F - <<'EOF'\nfix: x\n\nmentions co-authored-by in prose\nEOF", False),
             ("cat <<'EOF' > notes.md\n{}\nEOF".format(trailer), False),
             ("git commit -F - <<'EOF'\nfix: x\n EOF\n{}\nEOF".format(trailer), True),
+            ("git commit -F- <<'EOF'\nfix: x\n{}\nEOF".format(trailer), True),
+            ("git status && cat <<EOF # commit -F -\n{}\nEOF".format(trailer), False),
+            ('git commit -am "fix: x\n\n{}"'.format(trailer), True),
+            ("git commit -aF msg.txt", True),
             ("git commit -F - <<-EOF\n\tfix: x\n\t{}\n\tEOF".format(trailer), True),
             ('git commit -m "docs: mention co-authored-by in prose"', False),
             ("git commit --dry-run -F msg.txt", False),
@@ -374,6 +378,7 @@ class AuthorTest(unittest.TestCase):
             ("git commit --amend --no-edit", True),
             ("git commit --amend", True),
             ('git commit --amend -m "fix: clean"', False),
+            ("git commit --amend -F - <<'EOF'\nfix: clean\nEOF", False),
         ):
             with self.subTest(command=command):
                 reason = guard_git.check_command(command, self.mine)

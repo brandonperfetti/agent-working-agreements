@@ -179,16 +179,21 @@ def commit_message(args, directory):
     `-F -` is read by heredoc_commit_messages from the raw command; a piped stdin is not readable
     here, and the push check reads the committed message instead.
     """
-    parts = []
+    parts, supplied = [], False
     index = 0
     while index < len(args) and args[index] != "--":
         arg = args[index]
         name, has_value, value = arg.partition("=")
-        if re.fullmatch(r"-[mF].+", arg):
-            name, has_value, value = arg[:2], True, arg[2:]
-        if not has_value and arg in COMMIT_VALUE_OPTS and index + 1 < len(args):
+        cluster = re.fullmatch(r"-[a-zA-Z]*?([mF])(.*)", arg) if not arg.startswith("--") else None
+        if cluster:
+            # `-am msg`, `-aF file`, `-mmsg`, `-F-`: the last letter takes the value.
+            name, value = "-" + cluster.group(1), cluster.group(2)
+            has_value = bool(value)
+        if not has_value and (arg in COMMIT_VALUE_OPTS or cluster) and index + 1 < len(args):
             value = args[index + 1]
             index += 1
+        if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message"):
+            supplied = True
         if name in ("-m", "--message", "--trailer"):
             parts.append(value)
         elif name in ("-F", "--file") and value and value != "-":
@@ -201,7 +206,7 @@ def commit_message(args, directory):
         elif name in ("-C", "--reuse-message", "-c", "--reedit-message") and value:
             parts.extend(git_lines(directory, ["log", "-1", "--format=%B", value]) or [])
         index += 1
-    if "--amend" in args[: args.index("--") if "--" in args else len(args)] and not parts:
+    if "--amend" in args[: args.index("--") if "--" in args else len(args)] and not supplied:
         # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C replaces it.
         parts.extend(git_lines(directory, ["log", "-1", "--format=%B", "HEAD"]) or [])
     return "\n".join(parts)
@@ -220,6 +225,8 @@ def check_push_authors(refspecs, directory, tags=False):
     others = sorted(set(lines or []) - {AUTHOR_EMAIL})
     if others:
         return "a push of commits authored as {}".format(", ".join(others))
+    # Like the author read above, a failed read is None: git reports its own error, and a repo
+    # with nothing to log (no commits, no remote yet) is not a blocked push.
     bodies = git_lines(directory, ["log", "--format=%B"] + sources + ["--not", "--remotes", "--"])
     if bodies and TRAILER.search("\n".join(bodies)):
         return "a push of commits carrying an attribution trailer"
@@ -390,7 +397,8 @@ def heredoc_commit_messages(command):
     bodies = []
     for match in HEREDOC.finditer(command):
         head = match.group("head")
-        if re.search(r"\bgit\b.*\bcommit\b", head) and re.search(r"(-F|--file)[ =]-(\s|$)", head + " "):
+        reader = head.split("<<", 1)[0]  # the command that consumes the body, not a trailing comment
+        if re.search(r"\bgit\b.*\bcommit\b", reader) and re.search(r"(-F|--file)[ =]?-(\s|$)", reader + " "):
             body = match.group(0)[len(head) :]
             if match.group("dash"):
                 body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)  # `<<-` strips leading tabs
