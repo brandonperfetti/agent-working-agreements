@@ -619,6 +619,19 @@ class AuthorTest(unittest.TestCase):
                 self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
         self.assertIsNone(guard_git.check_command('git commit -m "fix: x" --no-edit', self.mine))
         self.assertIsNone(guard_git.check_command('git commit -t tmpl -m "fix: x"', self.mine))  # -m keeps the editor closed
+        for command in ('git commit -em "fix: x"', 'git commit -ae -m "fix: x"', 'git commit --edi -m "fix: x"', 'git commit -aem "fix: x"'):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
+        self.assertIsNone(guard_git.check_command('git commit -am "fix: x"', self.mine))
+
+    def test_shell_readers_before_separators_and_herestrings_before_commits(self):
+        for command in ("cat <<'EOF' | sh; true\ngit push -f origin feature\nEOF", "cat <<'EOF' | bash)\ngit push origin master\nEOF"):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine) or ""
+                self.assertTrue(reason and "cannot be checked" not in reason, reason)
+        trailer = "Co-Authored-By: A <a@b>"
+        command = 'cat <<<x | git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)"'.format(trailer)
+        self.assertTrue(guard_git.check_command(command, self.mine))
 
     def test_quoted_continuations_stay_text(self):
         for command in (
@@ -644,6 +657,9 @@ class AuthorTest(unittest.TestCase):
             "printf 'fix' >msg.txt; git commit -F msg.txt",
             "cp other msg.txt && git commit --file=msg.txt",
             "printf 'x' > ./msg.txt && git commit -F msg.txt",
+            "printf 'x' > 1.txt && git commit -F 1.txt",
+            "printf 'x' > msg.txt; bash -c 'git commit -F msg.txt'",
+            "printf 'x' > msg.txt; eval 'git commit -F msg.txt'",
             "printf 'x' >msg.txt && git commit -F ./msg.txt",
         ):
             with self.subTest(command=command):

@@ -220,7 +220,7 @@ def drop_heredocs(command):
     for head, body, dash, quoted, (start, end), _line in reversed(heredocs(command)):
         # A shell as a command word (`bash`, `/bin/zsh -s`, `dash`), not a script name such as
         # `check.sh`; `source` and `.` only where a command starts, so `git add .` is an argument.
-        if re.search(r"(^|[\s;&|(/\"'])(ba|z|da|k|mk|a)?sh(?=[\s<\"']|$)", head) or re.search(
+        if re.search(r"(^|[\s;&|(/\"'])(ba|z|da|k|mk|a)?sh(?=[\s<\"';&|)]|$)", head) or re.search(
             r"(^|[;&|(])\s*(source|\.)(?=\s)", head
         ):
             continue
@@ -367,7 +367,7 @@ def message_of(directory, revision):
 
 COMMIT_LONG_OPTS = (
     "--amend", "--author", "--cleanup", "--date", "--dry-run", "--file", "--fixup", "--message",
-    "--no-edit", "--no-verify", "--reedit-message", "--reset-author", "--reuse-message", "--squash",
+    "--edit", "--no-edit", "--no-verify", "--reedit-message", "--reset-author", "--reuse-message", "--squash",
     "--template", "--trailer", "--untracked-files", "--gpg-sign",
 )
 
@@ -406,6 +406,10 @@ def commit_message(args, directory, read=True, written=frozenset()):
             letter, value = cluster.group(2), cluster.group(3)
             name = "-" + letter
             has_value = bool(value)
+            if "e" in cluster.group(1) and read:
+                unreadable = True  # `-em msg`, `-aem msg`: the editor opens after the message is set
+        elif read and re.fullmatch(r"-[a-zA-Z]*e[a-zA-Z]*", arg):
+            unreadable = True  # `-ae`: a cluster of flags with the editor among them
         if not has_value and (arg in COMMIT_VALUE_OPTS or cluster) and index + 1 < len(args):
             value = args[index + 1]
             index += 1
@@ -434,7 +438,7 @@ def commit_message(args, directory, read=True, written=frozenset()):
             # Only a regular file is read: /dev/stdin, a FIFO or a device could block the hook or
             # hand it the hook's own stdin, so those count as unreadable.
             base = os.path.basename(value)  # `> ./msg.txt`, `>msg.txt` and `msg.txt` name one file
-            named = any(os.path.basename(word.lstrip("<>&|0123456789")) == base for word in written)
+            named = any(os.path.basename(re.sub(r"^\d*[<>&|]+", "", word)) == base for word in written)
             if named or not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
                 unreadable = True
             else:
@@ -733,8 +737,8 @@ def heredoc_commit_messages(command):
         if reads_commit_stdin(reader):
             bodies.append(None)  # stdin is never read here, whatever feeds it
             continue
-        if "$(" not in reader or not commit_reader(reader.rsplit("$(", 1)[0]):
-            continue
+        if "$(" not in line or not commit_reader(line.rsplit("$(", 1)[0]):
+            continue  # no substituted commit on this line
         match = SUBSTITUTION.match(line)
         entries = by_line.get(line_no, [])
         if match and len(ops) == 1 and ops[0][0] == "heredoc" and ops[0][3] and entries and not state["complex"]:
@@ -768,27 +772,27 @@ def join_continuations(command):
     return CONTINUATION.sub(lambda m: m.group(1)[:-1] if len(m.group(1)) % 2 else m.group(0), command)
 
 
-def check_command(command, directory, inherited=None):
+def check_command(command, directory, inherited=None, written=frozenset()):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment.
 
     Bash joins `\`-newline before reading a command, except inside single quotes and a heredoc
     whose delimiter is quoted, where the pair stays text: `Signed\` + newline + `Co-Authored-By:`
     is a trailer at a line start there. The joined text is read first; when the command holds a
     continuation at all, the raw text is read too, and either reading can deny."""
-    reason = check_text(join_continuations(command), directory, inherited)
+    reason = check_text(join_continuations(command), directory, inherited, written)
     if reason is None and CONTINUATION.search(command):
-        reason = check_text(command, directory, inherited)
+        reason = check_text(command, directory, inherited, written)
     return reason
 
 
-def check_text(command, directory, inherited=None):
+def check_text(command, directory, inherited=None, written=frozenset()):
     stdin_bodies, substituted = heredoc_commit_messages(command)
     if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"
     if any(b is None for b in substituted):
         return "a commit whose message cannot be checked for attribution trailers"
     exported = dict(inherited or {})
-    earlier = []  # the words of the simple commands already run: a file they name may be rewritten
+    earlier = list(written)  # the words of the simple commands already run: a file they name may be rewritten
     for raw_tokens in segments(command):
         written = frozenset(earlier)
         earlier.extend(raw_tokens)
@@ -807,11 +811,11 @@ def check_text(command, directory, inherited=None):
         elif head == "cd" and len(tokens) == 2:
             directory = os.path.join(directory, os.path.expanduser(tokens[1]))
         elif head == "eval":
-            reason = check_command(" ".join(tokens[1:]), directory, env)
+            reason = check_command(" ".join(tokens[1:]), directory, env, written)
         elif head in SHELLS:
             for index, token in enumerate(tokens[:-1]):
                 if re.fullmatch(r"-[a-z]*c", token):
-                    reason = check_command(tokens[index + 1], directory, env)
+                    reason = check_command(tokens[index + 1], directory, env, written)
                     break
         elif head == "git":
             reason = check_git(tokens, directory, env, stdin_bodies, written)
