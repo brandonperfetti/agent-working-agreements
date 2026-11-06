@@ -4,7 +4,8 @@
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
 ritual and merge boundary, and commits or pushes whose author is not Brandon's
-email (RULE ZERO). Merges between feature, wave, lane and hotfix branches pass.
+email, or whose message carries an attribution trailer (RULE ZERO). Merges between
+feature, wave, lane and hotfix branches pass.
 It parses the command rather than grepping it, so a commit message that
 mentions `git push --force` passes. It stops honest mistakes, not a determined
 bypass: git aliases, refspecs in shell variables and commands inside a quoted
@@ -20,6 +21,12 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
+# The profile's no-attribution rule, as `procedures/rule-zero-check.md` greps for it.
+TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session):|generated with", re.IGNORECASE | re.MULTILINE)
+COMMIT_VALUE_OPTS = {
+    "-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
+    "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
+}
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
@@ -159,7 +166,31 @@ def check_commit(args, directory, configs, env):
     email = email_of(author)
     if email != AUTHOR_EMAIL:
         return "a commit authored as {}".format(email or "an empty email")
+    if TRAILER.search(commit_message(args, directory)):
+        return "a commit carrying an attribution trailer"
     return None
+
+
+def commit_message(args, directory):
+    """The message text the command supplies: -m parts, -F files and --trailer lines."""
+    parts = []
+    index = 0
+    while index < len(args) and args[index] != "--":
+        arg = args[index]
+        name, has_value, value = arg.partition("=")
+        if not has_value and arg in COMMIT_VALUE_OPTS and index + 1 < len(args):
+            value = args[index + 1]
+            index += 1
+        if name in ("-m", "--message", "--trailer"):
+            parts.append(value)
+        elif name in ("-F", "--file") and value and value != "-":
+            try:
+                with open(os.path.join(directory, os.path.expanduser(value))) as handle:
+                    parts.append(handle.read())
+            except OSError:
+                pass
+        index += 1
+    return "\n".join(parts)
 
 
 def check_push_authors(refspecs, directory, tags=False):
@@ -175,6 +206,9 @@ def check_push_authors(refspecs, directory, tags=False):
     others = sorted(set(lines or []) - {AUTHOR_EMAIL})
     if others:
         return "a push of commits authored as {}".format(", ".join(others))
+    bodies = git_lines(directory, ["log", "--format=%B"] + sources + ["--not", "--remotes", "--"])
+    if bodies and TRAILER.search("\n".join(bodies)):
+        return "a push of commits carrying an attribution trailer"
     return None
 
 
@@ -373,7 +407,12 @@ def main():
     command = payload.get("tool_input", {}).get("command", "")
     reason = check_command(command, payload.get("cwd") or os.getcwd())
     if reason:
-        if reason.startswith(("a commit", "a push of commits")):
+        if "attribution trailer" in reason:
+            advice = (
+                "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
+                "Remove the trailer (git commit --amend for a commit already made) and retry."
+            )
+        elif reason.startswith(("a commit", "a push of commits")):
             advice = (
                 "RULE ZERO: every agent commit carries the author email {}. Fix the "
                 "identity (git config user.email, or git commit --amend --reset-author "

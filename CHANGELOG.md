@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-06 — The Claude Code git guard also rejects attribution trailers (#243).** RULE
+  ZERO's author-email half was already enforced by `hooks/claude-code/guard_git.py`; its
+  no-attribution half was prose plus a manual grep. The guard now denies a `git commit` whose
+  `-m`, `-F` or `--trailer` text carries a `Co-Authored-By`, `*-Session` or "generated with"
+  line, and a push whose unpushed commits do, using the same pattern as `rule-zero-check.md`.
+  Controls are the hook's tests; the prose cut waits for the other routes' controls (#243).
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/243).
+
 - **2026-11-06 — Agent comments on repositories Brandon does not own carry one agent line (#245).**
   The MEGA Seasons 1–2 review (S01E05) argued for labelling agent comments so maintainers can tell
   them apart; Brandon narrowed RULE ZERO's no-attribution rule to that one case and kept commits,

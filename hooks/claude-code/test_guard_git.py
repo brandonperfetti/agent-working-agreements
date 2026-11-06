@@ -331,6 +331,38 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn(self.OTHER, guard_git.check_command(command, self.mine) or "")
 
+    def test_commit_rejects_an_attribution_trailer(self):
+        trailer = "Co-Authored-By: Claude <noreply@anthropic.com>"
+        with open(os.path.join(self.mine, "msg.txt"), "w") as handle:
+            handle.write("fix: x\n\n" + trailer + "\n")
+        for command, blocked in (
+            ('git commit -m "fix: x"', False),
+            ('git commit -m "fix: x" -m "{}"'.format(trailer), True),
+            ('git commit -m "fix: x\n\n{}"'.format(trailer), True),
+            ('git commit --message="fix: x" --trailer "{}"'.format(trailer), True),
+            ('git commit -m "fix: x" --trailer="Claude-Session: abc"', True),
+            ('git commit -m "fix: x" -m "Generated with Claude Code"', True),
+            ("git commit -F msg.txt", True),
+            ('git commit -m "docs: mention co-authored-by in prose"', False),
+            ("git commit --dry-run -F msg.txt", False),
+        ):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine)
+                self.assertEqual(reason is not None, blocked, reason)
+                if blocked:
+                    self.assertIn("attribution trailer", reason)
+
+    def test_push_rejects_unpushed_commits_with_a_trailer(self):
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        self.assertIsNone(guard_git.check_command("git push -u origin feature", self.mine))
+        git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: y\n\nCo-Authored-By: X <x@example.com>")
+        self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git push --dry-run origin feature", self.mine))
+        git(self.mine, "push", "-q", "origin", "feature")
+        git(self.mine, "fetch", "-q", "origin")
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+
     def test_commits_a_remote_already_has_pass(self):
         commit_as(self.mine, self.OTHER)
         git(self.mine, "push", "-q", "origin", "feature")
