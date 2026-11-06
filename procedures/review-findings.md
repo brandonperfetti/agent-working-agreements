@@ -83,7 +83,9 @@ allowance holds the paid review, never the push (B2).
   The verdict rests on verification, not on the bot's severity label, and the same threshold holds
   on release PRs. **A re-review round continues only while it surfaces a new, verified finding
   that does real harm;** a round that surfaces none closes the loop, and that is what the ritual's
-  "clean" means (Brandon, 2026-10-27, #193).
+  "clean" means (Brandon, 2026-10-27, #193). Growth of the diff after the first review is
+  evidence to investigate, never a target: the threshold above decides each finding, whatever its
+  origin (Brandon, 2026-11-06, #242).
 
   **Selected studio profile only:** the bot is CodeRabbit, by CLI or on the PR, and it keeps
   reviewing release PRs (Brandon, 2026-09-29). An accepted finding's thread gets "Fixed in
