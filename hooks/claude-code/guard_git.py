@@ -337,11 +337,12 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
         return None
     editors = {"GIT_EDITOR", "VISUAL", "EDITOR"} & set(env) or {k for k in env if k.startswith("GIT_CONFIG")}
     keys = {c.partition("=")[0].lower() for c in configs}
-    settings = keys & {"core.editor", "commit.template", "sequence.editor"} or {k for k in keys if k.startswith("trailer.")}
+    settings = keys & {"core.editor", "commit.template", "sequence.editor"} or {k for k in keys if k.startswith(("trailer.", "include"))}
     if editors or settings:  # an editor, template or trailer setting for this command may add text after this check
         return "a commit whose message cannot be checked for attribution trailers"
     if any(canonical(a.partition("=")[0]) == "--trailer" for a in args[: args.index("--") if "--" in args else len(args)]):
-        configured = git_lines(directory, ["config", "--get-regexp", r"^trailer\."], dict(os.environ, **env))
+        options = [part for config in configs for part in ("-c", config)]  # the command's own settings count
+        configured = git_lines(directory, options + ["config", "--get-regexp", r"^trailer\."], dict(os.environ, **env))
         if configured is TIMEOUT or configured:  # `trailer.<key>.cmd` rewrites what --trailer adds
             return "a commit whose message cannot be checked for attribution trailers"
     author, retained, reset = identity["author"], identity["retained"], identity["reset"]
@@ -356,7 +357,9 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
     if author is None:
         options = [part for config in configs for part in ("-c", config)]
         lines = git_lines(directory, options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
-        author = lines[0] if lines and lines is not TIMEOUT else None  # fail-open: git reports it
+        if lines is TIMEOUT:
+            return "a commit whose author cannot be checked"
+        author = lines[0] if lines else None  # a failed read: git reports its own error and commits nothing
     if author is not None:
         email = email_of(author)
         if email != AUTHOR_EMAIL:

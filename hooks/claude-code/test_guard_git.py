@@ -492,7 +492,7 @@ class AuthorTest(unittest.TestCase):
             commit_as(self.mine, guard_git.AUTHOR_EMAIL)
             self.assertIn("could not be read in time", guard_git.check_command("git push origin feature", self.mine) or "")
             self.assertIn("cannot be checked", guard_git.check_command("git commit --amend --no-edit", self.mine) or "")
-            self.assertIsNone(guard_git.check_command('git commit -m "fix: clean"', self.mine))
+            self.assertIn("author cannot be checked", guard_git.check_command('git commit -m "fix: clean"', self.mine) or "")  # identity read timed out
         with mock.patch.object(guard_git, "git_lines", return_value=[]):
             self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
 
@@ -638,6 +638,9 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "config", "trailer.credit.key", "Co-Authored-By")
         self.assertIn("cannot be checked", guard_git.check_command('git commit -m "fix: x" --trailer "credit=A <a@b>"', self.mine) or "")
         self.assertIn("cannot be checked", guard_git.check_command('git --config-env=trailer.x.key=V commit -m "fix: x" --trailer "x=A <a@b>"', self.mine) or "")
+        self.assertIn("cannot be checked", guard_git.check_command('git -c include.path=/tmp/x commit -m "fix: x" --trailer "x=A <a@b>"', self.mine) or "")
+        with mock.patch.object(guard_git, "git_lines", return_value=guard_git.TIMEOUT):
+            self.assertIn("author cannot be checked", guard_git.check_command('git commit -m "fix: x"', self.mine) or "")
         self.assertIn("cannot be checked", guard_git.check_command('git --config-env trailer.x.key=V commit -m "fix: x" --trailer "x=A <a@b>"', self.mine) or "")
         self.assertIsNone(guard_git.check_command('git commit -m "fix: x"', self.mine))  # no --trailer: the setting adds nothing
 
