@@ -486,14 +486,28 @@ class AuthorTest(unittest.TestCase):
             'echo "<<EOF"; git push --force origin feature',
             "cat <<'EOF'\nexample <<END\nEOF\ngit push origin master",
             "cat <<'EOF'\nexample <<END\nEOF\ngh pr merge 1",
+            "echo 'docs:\n<<EOF'\ngit push --force origin feature",
+            "echo ok # <<EOF\ngit push origin master",
+            "echo ok # <<EOF\ngh pr merge 1",
         ):
             with self.subTest(command=command):
                 self.assertIsNotNone(guard_git.check_command(command, self.mine))
 
-    def test_last_stdin_redirection_wins(self):
+    def test_only_simple_stdin_shapes_are_read(self):
         trailer = "Co-Authored-By: A <a@b>"
-        self.assertIn("attribution trailer", guard_git.check_command("git commit -F - <<A <<B\nclean\nA\n{}\nB".format(trailer), self.mine) or "")
-        self.assertIsNone(guard_git.check_command("git commit -F - <<A <<B\n{}\nA\nclean\nB".format(trailer), self.mine))
+        # several redirections, several commands or a non-stdin descriptor on the line: uncheckable
+        for command in (
+            "git commit -F - <<A <<B\nclean\nA\n{}\nB".format(trailer),
+            "git commit -F - <<A <<B\n{}\nA\nclean\nB".format(trailer),
+            "git commit -F - <<A; cat <<B\n{}\nA\nclean\nB".format(trailer),
+            "git commit -F - <<A 2<<B\n{}\nA\nclean\nB".format(trailer),
+            "git commit -F - <<'EOF' && echo done\nclean\nEOF",
+        ):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
+        # two simple commits on two lines are read separately
+        self.assertIsNone(guard_git.check_command("git commit -F - <<'EOF'\nclean one\nEOF\ngit commit -F - <<'EOF'\nclean two\nEOF", self.mine))
+        self.assertIn("attribution trailer", guard_git.check_command("git commit -F - <<'EOF'\nclean one\nEOF\ngit commit -F - <<'EOF'\n{}\nEOF".format(trailer), self.mine) or "")
         self.assertIsNone(guard_git.check_command("git commit -F - <<''\nfix: clean\n\n", self.mine))
         self.assertIn("attribution trailer", guard_git.check_command("git commit -F - <<''\n{}\n\n".format(trailer), self.mine) or "")
 

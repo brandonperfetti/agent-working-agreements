@@ -110,12 +110,15 @@ def herestring_word(text):
     return word, expandable, index
 
 
-def redirections(line):
-    """Heredoc and here-string operators in one line, outside quotes, in order.
+def redirections(line, quote=None):
+    """Heredoc and here-string operators in one line, outside quotes and comments, in order.
 
-    Entries are ("heredoc", dash, tag, quoted, pos) or ("herestring", text, expandable, pos);
-    `pos` is the operator's offset in the line. Quoted `<<` is text, not a redirection."""
-    ops, index, quote, outer = [], 0, None, []  # `outer`: quotes suspended by `$(` substitutions
+    Returns (ops, state). Entries are ("heredoc", dash, tag, quoted, pos, fd) or
+    ("herestring", text, expandable, pos, fd); `pos` is the operator's offset, `fd` the descriptor
+    (0 unless a digit precedes the operator). `quote` is the quote still open from the previous
+    line, so quoted text spanning lines is text. `state` carries the quote left open at the end and
+    whether the line holds command separators outside quotes ("complex")."""
+    ops, index, outer, separators = [], 0, [], []  # `outer`: quotes suspended by `$(`
     while index < len(line):
         char = line[index]
         if quote == "'":
@@ -136,12 +139,17 @@ def redirections(line):
             index += 2; continue
         if char in "'\"":
             quote = char; index += 1; continue
+        if char == "#" and (index == 0 or line[index - 1] in " \t;|&("):
+            break  # a comment: nothing after it is an operator
+        if char in ";|&" and not outer:
+            separators.append(index)
+        fd = int(line[index - 1]) if index and line[index - 1].isdigit() and (index < 2 or line[index - 2] in " \t") else 0
         if line.startswith("<<<", index):
             start = index + 3
             while start < len(line) and line[start] in " \t":
                 start += 1
             text, expandable, used = herestring_word(line[start:])
-            ops.append(("herestring", text, expandable, index)); index = start + max(used, 1); continue
+            ops.append(("herestring", text, expandable, index, fd)); index = start + max(used, 1); continue
         if line.startswith("<<", index):
             dash = line[index + 2 : index + 3] == "-"
             start = index + 2 + dash
@@ -149,27 +157,34 @@ def redirections(line):
                 start += 1
             tag, quoted, used = heredoc_word(line[start:])
             if tag or quoted:  # `<<''` is a legal empty delimiter; a bare `<<` is not a heredoc
-                ops.append(("heredoc", dash, tag, quoted, index))
+                ops.append(("heredoc", dash, tag, quoted, index, fd))
             index = start + max(used, 1); continue
         index += 1
-    return ops
+    first = min((op[4] if op[0] == "heredoc" else op[3] for op in ops), default=len(line))
+    # Separators before the first operator only prefix the command (`./check.sh && git commit …`);
+    # a separator after it means another command shares the line with the redirection.
+    complex_line = any(pos > first for pos in separators)
+    return ops, {"quote": quote if not outer else outer[0] or quote, "complex": complex_line}
 
 
 def heredocs(command):
     """Each heredoc in the command as (head, body, dash, quoted, span); the body ends at the exact
     delimiter line (`<<-` also strips leading tabs, as the shell does). Unterminated: to the end.
     `span` is the (start, end) of the raw body and delimiter line, for blanking."""
-    found, pos = [], 0
+    found, pos, quote = [], 0, None
     while pos < len(command):
         line_end = command.find("\n", pos)
         if line_end == -1:
             return found
+        line_no = command.count("\n", 0, pos)  # the head's real line index
         head = command[pos:line_end]
         cursor = line_end + 1
-        for op in redirections(head):
+        ops, state = redirections(head, quote)
+        quote = state["quote"]  # a quote left open makes the next line text, not operators
+        for op in ops:
             if op[0] != "heredoc":
                 continue
-            _, dash, tag, quoted, _offset = op
+            _, dash, tag, quoted, _offset, _fd = op
             lines, body, end = [], None, len(command)
             for line in command[cursor:].split("\n"):
                 check = line.lstrip("\t") if dash else line
@@ -182,7 +197,7 @@ def heredocs(command):
                 body = "\n".join(lines)
             if dash:
                 body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)
-            found.append((head, body, dash, quoted, (cursor, end)))
+            found.append((head, body, dash, quoted, (cursor, end), line_no))
             cursor = end + 1 if end < len(command) else end  # body text is data, never another heredoc
         pos = cursor
     return found
@@ -190,7 +205,7 @@ def heredocs(command):
 
 def drop_heredocs(command):
     """Blank each heredoc body, unless a shell is reading it as commands."""
-    for head, body, dash, quoted, (start, end) in reversed(heredocs(command)):
+    for head, body, dash, quoted, (start, end), _line in reversed(heredocs(command)):
         # A shell as a command word (`bash`, `/bin/zsh -s`), not a script name such as `check.sh`.
         if re.search(r"(^|[\s;&|(/\"'])(ba|z)?sh(?=[\s<\"']|$)", head):
             continue
@@ -633,27 +648,42 @@ def heredoc_commit_messages(command):
     """
     bodies, substituted = [], []
     found = heredocs(command)
-    for head in dict.fromkeys(h for h, *_ in found):  # each line with heredocs, once, in order
-        ops = redirections(head)
-        line_bodies = iter(h[1] if h[3] or not expands(h[1]) else None for h in found if h[0] == head)
-        effective = None  # the last stdin redirection on the line is the one the command reads
-        for op in ops:
+    by_line, body_lines = {}, set()
+    for entry in found:
+        by_line.setdefault(entry[5], []).append(entry)
+        start, end = entry[4]
+        first = command.count("\n", 0, start)
+        body_lines.update(range(first, first + command.count("\n", start, end) + 1))
+    quote, line_no = None, -1
+    for line in command.split("\n"):
+        line_no += 1
+        if line_no in body_lines:
+            continue  # heredoc body and delimiter lines are data
+        ops, state = redirections(line, quote)
+        quote = state["quote"]
+        entries = by_line.get(line_no, [])
+        if not ops:
+            continue
+        first = ops[0]
+        reader = line[: first[4] if first[0] == "heredoc" else first[3]]  # the command before the first operator
+        stdin_ops = [op for op in ops if op[-1] == 0]
+        # The guard reads only the simple shapes agents use: one command on the line, one stdin
+        # redirection (a quoted-delimiter heredoc or a here-string). Anything else that feeds a
+        # commit's stdin — several commands or redirections on the line, a descriptor other than 0
+        # on a stdin-looking operator, an expanding body — is not readable here, so it is denied.
+        simple = not state["complex"] and len(stdin_ops) == 1 and len(ops) == 1
+        effective = None
+        if simple:
+            op = stdin_ops[0]
             if op[0] == "heredoc":
-                effective = next(line_bodies, None)
+                body = entries[0][1] if entries else None
+                effective = body if (op[3] or not expands(body or "")) else None
             else:
                 effective = None if op[2] else op[1]
-        reader = head[: ops[0][-1]]  # the command before the first redirection operator
         if reads_commit_stdin(reader):
             bodies.append(effective)
         elif "$(" in reader and commit_reader(reader.rsplit("$(", 1)[0]):
             substituted.append(effective)  # `git commit -m "$(cat <<'EOF' …)"`: the body is the message
-    for line in command.split("\n"):
-        ops = redirections(line)
-        if ops and all(op[0] == "herestring" for op in ops):
-            reader = line[: ops[0][-1]]
-            if reads_commit_stdin(reader):
-                last = ops[-1]
-                bodies.append(None if last[2] else last[1])  # an expanding word is not readable here
     return bodies, substituted
 
 
