@@ -862,7 +862,34 @@ def check_command(command, directory, inherited=None, written=()):
     return reason
 
 
+def substitutions(text):
+    """The commands inside each `$(…)` and backtick pair in `text`, outermost first."""
+    found, index = [], 0
+    while index < len(text):
+        if text.startswith("$(", index) and not text.startswith("$((", index):
+            depth, start = 1, index + 2
+            index = start
+            while index < len(text) and depth:
+                depth += {"(": 1, ")": -1}.get(text[index], 0)
+                index += 1
+            found.append(text[start : index - 1 if depth == 0 else index])
+            continue
+        if text[index] == "`":
+            end = text.find("`", index + 1)
+            found.append(text[index + 1 : end if end != -1 else len(text)])
+            index = end + 1 if end != -1 else len(text)
+            continue
+        index += 1
+    return found
+
+
 def check_text(command, directory, inherited=None, written=()):
+    for _head, body, _dash, quoted, _span, _line in heredocs(command):
+        if not quoted:  # the shell runs `$(…)` inside an unquoted body; the body is otherwise data
+            for inner in substitutions(body):
+                reason = check_command(inner, directory, inherited, written)
+                if reason:
+                    return reason
     stdin_bodies, substituted = heredoc_commit_messages(command)
     if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"

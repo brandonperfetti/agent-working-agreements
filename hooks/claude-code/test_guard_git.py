@@ -656,6 +656,15 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.mine))
 
+    def test_substitutions_in_unquoted_heredoc_bodies_run(self):
+        for command in ("cat > /dev/null <<EOF\n$(git push --force origin master)\nEOF", "cat <<EOF\n`git push origin master`\nEOF", "cat <<EOF\n$(cd . && gh pr merge 1)\nEOF"):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine) or ""
+                self.assertTrue(reason and "cannot be checked" not in reason, reason)
+        for command in ("cat <<'EOF'\n$(git push --force origin master)\nEOF", "cat <<EOF\n$(git status)\nEOF", "cat <<EOF\nprice $(( 1<<3 ))\nEOF"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.mine))
+
     def test_ansi_c_quotes_hide_no_heredoc(self):
         for command in ("echo $'a\\' <<EOF b'\ngit push --force origin master\nEOF", "echo $'a\n<<EOF b'\ngit push -f origin feature\nEOF", "echo $'a\\'\n<<EOF b'\ngit push origin master\nEOF"):
             with self.subTest(command=command):
