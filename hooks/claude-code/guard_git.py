@@ -23,6 +23,7 @@ PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 # The profile's no-attribution rule, as `procedures/rule-zero-check.md` greps for it.
 TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
+EXPANSION = re.compile(r"(?<!\\)\$[\w{(]|`")
 HERESTRING = re.compile(r"<<<[ \t]*(?:'(?P<sq>[^']*)'|\"(?P<dq>[^\"]*)\"|(?P<bare>\S+))")
 STDIN_MESSAGE = re.compile(r"(^|\s)(-[a-zA-Z]*F|--file)(=| )?-(\s|$)")
 COMMIT_VALUE_OPTS = {
@@ -151,7 +152,8 @@ def email_of(ident):
 
 def check_commit(args, directory, configs, env, stdin_bodies=None):
     """Resolve the author the commit will carry, as git would, then read its message."""
-    if "--dry-run" in args:  # `-n` is --no-verify on commit, not a dry run
+    message, stdin_used, dry_run = commit_message(args, directory)
+    if dry_run:  # option-aware: `-m --dry-run` is a message, not a dry run; `-n` is --no-verify
         return None
     author = None
     for index, arg in enumerate(args):
@@ -164,20 +166,19 @@ def check_commit(args, directory, configs, env, stdin_bodies=None):
     if author is None:
         options = [part for config in configs for part in ("-c", config)]
         lines = git_lines(directory, options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
-        if not lines:
-            return None
-        author = lines[0]
-    email = email_of(author)
-    if email != AUTHOR_EMAIL:
-        return "a commit authored as {}".format(email or "an empty email")
-    message, stdin_used = commit_message(args, directory)
+        author = lines[0] if lines else None  # a failed identity read stays fail-open (git reports it)
+    if author is not None:
+        email = email_of(author)
+        if email != AUTHOR_EMAIL:
+            return "a commit authored as {}".format(email or "an empty email")
     if TRAILER.search(message):
         return "a commit carrying an attribution trailer"
     if stdin_used:
-        # Each stdin-reading commit consumes the heredoc body written for it; none left means a pipe.
-        if not stdin_bodies:
+        # Each stdin-reading commit consumes the body written for it: none left means a pipe, and a
+        # body of None means the shell would expand it (an unquoted `$VAR`), which cannot be read here.
+        body = stdin_bodies.pop(0) if stdin_bodies else None
+        if body is None:
             return "a commit whose stdin message cannot be checked for attribution trailers"
-        stdin_bodies.pop(0)
     return None
 
 
@@ -194,7 +195,7 @@ def commit_message(args, directory):
     `-F -` is read by heredoc_commit_messages from the raw command; a piped stdin is not readable
     here, and the push check reads the committed message instead.
     """
-    parts, supplied, stdin_used = [], False, False
+    parts, supplied, stdin_used, dry_run = [], False, False, False
     index = 0
     while index < len(args) and args[index] != "--":
         arg = args[index]
@@ -209,6 +210,8 @@ def commit_message(args, directory):
         if not has_value and (arg in COMMIT_VALUE_OPTS or cluster) and index + 1 < len(args):
             value = args[index + 1]
             index += 1
+        if arg == "--dry-run":
+            dry_run = True
         if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c",
                     "--reedit-message", "--fixup", "--squash"):
             supplied = True
@@ -238,7 +241,7 @@ def commit_message(args, directory):
     if "--amend" in args[: args.index("--") if "--" in args else len(args)] and not supplied:
         # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C/--fixup replaces it.
         parts.extend(message_of(directory, "HEAD"))
-    return "\n".join(parts), stdin_used
+    return "\n".join(parts), stdin_used, dry_run
 
 
 def check_push_authors(refspecs, directory, tags=False):
@@ -250,14 +253,17 @@ def check_push_authors(refspecs, directory, tags=False):
     sources += ["--tags"] if tags else []
     if not sources:
         return None
-    lines = git_lines(directory, ["log", "--format=%ae"] + sources + ["--not", "--remotes", "--"])
-    others = sorted(set(lines or []) - {AUTHOR_EMAIL})
+    # One read for authors and messages, so the hook stays well inside its timeout. A failed read is
+    # None: git reports its own error, and a repo with nothing to log is not a blocked push.
+    lines = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B"] + sources + ["--not", "--remotes", "--"])
+    if not lines:
+        return None
+    records = [r for r in "\n".join(lines).split("\x1e") if r.strip()]
+    authors = {r.split("\x1f", 1)[0].strip() for r in records}
+    others = sorted(authors - {AUTHOR_EMAIL})
     if others:
         return "a push of commits authored as {}".format(", ".join(others))
-    # Like the author read above, a failed read is None: git reports its own error, and a repo
-    # with nothing to log (no commits, no remote yet) is not a blocked push.
-    bodies = git_lines(directory, ["log", "--format=%B"] + sources + ["--not", "--remotes", "--"])
-    if bodies and TRAILER.search("\n".join(bodies)):
+    if TRAILER.search("\n".join(r.split("\x1f", 1)[1] if "\x1f" in r else "" for r in records)):
         return "a push of commits carrying an attribution trailer"
     return None
 
@@ -433,7 +439,7 @@ def commit_reader(reader):
     tokens = strip_prefix(strip_redirects(simple))
     if not tokens or os.path.basename(tokens[0]) != "git" or "commit" not in tokens:
         return None
-    if "--dry-run" in tokens:
+    if commit_message(tokens[tokens.index("commit") + 1 :], os.getcwd())[2]:  # a real --dry-run option
         return None
     return tokens
 
@@ -460,6 +466,9 @@ def heredoc_commit_messages(command):
         body = match.group(0)[len(head) :]
         if match.group("dash"):
             body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)  # `<<-` strips leading tabs
+        quoted_tag = bool(re.search(r"<<-?[ \t]*['\"]", head))
+        if not quoted_tag and EXPANSION.search(body):
+            body = None  # the shell would expand `$VAR`/`$(…)` into the message: not readable here
         if reads_commit_stdin(reader):
             bodies.append(body)
         elif "$(" in reader and commit_reader(reader.rsplit("$(", 1)[0]):
@@ -467,14 +476,19 @@ def heredoc_commit_messages(command):
     for match in HERESTRING.finditer(command):
         reader = command[: match.start()].split("\n")[-1]
         if reads_commit_stdin(reader):
-            bodies.append(match.group("sq") or match.group("dq") or match.group("bare") or "")
+            text = match.group("sq")
+            if text is None:
+                text = match.group("dq") if match.group("dq") is not None else match.group("bare")
+                if EXPANSION.search(text or ""):
+                    text = None  # a double-quoted or bare here-string expands before git reads it
+            bodies.append(text if text is not None else None)
     return bodies, substituted
 
 
 def check_command(command, directory, inherited=None):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
     stdin_bodies, substituted = heredoc_commit_messages(command)
-    if TRAILER.search("\n".join(stdin_bodies + substituted)):
+    if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"
     exported = dict(inherited or {})
     for tokens in segments(command):

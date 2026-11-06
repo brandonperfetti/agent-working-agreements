@@ -382,6 +382,12 @@ class AuthorTest(unittest.TestCase):
             ("echo git commit -m \"$(cat <<'EOF'\n{}\nEOF\n)\"".format(trailer), False),
             ("git commit -F - <<'END.MSG'\nfix: clean\nEND.MSG", False),
             ("git commit -F - <<'END.MSG'\nfix: x\n{}\nEND.MSG".format(trailer), True),
+            ('git commit -m --dry-run -m "{}"'.format(trailer), True),
+            ('git commit -m "{}" --dry-run'.format(trailer), False),
+            ("M='x'; git commit -F - <<EOF\nfix: $M\nEOF", True),
+            ("git commit -F - <<EOF\nfix: plain unquoted tag, no expansion\nEOF", False),
+            ('M="x"; git commit -F - <<<"fix: $M"', True),
+            ("git commit -F - <<<\"fix: literal\"", False),
             ("git commit --author 'Brandon | Perfetti <brandon@brandonperfetti.com>' -F - <<'EOF'\nfix: clean\nEOF", False),
             ("git commit --author 'Brandon | Perfetti <brandon@brandonperfetti.com>' -F - <<'EOF'\nfix: x\n{}\nEOF".format(trailer), True),
             ('git commit -au -m "{}"'.format(trailer), True),
@@ -430,8 +436,41 @@ class AuthorTest(unittest.TestCase):
         self.assertIsNone(guard_git.check_command("git commit --amend --allow-empty --fixup=amend:HEAD~1 --no-edit", self.mine))
 
     def test_uncheckable_stdin_message_is_denied_with_its_own_reason(self):
-        reason = guard_git.check_command("cat msg.txt | git commit -F -", self.mine)
-        self.assertIn("cannot be checked", reason or "")
+        for command in (
+            "cat msg.txt | git commit -F -",
+            "M='x'; git commit -F - <<EOF\nfix: $M\nEOF",
+            'M="x"; git commit -F - <<<"fix: $M"',
+            "git commit -F - <<'EOF'\nfix: clean\nEOF\ncat msg.txt | git commit -F -",
+        ):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine) or ""
+                self.assertIn("cannot be checked", reason)
+                self.assertNotIn("carrying an attribution trailer", reason)
+        reason = guard_git.check_command('git commit -m "fix: x" -m "Co-Authored-By: A <a@b>"', self.mine) or ""
+        self.assertIn("carrying an attribution trailer", reason)
+        self.assertNotIn("cannot be checked", reason)
+
+    def test_main_advice_matches_the_reason(self):
+        import io, json as json_
+        cases = (
+            ('git commit -m x -m "Co-Authored-By: A <a@b>"', "no Co-Authored-By, session or generated-with line"),
+            ("cat msg.txt | git commit -F -", "must be readable here"),
+            ("git -c user.email={} commit -m x".format(self.OTHER), "every agent commit carries the author email"),
+        )
+        for command, advice in cases:
+            with self.subTest(command=command):
+                payload = json_.dumps({"tool_input": {"command": command}, "cwd": self.mine})
+                with mock.patch.object(sys, "stdin", io.StringIO(payload)), mock.patch("sys.stdout", new_callable=io.StringIO) as out:
+                    guard_git.main()
+                decision = json_.loads(out.getvalue())["hookSpecificOutput"]
+                self.assertEqual(decision["permissionDecision"], "deny")
+                self.assertIn(advice, decision["permissionDecisionReason"])
+
+    def test_commit_message_is_checked_when_the_identity_read_fails(self):
+        with mock.patch.object(guard_git, "git_lines", return_value=None):
+            reason = guard_git.check_command('git commit -m "fix: x" -m "Co-Authored-By: A <a@b>"', self.mine)
+            self.assertIn("attribution trailer", reason or "")
+            self.assertIsNone(guard_git.check_command('git commit -m "fix: clean"', self.mine))
 
     def test_push_rejects_unpushed_commits_with_a_trailer(self):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
