@@ -18,7 +18,7 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 | --- | --- |
 | `owner` | Brandon Perfetti; only he merges base branches, by hand in the host's UI |
 | `author identity` | `brandon@brandonperfetti.com`, exactly — RULE ZERO below |
-| `attribution` | none: no attribution line anywhere — RULE ZERO below |
+| `attribution` | none, except the agent line on comments to other owners' repositories — RULE ZERO below |
 | `integration branch` | `develop` |
 | `release branch` | `master` |
 | `artifact store` | the agent root's `_agent/` — A6 below |
