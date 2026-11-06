@@ -622,6 +622,11 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
 
+    def test_configured_trailers_are_uncheckable(self):
+        git(self.mine, "config", "trailer.credit.key", "Co-Authored-By")
+        self.assertIn("cannot be checked", guard_git.check_command('git commit -m "fix: x" --trailer "credit=A <a@b>"', self.mine) or "")
+        self.assertIsNone(guard_git.check_command('git commit -m "fix: x"', self.mine))  # no --trailer: the setting adds nothing
+
     def test_r8_routes_are_closed(self):
         trailer = "Co-Authored-By: A <a@b>"
         two = 'git commit -m "$(cat <<\'A\'\nfix: x\nA\n)" -m "$(cat <<\'B\'\n{}\nB\n)"'.format(trailer)
@@ -697,8 +702,10 @@ class AuthorTest(unittest.TestCase):
         with open(path, "w") as handle:
             handle.write("fix: clean\n")
         self.assertIsNone(guard_git.check_command("git commit -F msg.txt", self.mine))
-        for command in (  # any earlier mention counts: telling a write from a read is open-ended
+        for command in (  # anything run before the commit could rewrite the file: only a first-command -F is read
             "cat msg.txt && git commit -F msg.txt",
+            "./prepare.sh && git commit -F msg.txt",
+            "cd . && git commit -F msg.txt",
             "printf 'fix\\n\\nCo-Authored-By: X <x@y>' > msg.txt && git commit -F msg.txt",
             "printf 'fix' >msg.txt; git commit -F msg.txt",
             "cp other msg.txt && git commit --file=msg.txt",

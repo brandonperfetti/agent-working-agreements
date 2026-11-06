@@ -340,6 +340,10 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
     settings = keys & {"core.editor", "commit.template", "sequence.editor"} or {k for k in keys if k.startswith("trailer.")}
     if editors or settings:  # an editor, template or trailer setting for this command may add text after this check
         return "a commit whose message cannot be checked for attribution trailers"
+    if any(canonical(a.partition("=")[0]) == "--trailer" for a in args[: args.index("--") if "--" in args else len(args)]):
+        configured = git_lines(directory, ["config", "--get-regexp", r"^trailer\."], dict(os.environ, **env))
+        if configured is TIMEOUT or configured:  # `trailer.<key>.cmd` rewrites what --trailer adds
+            return "a commit whose message cannot be checked for attribution trailers"
     author = None
     for index, arg in enumerate(args):
         if arg == "--":
@@ -454,12 +458,11 @@ def commit_message(args, directory, read=True, written=()):
             path = os.path.join(directory, os.path.expanduser(value))
             # Only a regular file is read: /dev/stdin, a FIFO or a device could block the hook or
             # hand it the hook's own stdin, so those count as unreadable.
-            base = os.path.basename(value)  # `> ./msg.txt`, `>msg.txt` and `msg.txt` name one file
-            # `>msg.txt`, `2>msg.txt` and `'text'>msg.txt` all carry the name after an operator.
-            named = any(os.path.basename(part) == base for word in written for part in re.split(r"[<>&|]+", word) if part)
-            # A word the shell fills in (`> $F`, `cp evil $F`, `cp evil m*.txt`) may name this file too.
-            named = named or any(expands(w) or re.search(r"[*?\[]", w) for w in written)
-            if named or not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
+            # Anything that runs before the commit (`./prepare.sh &&`, a redirect, a nested shell's
+            # earlier words) could rewrite the file between this read and git's, so the file is read
+            # only when the commit is the line's first command.
+            preceded = bool(written)
+            if preceded or not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
                 unreadable = True
             else:
                 try:
@@ -894,7 +897,7 @@ def main():
         if "cannot be checked" in reason:
             advice = (
                 "RULE ZERO: the message must be readable here. Pass literal text with -m or "
-                "-F <file>, or -m \"$(cat <<'EOF' … EOF\n)\" exactly; no pipe, -F -, $var or other "
+                "-F <file> (as the line's first command), or -m \"$(cat <<'EOF' … EOF\n)\" exactly; no pipe, -F -, $var or other "
                 "substitution, so the guard can check it for attribution lines. An editor or "
                 "template route (-e, -c, a bare commit or --amend without -m or --no-edit, "
                 "GIT_EDITOR/VISUAL/EDITOR, core.editor, a trailer.* setting) is denied too. A literal $ or backtick in the "
