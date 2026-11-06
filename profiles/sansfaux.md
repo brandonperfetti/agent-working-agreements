@@ -37,14 +37,13 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   Its `MASTER-PRIORITY-DOCUMENT.md` is the spine, born from an attended Genesis, §0 recording the
   mode; leads advance approved work across waves. Bounded work outside one needs none of it (A1).
 - **RULE ZERO: a commit carries Brandon's author identity.** Every commit an agent makes on his
-  behalf has the author email `brandon@brandonperfetti.com`, exactly; an outside contribution
-  carries its author's own identity, and a PR whose commits carry Brandon's identity from another
-  account is not merged until re-authored (Brandon, 2026-10-13). **No attribution:** no
-  `Co-Authored-By` or session trailer, footer or crediting line on a commit, PR body, issue or
-  thread reply (Brandon's override, #226); receipts and inline references carry the evidence.
-  Exception: a comment posted on a repository Brandon does not own carries the line "Posted by an
-  agent on Brandon Perfetti's behalf." (Brandon, 2026-11-06, #245). RULE ZERO is line one of every
-  dispatch prompt. Check before every push, merge and presentation.
+  behalf has the author email `brandon@brandonperfetti.com`, exactly; an outside contribution keeps
+  its author's identity, and a PR carrying Brandon's identity from another account is not merged
+  until re-authored (Brandon, 2026-10-13). **No attribution:** no `Co-Authored-By` or session
+  trailer, footer or crediting line on a commit, PR body, issue or thread reply (Brandon's override,
+  #226); receipts carry the evidence. Exception: an agent comment on another owner's repository
+  carries the line "Posted by an agent on Brandon Perfetti's behalf." (Brandon, 2026-11-06, #245).
+  RULE ZERO is line one of every dispatch prompt. Check before every push, merge and presentation.
 - **Review.** Verdicts go under `reviews/`, naming the head SHA; the procedure carries scoping,
   staleness and the bot's three outcomes. Close-out review is where the big finds happen
   [learnings: 2026-08-30 §9]. Paid reviews use an approved funded allowance only (B2).
