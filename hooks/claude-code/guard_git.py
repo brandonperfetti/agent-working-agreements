@@ -332,7 +332,7 @@ def email_of(ident):
 
 def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
     """Resolve the author the commit will carry, as git would, then read its message."""
-    message, stdin_used, dry_run = commit_message(args, directory, written=written)
+    message, stdin_used, dry_run, identity = commit_message(args, directory, written=written)
     if dry_run:  # option-aware: `-m --dry-run` is a message, not a dry run; `-n` is --no-verify
         return None
     editors = {"GIT_EDITOR", "VISUAL", "EDITOR"} & set(env) or {k for k in env if k.startswith("GIT_CONFIG")}
@@ -344,20 +344,7 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
         configured = git_lines(directory, ["config", "--get-regexp", r"^trailer\."], dict(os.environ, **env))
         if configured is TIMEOUT or configured:  # `trailer.<key>.cmd` rewrites what --trailer adds
             return "a commit whose message cannot be checked for attribution trailers"
-    author, retained, reset = None, None, False
-    for index, arg in enumerate(args):
-        if arg == "--":
-            break
-        name, has_value, value = arg.partition("=")
-        name = canonical(name) if arg.startswith("--") else name
-        if name == "--author":
-            author = value if has_value else (args[index + 1] if index + 1 < len(args) else None)
-        elif name == "--reset-author":
-            reset = True
-        elif name in ("-C", "--reuse-message", "-c", "--reedit-message"):
-            retained = value if has_value else (args[index + 1] if index + 1 < len(args) else None)
-        elif name == "--amend" and retained is None:
-            retained = "HEAD"
+    author, retained, reset = identity["author"], identity["retained"], identity["reset"]
     if author is None and retained and not reset:
         # `-C`, `-c` and `--amend` keep the source commit's author unless --reset-author or --author.
         if retained.startswith("-"):
@@ -418,7 +405,8 @@ def commit_message(args, directory, read=True, written=()):
     here, and the push check reads the committed message instead.
     """
     parts, supplied, stdin_used, dry_run = [], False, False, False
-    given, edits, no_edit, generated, unreadable = False, False, False, False, False  # a message source the hook cannot read: a special file, a timed-out revision
+    given, edits, no_edit, generated, unreadable = False, False, False, False, False
+    identity = {"author": None, "retained": None, "reset": False}  # what decides the commit's author  # a message source the hook cannot read: a special file, a timed-out revision
     index = 0
     while index < len(args) and args[index] != "--":
         arg = args[index]
@@ -455,6 +443,12 @@ def commit_message(args, directory, read=True, written=()):
             given = True  # a message git takes as final: no editor unless asked for
         if name in ("-c", "--reedit-message", "--squash"):
             edits = True  # these open the editor on the reused text
+        if name in ("-C", "--reuse-message", "-c", "--reedit-message") and value:
+            identity["retained"] = value  # the reused commit's author is kept unless reset or overridden
+        if name == "--author":
+            identity["author"] = value
+        if name == "--reset-author":
+            identity["reset"] = True
         if name == "--no-edit":
             no_edit = True
         if name in ("-m", "--message"):
@@ -511,6 +505,8 @@ def commit_message(args, directory, read=True, written=()):
     if read and ((edits and not no_edit) or (not given and not generated and not no_edit)):
         unreadable = True
     amended = any(canonical(a.partition("=")[0]) == "--amend" for a in args[: args.index("--") if "--" in args else len(args)])
+    if amended and identity["retained"] is None:
+        identity["retained"] = "HEAD"
     if read and amended and not supplied:
         # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C/--fixup replaces it.
         kept = message_of(directory, "HEAD")
@@ -518,7 +514,7 @@ def commit_message(args, directory, read=True, written=()):
             unreadable = True
         else:
             parts.extend(kept)
-    return "\n".join(parts), stdin_used or unreadable, dry_run
+    return "\n".join(parts), stdin_used or unreadable, dry_run, identity
 
 
 def check_push_authors(refspecs, directory, tags=False):
@@ -912,7 +908,12 @@ def main():
     command = payload.get("tool_input", {}).get("command", "")
     reason = check_command(command, payload.get("cwd") or os.getcwd())
     if reason:
-        if "cannot be checked" in reason:
+        if reason == "a commit whose author cannot be checked":
+            advice = (
+                "RULE ZERO: the reused commit's author could not be read. Check the revision and "
+                "retry once, or pass --reset-author / --author explicitly."
+            )
+        elif "cannot be checked" in reason:
             advice = (
                 "RULE ZERO: the message must be readable here. Pass literal text with -m or "
                 "-F <file> (as the line's first command), or -m \"$(cat <<'EOF' … EOF\n)\" exactly; no pipe, -F -, $var or other "

@@ -625,7 +625,8 @@ class AuthorTest(unittest.TestCase):
 
     def test_retained_and_abbreviated_authors_are_checked(self):
         commit_as(self.mine, self.OTHER)  # HEAD now carries a foreign author
-        for command in ("git commit --amend --no-edit", 'git commit -C HEAD', 'git commit --reuse-message=HEAD', 'git commit -m "fix: x" --auth="Some One <{}>"'.format(self.OTHER)):
+        for command in ("git commit --amend --no-edit", 'git commit -C HEAD', 'git commit --reuse-message=HEAD', 'git commit -m "fix: x" --auth="Some One <{}>"'.format(self.OTHER),
+                        "git commit -CHEAD", "git commit -aC HEAD", 'git commit --amend -m --reset-author'):
             with self.subTest(command=command):
                 self.assertIn(self.OTHER, guard_git.check_command(command, self.mine) or "")
         for command in ("git commit --amend --no-edit --reset-author", 'git commit -C HEAD --author="Brandon Perfetti <{}>"'.format(guard_git.AUTHOR_EMAIL)):
@@ -771,6 +772,7 @@ class AuthorTest(unittest.TestCase):
             ('git commit -m x -m "Co-Authored-By: A <a@b>"', "no Co-Authored-By, session or generated-with line"),
             ("cat msg.txt | git commit -F -", "must be readable here"),
             ('GIT_EDITOR=./e.sh git commit -m "fix: x"', "editor or template route"),
+            ("git commit -C nonexistent-rev --no-edit", "author could not be read"),
             ("git -c user.email={} commit -m x".format(self.OTHER), "every agent commit carries the author email"),
         )
         for command, advice in cases:
