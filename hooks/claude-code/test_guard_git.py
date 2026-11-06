@@ -343,6 +343,12 @@ class AuthorTest(unittest.TestCase):
             ('git commit -m "fix: x" --trailer="Claude-Session: abc"', True),
             ('git commit -m "fix: x" -m "Generated with Claude Code"', True),
             ("git commit -F msg.txt", True),
+            ("git commit -Fmsg.txt", True),
+            ('git commit -m"fix: x" -m"{}"'.format(trailer), True),
+            ("git commit -F - <<'EOF'\nfix: x\n\n{}\nEOF".format(trailer), True),
+            ("git commit --file=- <<EOF\nfix: x\n{}\nEOF".format(trailer), True),
+            ("git commit -F - <<'EOF'\nfix: x\n\nmentions co-authored-by in prose\nEOF", False),
+            ("cat <<'EOF' > notes.md\n{}\nEOF".format(trailer), False),
             ('git commit -m "docs: mention co-authored-by in prose"', False),
             ("git commit --dry-run -F msg.txt", False),
         ):

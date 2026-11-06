@@ -172,12 +172,18 @@ def check_commit(args, directory, configs, env):
 
 
 def commit_message(args, directory):
-    """The message text the command supplies: -m parts, -F files and --trailer lines."""
+    """The message text the command supplies: -m parts, -F files and --trailer lines.
+
+    `-F -` is read by heredoc_commit_messages from the raw command; a piped stdin is not readable
+    here, and the push check reads the committed message instead.
+    """
     parts = []
     index = 0
     while index < len(args) and args[index] != "--":
         arg = args[index]
         name, has_value, value = arg.partition("=")
+        if re.fullmatch(r"-[mF].+", arg):
+            name, has_value, value = arg[:2], True, arg[2:]
         if not has_value and arg in COMMIT_VALUE_OPTS and index + 1 < len(args):
             value = args[index + 1]
             index += 1
@@ -368,8 +374,23 @@ def check_gh(tokens, directory, env):
     return None
 
 
+def heredoc_commit_messages(command):
+    """Bodies of heredocs that feed `git commit -F -` (or `--file -`/`--file=-`) on stdin.
+
+    A pipe into `-F -` cannot be read here; the push check reads the committed message later.
+    """
+    bodies = []
+    for match in HEREDOC.finditer(command):
+        head = match.group("head")
+        if re.search(r"\bgit\b.*\bcommit\b", head) and re.search(r"(-F|--file)[ =]-(\s|$)", head + " "):
+            bodies.append(match.group(0)[len(head) :])
+    return "\n".join(bodies)
+
+
 def check_command(command, directory, inherited=None):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
+    if TRAILER.search(heredoc_commit_messages(command)):
+        return "a commit carrying an attribution trailer"
     exported = dict(inherited or {})
     for tokens in segments(command):
         tokens = strip_redirects(tokens)
