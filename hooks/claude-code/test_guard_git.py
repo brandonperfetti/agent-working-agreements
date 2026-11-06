@@ -624,6 +624,8 @@ class AuthorTest(unittest.TestCase):
 
     def test_r8_routes_are_closed(self):
         trailer = "Co-Authored-By: A <a@b>"
+        two = 'git commit -m "$(cat <<\'A\'\nfix: x\nA\n)" -m "$(cat <<\'B\'\n{}\nB\n)"'.format(trailer)
+        self.assertIn("cannot be checked", guard_git.check_command(two, self.mine) or "")
         self.assertIn("attribution trailer", guard_git.check_command('git commit --dry-run -m clean && git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)"'.format(trailer), self.mine) or "")
         for command in ('git -c trailer.credit.key=Co-Authored-By commit -m clean --trailer "credit=A <a@b>"',
                         'GIT_CONFIG_COUNT=1 git commit -m clean --trailer "credit=A <a@b>"',

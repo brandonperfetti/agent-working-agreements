@@ -397,7 +397,7 @@ def commit_message(args, directory, read=True, written=()):
     `-F -` is read by heredoc_commit_messages from the raw command; a piped stdin is not readable
     here, and the push check reads the committed message instead.
     """
-    parts, supplied, stdin_used, dry_run, template = [], False, False, False, False
+    parts, supplied, stdin_used, dry_run = [], False, False, False
     given, edits, no_edit, generated, unreadable = False, False, False, False, False  # a message source the hook cannot read: a special file, a timed-out revision
     index = 0
     while index < len(args) and args[index] != "--":
@@ -441,8 +441,6 @@ def commit_message(args, directory, read=True, written=()):
             parts.append(value)
         elif name in ("-e", "--edit") and read:
             unreadable = True  # an editor adds text after this check; the push scan is the backstop
-        elif name in ("-t", "--template"):
-            template = True  # read only when the editor opens, which an explicit message prevents
         elif name == "--trailer":
             # Git accepts `Key=Value` as well as `Key: Value`; normalise to the colon form.
             parts.append(re.sub(r"^\s*([^:=]+?)\s*[:=]\s*", r"\1: ", value))
@@ -778,6 +776,9 @@ def heredoc_commit_messages(command):
             body = entries[0][1]
             after = line_no + command.count("\n", entries[0][4][0], entries[0][4][1]) + 2  # past body and delimiter
             close = SUBSTITUTION_CLOSE.match(lines[after]) if after < len(lines) else None
+            if close and ("$(" in close.group("rest") or "`" in close.group("rest")):
+                substituted.append(None)  # a second substitution opens on the closing line: not read here
+                continue
             if close:
                 argv_line = match.group("pre") + match.group("opt") + ' "__guard_message__"' + close.group("rest")
                 # The commit is the simple command holding the placeholder: not an earlier commit on
@@ -893,8 +894,8 @@ def main():
                 "RULE ZERO: the message must be readable here. Pass literal text with -m or "
                 "-F <file>, or -m \"$(cat <<'EOF' … EOF\n)\" exactly; no pipe, -F -, $var or other "
                 "substitution, so the guard can check it for attribution lines. An editor or "
-                "template route (-e, -t, GIT_EDITOR/VISUAL/EDITOR, core.editor) set in the same "
-                "command is denied too: drop it from the command. A literal $ or backtick in the "
+                "template route (-e, -c, a bare commit or --amend without -m or --no-edit, "
+                "GIT_EDITOR/VISUAL/EDITOR, core.editor, a trailer.* setting) is denied too. A literal $ or backtick in the "
                 "message is denied as well: spell it out."
             )
         elif reason.startswith("a push whose history could not be read"):
