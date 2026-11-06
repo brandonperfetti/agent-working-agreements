@@ -218,9 +218,11 @@ def heredocs(command):
 def drop_heredocs(command):
     """Blank each heredoc body, unless a shell is reading it as commands."""
     for head, body, dash, quoted, (start, end), _line in reversed(heredocs(command)):
-        # A shell as a command word (`bash`, `/bin/zsh -s`, `dash`, `source /dev/stdin`), not a
-        # script name such as `check.sh`.
-        if re.search(r"(^|[\s;&|(/\"'])((ba|z|da|k|mk|a)?sh|source|\.)(?=[\s<\"']|$)", head):
+        # A shell as a command word (`bash`, `/bin/zsh -s`, `dash`), not a script name such as
+        # `check.sh`; `source` and `.` only where a command starts, so `git add .` is an argument.
+        if re.search(r"(^|[\s;&|(/\"'])(ba|z|da|k|mk|a)?sh(?=[\s<\"']|$)", head) or re.search(
+            r"(^|[;&|(])\s*(source|\.)(?=\s)", head
+        ):
             continue
         command = command[:start] + command[end:]  # body and delimiter line go; the head stays
     return command
@@ -421,7 +423,8 @@ def commit_message(args, directory, read=True, written=frozenset()):
             path = os.path.join(directory, os.path.expanduser(value))
             # Only a regular file is read: /dev/stdin, a FIFO or a device could block the hook or
             # hand it the hook's own stdin, so those count as unreadable.
-            named = any(value == word or word.endswith(">" + value) for word in written)
+            base = os.path.basename(value)  # `> ./msg.txt`, `>msg.txt` and `msg.txt` name one file
+            named = any(os.path.basename(word.lstrip("<>&|0123456789")) == base for word in written)
             if named or not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
                 unreadable = True
             else:
@@ -728,11 +731,15 @@ def heredoc_commit_messages(command):
             close = SUBSTITUTION_CLOSE.match(lines[after]) if after < len(lines) else None
             if close:
                 argv_line = match.group("pre") + match.group("opt") + ' "X"' + close.group("rest")
-                tokens = commit_reader(argv_line)
-                if tokens is None:
-                    continue  # a dry run, or not a commit after all: nothing to check
-                substituted.append(body)
-                continue
+                # The commit is the first simple command on that line; `&& git push` after it is
+                # the main loop's to check, and must not hide the body here.
+                parsed = segments(argv_line)
+                first = strip_prefix(strip_redirects(parsed[0])) if parsed and parsed[0] else []
+                if first and os.path.basename(first[0]) == "git" and "commit" in first:
+                    if commit_message(first[first.index("commit") + 1 :], "", read=False)[2]:
+                        continue  # a dry run commits nothing
+                    substituted.append(body)
+                    continue
         substituted.append(None)  # some other substituted message: not readable here
     return bodies, substituted
 

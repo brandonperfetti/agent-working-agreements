@@ -549,6 +549,12 @@ class AuthorTest(unittest.TestCase):
         self.assertIsNone(guard_git.check_command(clean + " --dry-run", self.mine))  # argv parsed after the body
         self.assertIn("attribution trailer", guard_git.check_command('git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)"'.format(trailer), self.mine) or "")
         self.assertIn("attribution trailer", guard_git.check_command('git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)" --no-verify'.format(trailer), self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git add . && " + clean, self.mine))  # `.` here is an argument, not the shell builtin
+        self.assertIsNone(guard_git.check_command(clean + " && git push origin feature", self.mine))
+        for tail in (" && git push origin feature", "; git status", " || true"):
+            with self.subTest(tail=tail):
+                command = 'git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)"{}'.format(trailer, tail)
+                self.assertIn("attribution trailer", guard_git.check_command(command, self.mine) or "")
         # a stray heredoc after the closing quote feeds nothing the message uses: the -m text decides
         self.assertIsNone(guard_git.check_command(clean + " <<'X'\nmore\nX", self.mine))
         for command in (
@@ -615,6 +621,8 @@ class AuthorTest(unittest.TestCase):
             "printf 'fix\\n\\nCo-Authored-By: X <x@y>' > msg.txt && git commit -F msg.txt",
             "printf 'fix' >msg.txt; git commit -F msg.txt",
             "cp other msg.txt && git commit --file=msg.txt",
+            "printf 'x' > ./msg.txt && git commit -F msg.txt",
+            "printf 'x' >msg.txt && git commit -F ./msg.txt",
         ):
             with self.subTest(command=command):
                 self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
