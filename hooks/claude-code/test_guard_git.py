@@ -450,6 +450,31 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: tainted again\n\nClaude-Session: abc")
         self.assertIsNone(guard_git.check_command("git commit --amend --allow-empty --fixup=amend:HEAD~1 --no-edit", self.mine))
 
+    def test_special_message_files_and_timeouts_are_uncheckable(self):
+        trailer = "Co-Authored-By: A <a@b>"
+        for command in ("git commit -F /dev/stdin", "git commit -F /dev/null", "git commit --file=/dev/stdin"):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
+        with mock.patch.object(guard_git, "git_lines", return_value=guard_git.TIMEOUT):
+            commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+            self.assertIn("could not be read in time", guard_git.check_command("git push origin feature", self.mine) or "")
+            self.assertIn("cannot be checked", guard_git.check_command("git commit --amend --no-edit", self.mine) or "")
+            self.assertIsNone(guard_git.check_command('git commit -m "fix: clean"', self.mine))
+        with mock.patch.object(guard_git, "git_lines", return_value=[]):
+            self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+
+    def test_here_string_quoting_forms(self):
+        trailer = "Co-Authored-By: A <a@b>"
+        for command, blocked in (
+            ('git commit -F - <<<"fix: \\"quoted\\" x\n{}"'.format(trailer), True),
+            ('git commit -F - <<<"fix: \\"quoted\\" clean"', False),
+            ("git commit -F - <<<$'fix: x\\n{}'".format(trailer), True),  # ANSI-C: uncheckable → denied
+            ("git commit -F - <<<$'fix: clean'", True),
+        ):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine)
+                self.assertEqual(reason is not None, blocked, reason)
+
     def test_quoted_redirection_text_hides_nothing(self):
         for command in (
             "cat <<'EOF'\nexample <<END\nEOF\ngit push --force origin feature",

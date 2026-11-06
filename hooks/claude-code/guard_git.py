@@ -80,16 +80,24 @@ def herestring_word(text):
             word += text[index + 1]; index += 2; continue
         if char == "'":
             end = text.find("'", index + 1)
-            if end == -1:
-                break
+            if end == -1:  # the quoted word runs past this line: not readable here
+                expandable = True; break
             word += text[index + 1 : end]; index = end + 1; continue
         if char == '"':
-            end = text.find('"', index + 1)
-            if end == -1:
-                break
-            part = text[index + 1 : end]
+            part, index = "", index + 1
+            while index < len(text) and text[index] != '"':
+                if text[index] == "\\" and index + 1 < len(text):
+                    part += text[index + 1]; index += 2; continue
+                part += text[index]; index += 1
+            if index >= len(text):  # unterminated on this line: not readable here
+                expandable = True; break
             expandable = expandable or bool(EXPANSION.search(part))
-            word += part; index = end + 1; continue
+            word += part; index += 1; continue
+        if text.startswith("$'", index):  # ANSI-C quoting decodes escapes the hook does not model
+            expandable = True
+            end = text.find("'", index + 2)
+            index = len(text) if end == -1 else end + 1
+            continue
         word += char
         expandable = expandable or bool(EXPANSION.search(char + text[index + 1 : index + 2]))
         index += 1
@@ -247,8 +255,12 @@ def current_branch(directory):
     return result.stdout.strip()
 
 
+TIMEOUT = "timeout"  # git_lines' marker for a read that ran out of time (not a failure, not empty)
+
+
 def git_lines(directory, args, env=None):
-    """Run a read-only git command; None when it fails, so git reports its own error."""
+    """Run a read-only git command; None when it fails (git reports its own error), TIMEOUT when
+    it ran out of time, else its output lines."""
     try:
         result = subprocess.run(
             ["git", "-C", directory] + args,
@@ -258,6 +270,8 @@ def git_lines(directory, args, env=None):
             timeout=5,
             env=env,
         )
+    except subprocess.TimeoutExpired:
+        return TIMEOUT
     except (OSError, subprocess.SubprocessError):
         return None
     if result.returncode:
@@ -286,7 +300,7 @@ def check_commit(args, directory, configs, env, stdin_bodies=None):
     if author is None:
         options = [part for config in configs for part in ("-c", config)]
         lines = git_lines(directory, options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
-        author = lines[0] if lines else None  # a failed identity read stays fail-open (git reports it)
+        author = lines[0] if lines and lines is not TIMEOUT else None  # fail-open: git reports it
     if author is not None:
         email = email_of(author)
         if email != AUTHOR_EMAIL:
@@ -306,16 +320,18 @@ def message_of(directory, revision):
     """The full message of one commit; a value that looks like an option is not a revision."""
     if not revision or revision.startswith("-"):
         return []
-    return git_lines(directory, ["log", "-1", "--format=%B", "--end-of-options", revision]) or []
+    lines = git_lines(directory, ["log", "-1", "--format=%B", "--end-of-options", revision])
+    return None if lines is TIMEOUT else (lines or [])
 
 
-def commit_message(args, directory):
+def commit_message(args, directory, read=True):
     """The message text the command supplies: -m parts, -F files and --trailer lines.
 
     `-F -` is read by heredoc_commit_messages from the raw command; a piped stdin is not readable
     here, and the push check reads the committed message instead.
     """
     parts, supplied, stdin_used, dry_run = [], False, False, False
+    unreadable = False  # a message source the hook cannot read: a special file, a timed-out revision
     index = 0
     while index < len(args) and args[index] != "--":
         arg = args[index]
@@ -343,26 +359,43 @@ def commit_message(args, directory):
             parts.append(re.sub(r"^\s*([^:=]+?)\s*[:=]\s*", r"\1: ", value))
         elif name in ("-F", "--file") and value == "-":
             stdin_used = True
-        elif name in ("-F", "--file") and value:
-            try:
-                path = os.path.join(directory, os.path.expanduser(value))
-                with open(path, errors="replace") as handle:
-                    parts.append(handle.read())
-            except OSError:
-                pass
-        elif name in ("-C", "--reuse-message", "-c", "--reedit-message") and value:
-            parts.extend(message_of(directory, value))
+        elif name in ("-F", "--file") and value and read:
+            path = os.path.join(directory, os.path.expanduser(value))
+            # Only a regular file is read: /dev/stdin, a FIFO or a device could block the hook or
+            # hand it the hook's own stdin, so those count as unreadable.
+            if not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
+                unreadable = True
+            else:
+                try:
+                    with open(path, errors="replace") as handle:
+                        parts.append(handle.read())
+                except OSError:
+                    unreadable = True
+        elif name in ("-C", "--reuse-message", "-c", "--reedit-message") and value and read:
+            reused = message_of(directory, value)
+            if reused is None:
+                unreadable = True
+            else:
+                parts.extend(reused)
         elif name in ("--fixup", "--squash") and value:
             # `--fixup=amend:<c>` / `reword:<c>` take the target's message; a plain fixup/squash
             # generates "fixup! <subject>" from it, which carries no trailer.
             kind, sep, target = value.partition(":")
-            if sep and kind in ("amend", "reword"):
-                parts.extend(message_of(directory, target))
+            if sep and kind in ("amend", "reword") and read:
+                reused = message_of(directory, target)
+                if reused is None:
+                    unreadable = True
+                else:
+                    parts.extend(reused)
         index += 1
-    if "--amend" in args[: args.index("--") if "--" in args else len(args)] and not supplied:
+    if read and "--amend" in args[: args.index("--") if "--" in args else len(args)] and not supplied:
         # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C/--fixup replaces it.
-        parts.extend(message_of(directory, "HEAD"))
-    return "\n".join(parts), stdin_used, dry_run
+        kept = message_of(directory, "HEAD")
+        if kept is None:
+            unreadable = True
+        else:
+            parts.extend(kept)
+    return "\n".join(parts), stdin_used or unreadable, dry_run
 
 
 def check_push_authors(refspecs, directory, tags=False):
@@ -381,6 +414,8 @@ def check_push_authors(refspecs, directory, tags=False):
     # None: git reports its own error, and a repo with nothing to log is not a blocked push.
     # `--not --remotes --not` excludes what any remote has; `--end-of-options` keeps a source a revision.
     lines = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes", "--not"] + tag_option + ["--end-of-options"] + sources + ["--"])
+    if lines is TIMEOUT:
+        return "a push whose history could not be read in time for the author and trailer checks"
     if not lines:
         return None
     records = [r for r in "\n".join(lines).split("\x1e") if r.strip()]
@@ -570,7 +605,7 @@ def commit_reader(reader):
     tokens = strip_prefix(strip_redirects(simple))
     if not tokens or os.path.basename(tokens[0]) != "git" or "commit" not in tokens:
         return None
-    if commit_message(tokens[tokens.index("commit") + 1 :], os.getcwd())[2]:  # a real --dry-run option
+    if commit_message(tokens[tokens.index("commit") + 1 :], "", read=False)[2]:  # a real --dry-run option
         return None
     return tokens
 
@@ -580,7 +615,7 @@ def reads_commit_stdin(reader):
     tokens = commit_reader(reader)
     if not tokens:
         return False
-    return commit_message(tokens[tokens.index("commit") + 1 :], os.getcwd())[1]  # stdin_used
+    return commit_message(tokens[tokens.index("commit") + 1 :], "", read=False)[1]  # stdin_used
 
 
 def heredoc_commit_messages(command):
