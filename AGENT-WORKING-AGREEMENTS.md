@@ -102,12 +102,11 @@ Every git rule names the step of the profile's Git ritual it serves.
 The environment picks; the adapter names the default; the owner's word wins. At pickup, per checkout
 and delivery path, a failed item downgrades only that delivery to attended (item 4 is recorded
 instead): 1. native Git on a real checkout, hooks firing: the `pre-push` hook proven by dry run from
-the checkout you will push from, or its absence recorded; 2. a local verification run at pickup
-proportionate to the change, with what ran reported, the full gate (A5) before presentation; 3.
-feature work on its own branch, never a base branch; 4. base branches protected per the binding; 5.
-no owner override. A **route-scoped** adapter the profile names continues on supported routes
-instead and stops only an operation with no safe route (B2 item 5). See
-[`pickup-guard.md`](procedures/pickup-guard.md).
+the checkout you will push from, or its absence recorded; 2. a local check proportionate to the
+change, reported, the full gate (A5) before presentation; 3. feature work on its own branch, never a
+base branch; 4. base branches protected per the binding; 5. no owner override. A **route-scoped**
+adapter the profile names continues on supported routes instead and stops only an operation with no
+safe route (B2 item 5). See [`pickup-guard.md`](procedures/pickup-guard.md).
 
 ## B1. Attended mode
 
