@@ -33,7 +33,7 @@ Measurements behind it are in the history file; **re-measure on yours**.
   hook); **item 1 passes only after its per-checkout `pre-push` probe** (`git push --dry-run
   origin HEAD` at pickup in the checkout you will push from) or a record that no hook is installed.
   A dry run sends no objects but contacts the remote (sandbox-denial hazard below). 2 is **measure
-  and record** per repo: the gate may want tools beyond node, pnpm and python3 — run it once. 4 is
+  and record** per repo: a proportionate pickup check; it may need tools beyond node, pnpm and python3. 4 is
   queryable through `gh`, **still checked per repository**: no earlier measurement stands for it.
 - **Default mode is autonomous**, decided by the guard alone, exactly as in `claude-code.md`. The
   hook probe and item 2 are still yours to run at pickup, and item 4 is checked per repository. A
