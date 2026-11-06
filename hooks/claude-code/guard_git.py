@@ -46,7 +46,8 @@ GH_MERGE_MUTATIONS = re.compile(
 )
 FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
 HEREDOC = re.compile(
-    r"^(?P<head>[^\n]*<<-?[ \t]*['\"]?(?P<tag>\w+)['\"]?[^\n]*)\n.*?^\s*(?P=tag)\s*$",
+    # The delimiter line is exact for `<<`; `<<-` strips leading tabs only, as the shell does.
+    r"^(?P<head>[^\n]*<<(?P<dash>-?)[ \t]*['\"]?(?P<tag>\w+)['\"]?[^\n]*)\n.*?^(?(dash)\t*)(?P=tag)$",
     re.DOTALL | re.MULTILINE,
 )
 
@@ -130,6 +131,7 @@ def git_lines(directory, args, env=None):
             ["git", "-C", directory] + args,
             capture_output=True,
             text=True,
+            errors="replace",
             timeout=5,
             env=env,
         )
@@ -191,10 +193,13 @@ def commit_message(args, directory):
             parts.append(value)
         elif name in ("-F", "--file") and value and value != "-":
             try:
-                with open(os.path.join(directory, os.path.expanduser(value))) as handle:
+                path = os.path.join(directory, os.path.expanduser(value))
+                with open(path, errors="replace") as handle:
                     parts.append(handle.read())
             except OSError:
                 pass
+        elif name in ("-C", "--reuse-message", "-c", "--reedit-message") and value:
+            parts.extend(git_lines(directory, ["log", "-1", "--format=%B", value]) or [])
         index += 1
     return "\n".join(parts)
 
@@ -383,7 +388,10 @@ def heredoc_commit_messages(command):
     for match in HEREDOC.finditer(command):
         head = match.group("head")
         if re.search(r"\bgit\b.*\bcommit\b", head) and re.search(r"(-F|--file)[ =]-(\s|$)", head + " "):
-            bodies.append(match.group(0)[len(head) :])
+            body = match.group(0)[len(head) :]
+            if match.group("dash"):
+                body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)  # `<<-` strips leading tabs
+            bodies.append(body)
     return "\n".join(bodies)
 
 

@@ -349,6 +349,8 @@ class AuthorTest(unittest.TestCase):
             ("git commit --file=- <<EOF\nfix: x\n{}\nEOF".format(trailer), True),
             ("git commit -F - <<'EOF'\nfix: x\n\nmentions co-authored-by in prose\nEOF", False),
             ("cat <<'EOF' > notes.md\n{}\nEOF".format(trailer), False),
+            ("git commit -F - <<'EOF'\nfix: x\n EOF\n{}\nEOF".format(trailer), True),
+            ("git commit -F - <<-EOF\n\tfix: x\n\t{}\n\tEOF".format(trailer), True),
             ('git commit -m "docs: mention co-authored-by in prose"', False),
             ("git commit --dry-run -F msg.txt", False),
         ):
@@ -357,6 +359,19 @@ class AuthorTest(unittest.TestCase):
                 self.assertEqual(reason is not None, blocked, reason)
                 if blocked:
                     self.assertIn("attribution trailer", reason)
+
+    def test_commit_reads_a_reused_message(self):
+        git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: y\n\nCo-Authored-By: X <x@example.com>")
+        for command, blocked in (
+            ("git commit --allow-empty -C HEAD --reset-author", True),
+            ("git commit --allow-empty --reuse-message=HEAD", True),
+            ("git commit --allow-empty -c HEAD", True),
+            ("git commit --allow-empty -C HEAD~0", True),
+        ):
+            with self.subTest(command=command):
+                self.assertIn("attribution trailer", guard_git.check_command(command, self.mine) or "")
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        self.assertIsNone(guard_git.check_command("git commit --allow-empty -C HEAD", self.mine))
 
     def test_push_rejects_unpushed_commits_with_a_trailer(self):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
