@@ -128,6 +128,12 @@ def redirections(line, quote=None):
             if char == "'":
                 quote = None
             index += 1; continue
+        if quote == "$'":  # ANSI-C quoting, possibly begun on an earlier line: `\'` does not close it
+            if char == "\\":
+                index += 2; continue
+            if char == "'":
+                quote = None
+            index += 1; continue
         arithmetic = line.startswith("$((", index) or (
             quote is None and line.startswith("((", index) and (index == 0 or line[index - 1] in " \t;|&")
         )
@@ -137,12 +143,8 @@ def redirections(line, quote=None):
                 depth += {"(": 1, ")": -1}.get(line[index], 0)
                 index += 1
             continue
-        if quote is None and line.startswith("$'", index):  # ANSI-C quoting: `\'` does not close it
-            index += 2
-            while index < len(line) and line[index] != "'":
-                index += 2 if line[index] == "\\" else 1
-            index += 1
-            continue
+        if quote is None and line.startswith("$'", index):
+            quote = "$'"; index += 2; continue
         if line.startswith("$(", index):  # a command substitution resets quoting inside it
             outer.append(quote); quote = None; index += 2; continue
         if char == ")" and outer and quote is None:

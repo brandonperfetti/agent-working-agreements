@@ -638,9 +638,11 @@ class AuthorTest(unittest.TestCase):
                 self.assertIsNone(guard_git.check_command(command, self.mine))
 
     def test_ansi_c_quotes_hide_no_heredoc(self):
-        command = "echo $'a\\' <<EOF b'\ngit push --force origin master\nEOF"
-        reason = guard_git.check_command(command, self.mine) or ""
-        self.assertTrue(reason and "cannot be checked" not in reason, reason)
+        for command in ("echo $'a\\' <<EOF b'\ngit push --force origin master\nEOF", "echo $'a\n<<EOF b'\ngit push -f origin feature\nEOF", "echo $'a\\'\n<<EOF b'\ngit push origin master\nEOF"):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine) or ""
+                self.assertTrue(reason and "cannot be checked" not in reason, reason)
+        self.assertIsNone(guard_git.check_command("echo $'a\nb' && git push origin feature", self.mine))
 
     def test_expanding_message_values_are_uncheckable(self):
         for command in ('git commit -m "$(cat msg.txt)"', 'git commit -m "$MSG"', "git commit -m 'fix: $X'",
