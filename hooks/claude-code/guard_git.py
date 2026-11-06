@@ -321,7 +321,7 @@ def email_of(ident):
     return match.group(1) if match else ident.strip()
 
 
-def check_commit(args, directory, configs, env, stdin_bodies=None, written=frozenset()):
+def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
     """Resolve the author the commit will carry, as git would, then read its message."""
     message, stdin_used, dry_run = commit_message(args, directory, written=written)
     if dry_run:  # option-aware: `-m --dry-run` is a message, not a dry run; `-n` is --no-verify
@@ -380,7 +380,7 @@ def canonical(name):
     return matches[0] if len(matches) == 1 else name
 
 
-def commit_message(args, directory, read=True, written=frozenset()):
+def commit_message(args, directory, read=True, written=()):
     """The message text the command supplies: -m parts, -F files and --trailer lines.
 
     `written` holds the words of the commands that run first: a `-F` file one of them names may be
@@ -439,6 +439,9 @@ def commit_message(args, directory, read=True, written=frozenset()):
             # hand it the hook's own stdin, so those count as unreadable.
             base = os.path.basename(value)  # `> ./msg.txt`, `>msg.txt` and `msg.txt` name one file
             named = any(os.path.basename(re.sub(r"^\d*[<>&|]+", "", word)) == base for word in written)
+            # A redirect target the shell fills in (`> $F`) may be this file too.
+            targets = [w.lstrip("0123456789>") if ">" in w else w for i, w in enumerate(written) if ">" in w or (i and written[i - 1].endswith(">"))]
+            named = named or any(expands(t) for t in targets)
             if named or not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
                 unreadable = True
             else:
@@ -549,7 +552,7 @@ def check_push(args, directory):
     return check_push_authors(refspecs, directory, "--tags" in options)
 
 
-def check_git(tokens, directory, env, stdin_bodies=None, written=frozenset()):
+def check_git(tokens, directory, env, stdin_bodies=None, written=()):
     index, configs = 1, []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
@@ -772,7 +775,7 @@ def join_continuations(command):
     return CONTINUATION.sub(lambda m: m.group(1)[:-1] if len(m.group(1)) % 2 else m.group(0), command)
 
 
-def check_command(command, directory, inherited=None, written=frozenset()):
+def check_command(command, directory, inherited=None, written=()):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment.
 
     Bash joins `\`-newline before reading a command, except inside single quotes and a heredoc
@@ -785,7 +788,7 @@ def check_command(command, directory, inherited=None, written=frozenset()):
     return reason
 
 
-def check_text(command, directory, inherited=None, written=frozenset()):
+def check_text(command, directory, inherited=None, written=()):
     stdin_bodies, substituted = heredoc_commit_messages(command)
     if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"
@@ -794,7 +797,7 @@ def check_text(command, directory, inherited=None, written=frozenset()):
     exported = dict(inherited or {})
     earlier = list(written)  # the words of the simple commands already run: a file they name may be rewritten
     for raw_tokens in segments(command):
-        written = frozenset(earlier)
+        written = tuple(earlier)
         earlier.extend(raw_tokens)
         tokens = strip_redirects(raw_tokens)
         command_tokens = strip_prefix(tokens)
@@ -835,8 +838,12 @@ def main():
             advice = (
                 "RULE ZERO: the message must be readable here. Pass literal text with -m or "
                 "-F <file>, or -m \"$(cat <<'EOF' … EOF\n)\" exactly; no pipe, -F -, $var or other "
-                "substitution, so the guard can check it for attribution lines."
+                "substitution, so the guard can check it for attribution lines. An editor or "
+                "template route (-e, -t, GIT_EDITOR/VISUAL/EDITOR, core.editor) set in the same "
+                "command is denied too: drop it from the command."
             )
+        elif "could not be read in time" in reason:
+            advice = "RULE ZERO: the history read timed out. Retry once; if it keeps timing out, hand the push back to Brandon."
         elif "attribution trailer" in reason:
             advice = (
                 "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "

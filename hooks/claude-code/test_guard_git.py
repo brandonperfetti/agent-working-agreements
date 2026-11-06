@@ -658,6 +658,8 @@ class AuthorTest(unittest.TestCase):
             "cp other msg.txt && git commit --file=msg.txt",
             "printf 'x' > ./msg.txt && git commit -F msg.txt",
             "printf 'x' > 1.txt && git commit -F 1.txt",
+            "F=msg.txt; printf 'x' > $F; git commit -F msg.txt",
+            "F=msg.txt; printf 'x' >$F; git commit -F msg.txt",
             "printf 'x' > msg.txt; bash -c 'git commit -F msg.txt'",
             "printf 'x' > msg.txt; eval 'git commit -F msg.txt'",
             "printf 'x' >msg.txt && git commit -F ./msg.txt",
@@ -699,6 +701,7 @@ class AuthorTest(unittest.TestCase):
         cases = (
             ('git commit -m x -m "Co-Authored-By: A <a@b>"', "no Co-Authored-By, session or generated-with line"),
             ("cat msg.txt | git commit -F -", "must be readable here"),
+            ('GIT_EDITOR=./e.sh git commit -m "fix: x"', "editor or template route"),
             ("git -c user.email={} commit -m x".format(self.OTHER), "every agent commit carries the author email"),
         )
         for command, advice in cases:
