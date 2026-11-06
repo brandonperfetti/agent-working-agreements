@@ -667,6 +667,8 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
         self.assertIsNone(guard_git.check_command('git commit -am "fix: x"', self.mine))
+        self.assertIsNone(guard_git.check_command('git commit -Sdeadbeef -m "fix: x"', self.mine))
+        self.assertIsNone(guard_git.check_command('git commit -ue -m "fix: x"'.replace("-ue", "-uno"), self.mine))
 
     def test_shell_readers_before_separators_and_herestrings_before_commits(self):
         for command in ("cat <<'EOF' | sh; true\ngit push -f origin feature\nEOF", "cat <<'EOF' | bash)\ngit push origin master\nEOF"):
@@ -704,6 +706,7 @@ class AuthorTest(unittest.TestCase):
             "printf 'x' > 1.txt && git commit -F 1.txt",
             "F=msg.txt; printf 'x' > $F; git commit -F msg.txt",
             "F=msg.txt; printf 'x' >$F; git commit -F msg.txt",
+            "printf 'Co-Authored-By: x'>msg.txt && git commit -F msg.txt",
             "printf 'x' > msg.txt; bash -c 'git commit -F msg.txt'",
             "printf 'x' > msg.txt; eval 'git commit -F msg.txt'",
             "printf 'x' >msg.txt && git commit -F ./msg.txt",

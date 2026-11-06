@@ -418,8 +418,8 @@ def commit_message(args, directory, read=True, written=()):
             has_value = bool(value)
             if "e" in cluster.group(1) and read:
                 unreadable = True  # `-em msg`, `-aem msg`: the editor opens after the message is set
-        elif read and re.fullmatch(r"-[a-zA-Z]*e[a-zA-Z]*", arg):
-            unreadable = True  # `-ae`: a cluster of flags with the editor among them
+        elif read and arg.startswith("-") and not arg.startswith("--") and "e" in re.match(r"-([a-tv-zA-RT-Z]*)", arg).group(1):
+            unreadable = True  # `-ae`: a cluster of flags with the editor among them (`-Sdeadbeef` is a key id)
         if not has_value and (arg in COMMIT_VALUE_OPTS or cluster) and index + 1 < len(args):
             value = args[index + 1]
             index += 1
@@ -455,7 +455,8 @@ def commit_message(args, directory, read=True, written=()):
             # Only a regular file is read: /dev/stdin, a FIFO or a device could block the hook or
             # hand it the hook's own stdin, so those count as unreadable.
             base = os.path.basename(value)  # `> ./msg.txt`, `>msg.txt` and `msg.txt` name one file
-            named = any(os.path.basename(re.sub(r"^\d*[<>&|]+", "", word)) == base for word in written)
+            # `>msg.txt`, `2>msg.txt` and `'text'>msg.txt` all carry the name after an operator.
+            named = any(os.path.basename(part) == base for word in written for part in re.split(r"[<>&|]+", word) if part)
             # A redirect target the shell fills in (`> $F`) may be this file too.
             targets = [w.lstrip("0123456789>") if ">" in w else w for i, w in enumerate(written) if ">" in w or (i and written[i - 1].endswith(">"))]
             named = named or any(expands(t) for t in targets)
