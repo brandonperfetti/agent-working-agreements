@@ -450,6 +450,29 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: tainted again\n\nClaude-Session: abc")
         self.assertIsNone(guard_git.check_command("git commit --amend --allow-empty --fixup=amend:HEAD~1 --no-edit", self.mine))
 
+    def test_quoted_redirection_text_hides_nothing(self):
+        for command in (
+            "cat <<'EOF'\nexample <<END\nEOF\ngit push --force origin feature",
+            "echo '<<EOF'\ngit push --force origin feature",
+            'echo "<<EOF"; git push --force origin feature',
+            "cat <<'EOF'\nexample <<END\nEOF\ngit push origin master",
+            "cat <<'EOF'\nexample <<END\nEOF\ngh pr merge 1",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(guard_git.check_command(command, self.mine))
+
+    def test_last_stdin_redirection_wins(self):
+        trailer = "Co-Authored-By: A <a@b>"
+        self.assertIn("attribution trailer", guard_git.check_command("git commit -F - <<A <<B\nclean\nA\n{}\nB".format(trailer), self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git commit -F - <<A <<B\n{}\nA\nclean\nB".format(trailer), self.mine))
+        self.assertIsNone(guard_git.check_command("git commit -F - <<''\nfix: clean\n\n", self.mine))
+        self.assertIn("attribution trailer", guard_git.check_command("git commit -F - <<''\n{}\n\n".format(trailer), self.mine) or "")
+
+    def test_substituted_expansions_are_uncheckable(self):
+        reason = guard_git.check_command('MSG="x"; git commit -m "$(cat <<EOF\n$MSG\nEOF\n)"', self.mine) or ""
+        self.assertIn("cannot be checked", reason)
+        self.assertIsNone(guard_git.check_command('git commit -m "$(cat <<EOF\nfix: literal\nEOF\n)"', self.mine))
+
     def test_heredoc_bodies_are_data_not_more_heredocs(self):
         nested = "cat msg | git commit -F -\ncat <<'EOF' > notes\ngit commit -F - <<'X'\nclean\nX\nEOF\ngit push origin feature"
         found = guard_git.heredocs(nested)

@@ -25,7 +25,6 @@ AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
 # `$name`, `${…}`, `$(…)`, the special parameters (`$*`, `$@`, `$#`, `$?`, `$$`, `$!`, `$-`, `$0`…) and backticks.
 EXPANSION = re.compile(r"(?<!\\)\$(?:[\w{(]|[*@#?$!\-0-9])|`")
-HERESTRING_START = re.compile(r"<<<[ \t]*")
 COMMIT_VALUE_OPTS = {
     "-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
@@ -48,7 +47,6 @@ GH_MERGE_MUTATIONS = re.compile(
     r"mergePullRequest|enablePullRequestAutoMerge|mergeBranch|enqueuePullRequest"
 )
 FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
-HEREDOC_START = re.compile(r"<<(?P<dash>-)?(?!<)[ \t]*")
 
 
 def heredoc_word(text):
@@ -70,7 +68,7 @@ def heredoc_word(text):
 
 
 def herestring_word(text):
-    """The whole shell word after `<<<` as git would read it: (text, expandable).
+    """The whole shell word after `<<<` as git would read it: (text, expandable, length).
 
     Quoted parts join into one word (`''"$M"`); anything outside single quotes may expand."""
     word, expandable, index = "", False, 0
@@ -95,7 +93,52 @@ def herestring_word(text):
         word += char
         expandable = expandable or bool(EXPANSION.search(char + text[index + 1 : index + 2]))
         index += 1
-    return word, expandable
+    return word, expandable, index
+
+
+def redirections(line):
+    """Heredoc and here-string operators in one line, outside quotes, in order.
+
+    Entries are ("heredoc", dash, tag, quoted, pos) or ("herestring", text, expandable, pos);
+    `pos` is the operator's offset in the line. Quoted `<<` is text, not a redirection."""
+    ops, index, quote, outer = [], 0, None, []  # `outer`: quotes suspended by `$(` substitutions
+    while index < len(line):
+        char = line[index]
+        if quote == "'":
+            if char == "'":
+                quote = None
+            index += 1; continue
+        if line.startswith("$(", index):  # a command substitution resets quoting inside it
+            outer.append(quote); quote = None; index += 2; continue
+        if char == ")" and outer and quote is None:
+            quote = outer.pop(); index += 1; continue
+        if quote == '"':
+            if char == "\\":
+                index += 2; continue
+            if char == '"':
+                quote = None
+            index += 1; continue
+        if char == "\\":
+            index += 2; continue
+        if char in "'\"":
+            quote = char; index += 1; continue
+        if line.startswith("<<<", index):
+            start = index + 3
+            while start < len(line) and line[start] in " \t":
+                start += 1
+            text, expandable, used = herestring_word(line[start:])
+            ops.append(("herestring", text, expandable, index)); index = start + max(used, 1); continue
+        if line.startswith("<<", index):
+            dash = line[index + 2 : index + 3] == "-"
+            start = index + 2 + dash
+            while start < len(line) and line[start] in " \t":
+                start += 1
+            tag, quoted, used = heredoc_word(line[start:])
+            if tag or quoted:  # `<<''` is a legal empty delimiter; a bare `<<` is not a heredoc
+                ops.append(("heredoc", dash, tag, quoted, index))
+            index = start + max(used, 1); continue
+        index += 1
+    return ops
 
 
 def heredocs(command):
@@ -103,30 +146,32 @@ def heredocs(command):
     delimiter line (`<<-` also strips leading tabs, as the shell does). Unterminated: to the end.
     `span` is the (start, end) of the raw body and delimiter line, for blanking."""
     found, pos = [], 0
-    while True:
-        match = HEREDOC_START.search(command, pos)
-        if not match:
+    while pos < len(command):
+        line_end = command.find("\n", pos)
+        if line_end == -1:
             return found
-        tag, quoted, used = heredoc_word(command[match.end() :])
-        line_end = command.find("\n", match.end() + used)
-        if not tag or line_end == -1:
-            pos = match.end(); continue
-        head = command[command.rfind("\n", 0, match.start()) + 1 : line_end]
-        dash = bool(match.group("dash"))
-        lines, cursor, body, end = [], line_end + 1, None, len(command)
-        for line in command[cursor:].split("\n"):
-            check = line.lstrip("\t") if dash else line
-            if check == tag:
-                body = "\n".join(lines) + ("\n" if lines else "")
-                end = cursor + len(body) + len(line)
-                break
-            lines.append(line)
-        if body is None:
-            body = "\n".join(lines)
-        if dash:
-            body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)
-        found.append((head, body, dash, quoted, (cursor, end)))
-        pos = end  # resume after the delimiter line: body text is data, never another heredoc
+        head = command[pos:line_end]
+        cursor = line_end + 1
+        for op in redirections(head):
+            if op[0] != "heredoc":
+                continue
+            _, dash, tag, quoted, _offset = op
+            lines, body, end = [], None, len(command)
+            for line in command[cursor:].split("\n"):
+                check = line.lstrip("\t") if dash else line
+                if check == tag:
+                    body = "\n".join(lines) + ("\n" if lines else "")
+                    end = cursor + len(body) + len(line)
+                    break
+                lines.append(line)
+            if body is None:
+                body = "\n".join(lines)
+            if dash:
+                body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)
+            found.append((head, body, dash, quoted, (cursor, end)))
+            cursor = end + 1 if end < len(command) else end  # body text is data, never another heredoc
+        pos = cursor
+    return found
 
 
 def drop_heredocs(command):
@@ -546,19 +591,28 @@ def heredoc_commit_messages(command):
     (`-m "$(cat <<'EOF' …)"`). A pipe into `-F -` cannot be read here, so check_commit denies it.
     """
     bodies, substituted = [], []
-    for head, body, dash, quoted, _span in heredocs(command):
-        reader = head.split("<<", 1)[0]  # the command that consumes the body, not a trailing comment
-        if not quoted and EXPANSION.search(body):
-            body = None  # the shell would expand `$VAR`/`$(…)` into the message: not readable here
+    found = heredocs(command)
+    for head in dict.fromkeys(h for h, *_ in found):  # each line with heredocs, once, in order
+        ops = redirections(head)
+        line_bodies = iter(h[1] if h[3] or not EXPANSION.search(h[1]) else None for h in found if h[0] == head)
+        effective = None  # the last stdin redirection on the line is the one the command reads
+        for op in ops:
+            if op[0] == "heredoc":
+                effective = next(line_bodies, None)
+            else:
+                effective = None if op[2] else op[1]
+        reader = head[: ops[0][-1]]  # the command before the first redirection operator
         if reads_commit_stdin(reader):
-            bodies.append(body)
+            bodies.append(effective)
         elif "$(" in reader and commit_reader(reader.rsplit("$(", 1)[0]):
-            substituted.append(body)  # `git commit -m "$(cat <<'EOF' …)"`: the body is the message
-    for match in HERESTRING_START.finditer(command):
-        reader = command[: match.start()].split("\n")[-1]
-        if reads_commit_stdin(reader):
-            text, expandable = herestring_word(command[match.end() :])
-            bodies.append(None if expandable else text)  # an expanding word is not readable here
+            substituted.append(effective)  # `git commit -m "$(cat <<'EOF' …)"`: the body is the message
+    for line in command.split("\n"):
+        ops = redirections(line)
+        if ops and all(op[0] == "herestring" for op in ops):
+            reader = line[: ops[0][-1]]
+            if reads_commit_stdin(reader):
+                last = ops[-1]
+                bodies.append(None if last[2] else last[1])  # an expanding word is not readable here
     return bodies, substituted
 
 
@@ -567,6 +621,8 @@ def check_command(command, directory, inherited=None):
     stdin_bodies, substituted = heredoc_commit_messages(command)
     if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"
+    if any(b is None for b in substituted):
+        return "a commit whose stdin message cannot be checked for attribution trailers"
     exported = dict(inherited or {})
     for tokens in segments(command):
         tokens = strip_redirects(tokens)
