@@ -126,7 +126,7 @@ def heredocs(command):
         if dash:
             body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)
         found.append((head, body, dash, quoted, (cursor, end)))
-        pos = line_end + 1
+        pos = end  # resume after the delimiter line: body text is data, never another heredoc
 
 
 def drop_heredocs(command):
@@ -277,7 +277,8 @@ def commit_message(args, directory):
         name, has_value, value = arg.partition("=")
         # A short-option cluster ends at its first value-taking letter: `-am msg`, `-aF file`,
         # `-mmsg`, `-F-`; `-tform` is -t with the value "form", and takes no message.
-        cluster = re.match(r"-([a-zA-Z]*?)([mFtCc])(.*)", arg) if not arg.startswith("--") else None
+        # `-u[mode]` and `-S[keyid]` take an attached optional value, so they end a cluster.
+        cluster = re.match(r"-([a-tv-zA-RT-Z]*?)([mFtCc])(.*)", arg) if not arg.startswith("--") else None
         if cluster:
             letter, value = cluster.group(2), cluster.group(3)
             name = "-" + letter

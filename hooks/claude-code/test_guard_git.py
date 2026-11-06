@@ -450,6 +450,20 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: tainted again\n\nClaude-Session: abc")
         self.assertIsNone(guard_git.check_command("git commit --amend --allow-empty --fixup=amend:HEAD~1 --no-edit", self.mine))
 
+    def test_heredoc_bodies_are_data_not_more_heredocs(self):
+        nested = "cat msg | git commit -F -\ncat <<'EOF' > notes\ngit commit -F - <<'X'\nclean\nX\nEOF\ngit push origin feature"
+        found = guard_git.heredocs(nested)
+        self.assertEqual([h[1] for h in found], ["git commit -F - <<'X'\nclean\nX\n"])
+        self.assertIn("git push origin feature", guard_git.drop_heredocs(nested))
+        self.assertIn("cannot be checked", guard_git.check_command(nested, self.mine) or "")
+
+    def test_optional_value_options_end_a_cluster(self):
+        git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: y\n\nCo-Authored-By: X <x@example.com>")
+        for command in ("git commit --amend -unormal --no-edit", "git commit --amend -Skey --no-edit", "git commit --amend -aunormal --no-edit"):
+            with self.subTest(command=command):
+                self.assertIn("attribution trailer", guard_git.check_command(command, self.mine) or "")
+        self.assertIsNone(guard_git.check_command('git commit --amend -unormal -m "fix: clean"', self.mine))
+
     def test_uncheckable_stdin_message_is_denied_with_its_own_reason(self):
         for command in (
             "cat msg.txt | git commit -F -",
