@@ -611,6 +611,15 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertTrue(guard_git.check_command(command, self.mine))
 
+    def test_editor_and_template_routes_are_uncheckable(self):
+        for command in ('git commit -e -m "fix: x"', 'git commit -t tmpl', 'git commit --template=tmpl -a',
+                        'GIT_EDITOR=./add-trailer.sh git commit -m "fix: x"', 'git -c core.editor=./e.sh commit -m "fix: x"',
+                        'git -c commit.template=tmpl commit -m "fix: x"', 'export EDITOR=./e.sh; git commit -m "fix: x"'):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
+        self.assertIsNone(guard_git.check_command('git commit -m "fix: x" --no-edit', self.mine))
+        self.assertIsNone(guard_git.check_command('git commit -t tmpl -m "fix: x"', self.mine))  # -m keeps the editor closed
+
     def test_quoted_continuations_stay_text(self):
         for command in (
             'git commit -m "$(cat <<\'EOF\'\nfix: x\n\nSigned\\\nCo-Authored-By: X <x@y>\nEOF\n)"',

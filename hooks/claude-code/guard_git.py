@@ -326,6 +326,10 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=froze
     message, stdin_used, dry_run = commit_message(args, directory, written=written)
     if dry_run:  # option-aware: `-m --dry-run` is a message, not a dry run; `-n` is --no-verify
         return None
+    editors = {"GIT_EDITOR", "VISUAL", "EDITOR"} & set(env)
+    settings = {c.partition("=")[0].lower() for c in configs} & {"core.editor", "commit.template", "sequence.editor"}
+    if editors or settings:  # an editor or template set for this command may add text after this check
+        return "a commit whose message cannot be checked for attribution trailers"
     author = None
     for index, arg in enumerate(args):
         if arg == "--":
@@ -385,7 +389,7 @@ def commit_message(args, directory, read=True, written=frozenset()):
     `-F -` is read by heredoc_commit_messages from the raw command; a piped stdin is not readable
     here, and the push check reads the committed message instead.
     """
-    parts, supplied, stdin_used, dry_run = [], False, False, False
+    parts, supplied, stdin_used, dry_run, template = [], False, False, False, False
     unreadable = False  # a message source the hook cannot read: a special file, a timed-out revision
     index = 0
     while index < len(args) and args[index] != "--":
@@ -416,6 +420,10 @@ def commit_message(args, directory, read=True, written=frozenset()):
             supplied = True
         if name in ("-m", "--message"):
             parts.append(value)
+        elif name in ("-e", "--edit") and read:
+            unreadable = True  # an editor adds text after this check; the push scan is the backstop
+        elif name in ("-t", "--template"):
+            template = True  # read only when the editor opens, which an explicit message prevents
         elif name == "--trailer":
             # Git accepts `Key=Value` as well as `Key: Value`; normalise to the colon form.
             parts.append(re.sub(r"^\s*([^:=]+?)\s*[:=]\s*", r"\1: ", value))
@@ -452,6 +460,8 @@ def commit_message(args, directory, read=True, written=frozenset()):
                 else:
                     parts.extend(reused)
         index += 1
+    if read and template and not supplied:
+        unreadable = True
     amended = any(canonical(a.partition("=")[0]) == "--amend" for a in args[: args.index("--") if "--" in args else len(args)])
     if read and amended and not supplied:
         # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C/--fixup replaces it.
