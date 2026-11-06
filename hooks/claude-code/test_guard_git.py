@@ -707,6 +707,8 @@ class AuthorTest(unittest.TestCase):
             "F=msg.txt; printf 'x' > $F; git commit -F msg.txt",
             "F=msg.txt; printf 'x' >$F; git commit -F msg.txt",
             "printf 'Co-Authored-By: x'>msg.txt && git commit -F msg.txt",
+            "F=msg.txt; cp evil.txt $F; git commit -F msg.txt",
+            "cp evil.txt m*.txt; git commit -F msg.txt",
             "printf 'x' > msg.txt; bash -c 'git commit -F msg.txt'",
             "printf 'x' > msg.txt; eval 'git commit -F msg.txt'",
             "printf 'x' >msg.txt && git commit -F ./msg.txt",

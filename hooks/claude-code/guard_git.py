@@ -457,9 +457,8 @@ def commit_message(args, directory, read=True, written=()):
             base = os.path.basename(value)  # `> ./msg.txt`, `>msg.txt` and `msg.txt` name one file
             # `>msg.txt`, `2>msg.txt` and `'text'>msg.txt` all carry the name after an operator.
             named = any(os.path.basename(part) == base for word in written for part in re.split(r"[<>&|]+", word) if part)
-            # A redirect target the shell fills in (`> $F`) may be this file too.
-            targets = [w.lstrip("0123456789>") if ">" in w else w for i, w in enumerate(written) if ">" in w or (i and written[i - 1].endswith(">"))]
-            named = named or any(expands(t) for t in targets)
+            # A word the shell fills in (`> $F`, `cp evil $F`, `cp evil m*.txt`) may name this file too.
+            named = named or any(expands(w) or re.search(r"[*?\[]", w) for w in written)
             if named or not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
                 unreadable = True
             else:
