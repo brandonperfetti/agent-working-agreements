@@ -201,6 +201,9 @@ def commit_message(args, directory):
         elif name in ("-C", "--reuse-message", "-c", "--reedit-message") and value:
             parts.extend(git_lines(directory, ["log", "-1", "--format=%B", value]) or [])
         index += 1
+    if "--amend" in args[: args.index("--") if "--" in args else len(args)] and not parts:
+        # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C replaces it.
+        parts.extend(git_lines(directory, ["log", "-1", "--format=%B", "HEAD"]) or [])
     return "\n".join(parts)
 
 

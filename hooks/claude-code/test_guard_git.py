@@ -370,8 +370,17 @@ class AuthorTest(unittest.TestCase):
         ):
             with self.subTest(command=command):
                 self.assertIn("attribution trailer", guard_git.check_command(command, self.mine) or "")
+        for command, blocked in (
+            ("git commit --amend --no-edit", True),
+            ("git commit --amend", True),
+            ('git commit --amend -m "fix: clean"', False),
+        ):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine)
+                self.assertEqual(reason is not None, blocked, reason)
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
         self.assertIsNone(guard_git.check_command("git commit --allow-empty -C HEAD", self.mine))
+        self.assertIsNone(guard_git.check_command("git commit --amend --no-edit", self.mine))
 
     def test_push_rejects_unpushed_commits_with_a_trailer(self):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
