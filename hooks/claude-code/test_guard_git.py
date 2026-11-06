@@ -357,6 +357,16 @@ class AuthorTest(unittest.TestCase):
             ('git commit -tform -m "{}"'.format(trailer), True),
             ('git commit -t form -m "fix: x"', False),
             ('git commit -u -m "{}"'.format(trailer), True),
+            ('git commit -m x --trailer "Co-Authored-By=A <a@b>"', True),
+            ('git commit -m x --trailer "Reviewed-by=A <a@b>"', False),
+            ("git commit -aF- <<'EOF'\nfix: x\n{}\nEOF".format(trailer), True),
+            ("git commit -F - <<'END-MSG'\nfix: x\n{}\nEND-MSG".format(trailer), True),
+            ("git commit -F - <<<'{}'".format(trailer), True),
+            ("git commit -F - <<<'fix: clean'", False),
+            ("printf '%s\\n' x '' '{}' | git commit -F -".format(trailer), True),
+            ("printf 'fix: clean' | git commit -F -", True),
+            ("git commit --dry-run -F - <<'EOF'\n{}\nEOF".format(trailer), False),
+            ("echo git commit -F - <<'EOF'\n{}\nEOF".format(trailer), False),
             ('git commit -au -m "{}"'.format(trailer), True),
             ("git commit -F - <<-EOF\n\tfix: x\n\t{}\n\tEOF".format(trailer), True),
             ('git commit -m "docs: mention co-authored-by in prose"', False),
@@ -390,6 +400,21 @@ class AuthorTest(unittest.TestCase):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
         self.assertIsNone(guard_git.check_command("git commit --allow-empty -C HEAD", self.mine))
         self.assertIsNone(guard_git.check_command("git commit --amend --no-edit", self.mine))
+
+    def test_fixup_reads_the_target_not_head(self):
+        git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: tainted\n\nCo-Authored-By: X <x@example.com>")
+        git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: clean head")
+        # clean HEAD, tainted target
+        self.assertIn("attribution trailer", guard_git.check_command("git commit --allow-empty --fixup=amend:HEAD~1", self.mine) or "")
+        self.assertIn("attribution trailer", guard_git.check_command("git commit --allow-empty --fixup reword:HEAD~1", self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git commit --allow-empty --fixup=HEAD~1", self.mine))
+        # tainted HEAD, clean target: a legitimate repair passes
+        git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: tainted again\n\nClaude-Session: abc")
+        self.assertIsNone(guard_git.check_command("git commit --amend --allow-empty --fixup=amend:HEAD~1 --no-edit", self.mine))
+
+    def test_uncheckable_stdin_message_is_denied_with_its_own_reason(self):
+        reason = guard_git.check_command("cat msg.txt | git commit -F -", self.mine)
+        self.assertIn("cannot be checked", reason or "")
 
     def test_push_rejects_unpushed_commits_with_a_trailer(self):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)

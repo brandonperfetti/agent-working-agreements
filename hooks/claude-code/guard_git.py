@@ -23,6 +23,8 @@ PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 # The profile's no-attribution rule, as `procedures/rule-zero-check.md` greps for it.
 TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session):|generated with", re.IGNORECASE | re.MULTILINE)
+HERESTRING = re.compile(r"<<<[ \t]*(?:'(?P<sq>[^']*)'|\"(?P<dq>[^\"]*)\"|(?P<bare>\S+))")
+STDIN_MESSAGE = re.compile(r"(^|\s)(-[a-zA-Z]*F|--file)(=| )?-(\s|$)")
 COMMIT_VALUE_OPTS = {
     "-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
@@ -47,7 +49,7 @@ GH_MERGE_MUTATIONS = re.compile(
 FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
 HEREDOC = re.compile(
     # The delimiter line is exact for `<<`; `<<-` strips leading tabs only, as the shell does.
-    r"^(?P<head>[^\n]*<<(?P<dash>-?)[ \t]*['\"]?(?P<tag>\w+)['\"]?[^\n]*)\n.*?^(?(dash)\t*)(?P=tag)$",
+    r"^(?P<head>[^\n]*<<(?P<dash>-?)[ \t]*['\"]?(?P<tag>[\w-]+)['\"]?[^\n]*)\n.*?^(?(dash)\t*)(?P=tag)$",
     re.DOTALL | re.MULTILINE,
 )
 
@@ -147,9 +149,9 @@ def email_of(ident):
     return match.group(1) if match else ident.strip()
 
 
-def check_commit(args, directory, configs, env):
-    """Resolve the author the commit will carry, as git would."""
-    if "--dry-run" in args:
+def check_commit(args, directory, configs, env, stdin_checked=False):
+    """Resolve the author the commit will carry, as git would, then read its message."""
+    if "--dry-run" in args or "-n" in args:
         return None
     author = None
     for index, arg in enumerate(args):
@@ -168,8 +170,11 @@ def check_commit(args, directory, configs, env):
     email = email_of(author)
     if email != AUTHOR_EMAIL:
         return "a commit authored as {}".format(email or "an empty email")
-    if TRAILER.search(commit_message(args, directory)):
+    message, stdin_used = commit_message(args, directory)
+    if TRAILER.search(message):
         return "a commit carrying an attribution trailer"
+    if stdin_used and not stdin_checked:
+        return "a commit whose stdin message cannot be checked for attribution trailers"
     return None
 
 
@@ -179,7 +184,7 @@ def commit_message(args, directory):
     `-F -` is read by heredoc_commit_messages from the raw command; a piped stdin is not readable
     here, and the push check reads the committed message instead.
     """
-    parts, supplied = [], False
+    parts, supplied, stdin_used = [], False, False
     index = 0
     while index < len(args) and args[index] != "--":
         arg = args[index]
@@ -194,11 +199,17 @@ def commit_message(args, directory):
         if not has_value and (arg in COMMIT_VALUE_OPTS or cluster) and index + 1 < len(args):
             value = args[index + 1]
             index += 1
-        if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message"):
+        if name in ("-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c",
+                    "--reedit-message", "--fixup", "--squash"):
             supplied = True
-        if name in ("-m", "--message", "--trailer"):
+        if name in ("-m", "--message"):
             parts.append(value)
-        elif name in ("-F", "--file") and value and value != "-":
+        elif name == "--trailer":
+            # Git accepts `Key=Value` as well as `Key: Value`; normalise to the colon form.
+            parts.append(re.sub(r"^([^:=]+)=", r"\1: ", value))
+        elif name in ("-F", "--file") and value == "-":
+            stdin_used = True
+        elif name in ("-F", "--file") and value:
             try:
                 path = os.path.join(directory, os.path.expanduser(value))
                 with open(path, errors="replace") as handle:
@@ -207,11 +218,17 @@ def commit_message(args, directory):
                 pass
         elif name in ("-C", "--reuse-message", "-c", "--reedit-message") and value:
             parts.extend(git_lines(directory, ["log", "-1", "--format=%B", value]) or [])
+        elif name in ("--fixup", "--squash") and value:
+            # `--fixup=amend:<c>` / `reword:<c>` take the target's message; a plain fixup/squash
+            # generates "fixup! <subject>" from it, which carries no trailer.
+            kind, sep, target = value.partition(":")
+            if sep and kind in ("amend", "reword"):
+                parts.extend(git_lines(directory, ["log", "-1", "--format=%B", target]) or [])
         index += 1
     if "--amend" in args[: args.index("--") if "--" in args else len(args)] and not supplied:
-        # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C replaces it.
+        # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C/--fixup replaces it.
         parts.extend(git_lines(directory, ["log", "-1", "--format=%B", "HEAD"]) or [])
-    return "\n".join(parts)
+    return "\n".join(parts), stdin_used
 
 
 def check_push_authors(refspecs, directory, tags=False):
@@ -277,7 +294,7 @@ def check_push(args, directory):
     return check_push_authors(refspecs, directory, "--tags" in options)
 
 
-def check_git(tokens, directory, env):
+def check_git(tokens, directory, env, stdin_checked=False):
     index, configs = 1, []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
@@ -288,7 +305,7 @@ def check_git(tokens, directory, env):
     if index < len(tokens) and tokens[index] == "push":
         return check_push(tokens[index + 1 :], directory)
     if index < len(tokens) and tokens[index] == "commit":
-        return check_commit(tokens[index + 1 :], directory, configs, env)
+        return check_commit(tokens[index + 1 :], directory, configs, env, stdin_checked)
     return None
 
 
@@ -391,27 +408,47 @@ def check_gh(tokens, directory, env):
     return None
 
 
-def heredoc_commit_messages(command):
-    """Bodies of heredocs that feed `git commit -F -` (or `--file -`/`--file=-`) on stdin.
+def reads_commit_stdin(reader):
+    """True when the simple command before a `<<`/`<<<` is `git commit` reading its message from stdin."""
+    last = re.split(r"\|\||&&|[|;]", reader)[-1]  # the command right before the redirection
+    try:
+        tokens = strip_prefix(shlex.split(last, posix=True))
+    except ValueError:
+        return False
+    if not tokens or os.path.basename(tokens[0]) != "git" or "commit" not in tokens:
+        return False
+    if "--dry-run" in tokens or "-n" in tokens:
+        return False
+    return bool(STDIN_MESSAGE.search(" " + " ".join(tokens[tokens.index("commit") :]) + " "))
 
-    A pipe into `-F -` cannot be read here; the push check reads the committed message later.
+
+def heredoc_commit_messages(command):
+    """Bodies of heredocs and here-strings that feed `git commit -F -` on stdin.
+
+    A pipe into `-F -` cannot be read here, so check_commit denies it as uncheckable.
     """
     bodies = []
     for match in HEREDOC.finditer(command):
         head = match.group("head")
         reader = head.split("<<", 1)[0]  # the command that consumes the body, not a trailing comment
-        if re.search(r"\bgit\b.*\bcommit\b", reader) and re.search(r"(-F|--file)[ =]?-(\s|$)", reader + " "):
+        if reads_commit_stdin(reader):
             body = match.group(0)[len(head) :]
             if match.group("dash"):
                 body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)  # `<<-` strips leading tabs
             bodies.append(body)
+    for match in HERESTRING.finditer(command):
+        reader = command[: match.start()].split("\n")[-1]
+        if reads_commit_stdin(reader):
+            bodies.append(match.group("sq") or match.group("dq") or match.group("bare") or "")
     return "\n".join(bodies)
 
 
 def check_command(command, directory, inherited=None):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
-    if TRAILER.search(heredoc_commit_messages(command)):
+    stdin_message = heredoc_commit_messages(command)
+    if TRAILER.search(stdin_message):
         return "a commit carrying an attribution trailer"
+    stdin_checked = bool(stdin_message)
     exported = dict(inherited or {})
     for tokens in segments(command):
         tokens = strip_redirects(tokens)
@@ -436,7 +473,7 @@ def check_command(command, directory, inherited=None):
                     reason = check_command(tokens[index + 1], directory, env)
                     break
         elif head == "git":
-            reason = check_git(tokens, directory, env)
+            reason = check_git(tokens, directory, env, stdin_checked)
         elif head == "gh":
             reason = check_gh(tokens, directory, env)
         if reason:
@@ -449,7 +486,12 @@ def main():
     command = payload.get("tool_input", {}).get("command", "")
     reason = check_command(command, payload.get("cwd") or os.getcwd())
     if reason:
-        if "attribution trailer" in reason:
+        if "cannot be checked" in reason:
+            advice = (
+                "RULE ZERO: the message must be readable here. Pass it with -m, -F <file> or a "
+                "heredoc (-F - <<'EOF'), not a pipe, so the guard can check for attribution lines."
+            )
+        elif "attribution trailer" in reason:
             advice = (
                 "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
                 "Remove the trailer (git commit --amend for a commit already made) and retry."
