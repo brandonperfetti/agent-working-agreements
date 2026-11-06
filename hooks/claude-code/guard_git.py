@@ -125,6 +125,15 @@ def redirections(line, quote=None):
             if char == "'":
                 quote = None
             index += 1; continue
+        arithmetic = line.startswith("$((", index) or (
+            quote is None and line.startswith("((", index) and (index == 0 or line[index - 1] in " \t;|&")
+        )
+        if arithmetic:  # `$((1<<3))` and `(( x <<= 1 ))` shift bits; no operator lives inside them
+            depth, index = 2, index + (3 if line[index] == "$" else 2)
+            while index < len(line) and depth:
+                depth += {"(": 1, ")": -1}.get(line[index], 0)
+                index += 1
+            continue
         if line.startswith("$(", index):  # a command substitution resets quoting inside it
             outer.append(quote); quote = None; index += 2; continue
         if char == ")" and outer and quote is None:
@@ -143,7 +152,7 @@ def redirections(line, quote=None):
             break  # a comment: nothing after it is an operator
         if char in ";|&" and not outer:
             separators.append(index)
-        fd = int(line[index - 1]) if index and line[index - 1].isdigit() and (index < 2 or line[index - 2] in " \t") else 0
+        fd = int(line[index - 1]) if index and line[index - 1] in "0123456789" and (index < 2 or line[index - 2] in " \t") else 0
         if line.startswith("<<<", index):
             start = index + 3
             while start < len(line) and line[start] in " \t":
@@ -206,8 +215,9 @@ def heredocs(command):
 def drop_heredocs(command):
     """Blank each heredoc body, unless a shell is reading it as commands."""
     for head, body, dash, quoted, (start, end), _line in reversed(heredocs(command)):
-        # A shell as a command word (`bash`, `/bin/zsh -s`), not a script name such as `check.sh`.
-        if re.search(r"(^|[\s;&|(/\"'])(ba|z)?sh(?=[\s<\"']|$)", head):
+        # A shell as a command word (`bash`, `/bin/zsh -s`, `dash`, `source /dev/stdin`), not a
+        # script name such as `check.sh`.
+        if re.search(r"(^|[\s;&|(/\"'])((ba|z|da|k)?sh|source|\.)(?=[\s<\"']|$)", head):
             continue
         command = command[:start] + command[end:]  # body and delimiter line go; the head stays
     return command
@@ -305,9 +315,9 @@ def email_of(ident):
     return match.group(1) if match else ident.strip()
 
 
-def check_commit(args, directory, configs, env, stdin_bodies=None):
+def check_commit(args, directory, configs, env, stdin_bodies=None, written=frozenset()):
     """Resolve the author the commit will carry, as git would, then read its message."""
-    message, stdin_used, dry_run = commit_message(args, directory)
+    message, stdin_used, dry_run = commit_message(args, directory, written=written)
     if dry_run:  # option-aware: `-m --dry-run` is a message, not a dry run; `-n` is --no-verify
         return None
     author = None
@@ -360,8 +370,11 @@ def canonical(name):
     return matches[0] if len(matches) == 1 else name
 
 
-def commit_message(args, directory, read=True):
+def commit_message(args, directory, read=True, written=frozenset()):
     """The message text the command supplies: -m parts, -F files and --trailer lines.
+
+    `written` holds the words of the commands that run first: a `-F` file one of them names may be
+    rewritten before the commit reads it, so its text on disk now proves nothing.
 
     `-F -` is read by heredoc_commit_messages from the raw command; a piped stdin is not readable
     here, and the push check reads the committed message instead.
@@ -402,7 +415,8 @@ def commit_message(args, directory, read=True):
             path = os.path.join(directory, os.path.expanduser(value))
             # Only a regular file is read: /dev/stdin, a FIFO or a device could block the hook or
             # hand it the hook's own stdin, so those count as unreadable.
-            if not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
+            named = any(value == word or word.endswith(">" + value) for word in written)
+            if named or not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
                 unreadable = True
             else:
                 try:
@@ -510,7 +524,7 @@ def check_push(args, directory):
     return check_push_authors(refspecs, directory, "--tags" in options)
 
 
-def check_git(tokens, directory, env, stdin_bodies=None):
+def check_git(tokens, directory, env, stdin_bodies=None, written=frozenset()):
     index, configs = 1, []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
@@ -521,7 +535,7 @@ def check_git(tokens, directory, env, stdin_bodies=None):
     if index < len(tokens) and tokens[index] == "push":
         return check_push(tokens[index + 1 :], directory)
     if index < len(tokens) and tokens[index] == "commit":
-        return check_commit(tokens[index + 1 :], directory, configs, env, stdin_bodies)
+        return check_commit(tokens[index + 1 :], directory, configs, env, stdin_bodies, written)
     return None
 
 
@@ -717,20 +731,29 @@ def heredoc_commit_messages(command):
     return bodies, substituted
 
 
-CONTINUATION = re.compile(r"\\\n")
+CONTINUATION = re.compile(r"(\\+)\n")
+
+
+def join_continuations(command):
+    """Join `\`-newline as bash does before it reads anything else: only an unescaped backslash
+    continues the line, so `a\\` followed by a newline ends a command, as it does in the shell."""
+    return CONTINUATION.sub(lambda m: m.group(1)[:-1] if len(m.group(1)) % 2 else m.group(0), command)
 
 
 def check_command(command, directory, inherited=None):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
-    command = CONTINUATION.sub("", command)  # bash joins `\`-newline before it reads anything else
+    command = join_continuations(command)
     stdin_bodies, substituted = heredoc_commit_messages(command)
     if TRAILER.search("\n".join(b for b in stdin_bodies + substituted if b)):
         return "a commit carrying an attribution trailer"
     if any(b is None for b in substituted):
         return "a commit whose stdin message cannot be checked for attribution trailers"
     exported = dict(inherited or {})
-    for tokens in segments(command):
-        tokens = strip_redirects(tokens)
+    earlier = []  # the words of the simple commands already run: a file they name may be rewritten
+    for raw_tokens in segments(command):
+        written = frozenset(earlier)
+        earlier.extend(raw_tokens)
+        tokens = strip_redirects(raw_tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
         env = dict(exported)
@@ -752,7 +775,7 @@ def check_command(command, directory, inherited=None):
                     reason = check_command(tokens[index + 1], directory, env)
                     break
         elif head == "git":
-            reason = check_git(tokens, directory, env, stdin_bodies)
+            reason = check_git(tokens, directory, env, stdin_bodies, written)
         elif head == "gh":
             reason = check_gh(tokens, directory, env)
         if reason:

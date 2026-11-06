@@ -7,7 +7,7 @@ other clients, git aliases).
 
 | Hook | Event | What it does |
 | --- | --- | --- |
-| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main`, PR merges into `develop`, `main` or `master` (or whose base it cannot read), and commits or pushes whose author is not `brandon@brandonperfetti.com` or whose message carries an attribution trailer (RULE ZERO); a message fed on stdin (`-F -`, a here-string, a pipe) is denied as uncheckable, and a substituted message is read only as `-m "$(cat <<'TAG' … TAG\n)"` |
+| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main`, PR merges into `develop`, `main` or `master` (or whose base it cannot read), and commits or pushes whose author is not `brandon@brandonperfetti.com` or whose message carries an attribution trailer (RULE ZERO); a message fed on stdin (`-F -`, a here-string, a pipe) is denied as uncheckable, and a substituted message is read only as `-m "$(cat <<'TAG' … TAG\n)"`, and a `-F` file named by an earlier command in the line counts as unreadable |
 | `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode and the agreement paths after each compaction |
 | `look_again.py` | `Stop` | Sends the agent back once when a file it read or wrote since your last prompt has changed since, naming the file, so it reads it again before it reports |
 

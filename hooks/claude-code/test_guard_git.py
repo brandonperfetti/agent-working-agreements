@@ -571,6 +571,38 @@ class AuthorTest(unittest.TestCase):
         self.assertIn("cannot be checked", guard_git.check_command("git commit -F - <<'EOF' < hooks/claude-code/test_guard_git.py\nclean\nEOF", self.mine) or "")
         self.assertIn("cannot be checked", guard_git.check_command("git commit -F - < hooks/claude-code/test_guard_git.py", self.mine) or "")
 
+    def test_arithmetic_escapes_and_shell_readers_hide_nothing(self):
+        for command in (
+            "echo $((1<<3))\ngit push --force origin feature",
+            "(( x = 1<<3 ))\ngit push origin master",
+            'echo "$((1<<3))"\ngh pr merge 1',
+            "echo a\\\\\ngit push -f origin feature",
+            "dash <<EOF\ngit push -f origin feature\nEOF",
+            "source /dev/stdin <<EOF\ngit push -f origin feature\nEOF",
+            ". /dev/stdin <<EOF\ngit push -f origin feature\nEOF",
+        ):
+            with self.subTest(command=command):
+                reason = guard_git.check_command(command, self.mine) or ""
+                self.assertTrue(reason and "cannot be checked" not in reason, reason)
+        for command in ("echo $((1<<3)) && git push origin feature", "echo a\\\ngit push origin feature", "./check.sh <<EOF\ngit push -f\nEOF"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.mine))
+        self.assertIsNone(guard_git.check_command("git status \u00b2.txt <<EOF\nx\nEOF", self.mine))  # a non-ASCII digit is no descriptor
+
+    def test_message_file_written_earlier_in_the_command_is_uncheckable(self):
+        path = os.path.join(self.mine, "msg.txt")
+        with open(path, "w") as handle:
+            handle.write("fix: clean\n")
+        self.assertIsNone(guard_git.check_command("git commit -F msg.txt", self.mine))
+        for command in (  # any earlier mention counts: telling a write from a read is open-ended
+            "cat msg.txt && git commit -F msg.txt",
+            "printf 'fix\\n\\nCo-Authored-By: X <x@y>' > msg.txt && git commit -F msg.txt",
+            "printf 'fix' >msg.txt; git commit -F msg.txt",
+            "cp other msg.txt && git commit --file=msg.txt",
+        ):
+            with self.subTest(command=command):
+                self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
+
     def test_heredoc_bodies_are_data_not_more_heredocs(self):
         nested = "cat msg | git commit -F -\ncat <<'EOF' > notes\ngit commit -F - <<'X'\nclean\nX\nEOF\ngit push origin feature"
         found = guard_git.heredocs(nested)
