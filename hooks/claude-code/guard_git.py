@@ -22,7 +22,7 @@ RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 # The profile's no-attribution rule, as `procedures/rule-zero-check.md` greps for it.
-TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session):|generated with", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
 HERESTRING = re.compile(r"<<<[ \t]*(?:'(?P<sq>[^']*)'|\"(?P<dq>[^\"]*)\"|(?P<bare>\S+))")
 STDIN_MESSAGE = re.compile(r"(^|\s)(-[a-zA-Z]*F|--file)(=| )?-(\s|$)")
 COMMIT_VALUE_OPTS = {
@@ -49,7 +49,7 @@ GH_MERGE_MUTATIONS = re.compile(
 FORCE_FLAGS = {"--force", "--force-if-includes", "--force-with-lease", "--mirror"}
 HEREDOC = re.compile(
     # The delimiter line is exact for `<<`; `<<-` strips leading tabs only, as the shell does.
-    r"^(?P<head>[^\n]*<<(?P<dash>-)?[ \t]*['\"]?(?P<tag>[\w-]+)['\"]?[^\n]*)\n.*?^(?(dash)\t*)(?P=tag)$",
+    r"^(?P<head>[^\n]*<<(?P<dash>-)?[ \t]*['\"]?(?P<tag>[^\s'\"<>|&;()]+)['\"]?[^\n]*)\n.*?^(?(dash)\t*)(?P=tag)$",
     re.DOTALL | re.MULTILINE,
 )
 
@@ -216,7 +216,7 @@ def commit_message(args, directory):
             parts.append(value)
         elif name == "--trailer":
             # Git accepts `Key=Value` as well as `Key: Value`; normalise to the colon form.
-            parts.append(re.sub(r"^([^:=]+)=", r"\1: ", value))
+            parts.append(re.sub(r"^\s*([^:=]+?)\s*[:=]\s*", r"\1: ", value))
         elif name in ("-F", "--file") and value == "-":
             stdin_used = True
         elif name in ("-F", "--file") and value:
@@ -418,16 +418,30 @@ def check_gh(tokens, directory, env):
     return None
 
 
-def reads_commit_stdin(reader):
-    """True when the simple command before a `<<`/`<<<` is `git commit` reading its message from stdin."""
-    last = re.split(r"\|\||&&|[|;]", reader)[-1]  # the command right before the redirection
-    try:
-        tokens = strip_prefix(shlex.split(last, posix=True))
-    except ValueError:
-        return False
+def commit_reader(reader):
+    """The `git commit` tokens of the simple command that ends `reader`, or None.
+
+    Separators inside quotes (an author named "A | B") do not split the command; a dry run
+    commits nothing and so reads nothing worth checking.
+    """
+    simple = None
+    for tokens in segments(reader + " <<EOF\nEOF"):  # terminate a dangling redirection for the lexer
+        if tokens:
+            simple = tokens
+    if not simple:
+        return None
+    tokens = strip_prefix(strip_redirects(simple))
     if not tokens or os.path.basename(tokens[0]) != "git" or "commit" not in tokens:
-        return False
+        return None
     if "--dry-run" in tokens:
+        return None
+    return tokens
+
+
+def reads_commit_stdin(reader):
+    """True when the command before a `<<`/`<<<` is `git commit` reading its message from stdin."""
+    tokens = commit_reader(reader)
+    if not tokens:
         return False
     return bool(STDIN_MESSAGE.search(" " + " ".join(tokens[tokens.index("commit") :]) + " "))
 
@@ -448,8 +462,8 @@ def heredoc_commit_messages(command):
             body = re.sub(r"^\t+", "", body, flags=re.MULTILINE)  # `<<-` strips leading tabs
         if reads_commit_stdin(reader):
             bodies.append(body)
-        elif re.search(r"\bgit\b.*\bcommit\b.*\$\(", reader):
-            substituted.append(body)
+        elif "$(" in reader and commit_reader(reader.rsplit("$(", 1)[0]):
+            substituted.append(body)  # `git commit -m "$(cat <<'EOF' …)"`: the body is the message
     for match in HERESTRING.finditer(command):
         reader = command[: match.start()].split("\n")[-1]
         if reads_commit_stdin(reader):
