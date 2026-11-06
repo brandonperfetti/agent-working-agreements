@@ -55,7 +55,7 @@ git log --format='%B' <base>..HEAD | grep -inE '^(co-authored-by|[a-z-]*-session
 Any match is a send-back. Read an mbox series' message bodies the same way before approval, and
 a PR body, issue or thread reply before it is posted. The one exception is a comment on a
 repository Brandon does not own: check that it carries the line "Posted by an agent on Brandon
-Perfetti's behalf." and nothing more (#245). A commit already on a base branch stays as
+Perfetti's behalf." and no other attribution (#245). A commit already on a base branch stays as
 it is, recorded like an email mismatch. A trailer never established that a commit came through a
 reviewed lane: the two-axis review record under `reviews/`, the gate evidence under `evidence/`
 and the PR trail do; report those.
