@@ -358,6 +358,10 @@ class AuthorTest(unittest.TestCase):
             ('git commit -t form -m "fix: x"', False),
             ('git commit -u -m "{}"'.format(trailer), True),
             ('git commit -m x --trailer "Co-Authored-By=A <a@b>"', True),
+            ('git commit -m x --trail "Co-Authored-By: A <a@b>"', True),
+            ('git commit --mess "fix: clean"', False),
+            ('git commit --dry --mess "{}"'.format(trailer), False),
+            ('git commit --m "{}"'.format(trailer), True),
             ('git commit -m x --trailer "Reviewed-by=A <a@b>"', False),
             ("git commit -aF- <<'EOF'\nfix: x\n{}\nEOF".format(trailer), True),
             ("git commit -F - <<'END-MSG'\nfix: x\n{}\nEND-MSG".format(trailer), True),
@@ -525,7 +529,7 @@ class AuthorTest(unittest.TestCase):
 
     def test_optional_value_options_end_a_cluster(self):
         git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: y\n\nCo-Authored-By: X <x@example.com>")
-        for command in ("git commit --amend -unormal --no-edit", "git commit --amend -Skey --no-edit", "git commit --amend -aunormal --no-edit"):
+        for command in ("git commit --amend -unormal --no-edit", "git commit --amend -Skey --no-edit", "git commit --amend -aunormal --no-edit", "git commit --am --no-edit", "git commit --amen --no-e"):
             with self.subTest(command=command):
                 self.assertIn("attribution trailer", guard_git.check_command(command, self.mine) or "")
         self.assertIsNone(guard_git.check_command('git commit --amend -unormal -m "fix: clean"', self.mine))

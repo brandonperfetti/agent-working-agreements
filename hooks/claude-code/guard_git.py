@@ -345,6 +345,21 @@ def message_of(directory, revision):
     return None if lines is TIMEOUT else (lines or [])
 
 
+COMMIT_LONG_OPTS = (
+    "--amend", "--author", "--cleanup", "--date", "--dry-run", "--file", "--fixup", "--message",
+    "--no-edit", "--no-verify", "--reedit-message", "--reset-author", "--reuse-message", "--squash",
+    "--template", "--trailer", "--untracked-files", "--gpg-sign",
+)
+
+
+def canonical(name):
+    """Git accepts a unique prefix of a long option (`--am`, `--trail`); resolve it, else keep it."""
+    if not name.startswith("--") or name in COMMIT_LONG_OPTS:
+        return name
+    matches = [opt for opt in COMMIT_LONG_OPTS if opt.startswith(name)]
+    return matches[0] if len(matches) == 1 else name
+
+
 def commit_message(args, directory, read=True):
     """The message text the command supplies: -m parts, -F files and --trailer lines.
 
@@ -357,6 +372,9 @@ def commit_message(args, directory, read=True):
     while index < len(args) and args[index] != "--":
         arg = args[index]
         name, has_value, value = arg.partition("=")
+        name = canonical(name)
+        if arg.startswith("--") and not has_value:
+            arg = name  # an abbreviated long option behaves as its full name below
         # A short-option cluster ends at its first value-taking letter: `-am msg`, `-aF file`,
         # `-mmsg`, `-F-`; `-tform` is -t with the value "form", and takes no message.
         # `-u[mode]` and `-S[keyid]` take an attached optional value, so they end a cluster.
@@ -409,7 +427,8 @@ def commit_message(args, directory, read=True):
                 else:
                     parts.extend(reused)
         index += 1
-    if read and "--amend" in args[: args.index("--") if "--" in args else len(args)] and not supplied:
+    amended = any(canonical(a.partition("=")[0]) == "--amend" for a in args[: args.index("--") if "--" in args else len(args)])
+    if read and amended and not supplied:
         # `--amend` without a new message keeps HEAD's; an explicit -m/-F/-C/--fixup replaces it.
         kept = message_of(directory, "HEAD")
         if kept is None:
