@@ -674,11 +674,12 @@ def check_gh(tokens, directory, env):
     return None
 
 
-def commit_reader(reader):
+def commit_reader(reader, last_only=False):
     """The `git commit` tokens of the simple command that ends `reader`, or None.
 
     Separators inside quotes (an author named "A | B") do not split the command; a dry run
-    commits nothing and so reads nothing worth checking.
+    commits nothing and so reads nothing worth checking. `last_only`: only the final simple
+    command counts, so `git commit -m x && echo "$(` is echo's substitution, not the commit's.
     """
     simple = None
     for candidate in (reader, reader + '"', reader + "'"):  # a reader cut inside `-m "$(` is unfinished
@@ -686,7 +687,10 @@ def commit_reader(reader):
             parsed = list(segments(candidate + " <<EOF\nEOF"))  # terminate a dangling redirection
         except Exception:  # pragma: no cover - the lexer raises inside segments
             parsed = []
-        git_segments = [t for t in parsed if t and os.path.basename(strip_prefix(strip_redirects(t))[0] if strip_prefix(strip_redirects(t)) else "") == "git"]
+        parsed = [t for t in parsed if t]
+        if last_only:
+            parsed = parsed[-1:]
+        git_segments = [t for t in parsed if os.path.basename(strip_prefix(strip_redirects(t))[0] if strip_prefix(strip_redirects(t)) else "") == "git"]
         if git_segments:
             simple = git_segments[-1]
             break
@@ -748,7 +752,7 @@ def heredoc_commit_messages(command):
         if reads_commit_stdin(reader):
             bodies.append(None)  # stdin is never read here, whatever feeds it
             continue
-        if "$(" not in line or not commit_reader(line.rsplit("$(", 1)[0]):
+        if "$(" not in line or not commit_reader(line.rsplit("$(", 1)[0], last_only=True):
             continue  # no substituted commit on this line
         match = SUBSTITUTION.match(line)
         entries = by_line.get(line_no, [])
@@ -850,7 +854,7 @@ def main():
                 "template route (-e, -t, GIT_EDITOR/VISUAL/EDITOR, core.editor) set in the same "
                 "command is denied too: drop it from the command."
             )
-        elif "could not be read" in reason:
+        elif reason.startswith("a push whose history could not be read"):
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
         elif "attribution trailer" in reason:
             advice = (

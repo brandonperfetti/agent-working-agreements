@@ -554,6 +554,7 @@ class AuthorTest(unittest.TestCase):
         self.assertIn("attribution trailer", guard_git.check_command('git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)"'.format(trailer), self.mine) or "")
         self.assertIn("attribution trailer", guard_git.check_command('git commit -m "$(cat <<\'EOF\'\nfix: x\n\n{}\nEOF\n)" --no-verify'.format(trailer), self.mine) or "")
         self.assertIsNone(guard_git.check_command("git add . && " + clean, self.mine))  # `.` here is an argument, not the shell builtin
+        self.assertIsNone(guard_git.check_command('git commit -m "fix: x" && echo "$(cat <<\'EOF\'\nnotes\nEOF\n)"', self.mine))  # echo's substitution
         self.assertIsNone(guard_git.check_command(clean + " && git push origin feature", self.mine))
         for tail in (" && git push origin feature", "; git status", " || true"):
             with self.subTest(tail=tail):
