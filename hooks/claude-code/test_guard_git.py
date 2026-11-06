@@ -623,9 +623,21 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn("cannot be checked", guard_git.check_command(command, self.mine) or "")
 
+    def test_retained_and_abbreviated_authors_are_checked(self):
+        commit_as(self.mine, self.OTHER)  # HEAD now carries a foreign author
+        for command in ("git commit --amend --no-edit", 'git commit -C HEAD', 'git commit --reuse-message=HEAD', 'git commit -m "fix: x" --auth="Some One <{}>"'.format(self.OTHER)):
+            with self.subTest(command=command):
+                self.assertIn(self.OTHER, guard_git.check_command(command, self.mine) or "")
+        for command in ("git commit --amend --no-edit --reset-author", 'git commit -C HEAD --author="Brandon Perfetti <{}>"'.format(guard_git.AUTHOR_EMAIL)):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.mine))
+        self.assertIn("cannot be checked", guard_git.check_command("git commit -C nonexistent-rev --no-edit", self.mine) or "")
+
     def test_configured_trailers_are_uncheckable(self):
         git(self.mine, "config", "trailer.credit.key", "Co-Authored-By")
         self.assertIn("cannot be checked", guard_git.check_command('git commit -m "fix: x" --trailer "credit=A <a@b>"', self.mine) or "")
+        self.assertIn("cannot be checked", guard_git.check_command('git --config-env=trailer.x.key=V commit -m "fix: x" --trailer "x=A <a@b>"', self.mine) or "")
+        self.assertIn("cannot be checked", guard_git.check_command('git --config-env trailer.x.key=V commit -m "fix: x" --trailer "x=A <a@b>"', self.mine) or "")
         self.assertIsNone(guard_git.check_command('git commit -m "fix: x"', self.mine))  # no --trailer: the setting adds nothing
 
     def test_r8_routes_are_closed(self):

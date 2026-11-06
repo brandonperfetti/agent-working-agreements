@@ -42,7 +42,7 @@ ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"ash", "bash", "dash", "ksh", "mksh", "sh", "zsh"}
 SEPARATORS = ";&|()\n"
-GIT_VALUE_OPTS = {"-C", "-c", "--git-dir", "--namespace", "--work-tree"}
+GIT_VALUE_OPTS = {"-C", "-c", "--config-env", "--git-dir", "--namespace", "--work-tree"}
 PUSH_VALUE_OPTS = {"-o", "--exec", "--push-option", "--receive-pack", "--repo"}
 GH_VALUE_OPTS = {"-R", "--repo"}
 # Options that take a value, for `gh pr merge` and `gh api` alike; none is a flag in the other.
@@ -344,14 +344,28 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
         configured = git_lines(directory, ["config", "--get-regexp", r"^trailer\."], dict(os.environ, **env))
         if configured is TIMEOUT or configured:  # `trailer.<key>.cmd` rewrites what --trailer adds
             return "a commit whose message cannot be checked for attribution trailers"
-    author = None
+    author, retained, reset = None, None, False
     for index, arg in enumerate(args):
         if arg == "--":
             break
-        if arg.startswith("--author="):
-            author = arg.split("=", 1)[1]
-        elif arg == "--author" and index + 1 < len(args):
-            author = args[index + 1]
+        name, has_value, value = arg.partition("=")
+        name = canonical(name) if arg.startswith("--") else name
+        if name == "--author":
+            author = value if has_value else (args[index + 1] if index + 1 < len(args) else None)
+        elif name == "--reset-author":
+            reset = True
+        elif name in ("-C", "--reuse-message", "-c", "--reedit-message"):
+            retained = value if has_value else (args[index + 1] if index + 1 < len(args) else None)
+        elif name == "--amend" and retained is None:
+            retained = "HEAD"
+    if author is None and retained and not reset:
+        # `-C`, `-c` and `--amend` keep the source commit's author unless --reset-author or --author.
+        if retained.startswith("-"):
+            return "a commit whose author cannot be checked"
+        lines = git_lines(directory, ["log", "-1", "--format=%ae", "--end-of-options", retained])
+        if lines is TIMEOUT or lines is None:
+            return "a commit whose author cannot be checked"
+        author = lines[0] if lines else None
     if author is None:
         options = [part for config in configs for part in ("-c", config)]
         lines = git_lines(directory, options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
@@ -588,6 +602,10 @@ def check_git(tokens, directory, env, stdin_bodies=None, written=()):
             directory = os.path.join(directory, os.path.expanduser(tokens[index + 1]))
         elif tokens[index] == "-c" and index + 1 < len(tokens):
             configs.append(tokens[index + 1])
+        elif tokens[index] == "--config-env" and index + 1 < len(tokens):
+            configs.append(tokens[index + 1])  # `key=ENVVAR`: the key is what matters here
+        elif tokens[index].startswith("--config-env="):
+            configs.append(tokens[index].split("=", 1)[1])
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
     if index < len(tokens) and tokens[index] == "push":
         return check_push(tokens[index + 1 :], directory)
