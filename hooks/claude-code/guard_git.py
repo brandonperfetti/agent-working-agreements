@@ -3,11 +3,11 @@
 
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
-ritual and merge boundary; commits whose author is not Brandon's email or that
-skip the commit-msg hook; and pushes whose unpushed commits carry another
-author or an attribution line (RULE ZERO). The message of a commit being made
-is the commit-msg hook's to read (hooks/git), where git holds it final; this
-guard reads only what git has already written. Merges between feature, wave,
+ritual and merge boundary; commits that skip the commit-msg hook; and pushes
+whose unpushed commits carry another author or an attribution line (RULE
+ZERO). The author and message of a commit being made are the commit-msg hook's
+to read (hooks/git), where git holds them final; this guard reads only what
+git has already written. Merges between feature, wave,
 lane and hotfix branches pass. It parses the command rather than grepping it,
 so a commit message that mentions `git push --force` passes. It stops honest
 mistakes, not a determined bypass: git aliases, refspecs in shell variables and
@@ -153,23 +153,19 @@ def git_lines(directory, args, env=None, raw=False):
     return result.stdout if raw else result.stdout.splitlines()
 
 
-def email_of(ident):
-    match = re.search(r"<([^>]*)>", ident)
-    return match.group(1) if match else ident.strip()
-
-
-def check_commit(args, directory, configs, env, selectors=()):
-    """Resolve the author the commit will carry, as git would, and keep the commit-msg hook in play."""
-    flags, values, skip = [], {}, None
-    for arg in args[: args.index("--")] if "--" in args else args:
+def check_commit(args):
+    """Keep the commit-msg hook in play: it, not this guard, reads the message and the author."""
+    flags, skip = [], None
+    for arg in args:
         if skip:
-            values[skip] = arg  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message
-            skip = None
+            skip = None  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message, `-m --` too
+        elif arg == "--":
+            break
         elif arg.startswith("-"):
-            name, has_value, value = arg.partition("=")
+            name, has_value, _value = arg.partition("=")
             flags.append(name if has_value else arg)
             if has_value:
-                values[name] = value
+                pass  # `--author=X`: the value is attached
             elif arg in COMMIT_VALUE_OPTS:
                 skip = arg  # the next argument is this option's value
             elif not arg.startswith("--"):
@@ -191,16 +187,6 @@ def check_commit(args, directory, configs, env, selectors=()):
 
     if any(skips(a) for a in flags):
         return "a commit that skips the commit-msg hook (--no-verify)"
-    author = values.get("--author")
-    if author is None:
-        options = [part for config in configs for part in ("-c", config)]
-        lines = git_lines(directory, list(selectors) + options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
-        if not lines:
-            return None
-        author = lines[0]
-    email = email_of(author)
-    if email != AUTHOR_EMAIL:
-        return "a commit authored as {}".format(email or "an empty email")
     return None
 
 
@@ -209,9 +195,17 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None):
 
     `selectors` are the command's `--git-dir`/`--work-tree` options and `env` its GIT_DIR and
     GIT_WORK_TREE, so the scan reads the repository the push would use."""
-    sources = [refspec.lstrip("+").partition(":")[0] for refspec in refspecs] or ["HEAD"]
-    # `git push origin tag v1` names refs/tags/v1; the word `tag` is not a revision.
-    sources = [source for source in sources if source and source != "tag"]
+    # `git push origin tag v1` names refs/tags/v1: the standalone word `tag` is a marker and the
+    # name after it the revision to scan; `tag:topic`, or `tag` alone at the end, is a branch.
+    named, index = [], 0
+    while index < len(refspecs):
+        if refspecs[index] == "tag" and index + 1 < len(refspecs):
+            index += 1  # drop the marker, keep the tag name
+            continue
+        named.append(refspecs[index])
+        index += 1
+    sources = [refspec.lstrip("+").partition(":")[0] for refspec in named] or ["HEAD"]
+    sources = [source for source in sources if source]
     if any(source.startswith("-") for source in sources):
         return "a push naming an option-like revision"
     if not sources and not tags:
@@ -290,7 +284,7 @@ def check_git(tokens, directory, env):
     if index < len(tokens) and tokens[index] == "push":
         return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")})
     if index < len(tokens) and tokens[index] == "commit":
-        return check_commit(tokens[index + 1 :], directory, configs, env, selectors)
+        return check_commit(tokens[index + 1 :])
     return None
 
 

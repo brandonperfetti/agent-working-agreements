@@ -315,31 +315,29 @@ class AuthorTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_commit_reads_the_identity_git_would_use(self):
-        brandon = guard_git.AUTHOR_EMAIL
-        for directory, command, blocked in (
-            (self.mine, 'git commit -m "fix: x"', False),
-            (self.other, 'git commit -m "fix: x"', True),
-            (self.mine, "git -c user.email={} commit -m x".format(self.OTHER), True),
-            (self.mine, "GIT_AUTHOR_EMAIL={} git commit -m x".format(self.OTHER), True),
-            (self.mine, "git --git-dir={0}/.git --work-tree={0} commit -m x".format(self.other), True),
-            (self.mine, "env GIT_AUTHOR_EMAIL={} git commit -m x".format(self.OTHER), True),
-            (self.mine, 'git commit --author="X <{}>" -m x'.format(self.OTHER), True),
-            (self.other, 'git commit --author "B <{}>" -m x'.format(brandon), False),
-            (self.other, "git -c user.email={} commit -m x".format(brandon), False),
-            (self.other, "git commit --dry-run", False),
-            (self.mine, 'git commit -m "GIT_AUTHOR_EMAIL={}"'.format(self.OTHER), False),
-            (self.mine, "export GIT_AUTHOR_EMAIL={}; git commit -m x".format(self.OTHER), True),
-            (self.mine, 'export GIT_AUTHOR_EMAIL={}; bash -c "git commit -m y"'.format(self.OTHER), True),
+    def test_commit_identity_is_the_hooks_to_read(self):
+        # The commit-msg hook reads the author git resolves; the guard predicts nothing and so never
+        # false-denies `--author=Brandon` or a repo-local identity it cannot see.
+        for directory, command in (
+            (self.other, 'git commit -m "fix: x"'),
+            (self.mine, 'git commit --author="X <{}>" -m x'.format(self.OTHER)),
+            (self.mine, "git commit --author=Brandon -m x"),
+            (self.other, "git commit --dry-run"),
         ):
             with self.subTest(directory=os.path.basename(directory), command=command):
-                reason = guard_git.check_command(command, directory)
-                self.assertEqual(reason is not None, blocked, reason)
+                self.assertIsNone(guard_git.check_command(command, directory))
+        for command in ("git commit -m -- -n --allow-empty", 'git commit --author -- -n -m x', "git commit -n -- file"):
+            with self.subTest(command=command):
+                self.assertIn("commit-msg hook", guard_git.check_command(command, self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git commit -m x -- -n", self.mine))  # after `--`, `-n` is a path
 
     def test_push_reads_every_unpushed_author_and_message(self):
         commit_as(self.mine, self.OTHER)  # an older foreign commit under a clean tip
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
         self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "branch", "-q", "tag")  # a branch called tag is a source, not the `tag <name>` marker
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin tag:topic", self.mine) or "")
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin tag", self.mine) or "")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "--reset-author", "-m", "fix: x\n\nCo-Authored-By: A <a@b>")
         git(self.mine, "push", "-q", "origin", "HEAD~1:refs/heads/other")  # the foreign commit is now on a remote
         self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")
