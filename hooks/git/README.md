@@ -29,6 +29,10 @@ Claude Code hooks.
 A repository that sets its own `core.hooksPath` (a husky repository, for one) does not run the
 global hooks; git takes the repository's setting first. `git commit --no-verify` skips every
 commit-msg hook. `git cherry-pick`, `git rebase` and `git merge` write commits without running it,
-and keep the author and message they import. Both are covered by the Claude Code guard, which denies
+and keep the author and message they import. The Claude Code guard's push-time scan is a
+best-effort read: it checks the commits reachable from the pushed sources that the destination
+remote's tracking refs do not already hold, so stale tracking refs or a remote git chooses by
+configuration the guard does not read can leave a commit unscanned. The complete check is the
+RULE ZERO read before a delivery is presented. Both are covered by the Claude Code guard, which denies
 `--no-verify` and reads the author and message of every commit a push would send, and by the RULE
 ZERO check before a delivery is presented (`procedures/rule-zero-check.md`).

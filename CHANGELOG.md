@@ -14,7 +14,7 @@ being retrofitted onto the other.
   The rule was prose plus a manual grep. A `commit-msg` git hook (`hooks/git`) now denies a commit
   whose message carries a `Co-Authored-By`, `*-Session` or "generated with" line or whose author is
   not Brandon's email, on every client that commits through git; the Claude Code guard denies
-  `--no-verify` and reads every commit a push would send from the objects. A first attempt parsed
+  `--no-verify` and, best effort, reads the commits a push sends from the objects. A first attempt parsed
   the message out of the shell command and did not converge after nine review rounds (PR #250,
   closed unmerged): check the fact where it is final, not where it must be predicted. Brandon
   decided. Controls are the hooks' tests; the prose cut waits for the other routes' (#243).

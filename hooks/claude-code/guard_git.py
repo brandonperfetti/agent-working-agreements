@@ -256,7 +256,8 @@ def check_push(args, directory, selectors=(), env=None):
     # A dry run writes nothing, and the pickup guard's hook probe is one.
     if "--dry-run" in options or "-n" in options:
         return None
-    short_force = any(re.fullmatch(r"-[a-zA-Z]*f[a-zA-Z]*", opt) for opt in options)
+    # In a short cluster, `-o` takes the rest as its value (`-ofleet`), so only letters before it count.
+    short_force = any(re.fullmatch(r"-[a-zA-Z]*f[a-zA-Z]*", opt.split("o", 1)[0] if opt.startswith("-") and not opt.startswith("--") else opt) for opt in options)
     refspecs = positional[1:]
     if short_force or FORCE_FLAGS & set(options) or any(r.startswith("+") for r in refspecs):
         return "a force-push"
@@ -269,10 +270,20 @@ def check_push(args, directory, selectors=(), env=None):
     if "--repo" in options or (remote and re.search(r"[:/@]", remote)):
         return "a push to a remote named by URL or --repo; name the remote"
     if remote is None:
-        pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment)
-        remote = pushed[0].strip().partition("/")[0] if pushed and "/" in pushed[0] else "origin"
-    mirror = git_lines(directory, list(selectors) + ["config", "--get", "remote.{}.mirror".format(remote)], environment)
-    if mirror and mirror[0].strip().lower() in ("true", "yes", "on", "1"):
+        # branch.<name>.pushRemote, then remote.pushDefault, then the remote `@{push}` names, else origin.
+        branch = current_branch(directory, selectors, env)
+        for key in (["config", "--get", "branch.{}.pushRemote".format(branch)] if branch else [None], ["config", "--get", "remote.pushDefault"]):
+            value = git_lines(directory, list(selectors) + key, environment) if key[0] else None
+            if value and value[0].strip():
+                remote = value[0].strip()
+                break
+        if remote is None:
+            pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment)
+            remote = pushed[0].strip().partition("/")[0] if pushed and "/" in pushed[0] else "origin"
+        if re.search(r"[:/@]", remote):
+            return "a push to a remote named by URL or --repo; name the remote"
+    mirror = git_lines(directory, list(selectors) + ["config", "--bool", "--get", "remote.{}.mirror".format(remote)], environment)
+    if mirror and mirror[0].strip() == "true":
         return "a push to a mirror remote, which rewrites and deletes every ref"
     # `remote.<name>.push` maps a bare source (`feature`) or a bare push to other branches, and
     # `push.default=matching` sends every matching branch: the scan below would read the wrong

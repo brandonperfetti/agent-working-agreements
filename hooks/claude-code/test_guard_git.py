@@ -93,6 +93,8 @@ ALLOWED_ANYWHERE = [
     "git push origin feature-master",
     "git push origin master-notes",
     "git push --no-force-with-lease origin feature",
+    "git push -ofleet origin feature",
+    "git push -o fleet origin feature",
     "git push origin feature 2>&1 | tail -5",
     "git push --dry-run origin master",
     "git push -n --force origin feature",
@@ -365,9 +367,25 @@ class AuthorTest(unittest.TestCase):
         for command in ("git push {} feature".format(other_remote), "git push --repo=origin feature", "git push git@github.com:o/r.git feature"):
             with self.subTest(command=command):
                 self.assertIn("named by URL", guard_git.check_command(command, self.mine) or "")
-        git(self.mine, "config", "remote.origin.mirror", "true")
-        self.assertIn("mirror", guard_git.check_command("git push origin", self.mine) or "")
+        for spelling in ("true", "yes", "1", "on"):
+            git(self.mine, "config", "remote.origin.mirror", spelling)
+            self.assertIn("mirror", guard_git.check_command("git push origin", self.mine) or "")
         git(self.mine, "config", "--unset", "remote.origin.mirror")
+        subprocess.run(["git", "-C", self.mine, "config", "--add", "remote.origin.mirror", ""], check=False)  # valueless: true to git
+        # a valueless key is written as `mirror` with no `=`; git --bool reads it as true
+        with open(os.path.join(self.mine, ".git", "config"), "a") as handle:
+            handle.write("[remote \"origin\"]\n\tmirror\n")
+        self.assertIn("mirror", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "--unset-all", "remote.origin.mirror")
+        # The remote a bare push uses: pushRemote, then pushDefault, before @{push} or origin.
+        git(self.mine, "config", "branch.feature.pushRemote", "fork")
+        self.assertIsNone(guard_git.check_command("git push", self.mine))  # fork already has feature
+        git(self.mine, "config", "branch.feature.pushRemote", other_remote)
+        self.assertIn("named by URL", guard_git.check_command("git push", self.mine) or "")
+        git(self.mine, "config", "--unset", "branch.feature.pushRemote")
+        git(self.mine, "config", "remote.pushDefault", "fork")
+        self.assertIsNone(guard_git.check_command("git push", self.mine))
+        git(self.mine, "config", "--unset", "remote.pushDefault")
         # push.default=upstream with the feature branch tracking the release branch: the bare push lands on master.
         git(self.mine, "push", "-q", "origin", "feature:master")
         git(self.mine, "fetch", "-q", "origin")
