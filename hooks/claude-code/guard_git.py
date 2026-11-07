@@ -65,6 +65,9 @@ def drop_heredoc(match):
 def segments(command):
     """Split a command line into one token list per simple command."""
     command = HEREDOC.sub(drop_heredoc, command)
+    # `2>&1`, `>&2`, `&>log`: the `&` of a compound redirect would read as a separator; drop it so the
+    # redirect stays one word (`2>1`, `>2`, `>log`) that strip_redirects removes whole.
+    command = re.sub(r"([<>])&|&([<>])", lambda m: m.group(1) or m.group(2), command)
     try:
         lexer = shlex.shlex(command, posix=True, punctuation_chars=SEPARATORS)
         lexer.whitespace = " \t\r"
@@ -75,16 +78,8 @@ def segments(command):
         # Unbalanced quotes: read it as plain words so a real push still shows.
         parts = re.split(r"&&|\|\||[;|\n()]", command)
         return [part.replace('"', " ").replace("'", " ").split() for part in parts]
-    joined, index = [], 0
-    while index < len(tokens):  # `2>&1`, `>&2`, `&>log`: the `&` of a compound redirect is not a separator
-        token = tokens[index]
-        if re.fullmatch(r"\d*[<>]+", token) and index + 2 < len(tokens) and tokens[index + 1] == "&" and re.fullmatch(r"\d+|-|\S+", tokens[index + 2]):
-            joined.append(token + "&" + tokens[index + 2]); index += 3; continue
-        if token == "&" and index + 1 < len(tokens) and re.match(r"[<>]", tokens[index + 1]):
-            joined.append("&" + tokens[index + 1]); index += 2; continue
-        joined.append(token); index += 1
     result, current = [], []
-    for token in joined:
+    for token in tokens:
         if token and set(token) <= set(SEPARATORS):
             result.append(current)
             current = []
@@ -189,20 +184,16 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
     `git merge` makes a commit too and takes the same `--no-verify`."""
     value_opts = COMMIT_VALUE_OPTS if value_opts is None else value_opts
     value_letters, attached_letters, short_n = shorts
-    flags, skip, target = [], None, False
+    # Redirects were stripped before this walk by a lexer that cannot see quotes, so a quoted message
+    # such as `-m "> note"` is gone and its option is left dangling in front of the next token. A
+    # pending value that is missing or begins with `-` is therefore refused rather than read as the
+    # value: `git commit -m --no-verify` is never what an agent means.
+    flags, skip = [], None
     for arg in args:
-        if target:
-            target = False  # a redirect's target, whatever it looks like (`> ">log"`)
-        elif re.match(r"&?\d*[<>]", arg):
-            # After the lexer a redirect and a quoted value look alike (`>"some log"` and `-m "> note"`
-            # both arrive as one token). With a value pending the two readings diverge, so that case
-            # is refused rather than guessed. With nothing pending it is a redirect: a bare operator
-            # consumes its target (`> -m`), an attached one (`>log`, `2>&1`) stands alone.
-            if skip:
-                return "a commit whose options cannot be told from a redirection"
-            target = bool(re.fullmatch(r"&?\d*[<>]+", arg))
-        elif skip:
-            skip = None  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message, `-m --` too
+        if skip:
+            if arg.startswith("-") and arg != "-":  # `-F -` reads stdin, which the commit-msg hook then checks
+                return "a commit whose option values cannot be read: a value is missing or looks like an option"
+            skip = None
         elif arg == "--":
             break
         elif arg.startswith("-"):
@@ -218,6 +209,8 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
                 # and `-S` take an optional value that must be attached, so they never consume one.
                 letter = re.search("[{}{}]".format(value_letters, attached_letters), arg[1:])
                 skip = arg if bool(letter) and letter.group() in value_letters and letter.end() == len(arg) - 1 else None
+    if skip:
+        return "a commit whose option values cannot be read: a value is missing or looks like an option"
     if "--dry-run" in flags:
         return None  # a flag, not `-m --dry-run`
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
@@ -380,7 +373,7 @@ def check_push(args, directory, selectors=(), env=None):
     return check_push_authors(refspecs, directory, "--tags" in options, selectors, env, remote)
 
 
-def check_git(tokens, directory, env, unstripped=None):
+def check_git(tokens, directory, env):
     """Route a `git` command: global options first, then push, commit and merge."""
     index, configured, selectors, keys = 1, False, [], []
     while index < len(tokens) and tokens[index].startswith("-"):
@@ -407,20 +400,6 @@ def check_git(tokens, directory, env, unstripped=None):
         # that begins with `<` or `>` looks like a redirect and would otherwise vanish, leaving a
         # following `--no-verify` to be read as the message.
         args = tokens[index + 1 :]
-        if unstripped:  # walk the unstripped tokens the same way, stepping over redirects, to the subcommand
-            at = 1
-            while at < len(unstripped):
-                word = unstripped[at]
-                if re.fullmatch(r"&?\d*[<>]+", word):
-                    at += 2  # a bare operator and its target
-                elif re.match(r"&?\d*[<>]", word):
-                    at += 1  # an attached target
-                elif word.startswith("-"):
-                    at += 2 if word in GIT_VALUE_OPTS else 1
-                else:
-                    break
-            if at < len(unstripped) and unstripped[at] == tokens[index]:
-                args = unstripped[at + 1 :]
         if tokens[index] == "merge":
             return check_commit(args, MERGE_VALUE_OPTS, MERGE_SHORTS)
         return check_commit(args)
@@ -531,7 +510,6 @@ def check_command(command, directory, inherited=None):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
     exported = dict(inherited or {})
     for tokens in segments(command):
-        unstripped = strip_prefix(list(tokens))  # redirects kept: a quoted `> note` message is not a redirect
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
@@ -542,6 +520,10 @@ def check_command(command, directory, inherited=None):
             continue
         head = os.path.basename(tokens[0])
         reason = None
+        if head.startswith("-"):
+            # A segment that opens with an option is a piece of a command the lexer split off (a quoted
+            # `&` or `;` used as a redirect target); whatever it carries cannot be read in place.
+            return "a command the guard cannot read: a segment begins with an option"
         if fed_by_xargs(prefix, command_tokens):
             return "a git or gh command whose arguments arrive through xargs and are not visible here"
         if head == "export":
@@ -556,7 +538,7 @@ def check_command(command, directory, inherited=None):
                     reason = check_command(tokens[index + 1], directory, env)
                     break
         elif head == "git":
-            reason = check_git(tokens, directory, env, unstripped)
+            reason = check_git(tokens, directory, env)
         elif head == "gh":
             reason = check_gh(tokens, directory, env)
         if reason:
@@ -575,8 +557,10 @@ def main():
                 "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
                 "Remove the trailer (git commit --amend for a commit already made) and retry."
             )
-        elif "told from a redirection" in reason:
-            advice = "Start the message with a word rather than a redirection-like <, > or 2>, so the guard can read the command."
+        elif "cannot be read" in reason and "segment" in reason:
+            advice = "Quote redirect targets without shell separators, or split the command, so the guard can read each part."
+        elif "option values cannot be read" in reason:
+            advice = "Give each -m, -F, --author or --trailer a value that begins with a word, not with -, <, > or 2>, so the guard can read the command."
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
         elif "option-like revision" in reason:
