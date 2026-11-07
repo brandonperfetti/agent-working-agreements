@@ -169,12 +169,17 @@ def git_lines(directory, args, env=None, raw=False):
 
 
 MERGE_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-s", "--strategy", "-X", "--strategy-option", "--cleanup", "--into-name"}
+# Per command: the short letters that take a value (next argument when last in the cluster, else
+# attached), those whose optional value must be attached, and whether a short `-n` means --no-verify.
+COMMIT_SHORTS = ("mFCct", "Su", True)
+MERGE_SHORTS = ("mFsX", "S", False)  # `git merge -n` is --no-stat
 
 
-def check_commit(args, value_opts=None):
+def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
     """Keep the commit-msg hook in play: it, not this guard, reads the message and the author.
     `git merge` makes a commit too and takes the same `--no-verify`."""
     value_opts = COMMIT_VALUE_OPTS if value_opts is None else value_opts
+    value_letters, attached_letters, short_n = shorts
     flags, skip = [], None
     for arg in args:
         if skip:
@@ -192,8 +197,8 @@ def check_commit(args, value_opts=None):
                 # In a cluster the first value-taking letter ends it; the value is the next argument
                 # only when nothing follows that letter (`-am msg`), else attached (`-mtrim`). `-u`
                 # and `-S` take an optional value that must be attached, so they never consume one.
-                letter = re.search(r"[mFCctSu]", arg[1:])
-                skip = arg if bool(letter) and letter.group() in "mFCct" and letter.end() == len(arg) - 1 else None
+                letter = re.search("[{}{}]".format(value_letters, attached_letters), arg[1:])
+                skip = arg if bool(letter) and letter.group() in value_letters and letter.end() == len(arg) - 1 else None
     if "--dry-run" in flags:
         return None  # a flag, not `-m --dry-run`
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
@@ -202,8 +207,10 @@ def check_commit(args, value_opts=None):
         """True when this flag turns the commit-msg hook off."""
         if flag.startswith("--"):
             return "--no-verify".startswith(flag) and len(flag) >= 6
+        if not short_n:
+            return False
         cluster = re.match(r"-([a-zA-Z]*)", flag).group(1)
-        cluster = re.split(r"[mFCctSu]", cluster, maxsplit=1)[0]  # `-uno`, `-Skey`: attached values
+        cluster = re.split("[{}{}]".format(value_letters, attached_letters), cluster, maxsplit=1)[0]  # `-uno`, `-Skey`: attached values
         return "n" in cluster
 
     if any(skips(a) for a in flags):
@@ -371,7 +378,9 @@ def check_git(tokens, directory, env):
     if index < len(tokens) and tokens[index] in ("commit", "merge"):
         if configured or any(k.startswith("GIT_CONFIG") for k in env):
             return "a commit with a configuration setting on the command, which can switch off the commit-msg hook"
-        return check_commit(tokens[index + 1 :], MERGE_VALUE_OPTS if tokens[index] == "merge" else COMMIT_VALUE_OPTS)
+        if tokens[index] == "merge":
+            return check_commit(tokens[index + 1 :], MERGE_VALUE_OPTS, MERGE_SHORTS)
+        return check_commit(tokens[index + 1 :])
     return None
 
 
