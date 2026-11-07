@@ -671,7 +671,11 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "config", "push.default", "simple")
         git(self.mine, "config", "remote.origin.push", "refs/heads/*:refs/heads/*")
         self.assertIn("chosen by", guard_git.check_command("git push origin", self.mine) or "")
+        self.assertIn("chosen by", guard_git.check_command("git push origin feature", self.mine) or "")  # a bare source can be remapped
+        self.assertIsNone(guard_git.check_command("git push origin feature:feature", self.mine))  # an explicit destination cannot
         git(self.mine, "config", "--unset", "remote.origin.push")
+        self.assertIn("chosen by", guard_git.check_command("git -c include.path=/tmp/cfg push origin feature", self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
         git(self.mine, "push", "-q", "origin", "feature:master")  # the bare remote gets a master to track
         git(self.mine, "fetch", "-q", "origin")
         git(self.mine, "branch", "-q", "--set-upstream-to=origin/master", "feature")

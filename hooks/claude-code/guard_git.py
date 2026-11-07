@@ -583,22 +583,30 @@ def check_push(args, directory, configs=(), env=None):
         return "a force-push"
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
+    # Configuration can redirect a push: a `remote.<name>.push` refspec maps a bare source (`feature`)
+    # or a bare push to another branch, `push.default=matching` sends every matching branch, and
+    # an `include.path` on the command can load either. Those are denied; a refspec with an explicit
+    # `:<dst>` is read as written.
+    keys = {c.partition("=")[0].lower() for _kind, c in configs}
+    if any(k.startswith("include") or k in ("push.default", "remote.pushdefault") or (k.startswith("remote.") and k.endswith(".push")) for k in keys):
+        return "a push whose targets are chosen by a configuration setting on the command"
+    environment = dict(os.environ, **(env or {}))
+    options_c = [part for pair in configs for part in pair]
+    configured = git_lines(directory, options_c + ["config", "--get-regexp", r"^remote\..*\.push$"], environment)
+    if configured is TIMEOUT:
+        return "a push whose targets could not be read in time"
+    if configured and (not refspecs or any(":" not in r for r in refspecs)):
+        return "a push whose targets are chosen by push.default or remote.<name>.push"
     targets = [destination(r, directory) for r in refspecs]
     if not refspecs:
-        # Without a refspec, configuration chooses what goes. Any `remote.<name>.push` refspec or
-        # `push.default=matching` can send branches this check never sees: denied. Otherwise the one
-        # branch pushed is `@{push}` (which honours push.default, remote.pushDefault and upstream)
-        # or, with a remote named, the current branch (`upstream` default: its upstream branch).
-        keys = {c.partition("=")[0].lower() for _kind, c in configs}
-        if any(k == "push.default" or k == "remote.pushdefault" or (k.startswith("remote.") and k.endswith(".push")) for k in keys):
-            return "a push whose targets are chosen by a configuration setting on the command"
-        environment = dict(os.environ, **(env or {}))
-        configured = git_lines(directory, ["config", "--get-regexp", r"^remote\..*\.push$"], environment)
-        default = git_lines(directory, ["config", "--get", "push.default"], environment)
-        if configured is TIMEOUT or default is TIMEOUT:
+        # Without a refspec the one branch pushed is `@{push}` (which honours push.default,
+        # remote.pushDefault and upstream) or, with a remote named, the current branch (`upstream`
+        # default: its upstream branch); `matching` was denied above.
+        default = git_lines(directory, options_c + ["config", "--get", "push.default"], environment)
+        if default is TIMEOUT:
             return "a push whose targets could not be read in time"
         default = default[0].strip() if default else "simple"
-        if configured or default == "matching":
+        if default == "matching":
             return "a push whose targets are chosen by push.default or remote.<name>.push"
         if default == "nothing":
             return None  # git refuses a bare push
