@@ -32,6 +32,8 @@ BLOCKED_ANYWHERE = [
     "git -c core.quotepath=off push origin master",
     "git -c remote.origin.push=foreign:master push origin",
     "git --config-env=push.default=P push origin feature",
+    "git -c remote.origin.push=foreign:master push origin",
+    "git --config-env=push.default=P push origin feature",
     "/usr/bin/git push -f",
     "FOO=1 git push -f",
     "env FOO=1 git push -f",
@@ -328,7 +330,7 @@ class AuthorTest(unittest.TestCase):
         ):
             with self.subTest(directory=os.path.basename(directory), command=command):
                 self.assertIsNone(guard_git.check_command(command, directory))
-        for command in ("git commit -m -- -n --allow-empty", 'git commit --author -- -n -m x', "git commit -n -- file"):
+        for command in ("git commit -m -- -n --allow-empty", 'git commit --author -- -n -m x', "git commit -n -- file", "git commit --pathspec-from-file --dry-run -n -m x"):
             with self.subTest(command=command):
                 self.assertIn("commit-msg hook", guard_git.check_command(command, self.mine) or "")
         self.assertIsNone(guard_git.check_command("git commit -m x -- -n", self.mine))  # after `--`, `-n` is a path
@@ -340,6 +342,16 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "branch", "-q", "tag")  # a branch called tag is a source, not the `tag <name>` marker
         self.assertIn(self.OTHER, guard_git.check_command("git push origin tag:topic", self.mine) or "")
         self.assertIn(self.OTHER, guard_git.check_command("git push origin tag", self.mine) or "")
+        git(self.mine, "tag", "tag")  # and a tag called tag, pushed with the marker, is scanned too
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin tag tag", self.mine) or "")
+        git(self.mine, "config", "remote.origin.push", "feature:topic")
+        self.assertIn("chosen by", guard_git.check_command("git push origin", self.mine) or "")
+        self.assertIn("chosen by", guard_git.check_command("git push origin feature", self.mine) or "")
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature:feature", self.mine) or "")  # explicit: read as written
+        git(self.mine, "config", "--unset", "remote.origin.push")
+        git(self.mine, "config", "push.default", "matching")
+        self.assertIn("chosen by", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "push.default", "simple")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "--reset-author", "-m", "fix: x\n\nCo-Authored-By: A <a@b>")
         git(self.mine, "push", "-q", "origin", "HEAD~1:refs/heads/other")  # the foreign commit is now on a remote
         self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")
