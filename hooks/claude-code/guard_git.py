@@ -249,8 +249,10 @@ def check_push(args, directory, selectors=(), env=None):
             break
         elif arg.startswith("-"):
             options.append(arg.split("=")[0])
-            # `-o fleet`, and a short cluster ending in `o` (`-vo fleet`), take the next operand.
-            skip = arg in PUSH_VALUE_OPTS or bool(re.fullmatch(r"-[a-zA-Z]*o", arg))
+            # `-o fleet`, and a short cluster whose first `o` is its last letter (`-vo fleet`), take
+            # the next operand; `-ofoo` and `-vofoo` carry the value attached.
+            letters = arg[1:] if not arg.startswith("--") else ""
+            skip = arg in PUSH_VALUE_OPTS or (letters.isalpha() and "o" in letters and letters.index("o") == len(letters) - 1)
         else:
             positional.append(arg)
 
