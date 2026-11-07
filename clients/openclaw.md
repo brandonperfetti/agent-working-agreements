@@ -52,7 +52,7 @@ Authorized execution proceeds without per-wave or per-batch approval in B2. Stat
 deliveries still carry independent review, verification and the owner's decision context.
 
 - **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
-  is one, not a requirement). RULE ZERO first; role, deliverable, mode, fence, model and effort follow.
+  is one, not a requirement). Role, deliverable, mode, fence, model and effort follow.
 - **Continuity (A4):** preserve owners and tool boundaries. Authorized independent topics use
   [create root](../procedures/openclaw/session-rotation.md#create-a-root-conversation). Keep stable
   conversations per [continuity](../procedures/openclaw/session-rotation.md): prefer compaction, then

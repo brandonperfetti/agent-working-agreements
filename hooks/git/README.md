@@ -30,8 +30,37 @@ and `--dry-run` behave as for the Claude Code hooks.
 
 ## Reach and limits
 
-A repository that sets its own `core.hooksPath` (a husky repository, for one) does not run the
-global hooks; git takes the repository's setting first. `git commit --no-verify` skips every
+A repository that sets its own `core.hooksPath` does not run the global hooks; git takes the
+repository's setting first. Brandon's projects use husky, which does exactly that, so each carries a
+tracked `.husky/commit-msg` and `.husky/applypatch-msg` that run the installed hook when present.
+Each names its own installed link, since the hook reads the patch author under `git am` only when
+its name is `applypatch-msg`; calling `commit-msg` there would read the configured author instead:
+
+```sh
+#!/usr/bin/env sh
+# .husky/commit-msg
+[ -x "$HOME/.config/git/hooks/commit-msg" ] && exec "$HOME/.config/git/hooks/commit-msg" "$@"
+exit 0
+```
+
+```sh
+#!/usr/bin/env sh
+# .husky/applypatch-msg
+[ -x "$HOME/.config/git/hooks/applypatch-msg" ] && exec "$HOME/.config/git/hooks/applypatch-msg" "$@"
+exit 0
+```
+
+The `exit 0` is load-bearing: husky runs the file under `sh -e`, and without it a machine with no
+installed hook would refuse every commit. A fresh clone or worktree runs no hook at all until the
+repository's install step (`pnpm install`) has created `.husky/_`; install before the first commit
+there, then prove the hook from that checkout without making a commit: put a message carrying a
+`Co-Authored-By:` line in a scratch file and run `git hook run commit-msg -- /absolute/path/to/it`
+(git runs the hook from the repository root, so a relative path can name the wrong file; a hook may
+edit the file, hence scratch). Only the RULE ZERO refusal (exit 1) proves the hook. Exit 0 means no
+RULE ZERO hook ran: the husky wrapper found no installed hook and allowed, as it is written to;
+"cannot find a hook named commit-msg" means no hook at all. Either way, install before committing.
+
+`git commit --no-verify` skips every
 commit-msg hook, and the Claude Code guard denies it on `git commit` and `git merge`. `git
 cherry-pick` and `git rebase` write commits without running it and keep the author and message they
 import; a merge commit runs it (a fast-forward makes no commit). The Claude Code guard's push-time

@@ -59,11 +59,10 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   share a scratch space, is **unmeasured** — measure and record. The session scratch named under
   "Evidence store" is discarded, which costs a rebuildable clone nothing; whether a clone can be
   made there has not been measured. Never under `_agent/`.
-- **Attribution (RULE ZERO):** the harness carries Claude Code's attribution instruction, with no
-  setting here that switches it off; the profile forbids it, so remove each line before the
-  commit, body or reply is written. A commit over the bridge is one you make after approval, and
-  Brandon pushes it from his clone (B1); the check reads the author email and the messages
-  (`procedures/rule-zero-check.md`).
+- **Attribution (RULE ZERO):** the harness carries Claude Code's attribution instruction with no
+  switch; remove each line before a PR body or reply is written. A commit over the bridge is made
+  after approval and pushed from Brandon's clone (B1), where the installed hook refuses a trailer or
+  a wrong author.
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]
 - **Kody tool names (A7):** the same connector is named differently per client. A permission rule
