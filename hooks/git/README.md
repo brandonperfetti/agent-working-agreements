@@ -33,6 +33,5 @@ and keep the author and message they import. The Claude Code guard's push-time s
 best-effort read: it checks the commits reachable from the pushed sources that the destination
 remote's tracking refs do not already hold, so stale tracking refs or a remote git chooses by
 configuration the guard does not read can leave a commit unscanned. The complete check is the
-RULE ZERO read before a delivery is presented. Both are covered by the Claude Code guard, which denies
-`--no-verify` and reads the author and message of every commit a push would send, and by the RULE
-ZERO check before a delivery is presented (`procedures/rule-zero-check.md`).
+RULE ZERO read before a delivery is presented (`procedures/rule-zero-check.md`); the guard's denial
+of `--no-verify` keeps the hook in play on the Claude Code route.

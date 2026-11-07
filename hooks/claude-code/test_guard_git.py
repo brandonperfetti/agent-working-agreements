@@ -95,6 +95,7 @@ ALLOWED_ANYWHERE = [
     "git push --no-force-with-lease origin feature",
     "git push -ofleet origin feature",
     "git push -o fleet origin feature",
+    "git push -vo fleet origin feature",
     "git push origin feature 2>&1 | tail -5",
     "git push --dry-run origin master",
     "git push -n --force origin feature",

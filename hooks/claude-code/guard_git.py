@@ -249,7 +249,8 @@ def check_push(args, directory, selectors=(), env=None):
             break
         elif arg.startswith("-"):
             options.append(arg.split("=")[0])
-            skip = arg in PUSH_VALUE_OPTS
+            # `-o fleet`, and a short cluster ending in `o` (`-vo fleet`), take the next operand.
+            skip = arg in PUSH_VALUE_OPTS or bool(re.fullmatch(r"-[a-zA-Z]*o", arg))
         else:
             positional.append(arg)
 
