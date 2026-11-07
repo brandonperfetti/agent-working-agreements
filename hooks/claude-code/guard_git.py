@@ -28,9 +28,10 @@ ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
 SEPARATORS = ";&|()\n"
-GIT_VALUE_OPTS = {"-C", "-c", "--git-dir", "--namespace", "--work-tree"}
+GIT_VALUE_OPTS = {"-C", "-c", "--config-env", "--git-dir", "--namespace", "--work-tree"}
 COMMIT_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
-                     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template"}
+                     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
+                     "--pathspec-from-file"}
 PUSH_VALUE_OPTS = {"-o", "--exec", "--push-option", "--receive-pack", "--repo"}
 GH_VALUE_OPTS = {"-R", "--repo"}
 # Options that take a value, for `gh pr merge` and `gh api` alike; none is a flag in the other.
@@ -200,7 +201,8 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None):
     named, index = [], 0
     while index < len(refspecs):
         if refspecs[index] == "tag" and index + 1 < len(refspecs):
-            index += 1  # drop the marker, keep the tag name
+            named.append("refs/tags/" + refspecs[index + 1])  # marker and name together: one tag
+            index += 2
             continue
         named.append(refspecs[index])
         index += 1
@@ -257,6 +259,15 @@ def check_push(args, directory, selectors=(), env=None):
         return "a force-push"
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
+    # `remote.<name>.push` maps a bare source (`feature`) or a bare push to other branches, and
+    # `push.default=matching` sends every matching branch: the scan below would read the wrong
+    # commits, so those are denied unless each refspec names its destination.
+    if not refspecs or any(":" not in r for r in refspecs):
+        environment = dict(os.environ, **(env or {}))
+        mapped = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.push$"], environment)
+        default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], environment)
+        if mapped or (not refspecs and default and default[0].strip() == "matching"):
+            return "a push whose targets are chosen by remote.<name>.push or push.default, not the command"
     targets = [destination(r, directory, selectors, env) for r in refspecs]
     if not refspecs:
         targets = [current_branch(directory, selectors, env)]
@@ -271,17 +282,19 @@ def check_push(args, directory, selectors=(), env=None):
 
 
 def check_git(tokens, directory, env):
-    index, configs, selectors = 1, [], []
+    index, configured, selectors = 1, False, []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
             directory = os.path.join(directory, os.path.expanduser(tokens[index + 1]))
-        elif tokens[index] == "-c" and index + 1 < len(tokens):
-            configs.append(tokens[index + 1])
+        elif tokens[index] == "-c" or tokens[index].partition("=")[0] == "--config-env":
+            configured = True  # a setting for this command alone: push.default, remote.*.push, …
         elif tokens[index].partition("=")[0] in ("--git-dir", "--work-tree"):
             name, has_value, value = tokens[index].partition("=")
             selectors += [name, value] if has_value else tokens[index : index + 2]
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
     if index < len(tokens) and tokens[index] == "push":
+        if configured:
+            return "a push with a configuration setting on the command, which can redirect it"
         return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")})
     if index < len(tokens) and tokens[index] == "commit":
         return check_commit(tokens[index + 1 :])
@@ -437,6 +450,8 @@ def main():
             advice = "RULE ZERO is checked by the commit-msg hook; commit without --no-verify."
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
+        elif "chosen by" in reason or "configuration setting on the command" in reason:
+            advice = "The guard must see what is pushed. Name the remote and the branch, with its destination, on the command line, without -c."
         elif "could not be read for the author" in reason:
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
         elif "through xargs" in reason:

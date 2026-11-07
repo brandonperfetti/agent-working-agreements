@@ -30,6 +30,8 @@ BLOCKED_ANYWHERE = [
     "git push origin 'refs/heads/*:refs/heads/*'",
     "git push origin master 2>&1 | tail -5",
     "git -c core.quotepath=off push origin master",
+    "git -c remote.origin.push=foreign:master push origin",
+    "git --config-env=push.default=P push origin feature",
     "/usr/bin/git push -f",
     "FOO=1 git push -f",
     "env FOO=1 git push -f",
