@@ -45,7 +45,8 @@ exit 0
 The `exit 0` is load-bearing: husky runs the file under `sh -e`, and without it a machine with no
 installed hook would refuse every commit. A fresh clone or worktree runs no hook at all until the
 repository's install step (`pnpm install`) has created `.husky/_`; install before the first commit
-there, and prove the hook with a `--dry-run` from that checkout.
+there, then prove the hook from that checkout: an empty commit whose message carries a
+`Co-Authored-By:` line must come back refused with the RULE ZERO message, and nothing is written.
 
 `git commit --no-verify` skips every
 commit-msg hook, and the Claude Code guard denies it on `git commit` and `git merge`. `git
