@@ -27,7 +27,7 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|^[#> \t]*posted by an agent\b", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|^[#>*+\- \t]*posted by an agent\b", re.IGNORECASE | re.MULTILINE)  # a comment, quote or list prefix is still that line's start
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
