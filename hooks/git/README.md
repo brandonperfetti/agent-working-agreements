@@ -19,13 +19,13 @@ The Claude Code installer carries this folder too:
 
 It copies `commit-msg` into `~/.config/git/hooks/`, links `chain-repo-hook` there under every other
 hook name, and, when `core.hooksPath` is unset, points the global setting there. A `core.hooksPath`
-already set elsewhere is reported and left alone; to use these hooks there, have that folder's own
-`commit-msg` and `applypatch-msg` run the installed `commit-msg` under their own names (a symlink,
-or `exec -a applypatch-msg ~/.config/git/hooks/commit-msg "$@"`: the script reads the patch author
-only when it runs as `applypatch-msg`), never when that folder is a repository's own `.git/hooks`
-(the installed hook would then run it again, and the two would loop). The installer never repoints a
-set path, and refuses a folder holding other files under the names it manages. `--check` and
-`--dry-run` behave as for the Claude Code hooks.
+already set elsewhere is reported and left alone; to use these hooks there, make that folder's
+`commit-msg` and `applypatch-msg` symlinks to the installed `commit-msg`, as the installer does (the
+script reads the patch author only when its own name is `applypatch-msg`; a wrapper that calls it
+cannot rename it, since a shebang script sees its own path), never when that folder is a
+repository's own `.git/hooks` (the installed hook would then run it again, and the two would loop).
+The installer never repoints a set path, and refuses a folder holding other files under the names it
+manages. `--check` and `--dry-run` behave as for the Claude Code hooks.
 
 ## Reach and limits
 
