@@ -124,6 +124,7 @@ def make_repo(root, name, branch, email=guard_git.AUTHOR_EMAIL):
     subprocess.run(["git", "init", "-q", "-b", branch, path], check=True)
     git(path, "config", "user.name", "Test")
     git(path, "config", "user.email", email)
+    git(path, "config", "core.hooksPath", os.path.join(path, ".no-hooks"))  # fixtures commit trailers on purpose
     # A resolvable HEAD and the branches the push shapes name: the guard reads real history now.
     git(path, "-c", "user.email=" + guard_git.AUTHOR_EMAIL, "commit", "-q", "--allow-empty", "-m", "init")
     for other in ("develop", "wave-1", "feature-master", "master-notes"):
@@ -319,6 +320,7 @@ class AuthorTest(unittest.TestCase):
             (self.other, 'git commit -m "fix: x"', True),
             (self.mine, "git -c user.email={} commit -m x".format(self.OTHER), True),
             (self.mine, "GIT_AUTHOR_EMAIL={} git commit -m x".format(self.OTHER), True),
+            (self.mine, "git --git-dir={0}/.git --work-tree={0} commit -m x".format(self.other), True),
             (self.mine, "env GIT_AUTHOR_EMAIL={} git commit -m x".format(self.OTHER), True),
             (self.mine, 'git commit --author="X <{}>" -m x'.format(self.OTHER), True),
             (self.other, 'git commit --author "B <{}>" -m x'.format(brandon), False),

@@ -157,7 +157,7 @@ def email_of(ident):
     return match.group(1) if match else ident.strip()
 
 
-def check_commit(args, directory, configs, env):
+def check_commit(args, directory, configs, env, selectors=()):
     """Resolve the author the commit will carry, as git would, and keep the commit-msg hook in play."""
     flags, values, skip = [], {}, None
     for arg in args[: args.index("--")] if "--" in args else args:
@@ -193,7 +193,7 @@ def check_commit(args, directory, configs, env):
     author = values.get("--author")
     if author is None:
         options = [part for config in configs for part in ("-c", config)]
-        lines = git_lines(directory, options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
+        lines = git_lines(directory, list(selectors) + options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
         if not lines:
             return None
         author = lines[0]
@@ -287,7 +287,7 @@ def check_git(tokens, directory, env):
     if index < len(tokens) and tokens[index] == "push":
         return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")})
     if index < len(tokens) and tokens[index] == "commit":
-        return check_commit(tokens[index + 1 :], directory, configs, env)
+        return check_commit(tokens[index + 1 :], directory, configs, env, selectors)
     return None
 
 
