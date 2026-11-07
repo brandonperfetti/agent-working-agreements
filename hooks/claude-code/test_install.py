@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -33,8 +34,16 @@ def commands(settings, event):
 class InstallTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self.claude = self.tmp.name
+        self.claude = os.path.join(self.tmp.name, "claude")
+        os.makedirs(self.claude)
         self.settings_path = os.path.join(self.claude, "settings.json")
+        self.git_hooks = os.path.join(self.tmp.name, "git-hooks")
+        # A scratch global git config, so no test touches the real ~/.gitconfig.
+        self.gitconfig = os.path.join(self.tmp.name, "gitconfig")
+        open(self.gitconfig, "w").close()
+        patcher = unittest.mock.patch.dict(os.environ, {"GIT_CONFIG_GLOBAL": self.gitconfig, "GIT_CONFIG_SYSTEM": os.devnull, "HOME": self.tmp.name, "XDG_CONFIG_HOME": self.tmp.name})  # git before 2.32 reads HOME only
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -42,7 +51,7 @@ class InstallTest(unittest.TestCase):
     def run_install(self, *args):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            code = install.main(["--claude-dir", self.claude] + list(args))
+            code = install.main(["--claude-dir", self.claude, "--git-hooks-dir", self.git_hooks] + list(args))
         return code, out.getvalue()
 
     def write_settings(self, settings):
@@ -52,6 +61,68 @@ class InstallTest(unittest.TestCase):
     def read_settings(self):
         with open(self.settings_path) as handle:
             return json.load(handle)
+
+    def hooks_path(self):
+        result = subprocess.run(["git", "config", "--global", "--get", "core.hooksPath"], capture_output=True, text=True)
+        return result.stdout.strip()
+
+    def test_git_hook_is_copied_executable_and_hooks_path_set_once(self):
+        self.assertEqual(self.run_install()[0], 0)
+        target = os.path.join(self.git_hooks, "commit-msg")
+        self.assertTrue(os.access(target, os.X_OK))
+        self.assertTrue(os.access(os.path.join(self.git_hooks, "chain-repo-hook"), os.X_OK))
+        for name in ("pre-commit", "pre-push", "post-checkout"):
+            link = os.path.join(self.git_hooks, name)
+            self.assertEqual(os.readlink(link), "chain-repo-hook")
+            self.assertTrue(os.access(link, os.X_OK))
+        self.assertEqual(os.readlink(os.path.join(self.git_hooks, "applypatch-msg")), "commit-msg")
+        with open(target, "a") as handle:
+            handle.write("# an older revision of ours\n")  # still carries the ownership line: updated, not a conflict
+        code, out = self.run_install()
+        self.assertEqual(code, 0)
+        self.assertIn("copy", out)
+        self.assertEqual(os.path.realpath(self.hooks_path()), os.path.realpath(self.git_hooks))
+        self.assertEqual(self.run_install("--check")[0], 0)
+        code, out = self.run_install()
+        self.assertEqual((code, "Already installed." in out), (0, True))
+
+    def test_a_foreign_hook_in_the_folder_stops_the_install(self):
+        os.makedirs(self.git_hooks)
+        foreign = os.path.join(self.git_hooks, "pre-push")
+        with open(foreign, "w") as handle:
+            handle.write("#!/bin/sh\nexit 0\n")
+        with self.assertRaises(SystemExit):
+            self.run_install()
+        with open(foreign) as handle:
+            self.assertIn("exit 0", handle.read())  # untouched
+        self.assertFalse(os.path.exists(os.path.join(self.git_hooks, "commit-msg")))
+        self.assertEqual(self.hooks_path(), "")
+        code, out = self.run_install("--check")
+        self.assertEqual(code, 1)
+        self.assertIn("conflict", out)
+        os.unlink(foreign)
+        os.symlink("/usr/local/bin/their-hook", foreign)  # a foreign link is a conflict too
+        with self.assertRaises(SystemExit):
+            self.run_install()
+        os.unlink(foreign)
+        subprocess.run(["git", "config", "--global", "core.hooksPath", ""], check=True)
+        code, out = self.run_install()  # an explicitly empty setting is reported, not replaced
+        self.assertEqual((code, self.hooks_path()), (0, ""))
+        self.assertIn("set but empty", out)
+        subprocess.run(["git", "config", "--global", "--unset", "core.hooksPath"], check=True)
+        with open(os.path.join(self.git_hooks, "commit-msg"), "w") as handle:
+            handle.write("#!/bin/sh\nexit 0\n")  # a different commit-msg hook is a conflict too
+        with self.assertRaises(SystemExit):
+            self.run_install()
+
+    def test_an_existing_hooks_path_is_reported_not_overridden(self):
+        elsewhere = os.path.join(self.tmp.name, "elsewhere")
+        subprocess.run(["git", "config", "--global", "core.hooksPath", elsewhere], check=True)
+        code, out = self.run_install()
+        self.assertEqual(code, 0)
+        self.assertEqual(self.hooks_path(), elsewhere)
+        self.assertIn("not active", out)
+        self.assertTrue(os.path.exists(os.path.join(self.git_hooks, "commit-msg")))  # the copy still lands
 
     def test_fresh_install_copies_and_registers(self):
         self.assertEqual(self.run_install()[0], 0)

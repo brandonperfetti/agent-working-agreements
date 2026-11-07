@@ -1,0 +1,101 @@
+#!/usr/bin/python3
+"""RULE ZERO where git holds the final message: the commit-msg hook (and, linked, applypatch-msg).
+
+Denies a commit whose message carries an attribution line (`Co-Authored-By`, a
+`*-Session` line, "generated with") or whose author is not Brandon's email, on
+every route that commits through git on this Mac: Claude Code, Codex, OpenClaw,
+a shell. Git hands it the message file and has already resolved the author, so
+nothing here guesses what a shell command will produce. `--no-verify` skips
+every commit-msg hook; the Claude Code guard denies that flag, and the guard's
+push-time scan of unpushed commits is the backstop for the other routes.
+"""
+import os
+import re
+import subprocess
+import sys
+
+# installed-by: agent-working-agreements/hooks/claude-code/install.py (the installer updates files carrying this line)
+
+AUTHOR_EMAIL = "brandon@brandonperfetti.com"
+TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with", re.IGNORECASE | re.MULTILINE)
+
+
+def read_message(path):
+    """The whole message file. Below a scissors line git may have appended the staged diff
+    (`commit -v`): whether git then discards that text (an editor with `strip` cleanup) or keeps it
+    (`verbatim`, `whitespace`, a reused COMMIT_EDITMSG) is not visible here, so all of it is read.
+    A `commit -v` whose diff carries attribution text is refused; commit without `-v`."""
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        return handle.read()
+
+
+def author_email(hook):
+    """The email git will record as the author, or None when it cannot be read. Under `git am`
+    (applypatch-msg) that is the patch's author, which git keeps in rebase-apply/author-script."""
+    try:
+        if hook == "applypatch-msg":
+            path = subprocess.run(["git", "rev-parse", "--git-path", "rebase-apply/author-script"], capture_output=True, text=True, timeout=5)
+            if path.returncode:
+                return None
+            with open(path.stdout.strip(), encoding="utf-8", errors="replace") as handle:
+                match = re.search(r"^GIT_AUTHOR_EMAIL='?([^'\n]*)'?$", handle.read(), re.MULTILINE)
+            return match.group(1) if match else None
+        result = subprocess.run(["git", "var", "GIT_AUTHOR_IDENT"], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode:
+        return None
+    match = re.search(r"<([^>]*)>", result.stdout)
+    return match.group(1) if match else None
+
+
+def main(argv):
+    """Check the message file git names in argv[1] and the author git resolved; 0 to allow, 1 to refuse."""
+    if len(argv) < 2:
+        print("commit-msg: git gave no message file; refusing the commit.", file=sys.stderr)
+        return 1
+    message = read_message(argv[1])
+    # Comment lines are read too: `--cleanup=verbatim` keeps them, and a trailer in one is a mistake.
+    if TRAILER.search(message):
+        print(
+            "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
+            "Remove the line from the message and commit again.",
+            file=sys.stderr,
+        )
+        return 1
+    email = author_email(os.path.basename(argv[0]))
+    if email is None:
+        print("RULE ZERO: the author identity could not be read; set user.email and commit again.", file=sys.stderr)
+        return 1
+    if email != AUTHOR_EMAIL:
+        print(
+            "RULE ZERO: every commit carries the author email {}, not {}. Fix the identity "
+            "(git config user.email, or --reset-author on an amend) and commit again.".format(AUTHOR_EMAIL, email or "an empty email"),
+            file=sys.stderr,
+        )
+        return 1
+    code = chain(argv)
+    if code:
+        return code
+    if TRAILER.search(read_message(argv[1])):  # the repository's hook may have rewritten the message
+            print("RULE ZERO: the repository's own hook added an attribution line; remove it there.", file=sys.stderr)
+            return 1
+    return 0
+
+
+def chain(argv):
+    """Run the repository's own hook of this name (commit-msg, or applypatch-msg under `git am`),
+    which a global core.hooksPath would otherwise hide."""
+    name = os.path.basename(argv[0])
+    try:
+        common = subprocess.run(["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return 0
+    repo_hook = os.path.join(common.stdout.strip(), "hooks", name)
+    if common.returncode == 0 and os.access(repo_hook, os.X_OK) and not os.path.samefile(repo_hook, __file__):
+        return subprocess.run([repo_hook] + argv[1:]).returncode
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

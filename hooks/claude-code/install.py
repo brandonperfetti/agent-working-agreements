@@ -1,9 +1,11 @@
 #!/usr/bin/python3
-"""Install the user-level Claude Code hooks from this folder.
+"""Install the user-level Claude Code hooks from this folder, and the git hooks beside it.
 
-Copies each hook into ~/.claude/hooks/ and registers it in the `hooks` block of
-~/.claude/settings.json, leaving every other setting and every other hook as it
-was. It copies rather than links, so switching the branch of this checkout never
+Copies each Claude Code hook into ~/.claude/hooks/ and registers it in the `hooks`
+block of ~/.claude/settings.json, leaving every other setting and every other hook
+as it was. Copies each hook under ../git into ~/.config/git/hooks/ and, when
+`core.hooksPath` is unset, points the global git setting there; a path already set
+elsewhere is reported and never overridden. It copies rather than links, so switching the branch of this checkout never
 changes the hooks a running session uses; `--check` reports drift instead.
 Re-running it is safe: a hook already registered is updated in place, not added
 twice.
@@ -20,11 +22,25 @@ import os
 import re
 import shlex
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+GIT_HOOKS_SOURCE = os.path.join(os.path.dirname(HERE), "git")
+GIT_HOOKS = ["commit-msg", "chain-repo-hook"]  # hooks git runs itself, for every client on the Mac
+OWNED = "installed-by: agent-working-agreements/hooks/claude-code/install.py"  # a file carrying this is ours to update
+MESSAGE_HOOKS = {"applypatch-msg": "commit-msg"}  # `git am` hands the message file to applypatch-msg
+# Every other hook name git knows gets a link to chain-repo-hook, so a repository's own hooks keep
+# running once the global core.hooksPath replaces its .git/hooks for git.
+CHAINED_HOOKS = [
+    "pre-applypatch", "post-applypatch", "pre-commit", "pre-merge-commit",
+    "prepare-commit-msg", "post-commit", "pre-rebase", "post-checkout", "post-merge", "pre-push",
+    "pre-receive", "update", "proc-receive", "post-receive", "post-update", "reference-transaction",
+    "push-to-checkout", "pre-auto-gc", "post-rewrite", "sendemail-validate", "fsmonitor-watchman",
+    "p4-changelist", "p4-prepare-changelist", "p4-post-changelist", "p4-pre-submit", "post-index-change",
+]
 
 # event, matcher, script, extra fields. The command runs the copy in ~/.claude/hooks.
 # A matcher of None is an event without matchers; its group carries no matcher key.
@@ -104,7 +120,36 @@ def merge_hooks(settings, hooks_dir=None):
     return merged
 
 
+UNSET = None  # core.hooksPath absent from the global config
+
+
+def owned(path):
+    """True when the file at path was written by this installer (it carries OWNED in its head)."""
+    try:
+        with open(path, encoding="utf-8", errors="replace") as handle:
+            return OWNED in handle.read(2048)
+    except OSError:
+        return False
+
+
+def global_hooks_path():
+    """The global core.hooksPath: UNSET when absent, its value (possibly "") when present, and
+    False when git could not be asked."""
+    value = UNSET
+    for scope in ("--system", "--global"):  # the system file counts too; includes are followed
+        try:
+            result = subprocess.run(["git", "config", scope, "--includes", "--get", "core.hooksPath"], capture_output=True, text=True, timeout=5)
+        except (OSError, subprocess.SubprocessError):
+            return False
+        if result.returncode == 0:
+            value = result.stdout.strip()  # the global file wins over the system file, as for git
+        elif result.returncode != 1:
+            return False
+    return value
+
+
 def write_atomic(path, data, mode=0o644):
+    """Write `data` to `path` through a temporary file, so a reader never sees a half-written hook."""
     directory = os.path.dirname(path)
     fd, temp = tempfile.mkstemp(dir=directory, prefix=".install-")
     try:
@@ -118,13 +163,16 @@ def write_atomic(path, data, mode=0o644):
 
 
 def main(argv=None):
+    """Plan the copies, links and settings changes; report them; write them unless --dry-run or --check."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true", help="say what would change")
     parser.add_argument("--check", action="store_true", help="exit 1 on any drift")
     parser.add_argument("--claude-dir", default=os.path.expanduser("~/.claude"))
+    parser.add_argument("--git-hooks-dir", default=os.path.expanduser("~/.config/git/hooks"))
     args = parser.parse_args(argv)
 
     hooks_dir = os.path.join(args.claude_dir, "hooks")
+    git_hooks_dir = os.path.abspath(os.path.expanduser(args.git_hooks_dir))
     settings_path = os.path.join(args.claude_dir, "settings.json")
     changes = []
 
@@ -132,6 +180,39 @@ def main(argv=None):
         source, target = os.path.join(HERE, script), os.path.join(hooks_dir, script)
         if not os.path.exists(target) or not filecmp.cmp(source, target, shallow=False):
             changes.append(("copy", source, target))
+
+    for script in GIT_HOOKS:
+        source, target = os.path.join(GIT_HOOKS_SOURCE, script), os.path.join(git_hooks_dir, script)
+        if not os.path.isfile(source):
+            sys.exit("git hook source {} is missing; nothing written.".format(source))
+        if not os.path.exists(target) or not filecmp.cmp(source, target, shallow=False) or not os.access(target, os.X_OK):
+            changes.append(("git-hook", source, target))
+    conflicts = []
+    for script in GIT_HOOKS:
+        target = os.path.join(git_hooks_dir, script)
+        if os.path.lexists(target) and (os.path.islink(target) or not owned(target)):
+            conflicts.append(target)  # someone else's hook of that name: never overwritten
+    for name, wanted in [(n, "chain-repo-hook") for n in CHAINED_HOOKS] + list(MESSAGE_HOOKS.items()):
+        link = os.path.join(git_hooks_dir, name)
+        if os.path.lexists(link) and (not os.path.islink(link) or os.readlink(link) not in (wanted, "chain-repo-hook")):
+            conflicts.append(link)  # a file or someone else's link: never replaced
+        elif not os.path.lexists(link) or os.readlink(link) != wanted:
+            changes.append(("git-link", wanted, link))
+    if conflicts:
+        for path in conflicts:
+            print("conflict: {} exists and is not this installer's; move it (chain-repo-hook runs a repository's hooks, not a global one).".format(path))
+        return 1 if args.check else sys.exit("hooks folder {} holds other hooks; nothing written.".format(git_hooks_dir))
+    current = global_hooks_path()
+    if current is False:
+        sys.exit("git could not be asked for core.hooksPath; nothing written.")
+    if current is UNSET:
+        changes.append(("hooks-path", git_hooks_dir, None))
+    elif current == "":
+        print("note: core.hooksPath is set but empty; the git hooks under {} are not active until it points there.".format(git_hooks_dir))
+    elif not os.path.isabs(os.path.expanduser(current)):
+        print("note: core.hooksPath is relative ({}); git resolves it per repository, so the hooks under {} may not be active.".format(current, git_hooks_dir))
+    elif os.path.realpath(os.path.expanduser(current)) != os.path.realpath(git_hooks_dir):
+        print("note: core.hooksPath is {}; the git hooks under {} are not active until it points there or chains them.".format(current, git_hooks_dir))
 
     settings = {}
     if os.path.exists(settings_path):
@@ -148,8 +229,12 @@ def main(argv=None):
         changes.append(("settings", settings_path, None))
 
     for kind, path, target in changes:
-        if kind == "copy":
+        if kind in ("copy", "git-hook"):
             print("{} {} -> {}".format("differs:" if args.check else "copy", path, target))
+        elif kind == "git-link":
+            print("{} {} -> {}".format("differs:" if args.check else "link", target, path))
+        elif kind == "hooks-path":
+            print("{} git config --global core.hooksPath {}".format("unset:" if args.check else "set", path))
         else:
             print("{} hooks block of {}".format("differs:" if args.check else "update", path))
     if args.check:
@@ -164,6 +249,20 @@ def main(argv=None):
         if kind == "copy":
             with open(path, encoding="utf-8") as handle:
                 write_atomic(target, handle.read())
+        elif kind == "git-hook":
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            with open(path, encoding="utf-8") as handle:
+                write_atomic(target, handle.read(), 0o755)  # git runs only an executable hook
+        elif kind == "git-link":
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            if os.path.lexists(target):
+                os.unlink(target)  # only ever one of this installer's own links, by the check above
+            os.symlink(path, target)  # relative: the folder moves as one
+        elif kind == "hooks-path":
+            try:
+                subprocess.run(["git", "config", "--global", "core.hooksPath", path], check=True, timeout=5)
+            except (OSError, subprocess.SubprocessError) as error:
+                sys.exit("could not set core.hooksPath ({}); the copied hooks stay inactive until it points at {}. Rerun to finish.".format(error, path))
     if merged != settings:
         mode = 0o644
         if os.path.exists(settings_path):
