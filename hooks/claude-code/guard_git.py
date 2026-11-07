@@ -559,7 +559,7 @@ def main():
         elif "cannot be read" in reason and "segment" in reason:
             advice = "Quote redirect targets without shell separators, or split the command, so the guard can read each part."
         elif "option values cannot be read" in reason:
-            advice = "Give each -m, -F, --author or --trailer a value that begins with a word, not with -, <, > or 2>, so the guard can read the command."
+            advice = "Give each -m, -F, --author or --trailer a value that begins with a word, not with -, <, > or a digit followed by < or > (2>, 2<), so the guard can read the command."
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
         elif "option-like revision" in reason:
