@@ -52,7 +52,7 @@ Claude Code fact.
   a "Generated with Claude Code" PR-body footer and, with Auto-fix on, a crediting line on replies.
   The installed hooks refuse the commit forms where they run; where none runs yet (a husky checkout
   before its install), remove the trailers before committing. Remove the footer and reply lines
-  before writing them, reading each as [`rule-zero-check.md`](../procedures/rule-zero-check.md) says.
+  before writing them, as [`rule-zero-check.md`](../procedures/rule-zero-check.md) says.
 - Rotate at a context-driven clean pause through the supported session route, using A4's packet
   (or `handoff`); verify successor capability, receipt, acceptance and advancement before retirement.
 - Reached from the one-line pointer in `~/.claude/CLAUDE.md`; this opener completes the binding.
