@@ -183,12 +183,16 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
     value_letters, attached_letters, short_n = shorts
     flags, skip = [], None
     for arg in args:
-        if skip:
+        if re.fullmatch(r"\d*[<>]+\S*", arg):
+            # After the lexer a redirect and a quoted value look alike. With a value pending the two
+            # readings diverge (`-m > /dev/null -m --no-verify` is a redirect to the shell; `-m ">note"`
+            # a message), so that case is refused rather than guessed. With nothing pending it is a
+            # redirect: a bare operator consumes its target (`> -m`), an attached one stands alone.
+            if skip:
+                return "a commit whose options cannot be told from a redirection"
+            skip = arg if re.fullmatch(r"\d*[<>]+", arg) else None
+        elif skip:
             skip = None  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message, `-m --` too
-        elif re.fullmatch(r"\d*[<>]+", arg):
-            skip = arg  # a bare redirect operator: the next word is its target, not an option (`> -m`)
-        elif re.fullmatch(r"\d*[<>]+\S+", arg):
-            pass  # a redirect with its target attached (`>log`); a quoted `-m ">note"` arrived as a pending value above
         elif arg == "--":
             break
         elif arg.startswith("-"):
@@ -548,6 +552,8 @@ def main():
                 "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
                 "Remove the trailer (git commit --amend for a commit already made) and retry."
             )
+        elif "told from a redirection" in reason:
+            advice = "Quote the message so it holds a space, or move the redirection after the options, so the guard can read the command."
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
         elif "option-like revision" in reason:
