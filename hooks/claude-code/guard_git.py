@@ -4,7 +4,9 @@
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
 ritual and merge boundary; commits and merges that skip the commit-msg hook or
-carry a configuration override; and, best effort, pushes whose commits new to
+carry a configuration override (read from the command's words as the lexer
+splits them, so a flag placed after a compound redirect such as `2>&1` is not
+seen: the hook, not this denial, is the control); and, best effort, pushes whose commits new to
 the destination remote's tracking refs carry another author or an attribution
 line (RULE ZERO; stale tracking refs are the documented limit, and the read
 before a delivery is presented is the complete check). The author and message
@@ -65,9 +67,6 @@ def drop_heredoc(match):
 def segments(command):
     """Split a command line into one token list per simple command."""
     command = HEREDOC.sub(drop_heredoc, command)
-    # `2>&1`, `>&2`, `&>log`: the `&` of a compound redirect would read as a separator; drop it so the
-    # redirect stays one word (`2>1`, `>2`, `>log`) that strip_redirects removes whole.
-    command = re.sub(r"([<>])&|&([<>])", lambda m: m.group(1) or m.group(2), command)
     try:
         lexer = shlex.shlex(command, posix=True, punctuation_chars=SEPARATORS)
         lexer.whitespace = " \t\r"
