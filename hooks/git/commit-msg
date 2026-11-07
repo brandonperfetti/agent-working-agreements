@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""RULE ZERO where git holds the final message: the commit-msg hook.
+"""RULE ZERO where git holds the final message: the commit-msg hook (and, linked, applypatch-msg).
 
 Denies a commit whose message carries an attribution line (`Co-Authored-By`, a
 `*-Session` line, "generated with") or whose author is not Brandon's email, on
@@ -14,8 +14,10 @@ import re
 import subprocess
 import sys
 
+# installed-by: agent-working-agreements/hooks/claude-code/install.py (the installer updates files carrying this line)
+
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^[#>\s]*(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
 
 
 def author_email():
@@ -55,16 +57,25 @@ def main(argv):
             file=sys.stderr,
         )
         return 1
-    return chain(argv)
+    code = chain(argv)
+    if code:
+        return code
+    with open(argv[1], encoding="utf-8", errors="replace") as handle:
+        if TRAILER.search(handle.read()):  # the repository's hook may have rewritten the message
+            print("RULE ZERO: the repository's own hook added an attribution line; remove it there.", file=sys.stderr)
+            return 1
+    return 0
 
 
 def chain(argv):
-    """Run the repository's own commit-msg hook, which a global core.hooksPath would otherwise hide."""
+    """Run the repository's own hook of this name (commit-msg, or applypatch-msg under `git am`),
+    which a global core.hooksPath would otherwise hide."""
+    name = os.path.basename(argv[0])
     try:
         common = subprocess.run(["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, timeout=5)
     except (OSError, subprocess.SubprocessError):
         return 0
-    repo_hook = os.path.join(common.stdout.strip(), "hooks", "commit-msg")
+    repo_hook = os.path.join(common.stdout.strip(), "hooks", name)
     if common.returncode == 0 and os.access(repo_hook, os.X_OK) and not os.path.samefile(repo_hook, __file__):
         return subprocess.run([repo_hook] + argv[1:]).returncode
     return 0

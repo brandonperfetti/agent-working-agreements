@@ -13,12 +13,11 @@ being retrofitted onto the other.
 - **2026-11-06 — RULE ZERO's no-attribution half is enforced where git holds the message (#243).**
   The rule was prose plus a manual grep. A `commit-msg` git hook (`hooks/git`) now denies a commit
   whose message carries a `Co-Authored-By`, `*-Session` or "generated with" line or whose author is
-  not Brandon's email, on every client that commits through git. The Claude Code guard denies
-  `--no-verify`, which skips that hook, and reads the author and message of every commit a push
-  would send from the objects themselves. A first attempt parsed the message out of the shell
-  command and did not converge after nine review rounds (PR #250, closed unmerged): check the
-  fact where it is final, not where it must be predicted. Brandon decided. Controls are the
-  hooks' tests; the prose cut waits for the other routes' controls (#243).
+  not Brandon's email, on every client that commits through git; the Claude Code guard denies
+  `--no-verify` and reads every commit a push would send from the objects. A first attempt parsed
+  the message out of the shell command and did not converge after nine review rounds (PR #250,
+  closed unmerged): check the fact where it is final, not where it must be predicted. Brandon
+  decided. Controls are the hooks' tests; the prose cut waits for the other routes' (#243).
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/243).
 
 - **2026-11-06 — Agent comments on repositories Brandon does not own carry one agent line (#245).**

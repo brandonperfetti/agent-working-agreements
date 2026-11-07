@@ -1,4 +1,5 @@
 #!/bin/sh
+# installed-by: agent-working-agreements/hooks/claude-code/install.py (the installer updates files carrying this line)
 # A global core.hooksPath replaces a repository's own .git/hooks for git. This wrapper, installed
 # under every hook name, hands the call on to the repository's hook of the same name when it has
 # one, so a repository's checks keep running. Worktrees share the main checkout's hooks dir.

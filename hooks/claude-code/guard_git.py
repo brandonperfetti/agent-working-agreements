@@ -23,7 +23,7 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^[#>\s]*(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
@@ -157,22 +157,26 @@ def email_of(ident):
 
 def check_commit(args, directory, configs, env):
     """Resolve the author the commit will carry, as git would, and keep the commit-msg hook in play."""
-    if "--dry-run" in args:
-        return None
-    flags, skip = [], False
+    flags, values, skip = [], {}, None
     for arg in args[: args.index("--")] if "--" in args else args:
         if skip:
-            skip = False  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message
+            values[skip] = arg  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message
+            skip = None
         elif arg.startswith("-"):
-            flags.append(arg)
-            if arg in COMMIT_VALUE_OPTS:
-                skip = True  # the next argument is this option's value
+            name, has_value, value = arg.partition("=")
+            flags.append(name if has_value else arg)
+            if has_value:
+                values[name] = value
+            elif arg in COMMIT_VALUE_OPTS:
+                skip = arg  # the next argument is this option's value
             elif not arg.startswith("--"):
                 # In a cluster the first value-taking letter ends it; the value is the next argument
                 # only when nothing follows that letter (`-am msg`), else attached (`-mtrim`). `-u`
                 # and `-S` take an optional value that must be attached, so they never consume one.
                 letter = re.search(r"[mFCctSu]", arg[1:])
-                skip = bool(letter) and letter.group() in "mFCct" and letter.end() == len(arg) - 1
+                skip = arg if bool(letter) and letter.group() in "mFCct" and letter.end() == len(arg) - 1 else None
+    if "--dry-run" in flags:
+        return None  # a flag, not `-m --dry-run`
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
     # first value-taking letter skip the hook (`-anm msg` does; `-mn` is the message "n").
     def skips(flag):
@@ -184,14 +188,7 @@ def check_commit(args, directory, configs, env):
 
     if any(skips(a) for a in flags):
         return "a commit that skips the commit-msg hook (--no-verify)"
-    author = None
-    for index, arg in enumerate(args):
-        if arg == "--":
-            break
-        if arg.startswith("--author="):
-            author = arg.split("=", 1)[1]
-        elif arg == "--author" and index + 1 < len(args):
-            author = args[index + 1]
+    author = values.get("--author")
     if author is None:
         options = [part for config in configs for part in ("-c", config)]
         lines = git_lines(directory, options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
@@ -204,17 +201,23 @@ def check_commit(args, directory, configs, env):
     return None
 
 
-def check_push_authors(refspecs, directory, tags=False):
-    """Read the authors of the commits this push sends that no remote has yet."""
+def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None):
+    """Read the authors and messages of the commits this push sends that no remote has yet.
+
+    `selectors` are the command's `--git-dir`/`--work-tree` options and `env` its GIT_DIR and
+    GIT_WORK_TREE, so the scan reads the repository the push would use."""
     sources = [refspec.lstrip("+").partition(":")[0] for refspec in refspecs] or ["HEAD"]
     # `git push origin tag v1` names refs/tags/v1; the word `tag` is not a revision.
     sources = [source for source in sources if source and source != "tag"]
-    # `--tags` sends every local tag too, and the commits only a tag reaches.
-    sources += ["--tags"] if tags else []
-    if not sources:
+    if any(source.startswith("-") for source in sources):
+        return "a push naming an option-like revision"
+    if not sources and not tags:
         return None
-    # One read of author and message per commit, record-separated: `splitlines` would eat `\x1e`.
-    text = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B"] + sources + ["--not", "--remotes", "--"], raw=True)
+    # `--tags` is an option for log, so it goes before `--end-of-options`; the sources after it
+    # are only ever revisions. One read of author and message per commit, record-separated:
+    # `splitlines` would eat `\x1e`.
+    tag_option = ["--tags"] if tags else []
+    text = git_lines(directory, list(selectors) + ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes", "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True, env=dict(os.environ, **(env or {})))
     if text is None:  # the scan failed or timed out: nothing was checked
         return "a push whose commits could not be read for the author and trailer checks"
     records = [r for r in text.split("\x1e") if r.strip()]
@@ -234,7 +237,7 @@ def destination(refspec, directory):
     return re.sub(r"^(refs/)?heads/", "", branch)
 
 
-def check_push(args, directory):
+def check_push(args, directory, selectors=(), env=None):
     positional, options, skip = [], [], False
     for index, arg in enumerate(args):
         if skip:
@@ -265,19 +268,22 @@ def check_push(args, directory):
             return "a push to a release branch ({})".format(target)
     if "--delete" in options or "-d" in options:
         return None
-    return check_push_authors(refspecs, directory, "--tags" in options)
+    return check_push_authors(refspecs, directory, "--tags" in options, selectors, env)
 
 
 def check_git(tokens, directory, env):
-    index, configs = 1, []
+    index, configs, selectors = 1, [], []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
             directory = os.path.join(directory, os.path.expanduser(tokens[index + 1]))
         elif tokens[index] == "-c" and index + 1 < len(tokens):
             configs.append(tokens[index + 1])
+        elif tokens[index].partition("=")[0] in ("--git-dir", "--work-tree"):
+            name, has_value, value = tokens[index].partition("=")
+            selectors += [name, value] if has_value else tokens[index : index + 2]
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
     if index < len(tokens) and tokens[index] == "push":
-        return check_push(tokens[index + 1 :], directory)
+        return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")})
     if index < len(tokens) and tokens[index] == "commit":
         return check_commit(tokens[index + 1 :], directory, configs, env)
     return None
@@ -430,6 +436,8 @@ def main():
             )
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit without --no-verify."
+        elif "option-like revision" in reason:
+            advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "could not be read for the author" in reason:
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
         elif "through xargs" in reason:

@@ -67,6 +67,8 @@ BLOCKED_ANYWHERE = [
     'git commit -anm "fix: x"',
     'git commit --no-v -m "fix: x"',
     'git commit -mtrim --no-verify',
+    "git commit -m --dry-run -n --allow-empty",
+    "git push -- origin --output=/tmp/guard-must-not-write feature",
     "git commit -u -n",
     "git commit -S -n -m x",
     "xargs env git push origin <<EOF\nmaster\nEOF",
@@ -90,6 +92,7 @@ ALLOWED_ANYWHERE = [
     "git push -n --force origin feature",
     'git commit -m "docs: never git push --force"',
     "git commit -m --no-verify",
+    "git commit -m --author -m clean",
     "git commit -mn",
     'git commit -am "fix: -n"',
     'git commit -uno -m "fix: x"',
@@ -337,6 +340,18 @@ class AuthorTest(unittest.TestCase):
         self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: clean")
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+
+    def test_push_scan_reads_the_repository_the_command_selects(self):
+        commit_as(self.other, self.OTHER)  # `other` holds a foreign commit; cwd is the clean repo
+        git(self.other, "remote", "add", "origin", os.path.join(self.tmp.name, "remote.git"))
+        for command in (
+            "GIT_DIR={0}/.git GIT_WORK_TREE={0} git push origin feature".format(self.other),
+            "git --git-dir={0}/.git --work-tree={0} push origin feature".format(self.other),
+            "git --git-dir {0}/.git push origin feature".format(self.other),
+        ):
+            with self.subTest(command=command):
+                self.assertIn(self.OTHER, guard_git.check_command(command, self.mine) or "")
+        self.assertFalse(os.path.exists("/tmp/guard-must-not-write"))
 
     def test_a_failed_push_scan_denies(self):
         with mock.patch.object(guard_git, "git_lines", return_value=None):

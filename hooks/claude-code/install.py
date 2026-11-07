@@ -30,10 +30,12 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 GIT_HOOKS_SOURCE = os.path.join(os.path.dirname(HERE), "git")
 GIT_HOOKS = ["commit-msg", "chain-repo-hook"]  # hooks git runs itself, for every client on the Mac
+OWNED = "installed-by: agent-working-agreements/hooks/claude-code/install.py"  # a file carrying this is ours to update
+MESSAGE_HOOKS = {"applypatch-msg": "commit-msg"}  # `git am` hands the message file to applypatch-msg
 # Every other hook name git knows gets a link to chain-repo-hook, so a repository's own hooks keep
 # running once the global core.hooksPath replaces its .git/hooks for git.
 CHAINED_HOOKS = [
-    "applypatch-msg", "pre-applypatch", "post-applypatch", "pre-commit", "pre-merge-commit",
+    "pre-applypatch", "post-applypatch", "pre-commit", "pre-merge-commit",
     "prepare-commit-msg", "post-commit", "pre-rebase", "post-checkout", "post-merge", "pre-push",
     "pre-receive", "update", "proc-receive", "post-receive", "post-update", "reference-transaction",
     "push-to-checkout", "pre-auto-gc", "post-rewrite", "sendemail-validate", "fsmonitor-watchman",
@@ -121,6 +123,15 @@ def merge_hooks(settings, hooks_dir=None):
 UNSET = None  # core.hooksPath absent from the global config
 
 
+def owned(path):
+    """True when the file at path was written by this installer (it carries OWNED in its head)."""
+    try:
+        with open(path, encoding="utf-8", errors="replace") as handle:
+            return OWNED in handle.read(2048)
+    except OSError:
+        return False
+
+
 def global_hooks_path():
     """The global core.hooksPath: UNSET when absent, its value (possibly "") when present, and
     False when git could not be asked."""
@@ -175,14 +186,14 @@ def main(argv=None):
     conflicts = []
     for script in GIT_HOOKS:
         target = os.path.join(git_hooks_dir, script)
-        if os.path.lexists(target) and (os.path.islink(target) or not filecmp.cmp(os.path.join(GIT_HOOKS_SOURCE, script), target, shallow=False)):
+        if os.path.lexists(target) and (os.path.islink(target) or not owned(target)):
             conflicts.append(target)  # someone else's hook of that name: never overwritten
-    for name in CHAINED_HOOKS:
+    for name, wanted in [(n, "chain-repo-hook") for n in CHAINED_HOOKS] + list(MESSAGE_HOOKS.items()):
         link = os.path.join(git_hooks_dir, name)
-        if os.path.lexists(link) and (not os.path.islink(link) or os.readlink(link) != "chain-repo-hook"):
+        if os.path.lexists(link) and (not os.path.islink(link) or os.readlink(link) not in (wanted, "chain-repo-hook")):
             conflicts.append(link)  # a file or someone else's link: never replaced
-        elif not os.path.lexists(link):
-            changes.append(("git-link", "chain-repo-hook", link))
+        elif not os.path.lexists(link) or os.readlink(link) != wanted:
+            changes.append(("git-link", wanted, link))
     if conflicts:
         for path in conflicts:
             print("conflict: {} exists and is not this installer's; move it (chain-repo-hook runs a repository's hooks, not a global one).".format(path))
@@ -241,7 +252,7 @@ def main(argv=None):
         elif kind == "git-link":
             os.makedirs(os.path.dirname(target), exist_ok=True)
             if os.path.lexists(target):
-                os.unlink(target)
+                os.unlink(target)  # only ever one of this installer's own links, by the check above
             os.symlink(path, target)  # relative: the folder moves as one
         elif kind == "hooks-path":
             try:

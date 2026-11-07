@@ -105,6 +105,9 @@ class CommitMsgTest(unittest.TestCase):
         with open(os.path.join(repo_hooks, "commit-msg"), "w") as handle:
             handle.write("#!/bin/sh\nexit 7\n")  # the repository's own verdict still counts
         self.assertEqual(self.commit("-m", "fix: clean").returncode, 1)
+        with open(os.path.join(repo_hooks, "commit-msg"), "w") as handle:
+            handle.write("#!/bin/sh\nprintf '\\n{}\\n' >> \"$1\"\n".format(TRAILER))  # a repository hook that adds one
+        self.assert_denied(self.commit("-m", "fix: clean"), "repository's own hook")
         self.assert_denied(self.commit("-m", "fix: x\n\n" + TRAILER))  # ours runs first
 
     def test_hooks_never_chain_to_themselves(self):
@@ -115,6 +118,29 @@ class CommitMsgTest(unittest.TestCase):
         self.git("config", "--unset", "core.hooksPath")  # the repository's own hooks dir is the installed one
         result = self.commit("-m", "fix: clean")
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_comment_prefixed_attribution_and_git_am(self):
+        self.assert_denied(self.commit("--cleanup=verbatim", "-m", "fix: x\n\n# " + TRAILER))
+        self.assert_denied(self.commit("-m", "fix: x\n\n> " + TRAILER))
+        hooks_dir = os.path.join(self.tmp.name, "hooks")
+        os.makedirs(hooks_dir)
+        os.symlink(os.path.join(HOOKS_DIR, "commit-msg"), os.path.join(hooks_dir, "commit-msg"))
+        os.symlink("commit-msg", os.path.join(hooks_dir, "applypatch-msg"))  # as install.py lays it out
+        self.git("config", "core.hooksPath", hooks_dir)
+        with open(os.path.join(self.repo, "file.txt"), "w") as handle:
+            handle.write("content\n")  # a patch with a diff: `git am` refuses an empty one before any hook
+        self.git("add", "file.txt")
+        self.assertEqual(self.commit("-m", "feat: file").returncode, 0)
+        patch = self.git("format-patch", "-1", "--stdout").stdout
+        self.git("reset", "-q", "--hard", "HEAD~1")
+        tainted = patch.replace("\n---\n", "\n\n" + TRAILER + "\n---\n", 1)
+        path = os.path.join(self.tmp.name, "tainted.patch")
+        with open(path, "w") as handle:
+            handle.write(tainted)
+        result = self.git("am", path)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("RULE ZERO", result.stderr + result.stdout)
+        self.git("am", "--abort")
 
     def test_clean_messages_pass(self):
         for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"),

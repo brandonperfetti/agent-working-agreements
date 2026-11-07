@@ -75,6 +75,12 @@ class InstallTest(unittest.TestCase):
             link = os.path.join(self.git_hooks, name)
             self.assertEqual(os.readlink(link), "chain-repo-hook")
             self.assertTrue(os.access(link, os.X_OK))
+        self.assertEqual(os.readlink(os.path.join(self.git_hooks, "applypatch-msg")), "commit-msg")
+        with open(target, "a") as handle:
+            handle.write("# an older revision of ours\n")  # still carries the ownership line: updated, not a conflict
+        code, out = self.run_install()
+        self.assertEqual(code, 0)
+        self.assertIn("copy", out)
         self.assertEqual(os.path.realpath(self.hooks_path()), os.path.realpath(self.git_hooks))
         self.assertEqual(self.run_install("--check")[0], 0)
         code, out = self.run_install()
