@@ -168,6 +168,7 @@ def git_lines(directory, args, env=None, raw=False):
     return result.stdout if raw else result.stdout.splitlines()
 
 
+HOOK_KEYS = ("core.hookspath", "core.editor", "sequence.editor", "commit.template", "commit.cleanup", "core.commentchar", "core.commentstring", "trailer.", "include", "alias.")
 MERGE_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-s", "--strategy", "-X", "--strategy-option", "--cleanup", "--into-name"}
 # Per command: the short letters that take a value (next argument when last in the cluster, else
 # attached), those whose optional value must be attached, and whether a short `-n` means --no-verify.
@@ -361,12 +362,14 @@ def check_push(args, directory, selectors=(), env=None):
 
 def check_git(tokens, directory, env):
     """Route a `git` command: global options first, then push, commit and merge."""
-    index, configured, selectors = 1, False, []
+    index, configured, selectors, keys = 1, False, [], []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
             directory = os.path.join(directory, os.path.expanduser(tokens[index + 1]))
         elif tokens[index] == "-c" or tokens[index].partition("=")[0] == "--config-env":
             configured = True  # a setting for this command alone: push.default, remote.*.push, …
+            setting = tokens[index + 1] if tokens[index] in ("-c", "--config-env") and index + 1 < len(tokens) else tokens[index].partition("=")[2]
+            keys.append(setting.partition("=")[0].lower())
         elif tokens[index].partition("=")[0] in ("--git-dir", "--work-tree"):
             name, has_value, value = tokens[index].partition("=")
             selectors += [name, value] if has_value else tokens[index : index + 2]
@@ -376,7 +379,9 @@ def check_git(tokens, directory, env):
             return "a push with a configuration setting on the command, which can redirect it"
         return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")})
     if index < len(tokens) and tokens[index] in ("commit", "merge"):
-        if configured or any(k.startswith("GIT_CONFIG") for k in env):
+        # A setting that can switch the hook off or rewrite the message denies; identity and other
+        # benign keys pass (`-c user.name=…`). GIT_CONFIG_* in the environment is not read: denied.
+        if any(k.startswith(HOOK_KEYS) or k in HOOK_KEYS for k in keys) or any(k.startswith("GIT_CONFIG") for k in env):
             return "a commit with a configuration setting on the command, which can switch off the commit-msg hook"
         if tokens[index] == "merge":
             return check_commit(tokens[index + 1 :], MERGE_VALUE_OPTS, MERGE_SHORTS)

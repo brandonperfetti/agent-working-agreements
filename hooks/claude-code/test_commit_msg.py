@@ -161,6 +161,13 @@ class CommitMsgTest(unittest.TestCase):
         result = self.git("commit", "-q", "-v", "-m", "docs: notes")  # -v appends the diff under the scissors line
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assert_denied(self.commit("-v", "-m", "docs: x\n\n" + TRAILER))  # the message itself still counts
+        scissors = "# ------------------------ >8 ------------------------"
+        self.assert_denied(self.commit("--cleanup=verbatim", "-m", "fix: x\n" + scissors + "\n" + TRAILER))  # kept below the line
+        self.assert_denied(self.commit("-m", "fix: x\n" + scissors + "\n+" + TRAILER))  # a diff line adding a trailer
+        self.assertEqual(self.commit("-m", "fix: x\n" + scissors + "\n+Generated with Claude Code mentioned").returncode, 0)
+        self.git("config", "core.commentChar", "!")
+        self.assertEqual(self.commit("-m", "fix: x\n! ------------------------ >8 ------------------------\n+Generated with Claude Code").returncode, 0)
+        self.git("config", "--unset", "core.commentChar")
 
     def test_clean_messages_pass(self):
         for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"),

@@ -20,13 +20,23 @@ AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with", re.IGNORECASE | re.MULTILINE)
 
 
-SCISSORS = re.compile(r"^[#;] -+ >8 -+\n.*", re.MULTILINE | re.DOTALL)
+SCISSORS = re.compile(r"^\S -+ >8 -+$", re.MULTILINE)  # any comment leader (core.commentChar)
+KEY_LINE = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:", re.IGNORECASE | re.MULTILINE)
 
 
 def read_message(path):
-    """The message text, without the diff git appends below the scissors line for `commit -v`."""
+    """The message text to scan. Below a scissors line git may have appended the diff (`commit -v`),
+    which `strip` cleanup removes but `verbatim`/`whitespace` keep: that part is scanned for a
+    trailer key at the start of a line only, with the diff marker dropped, so a diff that merely
+    mentions "generated with" passes while a kept trailer does not."""
     with open(path, encoding="utf-8", errors="replace") as handle:
-        return SCISSORS.sub("", handle.read())
+        text = handle.read()
+    match = SCISSORS.search(text)
+    if not match:
+        return text
+    above, below = text[: match.start()], text[match.end() :]
+    stripped = "\n".join(line[1:] if line[:1] in "+- " else line for line in below.splitlines())
+    return above + "".join("\n" + line for line in stripped.splitlines() if KEY_LINE.match(line))
 
 
 def author_email(hook):
