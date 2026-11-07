@@ -210,7 +210,9 @@ def check_commit(args, value_opts=None):
 
 
 def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None, remote="origin"):
-    """Read the authors and messages of the commits this push sends that `remote` does not have.
+    """Read, best effort, the authors and messages of the commits this push sends: those reachable
+    from the sources that `remote`'s local tracking refs do not already hold. Stale tracking refs
+    can hide a commit the remote lacks; the read before a delivery is presented is the complete check.
 
     `selectors` are the command's `--git-dir`/`--work-tree` options and `env` its GIT_DIR and
     GIT_WORK_TREE, so the scan reads the repository the push would use. Only the destination
