@@ -244,7 +244,10 @@ def main(argv=None):
                 os.unlink(target)
             os.symlink(path, target)  # relative: the folder moves as one
         elif kind == "hooks-path":
-            subprocess.run(["git", "config", "--global", "core.hooksPath", path], check=True, timeout=5)
+            try:
+                subprocess.run(["git", "config", "--global", "core.hooksPath", path], check=True, timeout=5)
+            except (OSError, subprocess.SubprocessError) as error:
+                sys.exit("could not set core.hooksPath ({}); the copied hooks stay inactive until it points at {}. Rerun to finish.".format(error, path))
     if merged != settings:
         mode = 0o644
         if os.path.exists(settings_path):

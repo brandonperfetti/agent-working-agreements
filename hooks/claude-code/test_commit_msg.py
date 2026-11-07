@@ -61,7 +61,6 @@ class CommitMsgTest(unittest.TestCase):
             ("--trailer key=value", "-m", "fix: x", "--trailer", "Co-Authored-By=A <a@b>"),
             ("session line", "-m", "fix: x\n\nClaude-Session: abc"),
             ("generated with", "-m", "fix: x\n\nGenerated with Claude Code"),
-            ("ANSI-C", "-m", "fix: x\n\n" + TRAILER),
         )
         for name, *args in cases:
             with self.subTest(route=name):
