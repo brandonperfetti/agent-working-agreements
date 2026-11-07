@@ -43,7 +43,8 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   trailer, footer or crediting line on a commit, PR body, issue or thread reply (Brandon's override,
   #226); receipts carry the evidence. Exception: an agent comment on another owner's repository
   carries the line "Posted by an agent on Brandon Perfetti's behalf." (Brandon, 2026-11-06, #245).
-  RULE ZERO is line one of every dispatch prompt. Check before every push, merge and presentation.
+  A `commit-msg` hook on each Mac and the Claude Code guard enforce it; check before every push,
+  merge and presentation.
 - **Review.** Verdicts go under `reviews/`, naming the head SHA; the procedure carries scoping,
   staleness and the bot's three outcomes. Close-out review is where the big finds happen
   [learnings: 2026-08-30 §9]. Paid reviews use an approved funded allowance only (B2).

@@ -30,8 +30,15 @@ and `--dry-run` behave as for the Claude Code hooks.
 
 ## Reach and limits
 
-A repository that sets its own `core.hooksPath` (a husky repository, for one) does not run the
-global hooks; git takes the repository's setting first. `git commit --no-verify` skips every
+A repository that sets its own `core.hooksPath` does not run the global hooks; git takes the
+repository's setting first. Brandon's projects use husky, which does exactly that, so each carries a
+tracked `.husky/commit-msg` (and `.husky/applypatch-msg`) that runs the installed hook when present:
+
+```sh
+[ -x "$HOME/.config/git/hooks/commit-msg" ] && exec "$HOME/.config/git/hooks/commit-msg" "$@"
+```
+
+ `git commit --no-verify` skips every
 commit-msg hook, and the Claude Code guard denies it on `git commit` and `git merge`. `git
 cherry-pick` and `git rebase` write commits without running it and keep the author and message they
 import; a merge commit runs it (a fast-forward makes no commit). The Claude Code guard's push-time
