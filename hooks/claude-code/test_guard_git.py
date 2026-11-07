@@ -352,6 +352,36 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "config", "push.default", "matching")
         self.assertIn("chosen by", guard_git.check_command("git push origin", self.mine) or "")
         git(self.mine, "config", "push.default", "simple")
+
+    def test_push_destination_and_remote_are_the_ones_git_would_use(self):
+        commit_as(self.mine, self.OTHER)
+        # Known only to another remote: still new to origin, so still scanned.
+        other_remote = os.path.join(self.tmp.name, "fork.git")
+        subprocess.run(["git", "init", "-q", "--bare", other_remote], check=True)
+        git(self.mine, "remote", "add", "fork", other_remote)
+        git(self.mine, "push", "-q", "fork", "feature")
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature:topic", self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git push fork feature", self.mine))  # fork has it
+        for command in ("git push {} feature".format(other_remote), "git push --repo=origin feature", "git push git@github.com:o/r.git feature"):
+            with self.subTest(command=command):
+                self.assertIn("named by URL", guard_git.check_command(command, self.mine) or "")
+        git(self.mine, "config", "remote.origin.mirror", "true")
+        self.assertIn("mirror", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "--unset", "remote.origin.mirror")
+        # push.default=upstream with the feature branch tracking the release branch: the bare push lands on master.
+        git(self.mine, "push", "-q", "origin", "feature:master")
+        git(self.mine, "fetch", "-q", "origin")
+        git(self.mine, "branch", "-q", "--set-upstream-to=origin/master", "feature")
+        git(self.mine, "config", "push.default", "upstream")
+        self.assertIn("release branch", guard_git.check_command("git push", self.mine) or "")
+        git(self.mine, "config", "push.default", "simple")
+        git(self.mine, "branch", "-q", "--unset-upstream", "feature")
+        # Tags only: the tainted HEAD is not sent, a clean tag is.
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "--reset-author", "-m", "fix: clean")
+        git(self.mine, "tag", "v-clean")
+        commit_as(self.mine, self.OTHER)  # a tainted HEAD above the tag
+        self.assertIsNone(guard_git.check_command("git push --tags origin", self.mine))
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "--reset-author", "-m", "fix: x\n\nCo-Authored-By: A <a@b>")
         git(self.mine, "push", "-q", "origin", "HEAD~1:refs/heads/other")  # the foreign commit is now on a remote
         self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")

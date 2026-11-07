@@ -191,11 +191,12 @@ def check_commit(args):
     return None
 
 
-def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None):
-    """Read the authors and messages of the commits this push sends that no remote has yet.
+def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None, remote="origin"):
+    """Read the authors and messages of the commits this push sends that `remote` does not have.
 
     `selectors` are the command's `--git-dir`/`--work-tree` options and `env` its GIT_DIR and
-    GIT_WORK_TREE, so the scan reads the repository the push would use."""
+    GIT_WORK_TREE, so the scan reads the repository the push would use. Only the destination
+    remote's tracking refs are excluded: what another remote holds is still new to this one."""
     # `git push origin tag v1` names refs/tags/v1: the standalone word `tag` is a marker and the
     # name after it the revision to scan; `tag:topic`, or `tag` alone at the end, is a branch.
     named, index = [], 0
@@ -206,7 +207,9 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None):
             continue
         named.append(refspecs[index])
         index += 1
-    sources = [refspec.lstrip("+").partition(":")[0] for refspec in named] or ["HEAD"]
+    sources = [refspec.lstrip("+").partition(":")[0] for refspec in named]
+    if not sources and not tags:
+        sources = ["HEAD"]  # a bare push sends the current branch; `--tags` alone sends only tags
     sources = [source for source in sources if source]
     if any(source.startswith("-") for source in sources):
         return "a push naming an option-like revision"
@@ -216,7 +219,7 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None):
     # are only ever revisions. One read of author and message per commit, record-separated:
     # `splitlines` would eat `\x1e`.
     tag_option = ["--tags"] if tags else []
-    text = git_lines(directory, list(selectors) + ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes", "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True, env=dict(os.environ, **(env or {})))
+    text = git_lines(directory, list(selectors) + ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes=" + remote, "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True, env=dict(os.environ, **(env or {})))
     if text is None:  # the scan failed or timed out: nothing was checked
         return "a push whose commits could not be read for the author and trailer checks"
     records = [r for r in text.split("\x1e") if r.strip()]
@@ -259,18 +262,32 @@ def check_push(args, directory, selectors=(), env=None):
         return "a force-push"
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
+    tags_only = ("--tags" in options or "--follow-tags" in options) and not refspecs and "--tags" in options
+    environment = dict(os.environ, **(env or {}))
+    # The destination remote, by name: a URL or `--repo` has no tracking refs to scan against.
+    remote = positional[0] if positional else None
+    if "--repo" in options or (remote and re.search(r"[:/@]", remote)):
+        return "a push to a remote named by URL or --repo; name the remote"
+    if remote is None:
+        pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment)
+        remote = pushed[0].strip().partition("/")[0] if pushed and "/" in pushed[0] else "origin"
+    mirror = git_lines(directory, list(selectors) + ["config", "--get", "remote.{}.mirror".format(remote)], environment)
+    if mirror and mirror[0].strip().lower() in ("true", "yes", "on", "1"):
+        return "a push to a mirror remote, which rewrites and deletes every ref"
     # `remote.<name>.push` maps a bare source (`feature`) or a bare push to other branches, and
     # `push.default=matching` sends every matching branch: the scan below would read the wrong
     # commits, so those are denied unless each refspec names its destination.
-    if not refspecs or any(":" not in r for r in refspecs):
-        environment = dict(os.environ, **(env or {}))
+    if not tags_only and (not refspecs or any(":" not in r for r in refspecs)):
         mapped = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.push$"], environment)
         default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], environment)
         if mapped or (not refspecs and default and default[0].strip() == "matching"):
             return "a push whose targets are chosen by remote.<name>.push or push.default, not the command"
     targets = [destination(r, directory, selectors, env) for r in refspecs]
-    if not refspecs:
-        targets = [current_branch(directory, selectors, env)]
+    if not refspecs and not tags_only:
+        # A bare push lands where `@{push}` says (push.default simple/current/upstream, pushRemote);
+        # without an upstream git sends the current branch or refuses.
+        pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment)
+        targets = [pushed[0].strip().partition("/")[2]] if pushed and "/" in pushed[0] else [current_branch(directory, selectors, env)]
     if "" in targets:
         return "a push whose target branch could not be resolved"
     for target in targets:
@@ -278,7 +295,7 @@ def check_push(args, directory, selectors=(), env=None):
             return "a push to a release branch ({})".format(target)
     if "--delete" in options or "-d" in options:
         return None
-    return check_push_authors(refspecs, directory, "--tags" in options, selectors, env)
+    return check_push_authors(refspecs, directory, "--tags" in options, selectors, env, remote)
 
 
 def check_git(tokens, directory, env):
@@ -450,7 +467,7 @@ def main():
             advice = "RULE ZERO is checked by the commit-msg hook; commit without --no-verify."
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
-        elif "chosen by" in reason or "configuration setting on the command" in reason:
+        elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:
             advice = "The guard must see what is pushed. Name the remote and the branch, with its destination, on the command line, without -c."
         elif "could not be read for the author" in reason:
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
