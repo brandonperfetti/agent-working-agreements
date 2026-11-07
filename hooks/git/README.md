@@ -54,9 +54,10 @@ The `exit 0` is load-bearing: husky runs the file under `sh -e`, and without it 
 installed hook would refuse every commit. A fresh clone or worktree runs no hook at all until the
 repository's install step (`pnpm install`) has created `.husky/_`; install before the first commit
 there, then prove the hook from that checkout without writing anything: put a message carrying a
-`Co-Authored-By:` line in a file and run `git hook run commit-msg -- <file>`. The RULE ZERO refusal
-(exit 1) means the hook runs; "cannot find a hook named commit-msg" means none does, so install
-before any real commit. `git hook run` executes the configured hook and makes no commit.
+`Co-Authored-By:` line in a file and run `git hook run commit-msg -- /absolute/path/to/that/file`
+(git runs the hook from the repository root, so a relative path can name the wrong file). The RULE
+ZERO refusal (exit 1) means the hook runs; "cannot find a hook named commit-msg" means none does, so
+install before any real commit. `git hook run` executes the configured hook and makes no commit.
 
 `git commit --no-verify` skips every
 commit-msg hook, and the Claude Code guard denies it on `git commit` and `git merge`. `git
