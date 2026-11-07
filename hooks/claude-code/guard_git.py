@@ -183,11 +183,11 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
     value_letters, attached_letters, short_n = shorts
     flags, skip = [], None
     for arg in args:
-        if re.fullmatch(r"\d*[<>]+\S*", arg):
-            # After the lexer a redirect and a quoted value look alike. With a value pending the two
-            # readings diverge (`-m > /dev/null -m --no-verify` is a redirect to the shell; `-m ">note"`
-            # a message), so that case is refused rather than guessed. With nothing pending it is a
-            # redirect: a bare operator consumes its target (`> -m`), an attached one stands alone.
+        if re.match(r"\d*[<>]", arg):
+            # After the lexer a redirect and a quoted value look alike (`>"some log"` and `-m "> note"`
+            # both arrive as one token). With a value pending the two readings diverge, so that case
+            # is refused rather than guessed. With nothing pending it is a redirect: a bare operator
+            # consumes its target (`> -m`), an attached one stands alone.
             if skip:
                 return "a commit whose options cannot be told from a redirection"
             skip = arg if re.fullmatch(r"\d*[<>]+", arg) else None
@@ -553,7 +553,7 @@ def main():
                 "Remove the trailer (git commit --amend for a commit already made) and retry."
             )
         elif "told from a redirection" in reason:
-            advice = "Quote the message so it holds a space, or move the redirection after the options, so the guard can read the command."
+            advice = "Start the message with a word rather than < or >, and put any redirection after the options, so the guard can read the command."
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
         elif "option-like revision" in reason:
