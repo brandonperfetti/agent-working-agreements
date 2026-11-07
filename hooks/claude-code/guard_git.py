@@ -95,6 +95,20 @@ def strip_redirects(tokens):
     return kept
 
 
+XARGS_VALUE_OPTS = {"-a", "-d", "-E", "-e", "-I", "-i", "-L", "-l", "-n", "-P", "-R", "-s", "-S", "-J"}
+
+
+def xargs_runs(tokens):
+    """The command word xargs would run, or None: `xargs -n 1 git push` runs git; `xargs grep git` grep."""
+    try:
+        index = [os.path.basename(t) for t in tokens].index("xargs") + 1
+    except ValueError:
+        return None
+    while index < len(tokens) and tokens[index].startswith("-"):
+        index += 2 if tokens[index] in XARGS_VALUE_OPTS else 1
+    return os.path.basename(tokens[index]) if index < len(tokens) else None
+
+
 def strip_prefix(tokens):
     """Drop env assignments and wrappers such as `env` or `sudo`."""
     while tokens:
@@ -155,7 +169,13 @@ def check_commit(args, directory, configs, env):
             skip = False  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message
         elif arg.startswith("-"):
             flags.append(arg)
-            skip = arg in COMMIT_VALUE_OPTS or bool(re.fullmatch(r"-[a-zA-Z]*[mFCc]", arg))  # `-am msg`
+            if arg in COMMIT_VALUE_OPTS:
+                skip = True  # the next argument is this option's value
+            elif not arg.startswith("--"):
+                # In a cluster the first value-taking letter ends it; the value is the next argument
+                # only when nothing follows that letter (`-am msg`), else attached (`-mtrim`, `-uno`).
+                letter = re.search(r"[mFCctSu]", arg[1:])
+                skip = bool(letter) and letter.end() == len(arg) - 1
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
     # first value-taking letter skip the hook (`-anm msg` does; `-mn` is the message "n").
     def skips(flag):
@@ -379,8 +399,7 @@ def check_command(command, directory, inherited=None):
             continue
         head = os.path.basename(tokens[0])
         reason = None
-        names = {os.path.basename(t) for t in prefix + command_tokens}  # before the wrapper strip
-        if "xargs" in names and names & {"git", "gh"}:
+        if xargs_runs(prefix + command_tokens) in ("git", "gh"):
             return "a git or gh command whose arguments arrive through xargs and are not visible here"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
