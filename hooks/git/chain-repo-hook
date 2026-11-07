@@ -1,0 +1,14 @@
+#!/bin/sh
+# installed-by: agent-working-agreements/hooks/claude-code/install.py (the installer updates files carrying this line)
+# A global core.hooksPath replaces a repository's own .git/hooks for git. This wrapper, installed
+# under every hook name, hands the call on to the repository's hook of the same name when it has
+# one, so a repository's checks keep running. Worktrees share the main checkout's hooks dir.
+name="$(basename "$0")"
+common="$(git rev-parse --git-common-dir 2>/dev/null)" || exit 0  # not a repository: nothing to chain
+[ -n "$common" ] || exit 0
+repo_hook="$common/hooks/$name"
+# Never the installed link itself: a hooks dir that is a repository's own .git/hooks would loop.
+if [ -x "$repo_hook" ] && [ ! "$repo_hook" -ef "$0" ]; then
+  exec "$repo_hook" "$@"
+fi
+exit 0

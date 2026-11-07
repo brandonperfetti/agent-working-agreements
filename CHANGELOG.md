@@ -10,6 +10,34 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-06 — RULE ZERO's no-attribution half is enforced where git holds the message (#243).**
+  The rule was prose plus a manual grep. A `commit-msg` git hook (`hooks/git`) now denies a commit
+  whose message carries a `Co-Authored-By`, `*-Session` or "generated with" line or whose author is
+  not Brandon's email, on every client that commits through git; the Claude Code guard denies
+  `--no-verify` and, best effort, reads the commits a push sends from the objects. A first attempt parsed
+  the message out of the shell command and did not converge after nine review rounds (PR #250,
+  closed unmerged): check the fact where it is final, not where it must be predicted. Brandon
+  decided. Controls are the hooks' tests; the prose cut waits for the other routes' (#243).
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/243).
+
+- **2026-11-06 — Agent comments on repositories Brandon does not own carry one agent line (#245).**
+  The MEGA Seasons 1–2 review (S01E05) argued for labelling agent comments so maintainers can tell
+  them apart; Brandon narrowed RULE ZERO's no-attribution rule to that one case and kept commits,
+  PR bodies and own-repo threads unattributed. Profile and `rule-zero-check.md`.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/245).
+
+- **2026-11-06 — B0 item 2 asks for a proportionate pickup check, not the full gate (#244).** The
+  full local gate at every pickup stalled small fixes while CI already requires the full gate on
+  `master` for every active repository (measured 2026-11-06); A5's definition of green and the
+  release gate are unchanged. Brandon decided (MEGA review grill). Core B0 and `clients/claude-code.md`.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/244).
+
+- **2026-11-06 — Diff growth after first review is evidence, not a target (#242).** Four of seven
+  multi-commit Alchemist PRs grew 2.3–3.8× after their first commit; the course (S01E03, S01E05)
+  names review loops as a cause. Brandon decided (MEGA review grill). One sentence in
+  `review-findings.md`; the harm threshold and the no-cap decision are unchanged.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/242).
+
 - **2026-11-05 — OpenClaw task-based subscription routing.** Replaces fixed vendor roles with
   task-fit model/effort and independent conversation/worker selection; local mechanics stay in
   studio guidance, preserving wrapper contracts and B2 boundaries. Brandon approved implementation.

@@ -30,6 +30,23 @@ BLOCKED_ANYWHERE = [
     "git push origin 'refs/heads/*:refs/heads/*'",
     "git push origin master 2>&1 | tail -5",
     "git -c core.quotepath=off push origin master",
+    "git push -ofoo origin master",
+    "git push --force-w origin feature",
+    "git push --push-o --dry-run --force origin feature:feature",
+    "git push --mirr",
+    "git push origin --del master",
+    "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=push.default GIT_CONFIG_VALUE_0=matching git push origin",
+    'git -c core.hooksPath=/tmp/none commit -m "fix: x"',
+    'git -c trailer.credit.key=Co-Authored-By commit -m "fix: x"',
+    'git --config-env=core.editor=E commit -m "fix: x"',
+    'GIT_CONFIG_COUNT=1 git commit -m "fix: x"',
+    "git merge --no-verify topic",
+    "git merge -qsort --no-verify --no-ff --no-edit topic",
+    "git push -vofoo origin main",
+    "git -c remote.origin.push=foreign:master push origin",
+    "git --config-env=push.default=P push origin feature",
+    "git -c remote.origin.push=foreign:master push origin",
+    "git --config-env=push.default=P push origin feature",
     "/usr/bin/git push -f",
     "FOO=1 git push -f",
     "env FOO=1 git push -f",
@@ -56,6 +73,26 @@ BLOCKED_ANYWHERE = [
     "gh pr --repo owner/repo merge 1",
     "GH_TOKEN=x gh pr merge 1",
     "gh api -X PUT repos/o/r/pulls/1/merge",
+    "git push origin :",
+    "{ git push --force origin feature; }",
+    "{ git push origin master; }",
+    "echo master | xargs git push origin",
+    "printf 'master\\n' | xargs -n 1 git push --force origin",
+    "xargs git push origin <<EOF\nmaster\nEOF",
+    'git commit --no-verify -m "fix: x"',
+    'git commit -n -m "fix: x"',
+    'git commit -anm "fix: x"',
+    'git commit --no-v -m "fix: x"',
+    'git commit -mtrim --no-verify',
+    "git commit -m --dry-run -n --allow-empty",
+    "if git push --force origin feature; then echo ok; fi",
+    "while git push origin master; do :; done",
+    "git commit -u -n",
+    "git commit -S -n -m x",
+    "xargs env git push origin <<EOF\nmaster\nEOF",
+    "xargs --max-args 1 git push --force origin",
+    "printf master | xargs -I{} sh -c 'git push origin {}'",
+    "echo 1 | xargs -I {} gh pr merge {}",
     "gh api --method PUT repos/o/r/pulls/1/merge",
     "gh api repos/o/r/merges -f base=master -f head=develop",
     "gh api graphql -f query='mutation { mergePullRequest(input: {}) { clientMutationId } }'",
@@ -69,10 +106,34 @@ ALLOWED_ANYWHERE = [
     "git push origin feature-master",
     "git push origin master-notes",
     "git push --no-force-with-lease origin feature",
+    "git push -ofleet origin feature",
+    "git push -o fleet origin feature",
+    "git push -vo fleet origin feature",
+    "git push --push-o fleet origin feature",
+    "git push --push-option=fleet origin feature",
+    "git push -ofoo origin feature",
+    "git push -vofoo origin feature",
+    "git merge topic",
+    "git merge --no-ff -m 'merge topic' topic",
+    "git merge -n topic",
+    "git merge -qsort topic",
+    "git commit -m fix > -m",
+    "git commit > log -m fix",
+    'git commit -m "fix: >note" > log.txt',
+    'git commit -m fix > ">log"',
+    "git commit -m fix 2>&1 | tail -1",
+    "git commit -m fix & >log echo -n ok",
+    'git commit -m "fix: display comments posted by an agent"',
+    'git -c user.name="Brandon Perfetti" commit -m "fix: x"',
+    'git -c core.quotepath=off commit -m "fix: x"',
     "git push origin feature 2>&1 | tail -5",
     "git push --dry-run origin master",
     "git push -n --force origin feature",
     'git commit -m "docs: never git push --force"',
+    "git commit -mn",
+    'git commit -am "fix: -n"',
+    'git commit -uno -m "fix: x"',
+    "echo xargs git",
     "git log --grep='gh pr merge'",
     'echo "git push -f"',
     "echo git push -f",
@@ -99,6 +160,13 @@ def make_repo(root, name, branch, email=guard_git.AUTHOR_EMAIL):
     subprocess.run(["git", "init", "-q", "-b", branch, path], check=True)
     git(path, "config", "user.name", "Test")
     git(path, "config", "user.email", email)
+    git(path, "config", "core.hooksPath", os.path.join(path, ".no-hooks"))  # fixtures commit trailers on purpose
+    git(path, "config", "commit.gpgsign", "false")
+    # A resolvable HEAD and the branches the push shapes name: the guard reads real history now.
+    git(path, "-c", "user.email=" + guard_git.AUTHOR_EMAIL, "commit", "-q", "--allow-empty", "-m", "init")
+    for other in ("develop", "wave-1", "feature-master", "master-notes"):
+        if other != branch:
+            git(path, "branch", other)
     return path
 
 
@@ -282,25 +350,126 @@ class AuthorTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_commit_reads_the_identity_git_would_use(self):
-        brandon = guard_git.AUTHOR_EMAIL
-        for directory, command, blocked in (
-            (self.mine, 'git commit -m "fix: x"', False),
-            (self.other, 'git commit -m "fix: x"', True),
-            (self.mine, "git -c user.email={} commit -m x".format(self.OTHER), True),
-            (self.mine, "GIT_AUTHOR_EMAIL={} git commit -m x".format(self.OTHER), True),
-            (self.mine, "env GIT_AUTHOR_EMAIL={} git commit -m x".format(self.OTHER), True),
-            (self.mine, 'git commit --author="X <{}>" -m x'.format(self.OTHER), True),
-            (self.other, 'git commit --author "B <{}>" -m x'.format(brandon), False),
-            (self.other, "git -c user.email={} commit -m x".format(brandon), False),
-            (self.other, "git commit --dry-run", False),
-            (self.mine, 'git commit -m "GIT_AUTHOR_EMAIL={}"'.format(self.OTHER), False),
-            (self.mine, "export GIT_AUTHOR_EMAIL={}; git commit -m x".format(self.OTHER), True),
-            (self.mine, 'export GIT_AUTHOR_EMAIL={}; bash -c "git commit -m y"'.format(self.OTHER), True),
+    def test_a_dangling_or_option_like_value_is_refused(self):
+        for command in ("git commit -m > /dev/null -m --no-verify", 'git commit -m >"some log" -m --no-verify', 'git commit -m ">note" -n',
+                        "git commit -F >msg -n", 'git commit -m "<subject" -n', 'git merge -m ">merge" --no-verify topic',
+                        'git commit -m "> note" --no-verify', 'git merge -m "> merge" --no-verify topic', 'git commit -m "<subject" > log.txt',
+                        ">log git commit -m '> note' --no-verify", 'git commit -m "2>1 is true"', "git commit -m"):
+            with self.subTest(command=command):
+                self.assertIn("option values cannot be read", guard_git.check_command(command, self.mine) or "")
+
+    def test_commit_identity_is_the_hooks_to_read(self):
+        # The commit-msg hook reads the author git resolves; the guard predicts nothing and so never
+        # false-denies `--author=Brandon` or a repo-local identity it cannot see.
+        for directory, command in (
+            (self.other, 'git commit -m "fix: x"'),
+            (self.mine, 'git commit --author="X <{}>" -m x'.format(self.OTHER)),
+            (self.mine, "git commit --author=Brandon -m x"),
+            (self.other, "git commit --dry-run"),
         ):
             with self.subTest(directory=os.path.basename(directory), command=command):
-                reason = guard_git.check_command(command, directory)
-                self.assertEqual(reason is not None, blocked, reason)
+                self.assertIsNone(guard_git.check_command(command, directory))
+        for command in ("git commit -n -- file",
+                        "git commit -m fix > -m --no-verify", "git commit -m fix 2> -F -n",
+                        'echo ">" & git commit -m fix -n', 'echo ok & >log git commit -m fix -n'):
+            with self.subTest(command=command):
+                self.assertIn("commit-msg hook", guard_git.check_command(command, self.mine) or "")
+        for command in ("git commit -m -- -n --allow-empty", 'git commit --author -- -n -m x', "git commit --pathspec-from-file --dry-run -n -m x",
+                        "git commit -m --no-verify", "git commit -m --author -m clean"):
+            with self.subTest(command=command):
+                self.assertTrue(guard_git.check_command(command, self.mine))  # refused or denied: never allowed
+        self.assertIsNone(guard_git.check_command("git commit -m x -- -n", self.mine))  # after `--`, `-n` is a path
+
+    def test_push_reads_every_unpushed_author_and_message(self):
+        commit_as(self.mine, self.OTHER)  # an older foreign commit under a clean tip
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "branch", "-q", "tag")  # a branch called tag is a source, not the `tag <name>` marker
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin tag:topic", self.mine) or "")
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin tag", self.mine) or "")
+        git(self.mine, "tag", "tag")  # and a tag called tag, pushed with the marker, is scanned too
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin tag tag", self.mine) or "")
+        git(self.mine, "config", "remote.origin.push", "feature:topic")
+        self.assertIn("chosen by", guard_git.check_command("git push origin", self.mine) or "")
+        self.assertIn("chosen by", guard_git.check_command("git push origin feature", self.mine) or "")
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature:feature", self.mine) or "")  # explicit: read as written
+        git(self.mine, "config", "--unset", "remote.origin.push")
+        git(self.mine, "config", "push.default", "matching")
+        self.assertIn("chosen by", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "push.default", "simple")
+
+    def test_push_destination_and_remote_are_the_ones_git_would_use(self):
+        commit_as(self.mine, self.OTHER)
+        # Known only to another remote: still new to origin, so still scanned.
+        other_remote = os.path.join(self.tmp.name, "fork.git")
+        subprocess.run(["git", "init", "-q", "--bare", other_remote], check=True)
+        git(self.mine, "remote", "add", "fork", other_remote)
+        git(self.mine, "push", "-q", "fork", "feature")
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature:topic", self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git push fork feature", self.mine))  # fork has it
+        for command in ("git push {} feature".format(other_remote), "git push --repo=origin feature", "git push git@github.com:o/r.git feature"):
+            with self.subTest(command=command):
+                self.assertIn("named by URL", guard_git.check_command(command, self.mine) or "")
+        for spelling in ("true", "yes", "1", "on"):
+            git(self.mine, "config", "remote.origin.mirror", spelling)
+            self.assertIn("mirror", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "--unset", "remote.origin.mirror")
+        subprocess.run(["git", "-C", self.mine, "config", "--add", "remote.origin.mirror", ""], check=False)  # valueless: true to git
+        # a valueless key is written as `mirror` with no `=`; git --bool reads it as true
+        with open(os.path.join(self.mine, ".git", "config"), "a") as handle:
+            handle.write("[remote \"origin\"]\n\tmirror\n")
+        self.assertIn("mirror", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "--unset-all", "remote.origin.mirror")
+        # The remote a bare push uses: pushRemote, then pushDefault, before @{push} or origin.
+        git(self.mine, "config", "branch.feature.pushRemote", "fork")
+        self.assertIsNone(guard_git.check_command("git push", self.mine))  # fork already has feature
+        git(self.mine, "config", "branch.feature.pushRemote", other_remote)
+        self.assertIn("named by URL", guard_git.check_command("git push", self.mine) or "")
+        git(self.mine, "config", "--unset", "branch.feature.pushRemote")
+        git(self.mine, "config", "remote.pushDefault", "fork")
+        self.assertIsNone(guard_git.check_command("git push", self.mine))
+        git(self.mine, "config", "--unset", "remote.pushDefault")
+        # push.default=upstream with the feature branch tracking the release branch: the bare push lands on master.
+        git(self.mine, "push", "-q", "origin", "feature:master")
+        git(self.mine, "fetch", "-q", "origin")
+        git(self.mine, "branch", "-q", "--set-upstream-to=origin/master", "feature")
+        git(self.mine, "config", "push.default", "upstream")
+        self.assertIn("release branch", guard_git.check_command("git push", self.mine) or "")
+        git(self.mine, "config", "push.default", "simple")
+        git(self.mine, "branch", "-q", "--unset-upstream", "feature")
+        # Tags only: the tainted HEAD is not sent, a clean tag is.
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "--reset-author", "-m", "fix: clean")
+        git(self.mine, "tag", "v-clean")
+        commit_as(self.mine, self.OTHER)  # a tainted HEAD above the tag
+        self.assertIsNone(guard_git.check_command("git push --tags origin", self.mine))
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "--reset-author", "-m", "fix: x\n\nCo-Authored-By: A <a@b>")
+        git(self.mine, "push", "-q", "origin", "HEAD~1:refs/heads/other")  # the foreign commit is now on a remote
+        self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: clean")
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+
+    def test_push_scan_reads_the_repository_the_command_selects(self):
+        commit_as(self.other, self.OTHER)  # `other` holds a foreign commit; cwd is the clean repo
+        git(self.other, "remote", "add", "origin", os.path.join(self.tmp.name, "remote.git"))
+        for command in (
+            "GIT_DIR={0}/.git GIT_WORK_TREE={0} git push origin feature".format(self.other),
+            "git --git-dir={0}/.git --work-tree={0} push origin feature".format(self.other),
+            "git --git-dir {0}/.git push origin feature".format(self.other),
+        ):
+            with self.subTest(command=command):
+                self.assertIn(self.OTHER, guard_git.check_command(command, self.mine) or "")
+        git(self.other, "branch", "-q", "master")
+        self.assertIn("release branch", guard_git.check_command("git --git-dir={0}/.git push origin HEAD:master".format(self.other), self.mine) or "")
+        git(self.other, "checkout", "-q", "master")
+        self.assertIn("release branch", guard_git.check_command("GIT_DIR={0}/.git GIT_WORK_TREE={0} git push origin".format(self.other), self.mine) or "")
+        sentinel = os.path.join(self.tmp.name, "must-not-write")
+        self.assertTrue(guard_git.check_command("git push -- origin --output={} feature".format(sentinel), self.mine))
+        self.assertFalse(os.path.exists(sentinel))
+
+    def test_a_failed_push_scan_denies(self):
+        with mock.patch.object(guard_git, "git_lines", return_value=None):
+            self.assertIn("could not be read", guard_git.check_command("git push origin feature", self.mine) or "")
 
     def test_push_reads_the_authors_of_unpushed_commits(self):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)

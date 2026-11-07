@@ -21,9 +21,9 @@ the capture.
 The native shell supports `rm`, worktrees, `git branch -d` and hook execution; none of the Cowork
 hazards (`cowork.md`) apply. So B0 item 1 passes by construction but for its hook probe. **Still
 check at pickup:** item 1's hook probe (`git push --dry-run origin HEAD` from the checkout you will
-push from), item 2 (run the gate once — the local shell's locale/env differs from the CI runner;
-the project docs name the exports), item 3 before **every** feature commit, not only the first,
-item 4 (branch protection — query it, never assume it), item 5 (the override in the prompt,
+push from), item 2 (the proportionate pickup check — the local shell's locale/env differs from the
+CI runner; the project docs name the exports), item 3 before **every** feature commit, not only the
+first, item 4 (branch protection — query it, never assume it), item 5 (the override in the prompt,
 recorded in MPD §0 for initiative work, or with the delivery's decisions for work with no
 initiative, B1 or B2, by mode). Whether the repo carries any hooks at all is a repo fact, not a
 Claude Code fact.
