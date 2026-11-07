@@ -80,6 +80,26 @@ class InstallTest(unittest.TestCase):
         code, out = self.run_install()
         self.assertEqual((code, "Already installed." in out), (0, True))
 
+    def test_a_foreign_hook_in_the_folder_stops_the_install(self):
+        os.makedirs(self.git_hooks)
+        foreign = os.path.join(self.git_hooks, "pre-push")
+        with open(foreign, "w") as handle:
+            handle.write("#!/bin/sh\nexit 0\n")
+        with self.assertRaises(SystemExit):
+            self.run_install()
+        with open(foreign) as handle:
+            self.assertIn("exit 0", handle.read())  # untouched
+        self.assertFalse(os.path.exists(os.path.join(self.git_hooks, "commit-msg")))
+        self.assertEqual(self.hooks_path(), "")
+        code, out = self.run_install("--check")
+        self.assertEqual(code, 1)
+        self.assertIn("conflict", out)
+        os.unlink(foreign)
+        with open(os.path.join(self.git_hooks, "commit-msg"), "w") as handle:
+            handle.write("#!/bin/sh\nexit 0\n")  # a different commit-msg hook is a conflict too
+        with self.assertRaises(SystemExit):
+            self.run_install()
+
     def test_an_existing_hooks_path_is_reported_not_overridden(self):
         elsewhere = os.path.join(self.tmp.name, "elsewhere")
         subprocess.run(["git", "config", "--global", "core.hooksPath", elsewhere], check=True)

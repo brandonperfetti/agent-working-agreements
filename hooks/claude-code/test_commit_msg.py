@@ -108,6 +108,15 @@ class CommitMsgTest(unittest.TestCase):
         self.assertEqual(self.commit("-m", "fix: clean").returncode, 1)
         self.assert_denied(self.commit("-m", "fix: x\n\n" + TRAILER))  # ours runs first
 
+    def test_hooks_never_chain_to_themselves(self):
+        repo_hooks = os.path.join(self.repo, ".git", "hooks")
+        for name in ("commit-msg", "chain-repo-hook"):
+            os.symlink(os.path.join(HOOKS_DIR, name), os.path.join(repo_hooks, name))
+        os.symlink("chain-repo-hook", os.path.join(repo_hooks, "pre-commit"))
+        self.git("config", "--unset", "core.hooksPath")  # the repository's own hooks dir is the installed one
+        result = self.commit("-m", "fix: clean")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_clean_messages_pass(self):
         for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"),
                      ("-m", "fix: x", "--trailer", "Reviewed-by: B <b@c>")):  # "generated with…" anywhere is a match, by design

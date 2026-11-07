@@ -65,7 +65,7 @@ def chain(argv):
     except (OSError, subprocess.SubprocessError):
         return 0
     repo_hook = os.path.join(common.stdout.strip(), "hooks", "commit-msg")
-    if common.returncode == 0 and os.access(repo_hook, os.X_OK):
+    if common.returncode == 0 and os.access(repo_hook, os.X_OK) and not os.path.samefile(repo_hook, __file__):
         return subprocess.run([repo_hook] + argv[1:]).returncode
     return 0
 

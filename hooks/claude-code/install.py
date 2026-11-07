@@ -164,15 +164,28 @@ def main(argv=None):
         source, target = os.path.join(GIT_HOOKS_SOURCE, script), os.path.join(git_hooks_dir, script)
         if not os.path.exists(target) or not filecmp.cmp(source, target, shallow=False) or not os.access(target, os.X_OK):
             changes.append(("git-hook", source, target))
+    conflicts = []
+    for script in GIT_HOOKS:
+        target = os.path.join(git_hooks_dir, script)
+        if os.path.lexists(target) and (os.path.islink(target) or not filecmp.cmp(os.path.join(GIT_HOOKS_SOURCE, script), target, shallow=False)):
+            conflicts.append(target)  # someone else's hook of that name: never overwritten
     for name in CHAINED_HOOKS:
         link = os.path.join(git_hooks_dir, name)
-        if not os.path.islink(link) or os.readlink(link) != "chain-repo-hook":
+        if os.path.lexists(link) and not os.path.islink(link):
+            conflicts.append(link)
+        elif not os.path.islink(link) or os.readlink(link) != "chain-repo-hook":
             changes.append(("git-link", "chain-repo-hook", link))
+    if conflicts:
+        for path in conflicts:
+            print("conflict: {} exists and is not this installer's; move it (chain-repo-hook runs a repository's hooks, not a global one).".format(path))
+        return 1 if args.check else sys.exit("hooks folder {} holds other hooks; nothing written.".format(git_hooks_dir))
     current = global_hooks_path()
     if current is None:
         sys.exit("git could not be asked for core.hooksPath; nothing written.")
     if current == "":
         changes.append(("hooks-path", git_hooks_dir, None))
+    elif not os.path.isabs(os.path.expanduser(current)):
+        print("note: core.hooksPath is relative ({}); git resolves it per repository, so the hooks under {} may not be active.".format(current, git_hooks_dir))
     elif os.path.realpath(os.path.expanduser(current)) != os.path.realpath(git_hooks_dir):
         print("note: core.hooksPath is {}; the git hooks under {} are not active until it points there or chains them.".format(current, git_hooks_dir))
 

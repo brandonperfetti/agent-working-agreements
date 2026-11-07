@@ -29,6 +29,8 @@ WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
 SEPARATORS = ";&|()\n"
 GIT_VALUE_OPTS = {"-C", "-c", "--git-dir", "--namespace", "--work-tree"}
+COMMIT_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
+                     "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template"}
 PUSH_VALUE_OPTS = {"-o", "--exec", "--push-option", "--receive-pack", "--repo"}
 GH_VALUE_OPTS = {"-R", "--repo"}
 # Options that take a value, for `gh pr merge` and `gh api` alike; none is a flag in the other.
@@ -147,9 +149,23 @@ def check_commit(args, directory, configs, env):
     """Resolve the author the commit will carry, as git would, and keep the commit-msg hook in play."""
     if "--dry-run" in args:
         return None
-    options = args[: args.index("--")] if "--" in args else args
-    # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` skip the hook.
-    if any(("--no-verify".startswith(a) and len(a) >= 6) or re.fullmatch(r"-[a-zA-Z]*n[a-zA-Z]*", a) for a in options):
+    flags, skip = [], False
+    for arg in args[: args.index("--")] if "--" in args else args:
+        if skip:
+            skip = False  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message
+        elif arg.startswith("-"):
+            flags.append(arg)
+            skip = arg in COMMIT_VALUE_OPTS or bool(re.fullmatch(r"-[a-zA-Z]*[mFCc]", arg))  # `-am msg`
+    # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
+    # first value-taking letter skip the hook (`-anm msg` does; `-mn` is the message "n").
+    def skips(flag):
+        if flag.startswith("--"):
+            return "--no-verify".startswith(flag) and len(flag) >= 6
+        cluster = re.match(r"-([a-zA-Z]*)", flag).group(1)
+        cluster = re.split(r"[mFCct]", cluster, maxsplit=1)[0]
+        return "n" in cluster
+
+    if any(skips(a) for a in flags):
         return "a commit that skips the commit-msg hook (--no-verify)"
     author = None
     for index, arg in enumerate(args):
