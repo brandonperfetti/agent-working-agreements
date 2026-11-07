@@ -3,12 +3,14 @@
 
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
-ritual and merge boundary; commits that skip the commit-msg hook; and pushes
-whose unpushed commits carry another author or an attribution line (RULE
-ZERO). The author and message of a commit being made are the commit-msg hook's
-to read (hooks/git), where git holds them final; this guard reads only what
-git has already written. Merges between feature, wave,
-lane and hotfix branches pass. It parses the command rather than grepping it,
+ritual and merge boundary; commits and merges that skip the commit-msg hook or
+carry a configuration override; and, best effort, pushes whose commits new to
+the destination remote's tracking refs carry another author or an attribution
+line (RULE ZERO; stale tracking refs are the documented limit, and the read
+before a delivery is presented is the complete check). The author and message
+of a commit being made are the commit-msg hook's to read (hooks/git), where git
+holds them final; this guard reads only what git has already written. Merges
+between feature, wave, lane and hotfix branches pass. It parses the command rather than grepping it,
 so a commit message that mentions `git push --force` passes. It stops honest
 mistakes, not a determined bypass: git aliases, refspecs in shell variables and
 commands inside a quoted "$(...)" are not resolved.
