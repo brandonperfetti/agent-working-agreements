@@ -3,6 +3,7 @@
 `core.hooksPath` is this repository's hooks/git folder. Kept beside the Claude Code hook tests so
 the one `unittest discover` of the CI gate runs them."""
 import os
+import shlex
 import subprocess
 import tempfile
 import unittest
@@ -34,7 +35,7 @@ class CommitMsgTest(unittest.TestCase):
 
     def git(self, *args, **kwargs):
         env = dict(os.environ, **kwargs.pop("env", {}))
-        return subprocess.run(["git", "-C", self.repo] + list(args), capture_output=True, text=True, env=env, **kwargs)
+        return subprocess.run(["git", "-C", self.repo] + list(args), capture_output=True, text=True, env=env, timeout=30, **kwargs)
 
     def commit(self, *args, **kwargs):
         return self.git("commit", "-q", "--allow-empty", *args, **kwargs)
@@ -53,7 +54,7 @@ class CommitMsgTest(unittest.TestCase):
         message_file = os.path.join(self.tmp.name, "msg.txt")
         with open(message_file, "w") as handle:
             handle.write("fix: x\n\n" + TRAILER + "\n")
-        shell = "cd {} && git commit -q --allow-empty -F - <<'EOF'\nfix: x\n\n{}\nEOF".format(self.repo, TRAILER)
+        shell = "cd {} && git commit -q --allow-empty -F - <<'EOF'\nfix: x\n\n{}\nEOF".format(shlex.quote(self.repo), TRAILER)
         cases = (
             ("-m", "-m", "fix: x\n\n" + TRAILER),
             ("two -m", "-m", "fix: x", "-m", TRAILER),

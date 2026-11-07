@@ -74,6 +74,7 @@ BLOCKED_ANYWHERE = [
     "git commit -S -n -m x",
     "xargs env git push origin <<EOF\nmaster\nEOF",
     "xargs --max-args 1 git push --force origin",
+    "printf master | xargs -I{} sh -c 'git push origin {}'",
     "echo 1 | xargs -I {} gh pr merge {}",
     "gh api --method PUT repos/o/r/pulls/1/merge",
     "gh api repos/o/r/merges -f base=master -f head=develop",
@@ -125,6 +126,7 @@ def make_repo(root, name, branch, email=guard_git.AUTHOR_EMAIL):
     git(path, "config", "user.name", "Test")
     git(path, "config", "user.email", email)
     git(path, "config", "core.hooksPath", os.path.join(path, ".no-hooks"))  # fixtures commit trailers on purpose
+    git(path, "config", "commit.gpgsign", "false")
     # A resolvable HEAD and the branches the push shapes name: the guard reads real history now.
     git(path, "-c", "user.email=" + guard_git.AUTHOR_EMAIL, "commit", "-q", "--allow-empty", "-m", "init")
     for other in ("develop", "wave-1", "feature-master", "master-notes"):

@@ -102,7 +102,7 @@ def fed_by_xargs(prefix, tokens):
     if "xargs" not in names:
         return False
     after = (prefix + tokens)[names.index("xargs") + 1 :]
-    return any(os.path.basename(t) in ("git", "gh") for t in after)
+    return any(os.path.basename(t) in {"git", "gh"} | SHELLS for t in after)  # `xargs sh -c 'git {}'` too
 
 
 def strip_prefix(tokens):
@@ -265,6 +265,8 @@ def check_push(args, directory, selectors=(), env=None):
     targets = [destination(r, directory, selectors, env) for r in refspecs]
     if not refspecs:
         targets = [current_branch(directory, selectors, env)]
+    if "" in targets:
+        return "a push whose target branch could not be resolved"
     for target in targets:
         if target in RELEASE_BRANCHES or "*" in target:
             return "a push to a release branch ({})".format(target)
