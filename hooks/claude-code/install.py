@@ -162,6 +162,8 @@ def main(argv=None):
 
     for script in GIT_HOOKS:
         source, target = os.path.join(GIT_HOOKS_SOURCE, script), os.path.join(git_hooks_dir, script)
+        if not os.path.isfile(source):
+            sys.exit("git hook source {} is missing; nothing written.".format(source))
         if not os.path.exists(target) or not filecmp.cmp(source, target, shallow=False) or not os.access(target, os.X_OK):
             changes.append(("git-hook", source, target))
     conflicts = []

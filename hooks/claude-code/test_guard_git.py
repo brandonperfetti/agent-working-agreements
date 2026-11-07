@@ -86,6 +86,7 @@ ALLOWED_ANYWHERE = [
     "git commit -m --no-verify",
     "git commit -mn",
     'git commit -am "fix: -n"',
+    'git commit -uno -m "fix: x"',
     "git log --grep='gh pr merge'",
     'echo "git push -f"',
     "echo git push -f",

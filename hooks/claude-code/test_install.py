@@ -41,7 +41,7 @@ class InstallTest(unittest.TestCase):
         # A scratch global git config, so no test touches the real ~/.gitconfig.
         self.gitconfig = os.path.join(self.tmp.name, "gitconfig")
         open(self.gitconfig, "w").close()
-        patcher = unittest.mock.patch.dict(os.environ, {"GIT_CONFIG_GLOBAL": self.gitconfig})
+        patcher = unittest.mock.patch.dict(os.environ, {"GIT_CONFIG_GLOBAL": self.gitconfig, "HOME": self.tmp.name, "XDG_CONFIG_HOME": self.tmp.name})  # git before 2.32 reads HOME only
         patcher.start()
         self.addCleanup(patcher.stop)
 

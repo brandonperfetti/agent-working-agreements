@@ -162,7 +162,7 @@ def check_commit(args, directory, configs, env):
         if flag.startswith("--"):
             return "--no-verify".startswith(flag) and len(flag) >= 6
         cluster = re.match(r"-([a-zA-Z]*)", flag).group(1)
-        cluster = re.split(r"[mFCct]", cluster, maxsplit=1)[0]
+        cluster = re.split(r"[mFCctSu]", cluster, maxsplit=1)[0]  # `-uno`, `-Skey`: attached values
         return "n" in cluster
 
     if any(skips(a) for a in flags):
