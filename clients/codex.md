@@ -63,7 +63,7 @@ Measurements behind it are in the history file; **re-measure on yours**.
 - **Worktrees:** use native create/archive for app-managed trees; follow [lifecycle](../procedures/worktree-lifecycle.md).
   Scratch placement remains unmeasured, outside `_agent/`. T3: [adapter](../procedures/t3-adapter.md).
 - **Attribution (RULE ZERO):** the profile forbids it; this environment injects nothing (measured
-  2026-11-07), and the installed `commit-msg` hook refuses a trailer or a wrong author on every commit.
+  2026-11-07); the `commit-msg` hook refuses a trailer or a wrong author, `--no-verify` aside.
 - **Measure and record:** whether a dispatched worker keeps issuing tool calls while the app window
   is closed (distinct from window-close, app-quit and sleep).
 

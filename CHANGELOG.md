@@ -11,8 +11,9 @@ of amendments in that batch**, not an ordinal; the two notations predate each ot
 being retrofitted onto the other.
 
 - **2026-11-07 — RULE ZERO's per-prompt restatement goes; the hooks enforce it (#243).** With the
-  `commit-msg` hook installed on both Macs and the Claude Code guard denying `--no-verify`, every
-  route an agent commits through refuses a trailer or a wrong author before the commit exists
+  `commit-msg` hook installed on both Macs and the Claude Code guard denying `--no-verify`, each
+  route an agent commits through refuses a trailer or a wrong author at commit time; the measured
+  gaps are `--no-verify` outside Claude Code and a husky worktree before its install
   (`_agent/initiatives/fleet-mega-s02-systems-review/evidence/2026-11-07-t02-route-controls.md`).
   The profile stops asking for RULE ZERO as line one of every dispatch prompt and names the hooks;
   the client Attribution bullets point at them; husky repositories carry a `.husky/commit-msg` that
