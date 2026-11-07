@@ -48,11 +48,11 @@ Claude Code fact.
 - **Kody tool names (A7):** the same Kody connector is named differently per client. A permission
   rule or a reference to a Kody tool uses the name the session reports, read before it is written,
   because a name taken from another client or inferred from a listing matches nothing here.
-- **Attribution (RULE ZERO): this environment injects it by default, and the profile forbids it** —
-  `Co-Authored-By` and `Claude-Session` trailers on commits, a "Generated with Claude Code" PR-body
-  footer, and with Auto-fix on, a crediting line on each PR thread reply. Disable it in settings
-  where available, otherwise remove each line before the commit, body or reply is written;
-  [`rule-zero-check.md`](../procedures/rule-zero-check.md) reads the author email and the messages.
+- **Attribution (RULE ZERO):** this environment injects `Co-Authored-By`/`Claude-Session` trailers,
+  a "Generated with Claude Code" PR-body footer and, with Auto-fix on, a crediting line on replies.
+  The installed hooks refuse the commit forms where they run; where none runs yet (a husky checkout
+  before its install), remove the trailers before committing. Remove the footer and reply lines
+  before writing them, as [`rule-zero-check.md`](../procedures/rule-zero-check.md) says.
 - Rotate at a context-driven clean pause through the supported session route, using A4's packet
   (or `handoff`); verify successor capability, receipt, acceptance and advancement before retirement.
 - Reached from the one-line pointer in `~/.claude/CLAUDE.md`; this opener completes the binding.

@@ -10,6 +10,16 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-07 — RULE ZERO's per-prompt restatement goes; the hooks enforce it (#243).** With the
+  `commit-msg` hook installed on both Macs and the Claude Code guard denying `--no-verify`, each
+  route an agent commits through refuses a trailer or a wrong author at commit time; the gaps are
+  `--no-verify` outside Claude Code, a husky worktree before its install, and the commits
+  `cherry-pick` and `rebase` import unchanged
+  (`_agent/initiatives/fleet-mega-s02-systems-review/evidence/2026-11-07-t02-route-controls.md`).
+  The profile drops the per-prompt line and names the hooks; the client bullets point at them; husky
+  repositories run it from `.husky/commit-msg`; the read before push, merge and presentation stays.
+  Brandon decided. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/243).
+
 - **2026-11-07 — A review loop that keeps finding faults in the change's own mechanism asks for a
   design call (#243).** PR #250 ran nine rounds on corners of the shell parsing it introduced and
   closed unmerged; PR #251's eleven rounds found mostly pre-existing gaps and merged, so a plain
