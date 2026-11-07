@@ -560,7 +560,7 @@ def destination(refspec, directory):
     return re.sub(r"^(refs/)?heads/", "", branch)
 
 
-def check_push(args, directory):
+def check_push(args, directory, configs=(), env=None):
     positional, options, skip = [], [], False
     for index, arg in enumerate(args):
         if skip:
@@ -583,6 +583,22 @@ def check_push(args, directory):
         return "a force-push"
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
+    if not refspecs:
+        # Without a refspec, `push.default` and `remote.<name>.push` choose what goes: `matching` or a
+        # configured refspec can send branches this check never sees, so only `simple`/`current`/
+        # `upstream`/`nothing` (the current branch) are read; anything else denies.
+        remote = positional[0] if positional else "origin"
+        keys = {c.partition("=")[0].lower() for c in configs}
+        if any(k == "push.default" or (k.startswith("remote.") and k.endswith(".push")) for k in keys):
+            return "a push whose targets are chosen by a configuration setting on the command"
+        options_c = [part for config in configs for part in ("-c", config)]
+        environment = dict(os.environ, **(env or {}))
+        default = git_lines(directory, options_c + ["config", "--get", "push.default"], environment)
+        configured = git_lines(directory, options_c + ["config", "--get-all", "remote.{}.push".format(remote)], environment)
+        if default is TIMEOUT or configured is TIMEOUT:
+            return "a push whose targets could not be read in time"
+        if (default and default[0].strip() not in ("simple", "current", "upstream", "nothing")) or configured:
+            return "a push whose targets are chosen by push.default or remote.<name>.push"
     targets = [destination(r, directory) for r in refspecs]
     if not refspecs:
         targets = [current_branch(directory)]
@@ -607,7 +623,7 @@ def check_git(tokens, directory, env, stdin_bodies=None, written=()):
             configs.append(tokens[index].split("=", 1)[1])
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
     if index < len(tokens) and tokens[index] == "push":
-        return check_push(tokens[index + 1 :], directory)
+        return check_push(tokens[index + 1 :], directory, configs, env)
     if index < len(tokens) and tokens[index] == "commit":
         return check_commit(tokens[index + 1 :], directory, configs, env, stdin_bodies, written)
     return None
@@ -913,6 +929,8 @@ def check_text(command, directory, inherited=None, written=()):
             continue
         head = os.path.basename(tokens[0])
         reason = None
+        if "xargs" in {os.path.basename(t) for t in raw_tokens} and head in ("git", "gh"):
+            return "a git or gh command whose arguments arrive through xargs and cannot be checked"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
         elif head == "cd" and len(tokens) == 2:
@@ -952,6 +970,8 @@ def main():
                 "GIT_EDITOR/VISUAL/EDITOR, core.editor, a trailer.* setting) is denied too. A literal $ or backtick in the "
                 "message is denied as well: spell it out."
             )
+        elif "arrive through xargs" in reason or "chosen by" in reason or reason == "a push whose targets could not be read in time":
+            advice = "RULE ZERO: the guard must see what is pushed. Name the remote and branch on the command line, without xargs or a push.default/remote.*.push override."
         elif reason.startswith("a push whose history could not be read"):
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
         elif "attribution trailer" in reason:

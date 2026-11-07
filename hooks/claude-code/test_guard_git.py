@@ -659,6 +659,19 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.mine))
 
+    def test_configured_push_targets_and_xargs_are_uncheckable(self):
+        for command in ("xargs git push origin <<EOF\nmaster\nEOF", "echo master | xargs git push origin", "echo 1 | xargs gh pr merge",
+                        "git -c push.default=matching push", "git -c remote.origin.push=refs/heads/*:refs/heads/* push origin"):
+            with self.subTest(command=command):
+                self.assertTrue(guard_git.check_command(command, self.mine), command)
+        self.assertIsNone(guard_git.check_command("git push", self.mine))
+        git(self.mine, "config", "push.default", "matching")
+        self.assertIn("chosen by", guard_git.check_command("git push", self.mine) or "")
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))  # a named refspec is read as before
+        git(self.mine, "config", "push.default", "simple")
+        git(self.mine, "config", "remote.origin.push", "refs/heads/*:refs/heads/*")
+        self.assertIn("chosen by", guard_git.check_command("git push origin", self.mine) or "")
+
     def test_substitutions_in_unquoted_heredoc_bodies_run(self):
         for command in ("cat > /dev/null <<EOF\n$(git push --force origin master)\nEOF", "cat <<EOF\n`git push origin master`\nEOF", "cat <<EOF\n$(cd . && gh pr merge 1)\nEOF"):
             with self.subTest(command=command):
