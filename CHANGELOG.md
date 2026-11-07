@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-07 — A review loop that keeps finding faults in the change's own mechanism asks for a
+  design call (#243).** PR #250 ran nine rounds on corners of the shell parsing it introduced and
+  closed unmerged; PR #251's eleven rounds found mostly pre-existing gaps and merged, so a plain
+  round count would have stopped the wrong loop. After three consecutive rounds of harm in the
+  mechanism the change adds, the delivery owner asks whether the check belongs at another layer or
+  should narrow its claim; the harm threshold is unchanged. Drafted by Camina; Brandon decided.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/243).
+
 - **2026-11-06 — RULE ZERO's no-attribution half is enforced where git holds the message (#243).**
   The rule was prose plus a manual grep. A `commit-msg` git hook (`hooks/git`) now denies a commit
   whose message carries a `Co-Authored-By`, `*-Session` or "generated with" line or whose author is
