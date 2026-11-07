@@ -52,7 +52,10 @@ record, the gate evidence, the issue — which A2 wants.
 git log --format='%B' <base>..HEAD | grep -inE '^(co-authored-by|[a-z-]*-session):|generated with'
 ```
 
-Any match is a send-back. Read an mbox series' message bodies the same way before approval, and
+Any match is a send-back. On a Mac with the hooks installed (`hooks/git/README.md`), git's
+`commit-msg` hook refuses such a commit as it is made and the Claude Code guard refuses to push
+one; this read before presentation is the check that does not depend on where the commit was
+made. Read an mbox series' message bodies the same way before approval, and
 a PR body, issue or thread reply before it is posted. The one exception is a comment on a
 repository Brandon does not own: check that it carries the line "Posted by an agent on Brandon
 Perfetti's behalf." and no other attribution (#245). A commit already on a base branch stays as

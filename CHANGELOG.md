@@ -10,6 +10,17 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-06 — RULE ZERO's no-attribution half is enforced where git holds the message (#243).**
+  The rule was prose plus a manual grep. A `commit-msg` git hook (`hooks/git`) now denies a commit
+  whose message carries a `Co-Authored-By`, `*-Session` or "generated with" line or whose author is
+  not Brandon's email, on every client that commits through git. The Claude Code guard denies
+  `--no-verify`, which skips that hook, and reads the author and message of every commit a push
+  would send from the objects themselves. A first attempt parsed the message out of the shell
+  command and did not converge after nine review rounds (PR #250, closed unmerged): check the
+  fact where it is final, not where it must be predicted. Brandon decided. Controls are the
+  hooks' tests; the prose cut waits for the other routes' controls (#243).
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/243).
+
 - **2026-11-06 — Agent comments on repositories Brandon does not own carry one agent line (#245).**
   The MEGA Seasons 1–2 review (S01E05) argued for labelling agent comments so maintainers can tell
   them apart; Brandon narrowed RULE ZERO's no-attribution rule to that one case and kept commits,

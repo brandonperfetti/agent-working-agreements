@@ -3,12 +3,15 @@
 
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
-ritual and merge boundary, and commits or pushes whose author is not Brandon's
-email (RULE ZERO). Merges between feature, wave, lane and hotfix branches pass.
-It parses the command rather than grepping it, so a commit message that
-mentions `git push --force` passes. It stops honest mistakes, not a determined
-bypass: git aliases, refspecs in shell variables and commands inside a quoted
-"$(...)" are not resolved.
+ritual and merge boundary; commits whose author is not Brandon's email or that
+skip the commit-msg hook; and pushes whose unpushed commits carry another
+author or an attribution line (RULE ZERO). The message of a commit being made
+is the commit-msg hook's to read (hooks/git), where git holds it final; this
+guard reads only what git has already written. Merges between feature, wave,
+lane and hotfix branches pass. It parses the command rather than grepping it,
+so a commit message that mentions `git push --force` passes. It stops honest
+mistakes, not a determined bypass: git aliases, refspecs in shell variables and
+commands inside a quoted "$(...)" are not resolved.
 """
 import json
 import os
@@ -20,6 +23,7 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
+TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
@@ -92,8 +96,8 @@ def strip_redirects(tokens):
 def strip_prefix(tokens):
     """Drop env assignments and wrappers such as `env` or `sudo`."""
     while tokens:
-        if ASSIGNMENT.match(tokens[0]):
-            tokens = tokens[1:]
+        if ASSIGNMENT.match(tokens[0]) or tokens[0] in ("{", "}", "!", "then", "do", "else"):
+            tokens = tokens[1:]  # `{ git push -f; }`: the group opener is not the command
         elif os.path.basename(tokens[0]) in WRAPPERS:
             tokens = tokens[1:]
             while tokens and tokens[0].startswith("-"):
@@ -116,8 +120,9 @@ def current_branch(directory):
     return result.stdout.strip()
 
 
-def git_lines(directory, args, env=None):
-    """Run a read-only git command; None when it fails, so git reports its own error."""
+def git_lines(directory, args, env=None, raw=False):
+    """Run a read-only git command; None when it fails, so git reports its own error. `raw`
+    returns the text itself: `splitlines` reads the record separator `\x1e` as a line break."""
     try:
         result = subprocess.run(
             ["git", "-C", directory] + args,
@@ -130,7 +135,7 @@ def git_lines(directory, args, env=None):
         return None
     if result.returncode:
         return None
-    return result.stdout.splitlines()
+    return result.stdout if raw else result.stdout.splitlines()
 
 
 def email_of(ident):
@@ -139,9 +144,13 @@ def email_of(ident):
 
 
 def check_commit(args, directory, configs, env):
-    """Resolve the author the commit will carry, as git would."""
+    """Resolve the author the commit will carry, as git would, and keep the commit-msg hook in play."""
     if "--dry-run" in args:
         return None
+    options = args[: args.index("--")] if "--" in args else args
+    # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` skip the hook.
+    if any(("--no-verify".startswith(a) and len(a) >= 6) or re.fullmatch(r"-[a-zA-Z]*n[a-zA-Z]*", a) for a in options):
+        return "a commit that skips the commit-msg hook (--no-verify)"
     author = None
     for index, arg in enumerate(args):
         if arg == "--":
@@ -171,10 +180,14 @@ def check_push_authors(refspecs, directory, tags=False):
     sources += ["--tags"] if tags else []
     if not sources:
         return None
-    lines = git_lines(directory, ["log", "--format=%ae"] + sources + ["--not", "--remotes", "--"])
-    others = sorted(set(lines or []) - {AUTHOR_EMAIL})
+    # One read of author and message per commit, record-separated: `splitlines` would eat `\x1e`.
+    text = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B"] + sources + ["--not", "--remotes", "--"], raw=True)
+    records = [r for r in (text or "").split("\x1e") if r.strip()]
+    others = sorted({r.split("\x1f", 1)[0].strip() for r in records} - {AUTHOR_EMAIL})
     if others:
         return "a push of commits authored as {}".format(", ".join(others))
+    if TRAILER.search("\n".join(r.split("\x1f", 1)[1] if "\x1f" in r else "" for r in records)):
+        return "a push of commits carrying an attribution trailer"
     return None
 
 
@@ -207,7 +220,7 @@ def check_push(args, directory):
     refspecs = positional[1:]
     if short_force or FORCE_FLAGS & set(options) or any(r.startswith("+") for r in refspecs):
         return "a force-push"
-    if "--all" in options or "--branches" in options:
+    if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
     targets = [destination(r, directory) for r in refspecs]
     if not refspecs:
@@ -348,6 +361,9 @@ def check_command(command, directory, inherited=None):
             continue
         head = os.path.basename(tokens[0])
         reason = None
+        names = {os.path.basename(t) for t in prefix + command_tokens}  # before the wrapper strip
+        if "xargs" in names and names & {"git", "gh"}:
+            return "a git or gh command whose arguments arrive through xargs and are not visible here"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
         elif head == "cd" and len(tokens) == 2:
@@ -373,7 +389,16 @@ def main():
     command = payload.get("tool_input", {}).get("command", "")
     reason = check_command(command, payload.get("cwd") or os.getcwd())
     if reason:
-        if reason.startswith(("a commit", "a push of commits")):
+        if "attribution trailer" in reason:
+            advice = (
+                "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
+                "Remove the trailer (git commit --amend for a commit already made) and retry."
+            )
+        elif "commit-msg hook" in reason:
+            advice = "RULE ZERO is checked by the commit-msg hook; commit without --no-verify."
+        elif "through xargs" in reason:
+            advice = "Pass the git or gh command and its arguments directly, without xargs."
+        elif reason.startswith(("a commit", "a push of commits")):
             advice = (
                 "RULE ZERO: every agent commit carries the author email {}. Fix the "
                 "identity (git config user.email, or git commit --amend --reset-author "

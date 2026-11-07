@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+"""RULE ZERO where git holds the final message: the commit-msg hook.
+
+Denies a commit whose message carries an attribution line (`Co-Authored-By`, a
+`*-Session` line, "generated with") or whose author is not Brandon's email, on
+every route that commits through git on this Mac: Claude Code, Codex, OpenClaw,
+a shell. Git hands it the message file and has already resolved the author, so
+nothing here guesses what a shell command will produce. `--no-verify` skips
+every commit-msg hook; the Claude Code guard denies that flag, and the guard's
+push-time scan of unpushed commits is the backstop for the other routes.
+"""
+import re
+import subprocess
+import sys
+
+AUTHOR_EMAIL = "brandon@brandonperfetti.com"
+TRAILER = re.compile(r"^(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
+
+
+def author_email():
+    """The email git will record as the author, or None when it cannot be read."""
+    try:
+        result = subprocess.run(["git", "var", "GIT_AUTHOR_IDENT"], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode:
+        return None
+    match = re.search(r"<([^>]*)>", result.stdout)
+    return match.group(1) if match else None
+
+
+def main(argv):
+    if len(argv) < 2:
+        print("commit-msg: git gave no message file; refusing the commit.", file=sys.stderr)
+        return 1
+    with open(argv[1], encoding="utf-8", errors="replace") as handle:
+        message = handle.read()
+    # Comment lines are read too: `--cleanup=verbatim` keeps them, and a trailer in one is a mistake.
+    if TRAILER.search(message):
+        print(
+            "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
+            "Remove the line from the message and commit again.",
+            file=sys.stderr,
+        )
+        return 1
+    email = author_email()
+    if email is None:
+        print("RULE ZERO: the author identity could not be read; set user.email and commit again.", file=sys.stderr)
+        return 1
+    if email != AUTHOR_EMAIL:
+        print(
+            "RULE ZERO: every commit carries the author email {}, not {}. Fix the identity "
+            "(git config user.email, or --reset-author on an amend) and commit again.".format(AUTHOR_EMAIL, email or "an empty email"),
+            file=sys.stderr,
+        )
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

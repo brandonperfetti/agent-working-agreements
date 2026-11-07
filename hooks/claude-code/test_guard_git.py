@@ -56,6 +56,16 @@ BLOCKED_ANYWHERE = [
     "gh pr --repo owner/repo merge 1",
     "GH_TOKEN=x gh pr merge 1",
     "gh api -X PUT repos/o/r/pulls/1/merge",
+    "git push origin :",
+    "{ git push --force origin feature; }",
+    "{ git push origin master; }",
+    "echo master | xargs git push origin",
+    "printf 'master\\n' | xargs -n 1 git push --force origin",
+    "xargs git push origin <<EOF\nmaster\nEOF",
+    'git commit --no-verify -m "fix: x"',
+    'git commit -n -m "fix: x"',
+    'git commit -anm "fix: x"',
+    'git commit --no-v -m "fix: x"',
     "gh api --method PUT repos/o/r/pulls/1/merge",
     "gh api repos/o/r/merges -f base=master -f head=develop",
     "gh api graphql -f query='mutation { mergePullRequest(input: {}) { clientMutationId } }'",
@@ -301,6 +311,16 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(directory=os.path.basename(directory), command=command):
                 reason = guard_git.check_command(command, directory)
                 self.assertEqual(reason is not None, blocked, reason)
+
+    def test_push_reads_every_unpushed_author_and_message(self):
+        commit_as(self.mine, self.OTHER)  # an older foreign commit under a clean tip
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "--reset-author", "-m", "fix: x\n\nCo-Authored-By: A <a@b>")
+        git(self.mine, "push", "-q", "origin", "HEAD~1:refs/heads/other")  # the foreign commit is now on a remote
+        self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: clean")
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
 
     def test_push_reads_the_authors_of_unpushed_commits(self):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)

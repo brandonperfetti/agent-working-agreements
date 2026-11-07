@@ -7,7 +7,7 @@ other clients, git aliases).
 
 | Hook | Event | What it does |
 | --- | --- | --- |
-| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main`, PR merges into `develop`, `main` or `master` (or whose base it cannot read), and commits or pushes whose author is not `brandon@brandonperfetti.com` (RULE ZERO) |
+| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main` (the matching refspec `:` and `--all` included), PR merges into `develop`, `main` or `master` (or whose base it cannot read), git or gh arguments fed through `xargs`, a commit whose author is not `brandon@brandonperfetti.com` or that skips the commit-msg hook (`--no-verify`), and a push whose unpushed commits carry another author or an attribution line (RULE ZERO). The message of a commit being made is [`../git/commit-msg`](../git/README.md)'s to read |
 | `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode and the agreement paths after each compaction |
 | `look_again.py` | `Stop` | Sends the agent back once when a file it read or wrote since your last prompt has changed since, naming the file, so it reads it again before it reports |
 
@@ -26,7 +26,8 @@ From this clone, on each Mac:
 ```
 
 `install.py` copies the three hooks into `~/.claude/hooks/` and registers them in the `hooks`
-block of `~/.claude/settings.json`. Every other setting and every other hook stays as it was;
+block of `~/.claude/settings.json`; it also installs the git hooks under
+[`../git`](../git/README.md). Every other setting and every other hook stays as it was;
 `settings.json` is backed up beside itself before it changes. Re-running it updates a hook
 already registered rather than adding it twice. Start a new session afterwards.
 
