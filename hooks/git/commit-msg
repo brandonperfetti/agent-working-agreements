@@ -20,9 +20,17 @@ AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 TRAILER = re.compile(r"^[#>\s]*(co-authored-by|[a-z-]*-session)\s*:|generated with", re.IGNORECASE | re.MULTILINE)
 
 
-def author_email():
-    """The email git will record as the author, or None when it cannot be read."""
+def author_email(hook):
+    """The email git will record as the author, or None when it cannot be read. Under `git am`
+    (applypatch-msg) that is the patch's author, which git keeps in rebase-apply/author-script."""
     try:
+        if hook == "applypatch-msg":
+            path = subprocess.run(["git", "rev-parse", "--git-path", "rebase-apply/author-script"], capture_output=True, text=True, timeout=5)
+            if path.returncode:
+                return None
+            with open(path.stdout.strip(), encoding="utf-8", errors="replace") as handle:
+                match = re.search(r"^GIT_AUTHOR_EMAIL='?([^'\n]*)'?$", handle.read(), re.MULTILINE)
+            return match.group(1) if match else None
         result = subprocess.run(["git", "var", "GIT_AUTHOR_IDENT"], capture_output=True, text=True, timeout=5)
     except (OSError, subprocess.SubprocessError):
         return None
@@ -46,7 +54,7 @@ def main(argv):
             file=sys.stderr,
         )
         return 1
-    email = author_email()
+    email = author_email(os.path.basename(argv[0]))
     if email is None:
         print("RULE ZERO: the author identity could not be read; set user.email and commit again.", file=sys.stderr)
         return 1

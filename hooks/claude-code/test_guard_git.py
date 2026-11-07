@@ -68,7 +68,8 @@ BLOCKED_ANYWHERE = [
     'git commit --no-v -m "fix: x"',
     'git commit -mtrim --no-verify',
     "git commit -m --dry-run -n --allow-empty",
-    "git push -- origin --output=/tmp/guard-must-not-write feature",
+    "if git push --force origin feature; then echo ok; fi",
+    "while git push origin master; do :; done",
     "git commit -u -n",
     "git commit -S -n -m x",
     "xargs env git push origin <<EOF\nmaster\nEOF",
@@ -351,7 +352,13 @@ class AuthorTest(unittest.TestCase):
         ):
             with self.subTest(command=command):
                 self.assertIn(self.OTHER, guard_git.check_command(command, self.mine) or "")
-        self.assertFalse(os.path.exists("/tmp/guard-must-not-write"))
+        git(self.other, "branch", "-q", "master")
+        self.assertIn("release branch", guard_git.check_command("git --git-dir={0}/.git push origin HEAD:master".format(self.other), self.mine) or "")
+        git(self.other, "checkout", "-q", "master")
+        self.assertIn("release branch", guard_git.check_command("GIT_DIR={0}/.git GIT_WORK_TREE={0} git push origin".format(self.other), self.mine) or "")
+        sentinel = os.path.join(self.tmp.name, "must-not-write")
+        self.assertTrue(guard_git.check_command("git push -- origin --output={} feature".format(sentinel), self.mine))
+        self.assertFalse(os.path.exists(sentinel))
 
     def test_a_failed_push_scan_denies(self):
         with mock.patch.object(guard_git, "git_lines", return_value=None):

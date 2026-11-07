@@ -135,15 +135,17 @@ def owned(path):
 def global_hooks_path():
     """The global core.hooksPath: UNSET when absent, its value (possibly "") when present, and
     False when git could not be asked."""
-    try:
-        result = subprocess.run(["git", "config", "--global", "--get", "core.hooksPath"], capture_output=True, text=True, timeout=5)
-    except (OSError, subprocess.SubprocessError):
-        return False
-    if result.returncode == 1:
-        return UNSET
-    if result.returncode:
-        return False
-    return result.stdout.strip()
+    value = UNSET
+    for scope in ("--system", "--global"):  # the system file counts too; includes are followed
+        try:
+            result = subprocess.run(["git", "config", scope, "--includes", "--get", "core.hooksPath"], capture_output=True, text=True, timeout=5)
+        except (OSError, subprocess.SubprocessError):
+            return False
+        if result.returncode == 0:
+            value = result.stdout.strip()  # the global file wins over the system file, as for git
+        elif result.returncode != 1:
+            return False
+    return value
 
 
 def write_atomic(path, data, mode=0o644):

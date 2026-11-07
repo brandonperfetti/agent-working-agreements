@@ -17,7 +17,8 @@ TRAILER = "Co-Authored-By: Claude <noreply@anthropic.com>"
 class CommitMsgTest(unittest.TestCase):
     def setUp(self):
         # No global or system git config reaches these commits (a commit.gpgSign there would break them).
-        patcher = mock.patch.dict(os.environ, {"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull})
+        clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}  # no inherited GIT_DIR or identity
+        patcher = mock.patch.dict(os.environ, {**clean, "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull}, clear=True)
         patcher.start()
         self.addCleanup(patcher.stop)
         self.tmp = tempfile.TemporaryDirectory()
@@ -141,6 +142,16 @@ class CommitMsgTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("RULE ZERO", result.stderr + result.stdout)
         self.git("am", "--abort")
+        foreign = patch.replace("From: ", "From: Other <{}>\nX-Was: ".format(OTHER), 1)  # the patch's author, not the applier's
+        with open(path, "w") as handle:
+            handle.write(foreign)
+        result = self.git("am", path)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(OTHER, result.stderr + result.stdout)
+        self.git("am", "--abort")
+        with open(path, "w") as handle:
+            handle.write(patch)
+        self.assertEqual(self.git("am", path).returncode, 0)  # the clean patch applies
 
     def test_clean_messages_pass(self):
         for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"),

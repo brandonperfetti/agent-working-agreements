@@ -108,8 +108,8 @@ def fed_by_xargs(prefix, tokens):
 def strip_prefix(tokens):
     """Drop env assignments and wrappers such as `env` or `sudo`."""
     while tokens:
-        if ASSIGNMENT.match(tokens[0]) or tokens[0] in ("{", "}", "!", "then", "do", "else"):
-            tokens = tokens[1:]  # `{ git push -f; }`: the group opener is not the command
+        if ASSIGNMENT.match(tokens[0]) or tokens[0] in ("{", "}", "!", "if", "elif", "while", "until", "then", "do", "else"):
+            tokens = tokens[1:]  # `{ git push -f; }`, `if git push -f; then`: list words are not the command
         elif os.path.basename(tokens[0]) in WRAPPERS:
             tokens = tokens[1:]
             while tokens and tokens[0].startswith("-"):
@@ -119,13 +119,15 @@ def strip_prefix(tokens):
     return tokens
 
 
-def current_branch(directory):
+def current_branch(directory, selectors=(), env=None):
+    """The checked-out branch of the repository the command selects (`--git-dir`, GIT_DIR, cwd)."""
     try:
         result = subprocess.run(
-            ["git", "-C", directory, "symbolic-ref", "--short", "-q", "HEAD"],
+            ["git", "-C", directory] + list(selectors) + ["symbolic-ref", "--short", "-q", "HEAD"],
             capture_output=True,
             text=True,
             timeout=3,
+            env=dict(os.environ, **(env or {})),
         )
     except (OSError, subprocess.SubprocessError):
         return ""
@@ -229,11 +231,11 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None):
     return None
 
 
-def destination(refspec, directory):
+def destination(refspec, directory, selectors=(), env=None):
     source, _, target = refspec.lstrip("+").partition(":")
     branch = target or source
     if branch in ("HEAD", "@"):
-        return current_branch(directory)
+        return current_branch(directory, selectors, env)
     return re.sub(r"^(refs/)?heads/", "", branch)
 
 
@@ -260,9 +262,9 @@ def check_push(args, directory, selectors=(), env=None):
         return "a force-push"
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
-    targets = [destination(r, directory) for r in refspecs]
+    targets = [destination(r, directory, selectors, env) for r in refspecs]
     if not refspecs:
-        targets = [current_branch(directory)]
+        targets = [current_branch(directory, selectors, env)]
     for target in targets:
         if target in RELEASE_BRANCHES or "*" in target:
             return "a push to a release branch ({})".format(target)
