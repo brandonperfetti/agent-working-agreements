@@ -86,8 +86,9 @@ allowance holds the paid review, never the push (B2).
   "clean" means (Brandon, 2026-10-27, #193). Growth of the diff after the first review is
   evidence to investigate, never a target: the threshold above decides each finding, whatever its
   origin (#242). When three rounds in a row find harm in the mechanism the change itself adds, not
-  in pre-existing code or wording, the delivery owner pauses and asks the owner whether the check
-  belongs at another layer or its claim should narrow (Brandon, 2026-11-07, #243).
+  in pre-existing code or wording, moving the check to another layer or narrowing its claim is a
+  strategy change: B2 item 2, so the delivery owner pauses that action and asks the owner, while
+  other work continues (Brandon, 2026-11-07, #243).
 
   **Selected studio profile only:** the bot is CodeRabbit, by CLI or on the PR, and it keeps
   reviewing release PRs (Brandon, 2026-09-29). An accepted finding's thread gets "Fixed in
