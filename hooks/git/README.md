@@ -58,7 +58,7 @@ there, then prove the hook from that checkout without making a commit: put a mes
 (git runs the hook from the repository root, so a relative path can name the wrong file; a hook may
 edit the file, hence scratch). Only the RULE ZERO refusal (exit 1) proves the hook. Exit 0 means no
 RULE ZERO hook ran: the husky wrapper found no installed hook and allowed, as it is written to;
-"cannot find a hook named commit-msg" means no hook at all. Either way, install before a real commit.
+"cannot find a hook named commit-msg" means no hook at all. Either way, install before committing.
 
 `git commit --no-verify` skips every
 commit-msg hook, and the Claude Code guard denies it on `git commit` and `git merge`. `git
