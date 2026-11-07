@@ -330,9 +330,9 @@ def email_of(ident):
     return match.group(1) if match else ident.strip()
 
 
-def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
+def check_commit(args, directory, configs, env, stdin_bodies=None, written=(), current=()):
     """Resolve the author the commit will carry, as git would, then read its message."""
-    message, stdin_used, dry_run, identity = commit_message(args, directory, written=written)
+    message, stdin_used, dry_run, identity = commit_message(args, directory, written=written, current=current)
     if dry_run:  # option-aware: `-m --dry-run` is a message, not a dry run; `-n` is --no-verify
         return None
     editors = {"GIT_EDITOR", "VISUAL", "EDITOR"} & set(env) or {k for k in env if k.startswith("GIT_CONFIG")}
@@ -398,7 +398,7 @@ def canonical(name):
     return matches[0] if len(matches) == 1 else name
 
 
-def commit_message(args, directory, read=True, written=()):
+def commit_message(args, directory, read=True, written=(), current=()):
     """The message text the command supplies: -m parts, -F files and --trailer lines.
 
     `written` holds the words of the commands that run first: a `-F` file one of them names may be
@@ -472,7 +472,7 @@ def commit_message(args, directory, read=True, written=()):
             # Anything that runs before the commit (`./prepare.sh &&`, a redirect, a nested shell's
             # earlier words) could rewrite the file between this read and git's, so the file is read
             # only when the commit is the line's first command.
-            preceded = bool(written)
+            preceded = bool(written) or any("$(" in t or "`" in t for t in current)  # `F="$(…)" git commit -F msg.txt`
             if preceded or not os.path.isfile(path) or os.path.realpath(path).startswith("/dev/"):
                 unreadable = True
             else:
@@ -587,14 +587,18 @@ def check_push(args, directory, configs=(), env=None):
     # or a bare push to another branch, `push.default=matching` sends every matching branch, and
     # an `include.path` on the command can load either. Those are denied; a refspec with an explicit
     # `:<dst>` is read as written.
-    keys = {c.partition("=")[0].lower() for _kind, c in configs}
-    if any(k.startswith("include") or k in ("push.default", "remote.pushdefault") or (k.startswith("remote.") and k.endswith(".push")) for k in keys):
+    # `-c`/`--config-env` on a push can redirect it (push.default, remote.*.push, remote.*.mirror,
+    # branch.*.merge, include.path, …): every such override is denied rather than modelled.
+    if configs:
         return "a push whose targets are chosen by a configuration setting on the command"
     environment = dict(os.environ, **(env or {}))
-    options_c = [part for pair in configs for part in pair]
-    configured = git_lines(directory, options_c + ["config", "--get-regexp", r"^remote\..*\.push$"], environment)
-    if configured is TIMEOUT:
+    remote = positional[0] if positional else None
+    mirror = git_lines(directory, ["config", "--get", "remote.{}.mirror".format(remote)], environment) if remote and "/" not in remote and ":" not in remote else []
+    configured = git_lines(directory, ["config", "--get-regexp", r"^remote\..*\.push$"], environment)
+    if configured is TIMEOUT or mirror is TIMEOUT:
         return "a push whose targets could not be read in time"
+    if mirror and mirror[0].strip().lower() in ("true", "yes", "on", "1"):
+        return "a push to a mirror remote, release branches included"
     if configured and (not refspecs or any(":" not in r for r in refspecs)):
         return "a push whose targets are chosen by push.default or remote.<name>.push"
     targets = [destination(r, directory) for r in refspecs]
@@ -602,7 +606,7 @@ def check_push(args, directory, configs=(), env=None):
         # Without a refspec the one branch pushed is `@{push}` (which honours push.default,
         # remote.pushDefault and upstream) or, with a remote named, the current branch (`upstream`
         # default: its upstream branch); `matching` was denied above.
-        default = git_lines(directory, options_c + ["config", "--get", "push.default"], environment)
+        default = git_lines(directory, ["config", "--get", "push.default"], environment)
         if default is TIMEOUT:
             return "a push whose targets could not be read in time"
         default = default[0].strip() if default else "simple"
@@ -627,7 +631,7 @@ def check_push(args, directory, configs=(), env=None):
     return check_push_authors(refspecs, directory, "--tags" in options)
 
 
-def check_git(tokens, directory, env, stdin_bodies=None, written=()):
+def check_git(tokens, directory, env, stdin_bodies=None, written=(), current=()):
     index, configs = 1, []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
@@ -642,7 +646,7 @@ def check_git(tokens, directory, env, stdin_bodies=None, written=()):
     if index < len(tokens) and tokens[index] == "push":
         return check_push(tokens[index + 1 :], directory, configs, env)
     if index < len(tokens) and tokens[index] == "commit":
-        return check_commit(tokens[index + 1 :], directory, configs, env, stdin_bodies, written)
+        return check_commit(tokens[index + 1 :], directory, configs, env, stdin_bodies, written, current)
     return None
 
 
@@ -961,7 +965,7 @@ def check_text(command, directory, inherited=None, written=()):
                     reason = check_command(tokens[index + 1], directory, env, written)
                     break
         elif head == "git":
-            reason = check_git(tokens, directory, env, stdin_bodies, written)
+            reason = check_git(tokens, directory, env, stdin_bodies, written, tuple(raw_tokens))
         elif head == "gh":
             reason = check_gh(tokens, directory, env)
         if reason:
@@ -990,7 +994,7 @@ def main():
             )
         elif "arrive through xargs" in reason:
             advice = "RULE ZERO: pass the git or gh command and its arguments directly, without xargs."
-        elif "chosen by" in reason or reason.startswith("a push whose target"):
+        elif "chosen by" in reason or "mirror remote" in reason or reason.startswith("a push whose target"):
             advice = "RULE ZERO: the guard must see what is pushed. Name the remote and branch on the command line."
         elif reason.startswith("a push whose history could not be read"):
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."

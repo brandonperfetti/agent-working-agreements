@@ -644,6 +644,11 @@ class AuthorTest(unittest.TestCase):
         self.assertIn("cannot be checked", guard_git.check_command('git --config-env trailer.x.key=V commit -m "fix: x" --trailer "x=A <a@b>"', self.mine) or "")
         self.assertIsNone(guard_git.check_command('git commit -m "fix: x"', self.mine))  # no --trailer: the setting adds nothing
 
+    def test_substitution_in_the_commit_command_denies(self):
+        with open(os.path.join(self.mine, "msg.txt"), "w") as handle:
+            handle.write("fix: clean\n")
+        self.assertTrue(guard_git.check_command('git commit -F msg.txt --author="$(cp evil msg.txt)"', self.mine))  # author or file: either reason stops it
+
     def test_r8_routes_are_closed(self):
         trailer = "Co-Authored-By: A <a@b>"
         two = 'git commit -m "$(cat <<\'A\'\nfix: x\nA\n)" -m "$(cat <<\'B\'\n{}\nB\n)"'.format(trailer)
@@ -674,8 +679,13 @@ class AuthorTest(unittest.TestCase):
         self.assertIn("chosen by", guard_git.check_command("git push origin feature", self.mine) or "")  # a bare source can be remapped
         self.assertIsNone(guard_git.check_command("git push origin feature:feature", self.mine))  # an explicit destination cannot
         git(self.mine, "config", "--unset", "remote.origin.push")
-        self.assertIn("chosen by", guard_git.check_command("git -c include.path=/tmp/cfg push origin feature", self.mine) or "")
+        for command in ("git -c include.path=/tmp/cfg push origin feature", "git -c branch.feature.merge=refs/heads/master push", "git -c remote.origin.mirror=true push origin", "git --config-env=push.default=P push origin feature"):
+            with self.subTest(command=command):
+                self.assertIn("chosen by", guard_git.check_command(command, self.mine) or "")
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+        git(self.mine, "config", "remote.origin.mirror", "true")
+        self.assertIn("mirror", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "--unset", "remote.origin.mirror")
         git(self.mine, "push", "-q", "origin", "feature:master")  # the bare remote gets a master to track
         git(self.mine, "fetch", "-q", "origin")
         git(self.mine, "branch", "-q", "--set-upstream-to=origin/master", "feature")
@@ -773,6 +783,7 @@ class AuthorTest(unittest.TestCase):
             "printf 'Co-Authored-By: x'>msg.txt && git commit -F msg.txt",
             "F=msg.txt; cp evil.txt $F; git commit -F msg.txt",
             "cp evil.txt m*.txt; git commit -F msg.txt",
+            "F=\"$(printf 'x' > msg.txt)\" git commit -F msg.txt",
             "printf 'x' > msg.txt; bash -c 'git commit -F msg.txt'",
             "printf 'x' > msg.txt; eval 'git commit -F msg.txt'",
             "printf 'x' >msg.txt && git commit -F ./msg.txt",
