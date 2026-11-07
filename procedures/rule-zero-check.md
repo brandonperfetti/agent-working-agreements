@@ -49,7 +49,7 @@ record, the gate evidence, the issue — which A2 wants.
 2026-10-27 allowance). In the same range, read the messages of the commits the delivery adds:
 
 ```sh
-git log --format='%B' <base>..HEAD | grep -inE '^[#>[:blank:]]*(co-authored-by|[a-z-]*-session)[[:blank:]]*:|generated with'
+git log --format='%B' <base>..HEAD | grep -inE '^[#>[:blank:]]*(co-authored-by|[a-z-]*-session)[[:blank:]]*:|generated with|posted by an agent'
 ```
 
 Any match is a send-back. On a Mac with the hooks installed (`hooks/git/README.md`), git's

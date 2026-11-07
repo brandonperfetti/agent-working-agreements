@@ -2,7 +2,7 @@
 """RULE ZERO where git holds the final message: the commit-msg hook (and, linked, applypatch-msg).
 
 Denies a commit whose message carries an attribution line (`Co-Authored-By`, a
-`*-Session` line, "generated with") or whose author is not Brandon's email, on
+`*-Session` line, "generated with", the agent label) or whose author is not Brandon's email, on
 every route that commits through git on this Mac: Claude Code, Codex, OpenClaw,
 a shell. Git hands it the message file and has already resolved the author, so
 nothing here guesses what a shell command will produce. `--no-verify` skips
@@ -17,7 +17,7 @@ import sys
 # installed-by: agent-working-agreements/hooks/claude-code/install.py (the installer updates files carrying this line)
 
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|posted by an agent", re.IGNORECASE | re.MULTILINE)
 
 
 def read_message(path):

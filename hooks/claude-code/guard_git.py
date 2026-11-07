@@ -25,7 +25,7 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|posted by an agent", re.IGNORECASE | re.MULTILINE)
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
@@ -362,7 +362,7 @@ def check_push(args, directory, selectors=(), env=None):
     return check_push_authors(refspecs, directory, "--tags" in options, selectors, env, remote)
 
 
-def check_git(tokens, directory, env):
+def check_git(tokens, directory, env, unstripped=None):
     """Route a `git` command: global options first, then push, commit and merge."""
     index, configured, selectors, keys = 1, False, [], []
     while index < len(tokens) and tokens[index].startswith("-"):
@@ -385,9 +385,14 @@ def check_git(tokens, directory, env):
         # benign keys pass (`-c user.name=…`). GIT_CONFIG_* in the environment is not read: denied.
         if any(k.startswith(HOOK_KEYS) or k in HOOK_KEYS for k in keys) or any(k.startswith("GIT_CONFIG") for k in env):
             return "a commit with a configuration setting on the command, which can switch off the commit-msg hook"
+        # Option values are read from the tokens before redirects were stripped: a quoted message
+        # that begins with `<` or `>` looks like a redirect and would otherwise vanish, leaving a
+        # following `--no-verify` to be read as the message.
+        source = unstripped if unstripped and tokens[index] in unstripped else tokens
+        args = source[source.index(tokens[index]) + 1 :]
         if tokens[index] == "merge":
-            return check_commit(tokens[index + 1 :], MERGE_VALUE_OPTS, MERGE_SHORTS)
-        return check_commit(tokens[index + 1 :])
+            return check_commit(args, MERGE_VALUE_OPTS, MERGE_SHORTS)
+        return check_commit(args)
     return None
 
 
@@ -495,6 +500,7 @@ def check_command(command, directory, inherited=None):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
     exported = dict(inherited or {})
     for tokens in segments(command):
+        unstripped = strip_prefix(list(tokens))  # redirects kept: a quoted `> note` message is not a redirect
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
@@ -519,7 +525,7 @@ def check_command(command, directory, inherited=None):
                     reason = check_command(tokens[index + 1], directory, env)
                     break
         elif head == "git":
-            reason = check_git(tokens, directory, env)
+            reason = check_git(tokens, directory, env, unstripped)
         elif head == "gh":
             reason = check_gh(tokens, directory, env)
         if reason:
