@@ -154,20 +154,17 @@ class CommitMsgTest(unittest.TestCase):
             handle.write(patch)
         self.assertEqual(self.git("am", path).returncode, 0)  # the clean patch applies
 
-    def test_the_diff_below_the_scissors_line_is_not_the_message(self):
+    def test_the_whole_message_file_is_read_scissors_included(self):
+        # The hook cannot tell whether git will discard what sits below a scissors line, so it reads
+        # all of it: a kept attribution line is refused, and so is a `commit -v` whose diff carries one.
+        scissors = "# ------------------------ >8 ------------------------"
+        self.assert_denied(self.commit("--cleanup=verbatim", "-m", "fix: x\n" + scissors + "\n" + TRAILER))
+        self.assert_denied(self.commit("--cleanup=verbatim", "-m", "fix: x\n" + scissors + "\nGenerated with Claude Code"))
         with open(os.path.join(self.repo, "notes.md"), "w") as handle:
             handle.write("Never add a line Generated with Claude Code.\n")
         self.git("add", "notes.md")
-        result = self.git("commit", "-q", "-v", "-m", "docs: notes")  # -v appends the diff under the scissors line
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assert_denied(self.commit("-v", "-m", "docs: x\n\n" + TRAILER))  # the message itself still counts
-        scissors = "# ------------------------ >8 ------------------------"
-        self.assert_denied(self.commit("--cleanup=verbatim", "-m", "fix: x\n" + scissors + "\n" + TRAILER))  # kept below the line
-        self.assert_denied(self.commit("-m", "fix: x\n" + scissors + "\n+" + TRAILER))  # a diff line adding a trailer
-        self.assertEqual(self.commit("-m", "fix: x\n" + scissors + "\n+Generated with Claude Code mentioned").returncode, 0)
-        self.git("config", "core.commentChar", "!")
-        self.assertEqual(self.commit("-m", "fix: x\n! ------------------------ >8 ------------------------\n+Generated with Claude Code").returncode, 0)
-        self.git("config", "--unset", "core.commentChar")
+        # With -m the editor never opens, so -v appends nothing and the diff is not in the file.
+        self.assertEqual(self.git("commit", "-q", "-v", "-m", "docs: notes").returncode, 0)
 
     def test_clean_messages_pass(self):
         for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"),
