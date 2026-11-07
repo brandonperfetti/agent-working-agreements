@@ -20,6 +20,15 @@ AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with", re.IGNORECASE | re.MULTILINE)
 
 
+SCISSORS = re.compile(r"^[#;] -+ >8 -+\n.*", re.MULTILINE | re.DOTALL)
+
+
+def read_message(path):
+    """The message text, without the diff git appends below the scissors line for `commit -v`."""
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        return SCISSORS.sub("", handle.read())
+
+
 def author_email(hook):
     """The email git will record as the author, or None when it cannot be read. Under `git am`
     (applypatch-msg) that is the patch's author, which git keeps in rebase-apply/author-script."""
@@ -44,8 +53,7 @@ def main(argv):
     if len(argv) < 2:
         print("commit-msg: git gave no message file; refusing the commit.", file=sys.stderr)
         return 1
-    with open(argv[1], encoding="utf-8", errors="replace") as handle:
-        message = handle.read()
+    message = read_message(argv[1])
     # Comment lines are read too: `--cleanup=verbatim` keeps them, and a trailer in one is a mistake.
     if TRAILER.search(message):
         print(
@@ -68,8 +76,7 @@ def main(argv):
     code = chain(argv)
     if code:
         return code
-    with open(argv[1], encoding="utf-8", errors="replace") as handle:
-        if TRAILER.search(handle.read()):  # the repository's hook may have rewritten the message
+    if TRAILER.search(read_message(argv[1])):  # the repository's hook may have rewritten the message
             print("RULE ZERO: the repository's own hook added an attribution line; remove it there.", file=sys.stderr)
             return 1
     return 0

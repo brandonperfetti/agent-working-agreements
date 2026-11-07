@@ -154,6 +154,14 @@ class CommitMsgTest(unittest.TestCase):
             handle.write(patch)
         self.assertEqual(self.git("am", path).returncode, 0)  # the clean patch applies
 
+    def test_the_diff_below_the_scissors_line_is_not_the_message(self):
+        with open(os.path.join(self.repo, "notes.md"), "w") as handle:
+            handle.write("Never add a line Generated with Claude Code.\n")
+        self.git("add", "notes.md")
+        result = self.git("commit", "-q", "-v", "-m", "docs: notes")  # -v appends the diff under the scissors line
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assert_denied(self.commit("-v", "-m", "docs: x\n\n" + TRAILER))  # the message itself still counts
+
     def test_clean_messages_pass(self):
         for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"),
                      ("-m", "fix: x", "--trailer", "Reviewed-by: B <b@c>")):  # "generated with…" anywhere is a match, by design

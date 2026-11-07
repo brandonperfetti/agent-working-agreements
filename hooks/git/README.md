@@ -19,19 +19,22 @@ The Claude Code installer carries this folder too:
 
 It copies `commit-msg` into `~/.config/git/hooks/`, links `chain-repo-hook` there under every other
 hook name, and, when `core.hooksPath` is unset, points the global setting there. A `core.hooksPath`
-already set elsewhere is reported and left alone; to use these hooks there, call `commit-msg` from
-that folder's own `commit-msg` by hand (the installer never repoints a set path, and refuses a
-folder holding other files under the names it manages). `--check` and `--dry-run` behave as for the
+already set elsewhere is reported and left alone; to use these hooks there, call the installed
+`commit-msg` from that folder's own `commit-msg` and `applypatch-msg` by hand, never when that
+folder is a repository's own `.git/hooks` (the installed hook would then run it again, and the two
+would loop). The installer never repoints a set path, and refuses a folder holding other files
+under the names it manages. `--check` and `--dry-run` behave as for the
 Claude Code hooks.
 
 ## Reach and limits
 
 A repository that sets its own `core.hooksPath` (a husky repository, for one) does not run the
 global hooks; git takes the repository's setting first. `git commit --no-verify` skips every
-commit-msg hook. `git cherry-pick`, `git rebase` and `git merge` write commits without running it,
-and keep the author and message they import. The Claude Code guard's push-time scan is a
-best-effort read: it checks the commits reachable from the pushed sources that the destination
-remote's tracking refs do not already hold, so stale tracking refs or a remote git chooses by
-configuration the guard does not read can leave a commit unscanned. The complete check is the
-RULE ZERO read before a delivery is presented (`procedures/rule-zero-check.md`); the guard's denial
-of `--no-verify` keeps the hook in play on the Claude Code route.
+commit-msg hook, and the Claude Code guard denies it on `git commit` and `git merge`. `git
+cherry-pick` and `git rebase` write commits without running it and keep the author and message they
+import; a merge commit runs it (a fast-forward makes no commit). The Claude Code guard's push-time
+scan is a best-effort read: it checks the commits reachable from the pushed sources that the
+destination remote's tracking refs do not already hold, so stale tracking refs or a remote git
+chooses by configuration the guard does not read can leave a commit unscanned. The complete check is
+the RULE ZERO read before a delivery is pushed, merged or presented
+(`procedures/rule-zero-check.md`).

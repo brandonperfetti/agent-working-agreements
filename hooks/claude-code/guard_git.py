@@ -120,6 +120,17 @@ def strip_prefix(tokens):
     return tokens
 
 
+REPOSITORY_VARS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES")
+
+
+def environment(env=None):
+    """The guard's own environment for a git read: whatever selected a repository for the guard's
+    process is dropped, and only the command's selection (`env`) applies."""
+    base = {k: v for k, v in os.environ.items() if k not in REPOSITORY_VARS}
+    base.update(env or {})
+    return base
+
+
 def current_branch(directory, selectors=(), env=None):
     """The checked-out branch of the repository the command selects (`--git-dir`, GIT_DIR, cwd)."""
     try:
@@ -128,7 +139,7 @@ def current_branch(directory, selectors=(), env=None):
             capture_output=True,
             text=True,
             timeout=3,
-            env=dict(os.environ, **(env or {})),
+            env=environment(env),
         )
     except (OSError, subprocess.SubprocessError):
         return ""
@@ -154,8 +165,13 @@ def git_lines(directory, args, env=None, raw=False):
     return result.stdout if raw else result.stdout.splitlines()
 
 
-def check_commit(args):
-    """Keep the commit-msg hook in play: it, not this guard, reads the message and the author."""
+MERGE_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-s", "--strategy", "-X", "--strategy-option", "--cleanup", "--into-name"}
+
+
+def check_commit(args, value_opts=None):
+    """Keep the commit-msg hook in play: it, not this guard, reads the message and the author.
+    `git merge` makes a commit too and takes the same `--no-verify`."""
+    value_opts = COMMIT_VALUE_OPTS if value_opts is None else value_opts
     flags, skip = [], None
     for arg in args:
         if skip:
@@ -167,7 +183,7 @@ def check_commit(args):
             flags.append(name if has_value else arg)
             if has_value:
                 pass  # `--author=X`: the value is attached
-            elif arg in COMMIT_VALUE_OPTS:
+            elif arg in value_opts:
                 skip = arg  # the next argument is this option's value
             elif not arg.startswith("--"):
                 # In a cluster the first value-taking letter ends it; the value is the next argument
@@ -219,7 +235,7 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None, 
     # are only ever revisions. One read of author and message per commit, record-separated:
     # `splitlines` would eat `\x1e`.
     tag_option = ["--tags"] if tags else []
-    text = git_lines(directory, list(selectors) + ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes=" + remote, "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True, env=dict(os.environ, **(env or {})))
+    text = git_lines(directory, list(selectors) + ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes=" + remote, "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True, env=environment(env))
     if text is None:  # the scan failed or timed out: nothing was checked
         return "a push whose commits could not be read for the author and trailer checks"
     records = [r for r in text.split("\x1e") if r.strip()]
@@ -229,6 +245,22 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None, 
     if TRAILER.search("\n".join(r.split("\x1f", 1)[1] if "\x1f" in r else "" for r in records)):
         return "a push of commits carrying an attribution trailer"
     return None
+
+
+PUSH_LONG_OPTS = (
+    "--all", "--atomic", "--branches", "--delete", "--dry-run", "--exec", "--follow-tags", "--force",
+    "--force-if-includes", "--force-with-lease", "--ipv4", "--ipv6", "--mirror", "--no-verify", "--porcelain",
+    "--progress", "--prune", "--push-option", "--quiet", "--receive-pack", "--recurse-submodules", "--repo",
+    "--set-upstream", "--signed", "--tags", "--thin", "--verbose", "--verify",
+)
+
+
+def canonical_push(name):
+    """Git accepts a unique prefix of a long option (`--force-w`, `--mirr`, `--del`); resolve it."""
+    if not name.startswith("--") or name in PUSH_LONG_OPTS:
+        return name
+    matches = [opt for opt in PUSH_LONG_OPTS if opt.startswith(name)]
+    return matches[0] if len(matches) == 1 else name
 
 
 def destination(refspec, directory, selectors=(), env=None):
@@ -248,7 +280,7 @@ def check_push(args, directory, selectors=(), env=None):
             positional.extend(args[index + 1 :])
             break
         elif arg.startswith("-"):
-            options.append(arg.split("=")[0])
+            options.append(canonical_push(arg.split("=")[0]))
             # `-o fleet`, and a short cluster whose first `o` is its last letter (`-vo fleet`), take
             # the next operand; `-ofoo` and `-vofoo` carry the value attached.
             letters = arg[1:] if not arg.startswith("--") else ""
@@ -267,7 +299,7 @@ def check_push(args, directory, selectors=(), env=None):
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
     tags_only = ("--tags" in options or "--follow-tags" in options) and not refspecs and "--tags" in options
-    environment = dict(os.environ, **(env or {}))
+    environment_ = environment(env)
     # The destination remote, by name: a URL or `--repo` has no tracking refs to scan against.
     remote = positional[0] if positional else None
     if "--repo" in options or (remote and re.search(r"[:/@]", remote)):
@@ -276,31 +308,31 @@ def check_push(args, directory, selectors=(), env=None):
         # branch.<name>.pushRemote, then remote.pushDefault, then the remote `@{push}` names, else origin.
         branch = current_branch(directory, selectors, env)
         for key in (["config", "--get", "branch.{}.pushRemote".format(branch)] if branch else [None], ["config", "--get", "remote.pushDefault"]):
-            value = git_lines(directory, list(selectors) + key, environment) if key[0] else None
+            value = git_lines(directory, list(selectors) + key, environment_) if key[0] else None
             if value and value[0].strip():
                 remote = value[0].strip()
                 break
         if remote is None:
-            pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment)
+            pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment_)
             remote = pushed[0].strip().partition("/")[0] if pushed and "/" in pushed[0] else "origin"
         if re.search(r"[:/@]", remote):
             return "a push to a remote named by URL or --repo; name the remote"
-    mirror = git_lines(directory, list(selectors) + ["config", "--bool", "--get", "remote.{}.mirror".format(remote)], environment)
+    mirror = git_lines(directory, list(selectors) + ["config", "--bool", "--get", "remote.{}.mirror".format(remote)], environment_)
     if mirror and mirror[0].strip() == "true":
         return "a push to a mirror remote, which rewrites and deletes every ref"
     # `remote.<name>.push` maps a bare source (`feature`) or a bare push to other branches, and
     # `push.default=matching` sends every matching branch: the scan below would read the wrong
     # commits, so those are denied unless each refspec names its destination.
     if not tags_only and (not refspecs or any(":" not in r for r in refspecs)):
-        mapped = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.push$"], environment)
-        default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], environment)
+        mapped = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.push$"], environment_)
+        default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], environment_)
         if mapped or (not refspecs and default and default[0].strip() == "matching"):
             return "a push whose targets are chosen by remote.<name>.push or push.default, not the command"
     targets = [destination(r, directory, selectors, env) for r in refspecs]
     if not refspecs and not tags_only:
         # A bare push lands where `@{push}` says (push.default simple/current/upstream, pushRemote);
         # without an upstream git sends the current branch or refuses.
-        pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment)
+        pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment_)
         targets = [pushed[0].strip().partition("/")[2]] if pushed and "/" in pushed[0] else [current_branch(directory, selectors, env)]
     if "" in targets:
         return "a push whose target branch could not be resolved"
@@ -324,11 +356,13 @@ def check_git(tokens, directory, env):
             selectors += [name, value] if has_value else tokens[index : index + 2]
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
     if index < len(tokens) and tokens[index] == "push":
-        if configured:
+        if configured or any(k.startswith("GIT_CONFIG") for k in env):
             return "a push with a configuration setting on the command, which can redirect it"
         return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")})
-    if index < len(tokens) and tokens[index] == "commit":
-        return check_commit(tokens[index + 1 :])
+    if index < len(tokens) and tokens[index] in ("commit", "merge"):
+        if configured or any(k.startswith("GIT_CONFIG") for k in env):
+            return "a commit with a configuration setting on the command, which can switch off the commit-msg hook"
+        return check_commit(tokens[index + 1 :], MERGE_VALUE_OPTS if tokens[index] == "merge" else COMMIT_VALUE_OPTS)
     return None
 
 
@@ -478,7 +512,7 @@ def main():
                 "Remove the trailer (git commit --amend for a commit already made) and retry."
             )
         elif "commit-msg hook" in reason:
-            advice = "RULE ZERO is checked by the commit-msg hook; commit without --no-verify."
+            advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:
