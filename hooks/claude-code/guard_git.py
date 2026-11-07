@@ -185,6 +185,10 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
     for arg in args:
         if skip:
             skip = None  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message, `-m --` too
+        elif re.fullmatch(r"\d*[<>]+", arg):
+            skip = arg  # a bare redirect operator: the next word is its target, not an option (`> -m`)
+        elif re.fullmatch(r"\d*[<>]+\S+", arg):
+            pass  # a redirect with its target attached (`>log`); a quoted `-m ">note"` arrived as a pending value above
         elif arg == "--":
             break
         elif arg.startswith("-"):
