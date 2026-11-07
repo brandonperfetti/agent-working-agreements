@@ -149,6 +149,7 @@ def global_hooks_path():
 
 
 def write_atomic(path, data, mode=0o644):
+    """Write `data` to `path` through a temporary file, so a reader never sees a half-written hook."""
     directory = os.path.dirname(path)
     fd, temp = tempfile.mkstemp(dir=directory, prefix=".install-")
     try:
@@ -162,6 +163,7 @@ def write_atomic(path, data, mode=0o644):
 
 
 def main(argv=None):
+    """Plan the copies, links and settings changes; report them; write them unless --dry-run or --check."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true", help="say what would change")
     parser.add_argument("--check", action="store_true", help="exit 1 on any drift")

@@ -50,6 +50,7 @@ def author_email(hook):
 
 
 def main(argv):
+    """Check the message file git names in argv[1] and the author git resolved; 0 to allow, 1 to refuse."""
     if len(argv) < 2:
         print("commit-msg: git gave no message file; refusing the commit.", file=sys.stderr)
         return 1

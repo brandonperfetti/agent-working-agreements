@@ -87,6 +87,7 @@ def segments(command):
 
 
 def strip_redirects(tokens):
+    """Drop redirection operators and their targets from one simple command's tokens."""
     kept, skip = [], False
     for token in tokens:
         if skip:
@@ -198,6 +199,7 @@ def check_commit(args, value_opts=None):
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
     # first value-taking letter skip the hook (`-anm msg` does; `-mn` is the message "n").
     def skips(flag):
+        """True when this flag turns the commit-msg hook off."""
         if flag.startswith("--"):
             return "--no-verify".startswith(flag) and len(flag) >= 6
         cluster = re.match(r"-([a-zA-Z]*)", flag).group(1)
@@ -268,6 +270,7 @@ def canonical_push(name):
 
 
 def destination(refspec, directory, selectors=(), env=None):
+    """The branch a refspec updates on the remote, `HEAD`/`@` resolved to the current branch."""
     source, _, target = refspec.lstrip("+").partition(":")
     branch = target or source
     if branch in ("HEAD", "@"):
@@ -276,6 +279,7 @@ def destination(refspec, directory, selectors=(), env=None):
 
 
 def check_push(args, directory, selectors=(), env=None):
+    """The rule a `git push` breaks, or None: force, release branch, redirecting configuration, then the scan."""
     positional, options, skip = [], [], False
     for index, arg in enumerate(args):
         if skip:
@@ -349,6 +353,7 @@ def check_push(args, directory, selectors=(), env=None):
 
 
 def check_git(tokens, directory, env):
+    """Route a `git` command: global options first, then push, commit and merge."""
     index, configured, selectors = 1, False, []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
@@ -429,6 +434,7 @@ def gh_options(tokens):
 
 
 def check_gh(tokens, directory, env):
+    """The rule a `gh` command breaks, or None: PR merges into a protected base, by any gh route."""
     positional, options = gh_options(tokens[1:])
     repos = options.get("-R", []) + options.get("--repo", [])
     repo = ["--repo", repos[-1]] if repos else []
@@ -506,6 +512,7 @@ def check_command(command, directory, inherited=None):
 
 
 def main():
+    """Read Claude Code's PreToolUse payload from stdin and print a deny decision when a rule breaks."""
     payload = json.load(sys.stdin)
     command = payload.get("tool_input", {}).get("command", "")
     reason = check_command(command, payload.get("cwd") or os.getcwd())
