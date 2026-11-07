@@ -95,6 +95,15 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("conflict", out)
         os.unlink(foreign)
+        os.symlink("/usr/local/bin/their-hook", foreign)  # a foreign link is a conflict too
+        with self.assertRaises(SystemExit):
+            self.run_install()
+        os.unlink(foreign)
+        subprocess.run(["git", "config", "--global", "core.hooksPath", ""], check=True)
+        code, out = self.run_install()  # an explicitly empty setting is reported, not replaced
+        self.assertEqual((code, self.hooks_path()), (0, ""))
+        self.assertIn("set but empty", out)
+        subprocess.run(["git", "config", "--global", "--unset", "core.hooksPath"], check=True)
         with open(os.path.join(self.git_hooks, "commit-msg"), "w") as handle:
             handle.write("#!/bin/sh\nexit 0\n")  # a different commit-msg hook is a conflict too
         with self.assertRaises(SystemExit):

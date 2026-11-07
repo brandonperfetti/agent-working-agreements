@@ -118,14 +118,20 @@ def merge_hooks(settings, hooks_dir=None):
     return merged
 
 
+UNSET = None  # core.hooksPath absent from the global config
+
+
 def global_hooks_path():
-    """The global core.hooksPath, "" when unset, None when git could not be asked."""
+    """The global core.hooksPath: UNSET when absent, its value (possibly "") when present, and
+    False when git could not be asked."""
     try:
         result = subprocess.run(["git", "config", "--global", "--get", "core.hooksPath"], capture_output=True, text=True, timeout=5)
     except (OSError, subprocess.SubprocessError):
-        return None
-    if result.returncode not in (0, 1):
-        return None
+        return False
+    if result.returncode == 1:
+        return UNSET
+    if result.returncode:
+        return False
     return result.stdout.strip()
 
 
@@ -173,19 +179,21 @@ def main(argv=None):
             conflicts.append(target)  # someone else's hook of that name: never overwritten
     for name in CHAINED_HOOKS:
         link = os.path.join(git_hooks_dir, name)
-        if os.path.lexists(link) and not os.path.islink(link):
-            conflicts.append(link)
-        elif not os.path.islink(link) or os.readlink(link) != "chain-repo-hook":
+        if os.path.lexists(link) and (not os.path.islink(link) or os.readlink(link) != "chain-repo-hook"):
+            conflicts.append(link)  # a file or someone else's link: never replaced
+        elif not os.path.lexists(link):
             changes.append(("git-link", "chain-repo-hook", link))
     if conflicts:
         for path in conflicts:
             print("conflict: {} exists and is not this installer's; move it (chain-repo-hook runs a repository's hooks, not a global one).".format(path))
         return 1 if args.check else sys.exit("hooks folder {} holds other hooks; nothing written.".format(git_hooks_dir))
     current = global_hooks_path()
-    if current is None:
+    if current is False:
         sys.exit("git could not be asked for core.hooksPath; nothing written.")
-    if current == "":
+    if current is UNSET:
         changes.append(("hooks-path", git_hooks_dir, None))
+    elif current == "":
+        print("note: core.hooksPath is set but empty; the git hooks under {} are not active until it points there.".format(git_hooks_dir))
     elif not os.path.isabs(os.path.expanduser(current)):
         print("note: core.hooksPath is relative ({}); git resolves it per repository, so the hooks under {} may not be active.".format(current, git_hooks_dir))
     elif os.path.realpath(os.path.expanduser(current)) != os.path.realpath(git_hooks_dir):

@@ -95,18 +95,14 @@ def strip_redirects(tokens):
     return kept
 
 
-XARGS_VALUE_OPTS = {"-a", "-d", "-E", "-e", "-I", "-i", "-L", "-l", "-n", "-P", "-R", "-s", "-S", "-J"}
-
-
-def xargs_runs(tokens):
-    """The command word xargs would run, or None: `xargs -n 1 git push` runs git; `xargs grep git` grep."""
-    try:
-        index = [os.path.basename(t) for t in tokens].index("xargs") + 1
-    except ValueError:
-        return None
-    while index < len(tokens) and tokens[index].startswith("-"):
-        index += 2 if tokens[index] in XARGS_VALUE_OPTS else 1
-    return os.path.basename(tokens[index]) if index < len(tokens) else None
+def fed_by_xargs(prefix, tokens):
+    """True when xargs, in command position, hands git or gh arguments the guard never sees. Its
+    options are not modelled: any git or gh word after it counts (`xargs grep git` is denied too)."""
+    names = [os.path.basename(t) for t in prefix]
+    if "xargs" not in names:
+        return False
+    after = (prefix + tokens)[names.index("xargs") + 1 :]
+    return any(os.path.basename(t) in ("git", "gh") for t in after)
 
 
 def strip_prefix(tokens):
@@ -173,9 +169,10 @@ def check_commit(args, directory, configs, env):
                 skip = True  # the next argument is this option's value
             elif not arg.startswith("--"):
                 # In a cluster the first value-taking letter ends it; the value is the next argument
-                # only when nothing follows that letter (`-am msg`), else attached (`-mtrim`, `-uno`).
+                # only when nothing follows that letter (`-am msg`), else attached (`-mtrim`). `-u`
+                # and `-S` take an optional value that must be attached, so they never consume one.
                 letter = re.search(r"[mFCctSu]", arg[1:])
-                skip = bool(letter) and letter.end() == len(arg) - 1
+                skip = bool(letter) and letter.group() in "mFCct" and letter.end() == len(arg) - 1
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
     # first value-taking letter skip the hook (`-anm msg` does; `-mn` is the message "n").
     def skips(flag):
@@ -399,7 +396,7 @@ def check_command(command, directory, inherited=None):
             continue
         head = os.path.basename(tokens[0])
         reason = None
-        if xargs_runs(prefix + command_tokens) in ("git", "gh"):
+        if fed_by_xargs(prefix, command_tokens):
             return "a git or gh command whose arguments arrive through xargs and are not visible here"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
