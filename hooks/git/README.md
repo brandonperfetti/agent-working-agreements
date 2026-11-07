@@ -22,10 +22,11 @@ hook name, and, when `core.hooksPath` is unset, points the global setting there.
 already set elsewhere is reported and left alone; to use these hooks there, make that folder's
 `commit-msg` and `applypatch-msg` symlinks to the installed `commit-msg`, as the installer does (the
 script reads the patch author only when its own name is `applypatch-msg`; a wrapper that calls it
-cannot rename it, since a shebang script sees its own path), never when that folder is a
-repository's own `.git/hooks` (the installed hook would then run it again, and the two would loop).
-The installer never repoints a set path, and refuses a folder holding other files under the names it
-manages. `--check` and `--dry-run` behave as for the Claude Code hooks.
+cannot rename it, since a shebang script sees its own path), symlinks, not wrapper scripts: the hook
+skips itself when the repository's hook is the same file, but a wrapper in a repository's own
+`.git/hooks` that calls it would be run again by it, and the two would loop. The installer never
+repoints a set path, and refuses a folder holding other files under the names it manages. `--check`
+and `--dry-run` behave as for the Claude Code hooks.
 
 ## Reach and limits
 
