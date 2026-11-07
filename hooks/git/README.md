@@ -19,8 +19,10 @@ The Claude Code installer carries this folder too:
 
 It copies `commit-msg` into `~/.config/git/hooks/`, links `chain-repo-hook` there under every other
 hook name, and, when `core.hooksPath` is unset, points the global setting there. A `core.hooksPath`
-already set elsewhere is reported and left alone: move that hook set under `~/.config/git/hooks/` or
-chain this one from it by hand. `--check` and `--dry-run` behave as for the Claude Code hooks.
+already set elsewhere is reported and left alone; to use these hooks there, call `commit-msg` from
+that folder's own `commit-msg` by hand (the installer never repoints a set path, and refuses a
+folder holding other files under the names it manages). `--check` and `--dry-run` behave as for the
+Claude Code hooks.
 
 ## Reach and limits
 
