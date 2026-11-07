@@ -336,12 +336,12 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
     if dry_run:  # option-aware: `-m --dry-run` is a message, not a dry run; `-n` is --no-verify
         return None
     editors = {"GIT_EDITOR", "VISUAL", "EDITOR"} & set(env) or {k for k in env if k.startswith("GIT_CONFIG")}
-    keys = {c.partition("=")[0].lower() for c in configs}
+    keys = {c.partition("=")[0].lower() for _kind, c in configs}
     settings = keys & {"core.editor", "commit.template", "sequence.editor"} or {k for k in keys if k.startswith(("trailer.", "include"))}
     if editors or settings:  # an editor, template or trailer setting for this command may add text after this check
         return "a commit whose message cannot be checked for attribution trailers"
     if any(canonical(a.partition("=")[0]) == "--trailer" for a in args[: args.index("--") if "--" in args else len(args)]):
-        options = [part for config in configs for part in ("-c", config)]  # the command's own settings count
+        options = [part for pair in configs for part in pair]  # the command's own settings count
         configured = git_lines(directory, options + ["config", "--get-regexp", r"^trailer\."], dict(os.environ, **env))
         if configured is TIMEOUT or configured:  # `trailer.<key>.cmd` rewrites what --trailer adds
             return "a commit whose message cannot be checked for attribution trailers"
@@ -355,7 +355,7 @@ def check_commit(args, directory, configs, env, stdin_bodies=None, written=()):
             return "a commit whose author cannot be checked"
         author = lines[0] if lines else None
     if author is None:
-        options = [part for config in configs for part in ("-c", config)]
+        options = [part for pair in configs for part in pair]
         lines = git_lines(directory, options + ["var", "GIT_AUTHOR_IDENT"], dict(os.environ, **env))
         if lines is TIMEOUT:
             return "a commit whose author cannot be checked"
@@ -583,25 +583,34 @@ def check_push(args, directory, configs=(), env=None):
         return "a force-push"
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
-    if not refspecs:
-        # Without a refspec, `push.default` and `remote.<name>.push` choose what goes: `matching` or a
-        # configured refspec can send branches this check never sees, so only `simple`/`current`/
-        # `upstream`/`nothing` (the current branch) are read; anything else denies.
-        remote = positional[0] if positional else "origin"
-        keys = {c.partition("=")[0].lower() for c in configs}
-        if any(k == "push.default" or (k.startswith("remote.") and k.endswith(".push")) for k in keys):
-            return "a push whose targets are chosen by a configuration setting on the command"
-        options_c = [part for config in configs for part in ("-c", config)]
-        environment = dict(os.environ, **(env or {}))
-        default = git_lines(directory, options_c + ["config", "--get", "push.default"], environment)
-        configured = git_lines(directory, options_c + ["config", "--get-all", "remote.{}.push".format(remote)], environment)
-        if default is TIMEOUT or configured is TIMEOUT:
-            return "a push whose targets could not be read in time"
-        if (default and default[0].strip() not in ("simple", "current", "upstream", "nothing")) or configured:
-            return "a push whose targets are chosen by push.default or remote.<name>.push"
     targets = [destination(r, directory) for r in refspecs]
     if not refspecs:
-        targets = [current_branch(directory)]
+        # Without a refspec, configuration chooses what goes. Any `remote.<name>.push` refspec or
+        # `push.default=matching` can send branches this check never sees: denied. Otherwise the one
+        # branch pushed is `@{push}` (which honours push.default, remote.pushDefault and upstream)
+        # or, with a remote named, the current branch (`upstream` default: its upstream branch).
+        keys = {c.partition("=")[0].lower() for _kind, c in configs}
+        if any(k == "push.default" or k == "remote.pushdefault" or (k.startswith("remote.") and k.endswith(".push")) for k in keys):
+            return "a push whose targets are chosen by a configuration setting on the command"
+        environment = dict(os.environ, **(env or {}))
+        configured = git_lines(directory, ["config", "--get-regexp", r"^remote\..*\.push$"], environment)
+        default = git_lines(directory, ["config", "--get", "push.default"], environment)
+        if configured is TIMEOUT or default is TIMEOUT:
+            return "a push whose targets could not be read in time"
+        default = default[0].strip() if default else "simple"
+        if configured or default == "matching":
+            return "a push whose targets are chosen by push.default or remote.<name>.push"
+        if default == "nothing":
+            return None  # git refuses a bare push
+        ref = "@{push}" if not positional else ("@{upstream}" if default == "upstream" else None)
+        if ref:
+            resolved = git_lines(directory, ["rev-parse", "--abbrev-ref", ref], environment)
+            if resolved is TIMEOUT:
+                return "a push whose target branch could not be resolved"
+            # No upstream yet: git either refuses the push (`simple`) or sends the current branch.
+            targets = [resolved[0].strip().partition("/")[2] or resolved[0].strip()] if resolved else [current_branch(directory)]
+        else:
+            targets = [current_branch(directory)]
     for target in targets:
         if target in RELEASE_BRANCHES or "*" in target:
             return "a push to a release branch ({})".format(target)
@@ -616,11 +625,11 @@ def check_git(tokens, directory, env, stdin_bodies=None, written=()):
         if tokens[index] == "-C" and index + 1 < len(tokens):
             directory = os.path.join(directory, os.path.expanduser(tokens[index + 1]))
         elif tokens[index] == "-c" and index + 1 < len(tokens):
-            configs.append(tokens[index + 1])
+            configs.append(("-c", tokens[index + 1]))
         elif tokens[index] == "--config-env" and index + 1 < len(tokens):
-            configs.append(tokens[index + 1])  # `key=ENVVAR`: the key is what matters here
+            configs.append(("--config-env", tokens[index + 1]))  # `key=ENVVAR`, replayed as given
         elif tokens[index].startswith("--config-env="):
-            configs.append(tokens[index].split("=", 1)[1])
+            configs.append(("--config-env", tokens[index].split("=", 1)[1]))
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
     if index < len(tokens) and tokens[index] == "push":
         return check_push(tokens[index + 1 :], directory, configs, env)
@@ -929,8 +938,9 @@ def check_text(command, directory, inherited=None, written=()):
             continue
         head = os.path.basename(tokens[0])
         reason = None
-        if "xargs" in {os.path.basename(t) for t in raw_tokens} and head in ("git", "gh"):
-            return "a git or gh command whose arguments arrive through xargs and cannot be checked"
+        names = {os.path.basename(t) for t in raw_tokens}
+        if "xargs" in names and names & {"git", "gh"}:
+            return "a git or gh command whose arguments arrive through xargs and are not visible here"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
         elif head == "cd" and len(tokens) == 2:
@@ -970,8 +980,10 @@ def main():
                 "GIT_EDITOR/VISUAL/EDITOR, core.editor, a trailer.* setting) is denied too. A literal $ or backtick in the "
                 "message is denied as well: spell it out."
             )
-        elif "arrive through xargs" in reason or "chosen by" in reason or reason == "a push whose targets could not be read in time":
-            advice = "RULE ZERO: the guard must see what is pushed. Name the remote and branch on the command line, without xargs or a push.default/remote.*.push override."
+        elif "arrive through xargs" in reason:
+            advice = "RULE ZERO: pass the git or gh command and its arguments directly, without xargs."
+        elif "chosen by" in reason or reason.startswith("a push whose target"):
+            advice = "RULE ZERO: the guard must see what is pushed. Name the remote and branch on the command line."
         elif reason.startswith("a push whose history could not be read"):
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
         elif "attribution trailer" in reason:

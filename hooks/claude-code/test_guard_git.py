@@ -660,7 +660,7 @@ class AuthorTest(unittest.TestCase):
                 self.assertIsNone(guard_git.check_command(command, self.mine))
 
     def test_configured_push_targets_and_xargs_are_uncheckable(self):
-        for command in ("xargs git push origin <<EOF\nmaster\nEOF", "echo master | xargs git push origin", "echo 1 | xargs gh pr merge",
+        for command in ("xargs git push origin <<EOF\nmaster\nEOF", "echo master | xargs git push origin", "echo 1 | xargs gh pr merge", "printf 'master\\n' | xargs -n 1 git push --force origin",
                         "git -c push.default=matching push", "git -c remote.origin.push=refs/heads/*:refs/heads/* push origin"):
             with self.subTest(command=command):
                 self.assertTrue(guard_git.check_command(command, self.mine), command)
@@ -671,6 +671,20 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "config", "push.default", "simple")
         git(self.mine, "config", "remote.origin.push", "refs/heads/*:refs/heads/*")
         self.assertIn("chosen by", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "--unset", "remote.origin.push")
+        git(self.mine, "push", "-q", "origin", "feature:master")  # the bare remote gets a master to track
+        git(self.mine, "fetch", "-q", "origin")
+        git(self.mine, "branch", "-q", "--set-upstream-to=origin/master", "feature")
+        git(self.mine, "config", "push.default", "upstream")
+        self.assertIn("release branch", guard_git.check_command("git push", self.mine) or "")
+        self.assertIn("release branch", guard_git.check_command("git push origin", self.mine) or "")
+        git(self.mine, "config", "push.default", "simple")
+        self.assertIsNone(guard_git.check_command("git push origin", self.mine))  # simple: the current branch, feature
+
+    def test_config_env_identity_replays_as_given(self):
+        with mock.patch.dict(os.environ, {"MAIL": guard_git.AUTHOR_EMAIL}):
+            self.assertIsNone(guard_git.check_command('git --config-env=user.email=MAIL commit -m "fix: x"', self.other))
+            self.assertIsNone(guard_git.check_command('git --config-env user.email=MAIL commit -m "fix: x"', self.other))
 
     def test_substitutions_in_unquoted_heredoc_bodies_run(self):
         for command in ("cat > /dev/null <<EOF\n$(git push --force origin master)\nEOF", "cat <<EOF\n`git push origin master`\nEOF", "cat <<EOF\n$(cd . && gh pr merge 1)\nEOF"):
