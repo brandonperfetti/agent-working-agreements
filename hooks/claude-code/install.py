@@ -29,7 +29,16 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GIT_HOOKS_SOURCE = os.path.join(os.path.dirname(HERE), "git")
-GIT_HOOKS = ["commit-msg"]  # hooks git runs itself, for every client on the Mac
+GIT_HOOKS = ["commit-msg", "chain-repo-hook"]  # hooks git runs itself, for every client on the Mac
+# Every other hook name git knows gets a link to chain-repo-hook, so a repository's own hooks keep
+# running once the global core.hooksPath replaces its .git/hooks for git.
+CHAINED_HOOKS = [
+    "applypatch-msg", "pre-applypatch", "post-applypatch", "pre-commit", "pre-merge-commit",
+    "prepare-commit-msg", "post-commit", "pre-rebase", "post-checkout", "post-merge", "pre-push",
+    "pre-receive", "update", "proc-receive", "post-receive", "post-update", "reference-transaction",
+    "push-to-checkout", "pre-auto-gc", "post-rewrite", "sendemail-validate", "fsmonitor-watchman",
+    "p4-changelist", "p4-prepare-changelist", "p4-post-changelist", "p4-pre-submit", "post-index-change",
+]
 
 # event, matcher, script, extra fields. The command runs the copy in ~/.claude/hooks.
 # A matcher of None is an event without matchers; its group carries no matcher key.
@@ -155,6 +164,10 @@ def main(argv=None):
         source, target = os.path.join(GIT_HOOKS_SOURCE, script), os.path.join(git_hooks_dir, script)
         if not os.path.exists(target) or not filecmp.cmp(source, target, shallow=False) or not os.access(target, os.X_OK):
             changes.append(("git-hook", source, target))
+    for name in CHAINED_HOOKS:
+        link = os.path.join(git_hooks_dir, name)
+        if not os.path.islink(link) or os.readlink(link) != "chain-repo-hook":
+            changes.append(("git-link", "chain-repo-hook", link))
     current = global_hooks_path()
     if current is None:
         sys.exit("git could not be asked for core.hooksPath; nothing written.")
@@ -180,6 +193,8 @@ def main(argv=None):
     for kind, path, target in changes:
         if kind in ("copy", "git-hook"):
             print("{} {} -> {}".format("differs:" if args.check else "copy", path, target))
+        elif kind == "git-link":
+            print("{} {} -> {}".format("differs:" if args.check else "link", target, path))
         elif kind == "hooks-path":
             print("{} git config --global core.hooksPath {}".format("unset:" if args.check else "set", path))
         else:
@@ -200,6 +215,11 @@ def main(argv=None):
             os.makedirs(os.path.dirname(target), exist_ok=True)
             with open(path, encoding="utf-8") as handle:
                 write_atomic(target, handle.read(), 0o755)  # git runs only an executable hook
+        elif kind == "git-link":
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            if os.path.lexists(target):
+                os.unlink(target)
+            os.symlink(path, target)  # relative: the folder moves as one
         elif kind == "hooks-path":
             subprocess.run(["git", "config", "--global", "core.hooksPath", path], check=True, timeout=5)
     if merged != settings:

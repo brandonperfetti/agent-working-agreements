@@ -109,6 +109,11 @@ def make_repo(root, name, branch, email=guard_git.AUTHOR_EMAIL):
     subprocess.run(["git", "init", "-q", "-b", branch, path], check=True)
     git(path, "config", "user.name", "Test")
     git(path, "config", "user.email", email)
+    # A resolvable HEAD and the branches the push shapes name: the guard reads real history now.
+    git(path, "-c", "user.email=" + guard_git.AUTHOR_EMAIL, "commit", "-q", "--allow-empty", "-m", "init")
+    for other in ("develop", "wave-1", "feature-master", "master-notes"):
+        if other != branch:
+            git(path, "branch", other)
     return path
 
 
@@ -321,6 +326,10 @@ class AuthorTest(unittest.TestCase):
         self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: clean")
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+
+    def test_a_failed_push_scan_denies(self):
+        with mock.patch.object(guard_git, "git_lines", return_value=None):
+            self.assertIn("could not be read", guard_git.check_command("git push origin feature", self.mine) or "")
 
     def test_push_reads_the_authors_of_unpushed_commits(self):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)

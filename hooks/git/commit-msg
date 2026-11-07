@@ -9,6 +9,7 @@ nothing here guesses what a shell command will produce. `--no-verify` skips
 every commit-msg hook; the Claude Code guard denies that flag, and the guard's
 push-time scan of unpushed commits is the backstop for the other routes.
 """
+import os
 import re
 import subprocess
 import sys
@@ -54,6 +55,18 @@ def main(argv):
             file=sys.stderr,
         )
         return 1
+    return chain(argv)
+
+
+def chain(argv):
+    """Run the repository's own commit-msg hook, which a global core.hooksPath would otherwise hide."""
+    try:
+        common = subprocess.run(["git", "rev-parse", "--git-common-dir"], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return 0
+    repo_hook = os.path.join(common.stdout.strip(), "hooks", "commit-msg")
+    if common.returncode == 0 and os.access(repo_hook, os.X_OK):
+        return subprocess.run([repo_hook] + argv[1:]).returncode
     return 0
 
 

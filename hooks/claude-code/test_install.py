@@ -70,6 +70,11 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(self.run_install()[0], 0)
         target = os.path.join(self.git_hooks, "commit-msg")
         self.assertTrue(os.access(target, os.X_OK))
+        self.assertTrue(os.access(os.path.join(self.git_hooks, "chain-repo-hook"), os.X_OK))
+        for name in ("pre-commit", "pre-push", "post-checkout"):
+            link = os.path.join(self.git_hooks, name)
+            self.assertEqual(os.readlink(link), "chain-repo-hook")
+            self.assertTrue(os.access(link, os.X_OK))
         self.assertEqual(os.path.realpath(self.hooks_path()), os.path.realpath(self.git_hooks))
         self.assertEqual(self.run_install("--check")[0], 0)
         code, out = self.run_install()

@@ -6,6 +6,7 @@ import os
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 HOOKS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "git")
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
@@ -15,6 +16,10 @@ TRAILER = "Co-Authored-By: Claude <noreply@anthropic.com>"
 
 class CommitMsgTest(unittest.TestCase):
     def setUp(self):
+        # No global or system git config reaches these commits (a commit.gpgSign there would break them).
+        patcher = mock.patch.dict(os.environ, {"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.tmp = tempfile.TemporaryDirectory()
         self.repo = os.path.join(self.tmp.name, "repo")
         subprocess.run(["git", "init", "-q", "-b", "feature", self.repo], check=True)
@@ -80,6 +85,28 @@ class CommitMsgTest(unittest.TestCase):
         self.assertEqual(self.commit("--no-verify", "--author=X <{}>".format(OTHER), "-m", "fix: x").returncode, 0)
         self.assert_denied(self.commit("--amend", "--no-edit"), OTHER)  # the amend keeps that author
         self.assertEqual(self.commit("--amend", "--no-edit", "--reset-author").returncode, 0)
+
+    def test_repository_hooks_still_run(self):
+        repo_hooks = os.path.join(self.repo, ".git", "hooks")
+        marker = os.path.join(self.tmp.name, "ran")
+        for name in ("commit-msg", "pre-commit"):
+            with open(os.path.join(repo_hooks, name), "w") as handle:
+                handle.write("#!/bin/sh\necho {} >> {}\n".format(name, marker))
+            os.chmod(os.path.join(repo_hooks, name), 0o755)
+        os.symlink("chain-repo-hook", os.path.join(self.tmp.name, "pre-commit-link"))
+        hooks_dir = os.path.join(self.tmp.name, "hooks")
+        os.makedirs(hooks_dir)
+        for name in ("commit-msg", "chain-repo-hook"):
+            os.symlink(os.path.join(HOOKS_DIR, name), os.path.join(hooks_dir, name))
+        os.symlink("chain-repo-hook", os.path.join(hooks_dir, "pre-commit"))  # as install.py lays it out
+        self.git("config", "core.hooksPath", hooks_dir)
+        self.assertEqual(self.commit("-m", "fix: clean").returncode, 0)
+        with open(marker) as handle:
+            self.assertEqual(sorted(handle.read().split()), ["commit-msg", "pre-commit"])
+        with open(os.path.join(repo_hooks, "commit-msg"), "w") as handle:
+            handle.write("#!/bin/sh\nexit 7\n")  # the repository's own verdict still counts
+        self.assertEqual(self.commit("-m", "fix: clean").returncode, 1)
+        self.assert_denied(self.commit("-m", "fix: x\n\n" + TRAILER))  # ours runs first
 
     def test_clean_messages_pass(self):
         for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"),

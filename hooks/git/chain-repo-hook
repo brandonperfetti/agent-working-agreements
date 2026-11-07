@@ -1,0 +1,10 @@
+#!/bin/sh
+# A global core.hooksPath replaces a repository's own .git/hooks for git. This wrapper, installed
+# under every hook name, hands the call on to the repository's hook of the same name when it has
+# one, so a repository's checks keep running. Worktrees share the main checkout's hooks dir.
+name="$(basename "$0")"
+repo_hook="$(git rev-parse --git-common-dir 2>/dev/null)/hooks/$name"
+if [ -x "$repo_hook" ]; then
+  exec "$repo_hook" "$@"
+fi
+exit 0

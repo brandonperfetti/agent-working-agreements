@@ -6,7 +6,8 @@ needed. Each stops honest mistakes, not a determined bypass.
 
 | Hook | When git runs it | What it does |
 | --- | --- | --- |
-| `commit-msg` | After the message is final, before the commit object is written | Denies a commit whose message carries a `Co-Authored-By`, `*-Session` or "generated with" line, or whose author email is not `brandon@brandonperfetti.com` (RULE ZERO), printing the fix |
+| `commit-msg` | After the message is final, before the commit object is written | Denies a commit whose message carries a `Co-Authored-By`, `*-Session` or "generated with" line, or whose author email is not `brandon@brandonperfetti.com` (RULE ZERO), printing the fix; then runs the repository's own `commit-msg` hook if it has one |
+| `chain-repo-hook` | Installed under every other hook name git knows | Runs the repository's own hook of that name, so a global `core.hooksPath` hides no repository check |
 
 ## Install or update
 
@@ -16,10 +17,10 @@ The Claude Code installer carries this folder too:
 /usr/bin/python3 ~/dev/sansfaux/agent-working-agreements/hooks/claude-code/install.py
 ```
 
-It copies `commit-msg` into `~/.config/git/hooks/` and, when `core.hooksPath` is unset, points
-the global setting there. A `core.hooksPath` already set elsewhere is reported and left alone:
-move that hook set under `~/.config/git/hooks/` or chain this one from it by hand. `--check` and
-`--dry-run` behave as for the Claude Code hooks.
+It copies `commit-msg` into `~/.config/git/hooks/`, links `chain-repo-hook` there under every other
+hook name, and, when `core.hooksPath` is unset, points the global setting there. A `core.hooksPath`
+already set elsewhere is reported and left alone: move that hook set under `~/.config/git/hooks/` or
+chain this one from it by hand. `--check` and `--dry-run` behave as for the Claude Code hooks.
 
 ## Reach and limits
 

@@ -182,7 +182,9 @@ def check_push_authors(refspecs, directory, tags=False):
         return None
     # One read of author and message per commit, record-separated: `splitlines` would eat `\x1e`.
     text = git_lines(directory, ["log", "--format=%x1e%ae%x1f%B"] + sources + ["--not", "--remotes", "--"], raw=True)
-    records = [r for r in (text or "").split("\x1e") if r.strip()]
+    if text is None:  # the scan failed or timed out: nothing was checked
+        return "a push whose commits could not be read for the author and trailer checks"
+    records = [r for r in text.split("\x1e") if r.strip()]
     others = sorted({r.split("\x1f", 1)[0].strip() for r in records} - {AUTHOR_EMAIL})
     if others:
         return "a push of commits authored as {}".format(", ".join(others))
@@ -396,6 +398,8 @@ def main():
             )
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit without --no-verify."
+        elif "could not be read for the author" in reason:
+            advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
         elif "through xargs" in reason:
             advice = "Pass the git or gh command and its arguments directly, without xargs."
         elif reason.startswith(("a commit", "a push of commits")):
