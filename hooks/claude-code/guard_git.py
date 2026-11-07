@@ -4,7 +4,10 @@
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
 ritual and merge boundary; commits and merges that skip the commit-msg hook or
-carry a configuration override; and, best effort, pushes whose commits new to
+carry a configuration override (read from the command's words as the lexer
+splits them, so a flag placed after a compound redirect such as `2>&1` is not
+seen, and a commit so made skips the hook: the push-time scan and the read
+before presentation are the controls for that shape); and, best effort, pushes whose commits new to
 the destination remote's tracking refs carry another author or an attribution
 line (RULE ZERO; stale tracking refs are the documented limit, and the read
 before a delivery is presented is the complete check). The author and message
@@ -25,7 +28,7 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|^[#>*+\- \t]*posted by an agent\b", re.IGNORECASE | re.MULTILINE)  # a comment, quote or list prefix is still that line's start
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
@@ -181,10 +184,16 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
     `git merge` makes a commit too and takes the same `--no-verify`."""
     value_opts = COMMIT_VALUE_OPTS if value_opts is None else value_opts
     value_letters, attached_letters, short_n = shorts
+    # Redirects were stripped before this walk by a lexer that cannot see quotes, so a quoted message
+    # such as `-m "> note"` is gone and its option is left dangling in front of the next token. A
+    # pending value that is missing or begins with `-` is therefore refused rather than read as the
+    # value: `git commit -m --no-verify` is never what an agent means.
     flags, skip = [], None
     for arg in args:
         if skip:
-            skip = None  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message, `-m --` too
+            if arg.startswith("-") and arg != "-":  # `-F -` reads stdin, which the commit-msg hook then checks
+                return "a commit whose option values cannot be read: a value is missing or looks like an option"
+            skip = None
         elif arg == "--":
             break
         elif arg.startswith("-"):
@@ -200,6 +209,8 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
                 # and `-S` take an optional value that must be attached, so they never consume one.
                 letter = re.search("[{}{}]".format(value_letters, attached_letters), arg[1:])
                 skip = arg if bool(letter) and letter.group() in value_letters and letter.end() == len(arg) - 1 else None
+    if skip:
+        return "a commit whose option values cannot be read: a value is missing or looks like an option"
     if "--dry-run" in flags:
         return None  # a flag, not `-m --dry-run`
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
@@ -385,9 +396,13 @@ def check_git(tokens, directory, env):
         # benign keys pass (`-c user.name=…`). GIT_CONFIG_* in the environment is not read: denied.
         if any(k.startswith(HOOK_KEYS) or k in HOOK_KEYS for k in keys) or any(k.startswith("GIT_CONFIG") for k in env):
             return "a commit with a configuration setting on the command, which can switch off the commit-msg hook"
+        # Option values are read from the tokens before redirects were stripped: a quoted message
+        # that begins with `<` or `>` looks like a redirect and would otherwise vanish, leaving a
+        # following `--no-verify` to be read as the message.
+        args = tokens[index + 1 :]
         if tokens[index] == "merge":
-            return check_commit(tokens[index + 1 :], MERGE_VALUE_OPTS, MERGE_SHORTS)
-        return check_commit(tokens[index + 1 :])
+            return check_commit(args, MERGE_VALUE_OPTS, MERGE_SHORTS)
+        return check_commit(args)
     return None
 
 
@@ -505,6 +520,10 @@ def check_command(command, directory, inherited=None):
             continue
         head = os.path.basename(tokens[0])
         reason = None
+        if head.startswith("-"):
+            # A segment that opens with an option is a piece of a command the lexer split off (a quoted
+            # `&` or `;` used as a redirect target); whatever it carries cannot be read in place.
+            return "a command the guard cannot read: a segment begins with an option"
         if fed_by_xargs(prefix, command_tokens):
             return "a git or gh command whose arguments arrive through xargs and are not visible here"
         if head == "export":
@@ -538,6 +557,10 @@ def main():
                 "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
                 "Remove the trailer (git commit --amend for a commit already made) and retry."
             )
+        elif "cannot be read" in reason and "segment" in reason:
+            advice = "Quote redirect targets without shell separators, or split the command, so the guard can read each part."
+        elif "option values cannot be read" in reason:
+            advice = "Give each -m, -F, --author or --trailer a value that begins with a word, not with -, <, > or a digit followed by < or > (2>, 2<), so the guard can read the command."
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
         elif "option-like revision" in reason:
