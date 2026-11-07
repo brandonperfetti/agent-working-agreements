@@ -167,7 +167,7 @@ class CommitMsgTest(unittest.TestCase):
         self.assertEqual(self.git("commit", "-q", "-v", "-m", "docs: notes").returncode, 0)
 
     def test_clean_messages_pass(self):
-        for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"),
+        for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"), ("-m", "fix: display comments posted by an agent"),
                      ("-m", "fix: x", "--trailer", "Reviewed-by: B <b@c>")):  # "generated with…" anywhere is a match, by design
             with self.subTest(args=args):
                 result = self.commit(*args)

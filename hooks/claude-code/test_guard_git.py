@@ -120,6 +120,9 @@ ALLOWED_ANYWHERE = [
     "git commit -m fix > -m",
     "git commit > log -m fix",
     'git commit -m "fix: >note" > log.txt',
+    'git commit -m fix > ">log"',
+    "git commit -m fix 2>&1",
+    'git commit -m "fix: display comments posted by an agent"',
     'git -c user.name="Brandon Perfetti" commit -m "fix: x"',
     'git -c core.quotepath=off commit -m "fix: x"',
     "git push origin feature 2>&1 | tail -5",
@@ -367,7 +370,9 @@ class AuthorTest(unittest.TestCase):
             with self.subTest(directory=os.path.basename(directory), command=command):
                 self.assertIsNone(guard_git.check_command(command, directory))
         for command in ("git commit -m -- -n --allow-empty", 'git commit --author -- -n -m x', "git commit -n -- file", "git commit --pathspec-from-file --dry-run -n -m x",
-                        "git commit -m fix > -m --no-verify", "git commit -m fix 2> -F -n"):
+                        "git commit -m fix > -m --no-verify", "git commit -m fix 2> -F -n",
+                        "git commit -m fix 2>&1 --no-verify", "git commit -m fix 2>&1 -n", "git merge -m fix 2>&1 --no-verify topic",
+                        "git commit -m fix &>log -n", "git > commit --git-dir -- commit --allow-empty -m fix --no-verify"):
             with self.subTest(command=command):
                 self.assertIn("commit-msg hook", guard_git.check_command(command, self.mine) or "")
         self.assertIsNone(guard_git.check_command("git commit -m x -- -n", self.mine))  # after `--`, `-n` is a path

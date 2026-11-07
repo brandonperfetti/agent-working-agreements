@@ -25,7 +25,7 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|posted by an agent", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|^[#> \t]*posted by an agent\b", re.IGNORECASE | re.MULTILINE)
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
@@ -75,8 +75,16 @@ def segments(command):
         # Unbalanced quotes: read it as plain words so a real push still shows.
         parts = re.split(r"&&|\|\||[;|\n()]", command)
         return [part.replace('"', " ").replace("'", " ").split() for part in parts]
+    joined, index = [], 0
+    while index < len(tokens):  # `2>&1`, `>&2`, `&>log`: the `&` of a compound redirect is not a separator
+        token = tokens[index]
+        if re.fullmatch(r"\d*[<>]+", token) and index + 2 < len(tokens) and tokens[index + 1] == "&" and re.fullmatch(r"\d+|-|\S+", tokens[index + 2]):
+            joined.append(token + "&" + tokens[index + 2]); index += 3; continue
+        if token == "&" and index + 1 < len(tokens) and re.match(r"[<>]", tokens[index + 1]):
+            joined.append("&" + tokens[index + 1]); index += 2; continue
+        joined.append(token); index += 1
     result, current = [], []
-    for token in tokens:
+    for token in joined:
         if token and set(token) <= set(SEPARATORS):
             result.append(current)
             current = []
@@ -181,16 +189,18 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
     `git merge` makes a commit too and takes the same `--no-verify`."""
     value_opts = COMMIT_VALUE_OPTS if value_opts is None else value_opts
     value_letters, attached_letters, short_n = shorts
-    flags, skip = [], None
+    flags, skip, target = [], None, False
     for arg in args:
-        if re.match(r"\d*[<>]", arg):
+        if target:
+            target = False  # a redirect's target, whatever it looks like (`> ">log"`)
+        elif re.match(r"&?\d*[<>]", arg):
             # After the lexer a redirect and a quoted value look alike (`>"some log"` and `-m "> note"`
             # both arrive as one token). With a value pending the two readings diverge, so that case
             # is refused rather than guessed. With nothing pending it is a redirect: a bare operator
-            # consumes its target (`> -m`), an attached one stands alone.
+            # consumes its target (`> -m`), an attached one (`>log`, `2>&1`) stands alone.
             if skip:
                 return "a commit whose options cannot be told from a redirection"
-            skip = arg if re.fullmatch(r"\d*[<>]+", arg) else None
+            target = bool(re.fullmatch(r"&?\d*[<>]+", arg))
         elif skip:
             skip = None  # the value of -m, -F, --author…: `git commit -m --no-verify` is a message, `-m --` too
         elif arg == "--":
@@ -396,8 +406,21 @@ def check_git(tokens, directory, env, unstripped=None):
         # Option values are read from the tokens before redirects were stripped: a quoted message
         # that begins with `<` or `>` looks like a redirect and would otherwise vanish, leaving a
         # following `--no-verify` to be read as the message.
-        source = unstripped if unstripped and tokens[index] in unstripped else tokens
-        args = source[source.index(tokens[index]) + 1 :]
+        args = tokens[index + 1 :]
+        if unstripped:  # walk the unstripped tokens the same way, stepping over redirects, to the subcommand
+            at = 1
+            while at < len(unstripped):
+                word = unstripped[at]
+                if re.fullmatch(r"&?\d*[<>]+", word):
+                    at += 2  # a bare operator and its target
+                elif re.match(r"&?\d*[<>]", word):
+                    at += 1  # an attached target
+                elif word.startswith("-"):
+                    at += 2 if word in GIT_VALUE_OPTS else 1
+                else:
+                    break
+            if at < len(unstripped) and unstripped[at] == tokens[index]:
+                args = unstripped[at + 1 :]
         if tokens[index] == "merge":
             return check_commit(args, MERGE_VALUE_OPTS, MERGE_SHORTS)
         return check_commit(args)
@@ -553,7 +576,7 @@ def main():
                 "Remove the trailer (git commit --amend for a commit already made) and retry."
             )
         elif "told from a redirection" in reason:
-            advice = "Start the message with a word rather than < or >, and put any redirection after the options, so the guard can read the command."
+            advice = "Start the message with a word rather than a redirection-like <, > or 2>, so the guard can read the command."
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
         elif "option-like revision" in reason:

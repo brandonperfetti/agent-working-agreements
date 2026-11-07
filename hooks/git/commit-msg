@@ -17,7 +17,7 @@ import sys
 # installed-by: agent-working-agreements/hooks/claude-code/install.py (the installer updates files carrying this line)
 
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|posted by an agent", re.IGNORECASE | re.MULTILINE)
+TRAILER = re.compile(r"^[#> \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|^[#> \t]*posted by an agent\b", re.IGNORECASE | re.MULTILINE)
 
 
 def read_message(path):
