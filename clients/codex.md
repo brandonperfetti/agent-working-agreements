@@ -24,12 +24,14 @@ Measurements behind it are in the history file; **re-measure on yours**.
   and `~/.codex/AGENTS.md` are **the same surface**; keep one copy of the pointer and these rules.
   **Following the pointer is a read you must perform** — not an automatic include, so a session
   that skipped it looks identical to one that complied. Read the files, then say you did.
-- **Guard (B0):** the mode is decided by the guard alone, exactly as in `claude-code.md`. At pickup
+- **Guard (B0):** the mode is decided by the guard alone, exactly as in `claude-code.md`. Item 1's
+  capabilities are **shown by demonstration** (`rm`, truncating overwrite, `git worktree
+  add`/`remove`, `branch -d` refusing an unmerged branch, a firing `pre-commit` hook). At pickup
   run item 1's per-checkout `pre-push` probe (`git push --dry-run origin HEAD` in the checkout you
   will push from) or record that no hook is installed; item 2 is **measure and record** per repo,
   with any tools it needs; item 4 is queried through `gh` per repository, and no earlier
-  measurement stands for it. Check the installed skills plugin's version against the remote
-  manifest before relying on an installed skill.
+  measurement stands for it. At pickup, check the installed skills plugin's version against the
+  remote manifest.
 - **Scope, because this client's instruction field is wider than the others.** The Codex
   instructions field applies to *every* ChatGPT and Codex chat, including ones with no shell and no
   repo; this appendix — and Part B — apply only to a session that has a local shell and is working
@@ -37,7 +39,7 @@ Measurements behind it are in the history file; **re-measure on yours**.
 - **Sub-agents:** model and effort per [orchestration seats](../procedures/orchestration-seats.md),
   and in T3 [its adapter](../procedures/t3-adapter.md). A full-history fork **inherits the
   parent's model and cannot override**, and config is not attestation (A4).
-- **Hazards:** read [desktop hazards](../procedures/codex/desktop-hazards.md) when you edit the
+- **Hazards:** read [shell hazards](../procedures/codex/shell-hazards.md) when you edit the
   pointer, a call is denied or hangs in the sandbox, a command carries a URL query string, the
   plugin is behind, MCP config changed, or a worker runs with the window closed.
 - **Worktrees:** use native create/archive for app-managed trees; follow [lifecycle](../procedures/worktree-lifecycle.md).

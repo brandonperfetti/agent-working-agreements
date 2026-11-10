@@ -13,7 +13,7 @@ being retrofitted onto the other.
 - **2026-11-10 — A shorter everyday read, same policy.** The core's A4 keeps the whole-branch
   exact-head invariant and links `review-findings.md`, which now also holds the close-out order;
   the profile's *Review*, *A6* and *B2* bullets point at their procedures; the Codex adapter's dated
-  desktop hazards move to the triggered `procedures/codex/desktop-hazards.md`, with the pointer,
+  local-shell hazards move to the triggered `procedures/codex/shell-hazards.md`, with the pointer,
   guard and plugin-lag check kept inline. No review, gate or merge rule changed. Brandon approved
   MEGA S03 Batch 1 ("Yes proceed"). Receipt: the obligation map,
   `_agent/initiatives/fleet-mega-s03-adoption/analysis/2026-11-10-awa-obligation-map.md`.

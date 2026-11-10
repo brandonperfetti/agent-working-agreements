@@ -1,4 +1,4 @@
-# Codex desktop hazards
+# Codex local-shell hazards
 
 This procedure carries mechanics for `clients/codex.md` and the rules it implements in
 [`../../AGENT-WORKING-AGREEMENTS.md`](../../AGENT-WORKING-AGREEMENTS.md); it never overrides Parts
@@ -6,11 +6,11 @@ A–B, and a rule here that contradicts one there is the rule that is wrong. The
 of the appendix on 2026-11-10 with its rules unchanged; the measurements behind it stay dated in
 [`../../history/openclaw.md#codex`](../../history/openclaw.md#codex). Re-measure on your machine.
 
-**Trigger:** In a Codex desktop session with a local shell: you edit the Codex instructions field
-or `~/.codex/AGENTS.md`; a call is denied, fails DNS or hangs inside the sandbox; a shell command
+**Trigger:** In a Codex session with local shell tools, in the desktop app or through T3: you edit
+the Codex instructions field or `~/.codex/AGENTS.md` (desktop app); a call is denied, fails DNS or hangs inside the sandbox; a shell command
 carries a URL query string or fails with `no matches found`; the installed skills plugin is behind
 the remote manifest; you changed MCP or app configuration; you dispatch a worker and close the app
-window.
+window (desktop app).
 
 **Owner:** The Codex session that meets the event; the delivery owner for gate steps.
 
@@ -22,7 +22,7 @@ restoration owner. A sandbox denial alone is never that.
 
 ---
 
-## Editing the instruction pointer
+## Editing the instruction pointer (desktop app)
 
 The ChatGPT desktop **Personalization → Codex instructions** field and `~/.codex/AGENTS.md` are
 **the same surface** — keep exactly one copy of the pointer and of these rules. It round-trips
@@ -57,7 +57,7 @@ Refresh is `codex plugin marketplace upgrade <marketplace>` then `codex plugin a
 **A task can keep a stale MCP catalog after a config change, even across an app restart** — start
 a fresh task rather than trusting the old one.
 
-## Open measurements
+## Open measurements (desktop app)
 
 Whether a dispatched worker keeps issuing tool calls while the app window is closed (distinct from
 window-close, app-quit and sleep) is **measure and record**.

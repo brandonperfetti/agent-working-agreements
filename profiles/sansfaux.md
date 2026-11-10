@@ -45,7 +45,8 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   agent on Brandon Perfetti's behalf." (Brandon, 2026-11-06, #245). The `commit-msg` hook and Claude
   Code guard refuse the known forms; read every message and author before push, merge, presentation.
 - **Review.** [`review-findings.md`](../procedures/review-findings.md) carries where verdicts go,
-  the paid allowance and the bot's outcomes; close-out finds the most [learnings: 2026-08-30 §9].
+  the paid allowance and the bot's outcomes; close-out is where the big finds happen
+  [learnings: 2026-08-30 §9].
 - **A5.** Never reason about a running dev server as though your edit is in it. Shared-database
   tiers in parallel workers snapshot their baseline by id and unwind fixtures in `try/finally`.
 - **A6.** Initiative work goes in its initiative folder, one-off work in `_agent/`'s one-off
