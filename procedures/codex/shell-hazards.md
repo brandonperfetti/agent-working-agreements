@@ -10,7 +10,8 @@ of the appendix on 2026-11-10 with its rules unchanged; the measurements behind 
 the Codex instructions field or `~/.codex/AGENTS.md` (desktop app); a call is denied, fails DNS or
 hangs inside the sandbox; a shell command carries a URL query string or fails with `no matches
 found`; the installed skills plugin is behind the remote manifest; you changed MCP or app
-configuration; you dispatch a worker and close the app window (desktop app).
+configuration; you are about to close the app window on a dispatched worker (desktop app). Also
+a cloud Codex task, for the pointer's open measurement below.
 
 **Owner:** The Codex session that meets the event; the delivery owner for gate steps.
 
