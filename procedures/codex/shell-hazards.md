@@ -29,7 +29,7 @@ The ChatGPT desktop **Personalization → Codex instructions** field and `~/.cod
 **asymmetrically**: a field edit rewrites the file immediately, while a file edit reaches the field
 **only after an app restart**, and a file edit made while the app runs can be discarded by the next
 field save. So quit the app, edit the file, then start it. Whether a cloud Codex task gets the same
-text stays an open measurement in `clients/codex.md`.
+text stays an open measurement in [`clients/codex.md`](../../clients/codex.md).
 
 ## Sandbox denials and hangs
 
