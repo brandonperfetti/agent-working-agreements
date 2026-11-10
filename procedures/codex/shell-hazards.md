@@ -7,10 +7,10 @@ of the appendix on 2026-11-10 with its rules unchanged; the measurements behind 
 [`../../history/openclaw.md#codex`](../../history/openclaw.md#codex). Re-measure on your machine.
 
 **Trigger:** In a Codex session with local shell tools, in the desktop app or through T3: you edit
-the Codex instructions field or `~/.codex/AGENTS.md` (desktop app); a call is denied, fails DNS or hangs inside the sandbox; a shell command
-carries a URL query string or fails with `no matches found`; the installed skills plugin is behind
-the remote manifest; you changed MCP or app configuration; you dispatch a worker and close the app
-window (desktop app).
+the Codex instructions field or `~/.codex/AGENTS.md` (desktop app); a call is denied, fails DNS or
+hangs inside the sandbox; a shell command carries a URL query string or fails with `no matches
+found`; the installed skills plugin is behind the remote manifest; you changed MCP or app
+configuration; you dispatch a worker and close the app window (desktop app).
 
 **Owner:** The Codex session that meets the event; the delivery owner for gate steps.
 
