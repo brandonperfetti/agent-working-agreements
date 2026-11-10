@@ -50,7 +50,7 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 - **A5.** Never reason about a running dev server as though your edit is in it. Shared-database
   tiers in parallel workers snapshot their baseline by id and unwind fixtures in `try/finally`.
 - **A6.** Initiative work goes in its initiative folder, one-off work in `_agent/`'s one-off
-  folders, never loose; the layout, friction path and clone rule are
+  folders, never loose; never a clone in `_agent/`. The layout, friction path and clone rule are
   [`agent-workspace-layout.md`](../procedures/agent-workspace-layout.md)'s (#185).
 - **A7.** `gh` is primary. The GitHub MCP and Kody's `@brandonperfetti/github` never author
   commits. Board intake is a repository's `add-to-project` workflow; the orchestrator moves "In
