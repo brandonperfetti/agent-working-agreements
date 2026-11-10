@@ -15,8 +15,8 @@ being retrofitted onto the other.
   the profile's *Review*, *A6* and *B2* bullets point at their procedures; the Codex adapter's dated
   local-shell hazards move to the triggered `procedures/codex/shell-hazards.md`, with the pointer,
   guard and plugin-lag check kept inline. No review, gate or merge rule changed. Brandon approved
-  MEGA S03 Batch 1 ("Yes proceed"). Receipt: the obligation map,
-  `_agent/initiatives/fleet-mega-s03-adoption/analysis/2026-11-10-awa-obligation-map.md`.
+  MEGA S03 Batch 1 ("Yes proceed").
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/258), with its obligation map.
 
 - **2026-11-07 — RULE ZERO's per-prompt restatement goes; the hooks enforce it (#243).** With the
   `commit-msg` hook installed on both Macs and the Claude Code guard denying `--no-verify`, each
