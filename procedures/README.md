@@ -32,8 +32,8 @@ names read without a profile, and its studio-only rules open **Selected studio p
 | [`openclaw/native-sandbox-breaker.md`](openclaw/native-sandbox-breaker.md) | `clients/openclaw.md` | dormant: the exact Bubblewrap prelaunch signature |
 | [`codex/shell-hazards.md`](codex/shell-hazards.md) | `clients/codex.md` | Codex with local shell: pointer edit, sandbox denial or hang, URL quoting, plugin lag, stale MCP catalog |
 
-The text in these files was moved out of the agreement verbatim on 2026-10-27 (PR 2 of the
-hardening, epic #185), minus the lines the core kept (`review-findings.md` skips A4's issue and
-tests bullets; `autonomous-delivery.md` skips the stop-list). Where it says "above" or "below", it
-means the agreement section it implements. Trimming it is later work, one procedure per PR, under
-`AGENTS.md`'s amendment rules.
+The text in these files, but `codex/shell-hazards.md` (2026-11-10), was moved out of the agreement
+verbatim on 2026-10-27 (PR 2 of the hardening, epic #185), minus the lines the core kept
+(`review-findings.md` skips A4's issue and tests bullets; `autonomous-delivery.md` skips the
+stop-list). Where it says "above" or "below", it means the agreement section it implements. Trimming
+it is later work, one procedure per PR, under `AGENTS.md`'s amendment rules.
