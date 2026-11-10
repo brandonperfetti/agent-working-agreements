@@ -6,11 +6,12 @@ A–B, and a rule here that contradicts one there is the rule that is wrong. The
 of the appendix on 2026-11-10 with its rules unchanged; the measurements behind it stay dated in
 [`../../history/openclaw.md#codex`](../../history/openclaw.md#codex). Re-measure on your machine.
 
-**Trigger:** In a Codex session with local shell tools, in the desktop app or through T3: you edit
-the Codex instructions field or `~/.codex/AGENTS.md` (desktop app); a call is denied, fails DNS or
-hangs inside the sandbox; a shell command carries a URL query string or fails with `no matches
-found`; the installed skills plugin is behind the remote manifest; you changed MCP or app
-configuration; you are about to close the app window on a dispatched worker (desktop app).
+**Trigger:** In a Codex session with local shell tools, in the desktop app or through T3: you are
+about to edit the Codex instructions field or `~/.codex/AGENTS.md` (desktop app), or to run `claude
+plugin validate .`; a call is denied, fails DNS or hangs inside the sandbox; a shell command carries
+a URL query string or fails with `no matches found`; the installed skills plugin is behind the
+remote manifest; you changed MCP or app configuration; you are about to close the app window on a
+dispatched worker (desktop app).
 
 **Owner:** The Codex session that meets the event; the delivery owner for gate steps.
 
