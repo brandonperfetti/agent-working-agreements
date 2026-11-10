@@ -24,12 +24,13 @@ Measurements behind it are in the history file; **re-measure on yours**.
   and `~/.codex/AGENTS.md` are **the same surface**; keep one copy of the pointer and these rules.
   **Following the pointer is a read you must perform** — not an automatic include, so a session
   that skipped it looks identical to one that complied. Read the files, then say you did.
+  Whether a cloud Codex task without this filesystem gets the same text is **measure and record**.
 - **Guard (B0):** the mode is decided by the guard alone, exactly as in `claude-code.md`. Item 1's
   capabilities are **shown by demonstration** (`rm`, truncating overwrite, `git worktree
   add`/`remove`, `branch -d` refusing an unmerged branch, a firing `pre-commit` hook). At pickup
   run item 1's per-checkout `pre-push` probe (`git push --dry-run origin HEAD` in the checkout you
   will push from) or record that no hook is installed; item 2 is **measure and record** per repo,
-  with any tools it needs; item 4 is queried through `gh` per repository, and no earlier
+  with any tools it needs; item 4 is queryable through `gh`, still checked per repository: no earlier
   measurement stands for it. At pickup, check the installed skills plugin's version against the
   remote manifest.
 - **Scope, because this client's instruction field is wider than the others.** The Codex
@@ -41,8 +42,8 @@ Measurements behind it are in the history file; **re-measure on yours**.
   parent's model and cannot override**, and config is not attestation (A4).
 - **Hazards:** read [shell hazards](../procedures/codex/shell-hazards.md) when you edit the
   pointer, a call is denied, fails DNS or hangs in the sandbox, a command carries a URL query
-  string, the plugin is behind, MCP config changed, you are about to close the window on a
-  dispatched worker, or you work a cloud Codex task.
+  string, the plugin is behind, MCP config changed, or you are about to close the window on a
+  dispatched worker.
 - **Worktrees:** use native create/archive for app-managed trees; follow [lifecycle](../procedures/worktree-lifecycle.md).
   Scratch placement remains unmeasured, outside `_agent/`. T3: [adapter](../procedures/t3-adapter.md).
 - **Attribution (RULE ZERO):** the profile forbids it; this environment injects nothing (measured

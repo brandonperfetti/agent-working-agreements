@@ -10,8 +10,7 @@ of the appendix on 2026-11-10 with its rules unchanged; the measurements behind 
 the Codex instructions field or `~/.codex/AGENTS.md` (desktop app); a call is denied, fails DNS or
 hangs inside the sandbox; a shell command carries a URL query string or fails with `no matches
 found`; the installed skills plugin is behind the remote manifest; you changed MCP or app
-configuration; you are about to close the app window on a dispatched worker (desktop app). Also
-a cloud Codex task, for the pointer's open measurement below.
+configuration; you are about to close the app window on a dispatched worker (desktop app).
 
 **Owner:** The Codex session that meets the event; the delivery owner for gate steps.
 
@@ -29,8 +28,8 @@ The ChatGPT desktop **Personalization → Codex instructions** field and `~/.cod
 **the same surface** — keep exactly one copy of the pointer and of these rules. It round-trips
 **asymmetrically**: a field edit rewrites the file immediately, while a file edit reaches the field
 **only after an app restart**, and a file edit made while the app runs can be discarded by the next
-field save. So quit the app, edit the file, then start it. Whether a cloud Codex task without this
-filesystem gets the same text is **measure and record**.
+field save. So quit the app, edit the file, then start it. Whether a cloud Codex task gets the same
+text stays an open measurement in `clients/codex.md`.
 
 ## Sandbox denials and hangs
 
