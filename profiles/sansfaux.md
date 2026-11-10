@@ -44,16 +44,13 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   #226). Exception: an agent comment on another owner's repository carries the line "Posted by an
   agent on Brandon Perfetti's behalf." (Brandon, 2026-11-06, #245). The `commit-msg` hook and Claude
   Code guard refuse the known forms; read every message and author before push, merge, presentation.
-- **Review.** Verdicts go under `reviews/`, naming the head SHA; the procedure carries scoping,
-  staleness and the bot's three outcomes. Close-out review is where the big finds happen
-  [learnings: 2026-08-30 §9]. Paid reviews use an approved funded allowance only (B2).
+- **Review.** [`review-findings.md`](../procedures/review-findings.md) carries where verdicts go,
+  the paid allowance and the bot's outcomes; close-out finds the most [learnings: 2026-08-30 §9].
 - **A5.** Never reason about a running dev server as though your edit is in it. Shared-database
   tiers in parallel workers snapshot their baseline by id and unwind fixtures in `try/finally`.
-- **A6.** The `sansfaux/` root holds `_agent/`, checkouts, `.worktrees/`, the agreement clone and
-  `organize.sh`. An on-fleet workspace has `_agent/` above it. Initiative work goes in its
-  initiative folder; one-off work in `reviews/`, `evidence/`, `friction/`, `notes/`, `analysis/`;
-  never loose at either root or a clone in `_agent/`. One-off friction:
-  `_agent/friction/YYYY-MM-DD-<repo>-<id>.md`, opening with the delivery's full identifier (#185).
+- **A6.** Initiative work goes in its initiative folder, one-off work in `_agent/`'s one-off
+  folders, never loose; the layout, friction path and clone rule are
+  [`agent-workspace-layout.md`](../procedures/agent-workspace-layout.md)'s (#185).
 - **A7.** `gh` is primary. The GitHub MCP and Kody's `@brandonperfetti/github` never author
   commits. Board intake is a repository's `add-to-project` workflow; the orchestrator moves "In
   Review" by hand.
@@ -63,10 +60,9 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   affected delivery under attended rules (B1); OpenClaw stops it, as its adapter says (core
   *Composition*). **Route-scoped adapter:** `clients/openclaw.md`
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3].
-- **B2.** The delivery owner runs `coderabbit-preflight` before a push carrying new work where the
-  CLI is available, works the round with `coderabbit-response`, and files real work as
-  `agent-filed` issues; `what-did-we-learn` runs at wave close. Brandon is never made the command
-  runner (#194).
+- **B2.** [`autonomous-delivery.md`](../procedures/autonomous-delivery.md) carries the preflight,
+  the CodeRabbit round, `agent-filed` issues and wave-close learnings; Brandon is never made the
+  command runner (#194).
 
 ## The Git ritual
 

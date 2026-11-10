@@ -30,6 +30,7 @@ names read without a profile, and its studio-only rules open **Selected studio p
 | [`openclaw/managed-worktrees.md`](openclaw/managed-worktrees.md) | `clients/openclaw.md` | pickup of an OpenClaw delivery: create, refresh, clean up |
 | [`openclaw/session-rotation.md`](openclaw/session-rotation.md) | `clients/openclaw.md` | authorized independent topics, stable conversation, context maintenance and recovery |
 | [`openclaw/native-sandbox-breaker.md`](openclaw/native-sandbox-breaker.md) | `clients/openclaw.md` | dormant: the exact Bubblewrap prelaunch signature |
+| [`codex/desktop-hazards.md`](codex/desktop-hazards.md) | `clients/codex.md` | Codex desktop: pointer edit, sandbox denial or hang, URL quoting, plugin lag, stale MCP catalog |
 
 The text in these files was moved out of the agreement verbatim on 2026-10-27 (PR 2 of the
 hardening, epic #185), minus the lines the core kept (`review-findings.md` skips A4's issue and
