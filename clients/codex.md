@@ -40,8 +40,8 @@ Measurements behind it are in the history file; **re-measure on yours**.
   and in T3 [its adapter](../procedures/t3-adapter.md). A full-history fork **inherits the
   parent's model and cannot override**, and config is not attestation (A4).
 - **Hazards:** read [shell hazards](../procedures/codex/shell-hazards.md) when you edit the
-  pointer, a call is denied or hangs in the sandbox, a command carries a URL query string, the
-  plugin is behind, MCP config changed, or a worker runs with the window closed.
+  pointer, a call is denied, fails DNS or hangs in the sandbox, a command carries a URL query
+  string, the plugin is behind, MCP config changed, or a worker runs with the window closed.
 - **Worktrees:** use native create/archive for app-managed trees; follow [lifecycle](../procedures/worktree-lifecycle.md).
   Scratch placement remains unmeasured, outside `_agent/`. T3: [adapter](../procedures/t3-adapter.md).
 - **Attribution (RULE ZERO):** the profile forbids it; this environment injects nothing (measured
