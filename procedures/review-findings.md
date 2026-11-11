@@ -58,9 +58,10 @@ for work with no initiative under the `_agent/` root's one-off `reviews/`.
   only the latest change — **at an exact head SHA** the verdict names; close-out review precedes
   promotion. Each later fix gets its own independent review scoped to it, naming its SHA, the prior
   acceptance's head, base and spec, the delta between them and which conclusions it affects.
-- **The whole-branch acceptance is renewed only when a fix materially stales it:** observable scope
-  or behaviour changed, reviewed logic was substantially rewritten, a conflict resolution changed
-  semantics, the base moved the reviewed surface, or the verification basis changed. Otherwise the
+- **The whole-branch acceptance is renewed only when a fix or a base move materially stales it:**
+  observable scope or behaviour changed, reviewed logic was substantially rewritten, a conflict
+  resolution changed semantics, the base moved the reviewed surface, or the verification basis
+  changed. Otherwise the
   acceptance carries forward on that short confirmation, never on a prior PASS label alone, and
   the presentation names its SHA and each later fix SHA (Brandon, 2026-10-27, #193). A client's
   own documents point here and set no stricter timing.
