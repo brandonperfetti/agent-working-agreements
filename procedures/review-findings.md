@@ -77,10 +77,10 @@ for work with no initiative under the `_agent/` root's one-off `reviews/`.
 ## Bot stages
 
 The internal review and its fixes come first, except under A4's no-reviewer exception, which
-pushes before independent review. The required bot preflight then runs under B2's triggers; its
-accepted findings are fixed, and the review or gate evidence they affect renewed, before the PR bot
-round, which still runs. The two stages keep separate allowances; neither is
-skipped for a routine change, and no paid fallback replaces either.
+pushes before independent review. Either way, the required bot preflight runs under B2's triggers
+before the push that carries new work; its accepted findings are fixed, and the review or gate
+evidence they affect renewed, before the PR bot round, which still runs. The two stages keep
+separate allowances; neither is skipped for a routine change, and no paid fallback replaces either.
 
 ## Findings
 

@@ -100,8 +100,9 @@ two-axis sequence applies; the delivery owner never claims independent review of
     change to that side's work. The delivery owner's merged-tree gate before the push is unchanged.
 - **The preflight runs once before each push that carries new work** — a lane landing, a release
   cut — and never before a push that only answers review findings, which the PR's own review
-  covers; there is no re-run. It follows the internal review and its fixes; its accepted findings
-  are fixed and the evidence they affect renewed before the PR round
+  covers; there is no re-run. It follows the internal review and its fixes, but for A4's no-reviewer
+  exception, where it still precedes the push; its accepted findings are fixed and the evidence
+  they affect renewed before the PR round
   ([bot stages](review-findings.md#bot-stages)). An unavailable CLI never holds a push and never
   downgrades the mode: the round is recorded as not run, and the PR round is the review. The skill
   carries the rules of a run, the checks that decide whether the CLI is available among them.
