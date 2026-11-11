@@ -15,7 +15,7 @@ being retrofitted onto the other.
   and an issue before any fix. A later dated disposition in the same record now links what covers
   it, fixes a confirmed defect, keeps follow-up open with its holder, or says why none is needed;
   capture still waits for none. Brandon approved MEGA S03 Batch 2 ("Yes proceed").
-  `_agent/initiatives/fleet-mega-s03-adoption/analysis/2026-11-11-batch-2-recommendation.md`.
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/260), with its options.
 
 - **2026-11-10 — A shorter everyday read, same policy.** The core's A4 keeps the whole-branch
   exact-head invariant and links `review-findings.md`, which now also holds the close-out order;
