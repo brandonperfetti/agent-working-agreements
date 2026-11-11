@@ -54,9 +54,9 @@ owner decision.
 
 - **Three seats:** the **orchestrator** dispatches, coordinates and owns the hand-back; the
   **delivery owner** owns git state, integration, gate, push and PR; the **independent reviewer**
-  did not produce the work. One session may hold the first two, never its own review. Only the
-  owner merges base branches. Without a reviewer route, routine reversible work may push first,
-  disclosing it; bot and owner review precede base merge.
+  did not produce the work. One session may hold the first two, never its own review. Only the owner
+  merges base branches, save by a qualified delegated route the binding names. Without a reviewer
+  route, routine reversible work may push first, disclosing it; bot and owner review precede merge.
 - **Initiative continuity lives in files** (kickoffs, addenda, lane reports, rotation packets), as
   does any other handoff continuity needs; bounded delegation reports in its return, with no
   handoff scaffolding. A record carries existing authority, never invents gates or narrows the
@@ -64,12 +64,12 @@ owner decision.
 - **Model and effort are chosen per task**; reports separate requested from attested.
 - **Authorship:** every agent commit carries the bound author identity, checked before push,
   merge and presentation; attribution follows the binding. No credit footer is required anywhere.
-- **Independent two-axis review (Standards + Spec)** via the bound route before acceptance, fixes
-  and conflict resolutions included, no size exemption; never a producer's own report. **Before
-  presentation for the owner's merge**, the whole branch is reviewed at an exact head the verdict
-  names; [the procedure](procedures/review-findings.md) carries its timing, fix review and staleness.
-- **Verified harmful review findings are fixed before merge**; disproved ones are declined with
-  receipts.
+- **Independent review with distinct Standards and Spec conclusions** via the bound route before
+  acceptance, fixes and conflict resolutions included, no size exemption; never a producer's own
+  report; a second, focused reviewer for consequence, uncertainty or disagreement. **Before any
+  base merge** the whole branch is accepted at an exact head the verdict names. [The
+  procedure](procedures/review-findings.md) carries escalation, fixes, staleness, releases, merges.
+- **Verified harmful findings are fixed before merge**; disproved ones are declined with receipts.
 - **Distrust the issue until you've read the code.** Tests ship with the change.
 
 ## A5. "Green" means the full CI gate — plus the ticket's own repro
@@ -116,7 +116,7 @@ in the shared checkout.
 
 Review moves to the pull request. Branches descend from the integration branch; never push the
 release branch, force-push, or push feature work to the integration branch. The delivery owner
-integrates reviewed work, re-runs the gate and pushes; only the owner merges base PRs.
+integrates reviewed work, re-runs the gate and pushes; base PRs merge as A4 says.
 
 **Stop-list** — pause only the affected action, name its decision or restoration owner, otherwise
 act, decide, record:

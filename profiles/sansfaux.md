@@ -3,8 +3,7 @@
 **Read [`../AGENT-WORKING-AGREEMENTS.md`](../AGENT-WORKING-AGREEMENTS.md) Parts A and B first,
 then this profile, then your client adapter below.** This profile binds the core to Brandon's
 studio; it adds and narrows, never weakens, and a rule here that contradicts one there is the rule
-that is wrong. Every file under `clients/` requires it. **Name it when you acknowledge your
-reading** — "read the agreements, `profiles/sansfaux.md` and `clients/<yours>.md`".
+that is wrong. Every file under `clients/` requires it; name it with the core and your adapter.
 
 This is the working agreement between Brandon and every agent he works with under the **Sans
 Faux** studio. It sits above each project's own `AGENTS.md` / `CLAUDE.md`; project scope never
@@ -16,7 +15,8 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 
 | Core term | Sans Faux binding |
 | --- | --- |
-| `owner` | Brandon Perfetti; only he merges base branches, by hand in the host's UI |
+| `owner` | Brandon Perfetti; he merges base branches, by hand in the host's UI |
+| `delegated merge route` | none qualified, so Brandon merges every PR — *Review and merge* below |
 | `author identity` | `brandon@brandonperfetti.com`, exactly — RULE ZERO below |
 | `attribution` | none, except the agent line on comments to other owners' repositories — RULE ZERO below |
 | `integration branch` | `develop` |
@@ -29,10 +29,8 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 
 - **A1.** Applies to every session Brandon runs, on any of his repositories, wherever the checkout
   lives. A skill never overrides the agreement (Brandon, 2026-10-12). Skills come from the
-  `brandonperfetti-skills` plugin; read the relevant one first: `orchestrate`, `deep-grill`,
-  `handoff`, `code-review`, `writing-tickets`, `writing-pull-requests`, `coderabbit-preflight`,
-  `coderabbit-response`, `what-did-we-learn`, `writing-for-agents`. Confirm tooling with
-  `ListSkills` / `ListConnectors` or your client's equivalent.
+  `brandonperfetti-skills` plugin; read the one a task, trigger or procedure names before acting,
+  confirmed in your client's skill and connector listing.
 - **Initiatives.** Orchestrated multi-wave work lives in `_agent/initiatives/<project>-<slug>/`.
   Its `MASTER-PRIORITY-DOCUMENT.md` is the spine, born from an attended Genesis, §0 recording the
   mode; leads advance approved work across waves. Bounded work outside one needs none of it (A1).
@@ -44,9 +42,9 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   #226). Exception: an agent comment on another owner's repository carries the line "Posted by an
   agent on Brandon Perfetti's behalf." (Brandon, 2026-11-06, #245). The `commit-msg` hook and Claude
   Code guard refuse the known forms; read every message and author before push, merge, presentation.
-- **Review.** [`review-findings.md`](../procedures/review-findings.md) carries where verdicts go,
-  the paid allowance and the bot's outcomes; close-out is where the big finds happen
-  [learnings: 2026-08-30 §9].
+- **Review and merge.** [`review-findings.md`](../procedures/review-findings.md) carries where
+  verdicts go, reviewer escalation, release carry-forward, the paid allowance, the bot's outcomes
+  and delegated-merge conditions; close-out is where the big finds happen [learnings: 2026-08-30 §9].
 - **A5.** Never reason about a running dev server as though your edit is in it. Shared-database
   tiers in parallel workers snapshot their baseline by id and unwind fixtures in `try/finally`.
 - **A6.** Initiative work goes in its initiative folder, one-off work in `_agent/`'s one-off
@@ -99,7 +97,7 @@ disagree, the rule is wrong.
 | You label a claim from irreproducible bytes, trust a probe, or quote a file | [`evidence-capture.md`](../procedures/evidence-capture.md) |
 | You dispatch a lane, hold more than one seat, or run an initiative | [`orchestration-seats.md`](../procedures/orchestration-seats.md) |
 | You are about to push, merge, present, or apply an mbox series | [`rule-zero-check.md`](../procedures/rule-zero-check.md) |
-| A delivery is ready for review, or a bot or reviewer finding needs an outcome | [`review-findings.md`](../procedures/review-findings.md) |
+| A delivery is ready for review, a bot or reviewer finding needs an outcome, or a PR is about to merge | [`review-findings.md`](../procedures/review-findings.md) |
 | You create, adopt, move or retire a worktree, or close out a delivery | [`worktree-lifecycle.md`](../procedures/worktree-lifecycle.md) |
 | You work or delegate through T3 | [`t3-adapter.md`](../procedures/t3-adapter.md) |
 | You write any artifact, or need a scratch clone | [`agent-workspace-layout.md`](../procedures/agent-workspace-layout.md) |
