@@ -39,15 +39,17 @@ objectives, or expansion of the authorized scope.
     updates the feature pull request and completes its review round, and may draft the
     `develop → master` release pull request.
   - The **independent reviewer** is a separate seat, independent of whoever produced the work
-    under review, delivery owner included; it runs the two-axis review below. Where the client's
-    supported routes cannot seat one — the dispatch tool refuses the role, or the session is the
-    only one there is — A4 permits routine reversible work to integrate and push before independent
-    review. The PR discloses the missing route; its bot round plus Brandon's review occur before
-    base merge. This exception changes timing, not reviewer independence or the full gate.
+    under review, delivery owner included; it runs the review and confirms merge eligibility.
+    Where the client's supported routes cannot seat one — the dispatch tool refuses the role, or
+    the session is the only one there is — A4 permits routine reversible work to integrate and push
+    before independent review. The PR discloses the missing route; its bot round plus Brandon's
+    review occur before base merge. This exception changes timing, not reviewer independence or the
+    full gate, and never supplies the confirmation a delegated merge needs.
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
-  neither seat makes it the reviewer of its own work, and neither merges a base branch — only
-  Brandon does (the profile's Git ritual, step 6). A client appendix may name who fills each
+  neither seat makes it the reviewer of its own work, and neither merges a base branch but by a
+  qualified delegated route ([base merges](review-findings.md#base-merges)); Brandon does (the
+  profile's Git ritual, step 6). A client appendix may name who fills each
   seat there (Brandon, 2026-10-23, #173).
 - **The MPD is the spine.** The owner conversation establishes the objective and decisions;
   `MASTER-PRIORITY-DOCUMENT.md` records them and §0's mode. The lead advances the next justified

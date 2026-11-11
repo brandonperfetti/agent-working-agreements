@@ -12,7 +12,8 @@ delivery's decision record — and a passage opening **Selected studio profile o
 when `profiles/sansfaux.md` is selected, through the end of its paragraph and any list under it.
 
 **Trigger:** Pickup of any delivery: before the first commit on a checkout, and again for each
-repository a session delivers to.
+repository a session delivers to. A consultation, research or review that writes no repository
+runs none of it; it still keeps protected roots and owners' trees untouched.
 
 **Owner:** The delivery owner, per checkout and per repository.
 
@@ -64,9 +65,10 @@ repository a session delivers to.
    you found. **Until protection exists on a repo, a failed item 4 is
    *recorded* in MPD §0, or in the PR body for work with no initiative (B2; in attended mode, its
    one-off review record until a PR exists, B1), not a downgrade.** **Feature work never lands on
-   a base branch, and only Brandon merges** are rules of this agreement, not repo settings; report
-   a measured breach. A settings PASS is never proof that agents cannot act as the owner or that
-   the human-merge boundary is mechanically enforced.
+   a base branch, and only Brandon merges base branches but by a qualified delegated route
+   ([`review-findings.md`](review-findings.md#base-merges))** are rules of this agreement, not
+   repo settings; report a measured breach. A settings PASS is never proof that agents cannot act
+   as the owner or that the human-merge boundary is mechanically enforced.
 
    **Selected studio profile only:** the base branches are protected on GitHub **by role**:
    - **Integration branch (`develop`)** — force pushes and deletions blocked, no bypass actors, and

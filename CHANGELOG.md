@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-11 — One independent reviewer by default; acceptance carries forward; merges can be
+  delegated once a route qualifies.** One reviewer now records distinct Standards and Spec
+  conclusions, with a second focused reviewer for named risks. A fix or release carries the prior
+  acceptance forward against its stated basis and delta. Integration merges of eligible work may be
+  delegated only through a qualified route the profile names; none is qualified, so Brandon still
+  merges. Preflight, the PR bot round and owner release approval are unchanged, and the PR
+  template is intent-first. Brandon approved the MEGA S03 Batch 3 scope.
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/262).
+
 - **2026-11-11 — A friction record's follow-up is a disposition, not a promotion ladder.** The
   linear "friction → triage → recurring issue → durable fix" sentence read as requiring recurrence
   and an issue before any fix. A later dated disposition in the same record now links what covers
