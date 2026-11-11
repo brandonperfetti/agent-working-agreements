@@ -102,10 +102,11 @@ two-axis sequence applies; the delivery owner never claims independent review of
   cut — and never before a push that only answers review findings, which the PR's own review
   covers; there is no re-run. It follows the internal review and its fixes, but for A4's no-reviewer
   exception, where it still precedes the push; its accepted findings are fixed and the evidence
-  they affect renewed before the PR round
-  ([bot stages](review-findings.md#bot-stages)). An unavailable CLI never holds a push and never
-  downgrades the mode: the round is recorded as not run, and the PR round is the review. The skill
-  carries the rules of a run, the checks that decide whether the CLI is available among them.
+  they affect renewed before the PR round, which still runs. An unavailable CLI never holds a push
+  and never downgrades the mode: the round is recorded as not run, and the PR round is the review.
+  The CLI and PR rounds keep separate allowances; classing a change routine skips neither, and no
+  paid fallback replaces either. The skill carries the rules of a run, the checks that decide whether
+  the CLI is available among them.
 - **Open the ready-for-review PR against `develop` at the first push. CodeRabbit runs on that ready
   PR, and the delivery owner completes the round before hand-back.** The PR uses the
   `writing-pull-requests` shape; in an initiative its body is seeded under the initiative's

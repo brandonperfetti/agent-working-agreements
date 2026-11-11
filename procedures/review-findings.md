@@ -76,11 +76,9 @@ for work with no initiative under the `_agent/` root's one-off `reviews/`.
 
 ## Bot stages
 
-The internal review and its fixes come first, except under A4's no-reviewer exception, which
-pushes before independent review. Either way, the required bot preflight runs under B2's triggers
-before the push that carries new work; its accepted findings are fixed, and the review or gate
-evidence they affect renewed, before the PR bot round, which still runs. The two stages keep
-separate allowances; neither is skipped for a routine change, and no paid fallback replaces either.
+The order of internal review, bot preflight and the PR bot round, with the preflight's triggers
+and exceptions, is B2's: the preflight bullet of
+[`autonomous-delivery.md`](autonomous-delivery.md)'s Git contract.
 
 ## Findings
 
