@@ -45,7 +45,8 @@ allowance holds the paid review, never the push (B2).
 
   **Before a delivery is presented for Brandon's merge, the independent reviewer runs the two-axis
   review over the whole branch** — its full diff against the base, not only the latest change —
-  **at an exact head SHA**, and the verdict names that SHA. Each later fix gets its own independent
+  **at an exact head SHA**, and the verdict names that SHA; close-out review precedes promotion
+  (A4). Each later fix gets its own independent
   two-axis review scoped to it (above), naming its SHA. **The whole-branch verdict is renewed only
   when the fix materially stales it:** observable scope or behaviour changed, reviewed logic was
   substantially rewritten, a conflict resolution changed semantics, the base moved the reviewed

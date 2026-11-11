@@ -66,10 +66,8 @@ owner decision.
   merge and presentation; attribution follows the binding. No credit footer is required anywhere.
 - **Independent two-axis review (Standards + Spec)** via the bound route before acceptance, fixes
   and conflict resolutions included, no size exemption; never a producer's own report. **Before
-  presentation for the owner's merge**, review the whole-branch base diff at an exact head the
-  verdict names; close-out review precedes promotion. Each later fix gets independent scoped review
-  at its SHA, renewal only if materially stale (#193); presentation names verdict and fix SHAs. See
-  [procedure](procedures/review-findings.md).
+  presentation for the owner's merge**, the whole branch is reviewed at an exact head the verdict
+  names; [the procedure](procedures/review-findings.md) carries its timing, fix review and staleness.
 - **Verified harmful review findings are fixed before merge**; disproved ones are declined with
   receipts.
 - **Distrust the issue until you've read the code.** Tests ship with the change.

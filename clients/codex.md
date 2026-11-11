@@ -21,24 +21,18 @@ Scope: this describes a *Codex session with local shell tools*, not every ChatGP
 Measurements behind it are in the history file; **re-measure on yours**.
 
 - **How this file reaches you:** the ChatGPT desktop **Personalization → Codex instructions** field
-  and `~/.codex/AGENTS.md` are **the same surface** — keep exactly one copy of the pointer and of
-  these rules. It round-trips **asymmetrically**: a field edit rewrites the file immediately, while
-  a file edit reaches the field **only after an app restart**, and a file edit made while the app
-  runs can be discarded by the next field save. So quit the app, edit the file, then start it.
-  Whether a cloud Codex task without this filesystem gets the same text is **measure and record**.
+  and `~/.codex/AGENTS.md` are **the same surface**; keep one copy of the pointer and these rules.
   **Following the pointer is a read you must perform** — not an automatic include, so a session
   that skipped it looks identical to one that complied. Read the files, then say you did.
-- **Guard items:** 1's capabilities are **shown by demonstration** (`rm`, truncating overwrite, `git
-  worktree add`/`remove`, `branch -d` refusing an unmerged branch, a firing `pre-commit` hook);
-  **item 1 passes only after its per-checkout `pre-push` probe** (`git push --dry-run origin HEAD`
-  at pickup in the checkout you will push from) or a record that no hook is installed. A dry run
-  sends no objects but contacts the remote (sandbox-denial hazard below). 2 is **measure and
-  record** per repo: a proportionate pickup check, with any tools it needs. 4 is queryable through
-  `gh`, **still checked per repository**: no earlier measurement stands for it.
-- **Default mode is autonomous**, decided by the guard alone, exactly as in `claude-code.md`. The
-  hook probe and item 2 are still yours to run at pickup, and item 4 is checked per repository. A
-  failure downgrades what B0 says a failed check downgrades, with a one-line reason; a failed
-  item 4 is recorded, as B0 says.
+  Whether a cloud Codex task without this filesystem gets the same text is **measure and record**.
+- **Guard (B0):** the mode is decided by the guard alone, exactly as in `claude-code.md`. Item 1's
+  capabilities are **shown by demonstration** (`rm`, truncating overwrite, `git worktree
+  add`/`remove`, `branch -d` refusing an unmerged branch, a firing `pre-commit` hook). At pickup
+  run item 1's per-checkout `pre-push` probe (`git push --dry-run origin HEAD` in the checkout you
+  will push from) or record that no hook is installed; item 2 is **measure and record** per repo,
+  with any tools it needs; item 4 is queryable through `gh`, still checked per repository: no earlier
+  measurement stands for it. At pickup, check the installed skills plugin's version against the
+  remote manifest.
 - **Scope, because this client's instruction field is wider than the others.** The Codex
   instructions field applies to *every* ChatGPT and Codex chat, including ones with no shell and no
   repo; this appendix — and Part B — apply only to a session that has a local shell and is working
@@ -46,26 +40,14 @@ Measurements behind it are in the history file; **re-measure on yours**.
 - **Sub-agents:** model and effort per [orchestration seats](../procedures/orchestration-seats.md),
   and in T3 [its adapter](../procedures/t3-adapter.md). A full-history fork **inherits the
   parent's model and cannot override**, and config is not attestation (A4).
-- **Hazards:**
-  - **A sandbox denial looks exactly like a missing capability** — preserve the execution boundary
-    in the claim, and never report "this machine can't" from inside a restricted call.
-  - **`claude plugin validate .` stalls inside the sandbox** and completes through approved
-    execution. It is part of the CI gate: run it there and let it pass before calling the gate
-    green. A hang on the permitted route is a real failure, not the boundary.
-  - **Unquoted URL query strings die to zsh globbing** (`no matches found: …?ref=master`) — quote
-    the endpoint.
-  - **The installed skills plugin can lag the repo** — check the installed version against the
-    remote manifest at pickup; refresh is `codex plugin marketplace upgrade <marketplace>` then
-    `codex plugin add <plugin>@<marketplace>`; whether that replaces the cache in place or needs an
-    app restart is **measure and record**.
-  - **A task can keep a stale MCP catalog after a config change, even across an app restart** —
-    start a fresh task rather than trusting the old one.
+- **Hazards:** read [shell hazards](../procedures/codex/shell-hazards.md) before you edit the
+  instructions field or `~/.codex/AGENTS.md`, before `claude plugin validate .`, when a call is
+  denied, fails DNS or hangs in the sandbox, a command carries a URL query string, the plugin is
+  behind, MCP or app config changed, or you are about to close the window on a dispatched worker.
 - **Worktrees:** use native create/archive for app-managed trees; follow [lifecycle](../procedures/worktree-lifecycle.md).
   Scratch placement remains unmeasured, outside `_agent/`. T3: [adapter](../procedures/t3-adapter.md).
 - **Attribution (RULE ZERO):** the profile forbids it; this environment injects nothing (measured
   2026-11-07); the `commit-msg` hook refuses a trailer or a wrong author, `--no-verify` aside.
-- **Measure and record:** whether a dispatched worker keeps issuing tool calls while the app window
-  is closed (distinct from window-close, app-quit and sleep).
 
 ## History
 
