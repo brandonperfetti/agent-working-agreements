@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-11 — A friction record's follow-up is a disposition, not a promotion ladder.** The
+  linear "friction → triage → recurring issue → durable fix" sentence read as requiring recurrence
+  and an issue before any fix. A later dated disposition in the same record now links what covers
+  it, fixes a confirmed defect, keeps follow-up open with its holder, or says why none is needed;
+  capture still waits for none. Brandon approved MEGA S03 Batch 2 ("Yes proceed").
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/260), with its options.
+
 - **2026-11-10 — A shorter everyday read, same policy.** The core's A4 keeps the whole-branch
   exact-head invariant and links `review-findings.md`, which now also holds the close-out order;
   the profile's *Review*, *A6* and *B2* bullets point at their procedures; the Codex adapter's dated
