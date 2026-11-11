@@ -89,9 +89,12 @@ measured); the workaround, if any; first-seen or recurring, and how to reproduce
 durable fix, or `unknown`. Friction is a workflow cost, kept apart from evidence (A2), review
 findings (`reviews/`), learnings (`what-did-we-learn`) and issues (filed after triage); it may link
 to any of them. Preserve the raw record; correct it in place under A2, quoting the old text,
-marked and dated. Its promotion path is friction → triage → a
-recurring, reproducible issue → a durable learning, rule, skill or script. Capture is
-non-blocking: it creates no checkpoint and stops nothing.
+marked and dated. Whoever later acts on it adds a dated disposition to the same record: link the
+fix, issue or receipt that already covers it; fix a confirmed defect the delivery's authority
+covers, since one confirmed defect needs no recurrence (a claim that it recurs keeps
+`recurring-error-analysis`'s evidence threshold); keep follow-up open with its reason and the role
+that holds it under existing authority; or say why none is needed. Capture is non-blocking: it
+waits for no disposition, creates no checkpoint and stops nothing.
 
 **Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
 lives in the client's own scratch directory, outside `_agent/` — your client file names that
