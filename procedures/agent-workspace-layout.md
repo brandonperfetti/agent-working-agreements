@@ -93,8 +93,9 @@ marked and dated. Whoever later acts on it adds a dated disposition to the same 
 fix, issue or receipt that already covers it; fix a confirmed defect the delivery's authority
 covers, since one confirmed defect needs no recurrence (a claim that it recurs keeps
 `recurring-error-analysis`'s evidence threshold); keep follow-up open with its reason and the role
-that holds it under existing authority; or say why none is needed. Capture is non-blocking: it
-waits for no disposition, creates no checkpoint and stops nothing.
+that holds it under existing authority; or say why none is needed. A lesson or prevention it
+verifies goes to its existing learning, rule, skill or script, by that home's owner. Capture is
+non-blocking: it waits for no disposition, creates no checkpoint and stops nothing.
 
 **Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
 lives in the client's own scratch directory, outside `_agent/` — your client file names that
