@@ -7,7 +7,7 @@ verbatim on 2026-10-27; "above" and "below" in it refer to the agreement section
 
 **Trigger:** B0 selected autonomous mode for this delivery.
 
-**Owner:** The delivery owner owns the branch until Brandon merges; the orchestrator dispatches and
+**Owner:** The delivery owner owns the branch until it merges; the orchestrator dispatches and
 routes; the independent reviewer verdicts.
 
 **Implements:** B2 — Autonomous mode: the git contract, addenda, the review loop.
@@ -30,7 +30,8 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
 A4's no-reviewer exception applies to this procedure's pre-integration and pre-push review steps
 only for routine, reversible work when supported routes cannot seat an independent reviewer.
 Integrate and push with the full gate, disclose the missing reviewer route in the PR, and complete
-the bot round plus Brandon's review before base merge. When a reviewer is available, the normal
+the bot round plus Brandon's review before base merge; such work is never eligible for a delegated
+merge. When a reviewer is available, the normal
 two-axis sequence applies; the delivery owner never claims independent review of its own work.
 
 - The delivery owner cuts a feature, bugfix or wave branch (the delivery branch) descending from
@@ -99,9 +100,11 @@ two-axis sequence applies; the delivery owner never claims independent review of
     change to that side's work. The delivery owner's merged-tree gate before the push is unchanged.
 - **The preflight runs once before each push that carries new work** — a lane landing, a release
   cut — and never before a push that only answers review findings, which the PR's own review
-  covers; there is no re-run. An unavailable CLI never holds a push and never downgrades the mode:
-  the round is recorded as not run, and the PR round is the review. The skill carries the rules of
-  a run, the checks that decide whether the CLI is available among them.
+  covers; there is no re-run. It follows the internal review and its fixes; its accepted findings
+  are fixed and the evidence they affect renewed before the PR round
+  ([bot stages](review-findings.md#bot-stages)). An unavailable CLI never holds a push and never
+  downgrades the mode: the round is recorded as not run, and the PR round is the review. The skill
+  carries the rules of a run, the checks that decide whether the CLI is available among them.
 - **Open the ready-for-review PR against `develop` at the first push. CodeRabbit runs on that ready
   PR, and the delivery owner completes the round before hand-back.** The PR uses the
   `writing-pull-requests` shape; in an initiative its body is seeded under the initiative's
@@ -134,15 +137,16 @@ A lane merge that conflicts goes back to the lane the same way (Git contract abo
 
 **The review loop (Brandon, the delivery owner and the orchestrator)**
 
-1. **Before each push that carries new work, the delivery owner runs `coderabbit-preflight`** where
-   the CodeRabbit CLI is available (Git contract above).
+1. **Before each push that carries new work, the delivery owner runs `coderabbit-preflight`**
+   (Git contract above).
 2. **The delivery owner opens the feature PR ready for review; CodeRabbit runs; the delivery owner
    completes the round before hand-back.**
 3. The delivery owner works the review end-to-end with `coderabbit-response`: verifies every
    finding, has the orchestrator redispatch the fixes A4 calls for to lanes (worktrees, review,
    merge, push as above), replies per thread with receipts, monitors re-reviews to clean.
    Brandon's review is the PR's final state, not the threads.
-4. **Brandon alone merges, manually, in the GitHub UI** — delivery PRs into `develop`, and the release
+4. **Brandon merges, manually, in the GitHub UI** — delivery PRs into `develop` unless a qualified
+   delegated route applies ([base merges](review-findings.md#base-merges)), and always the release
    PR `develop → master`, which the delivery owner may open as a draft with a changelog. Closing
    keywords fire on the default branch; the orchestrator moves issues to In Review at PR time.
 5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`, and

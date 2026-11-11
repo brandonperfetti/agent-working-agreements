@@ -38,7 +38,7 @@ in the existing handoff or task receipt. Native session cwd must agree with that
 ## Closeout
 
 1. At lane integration, check whether the lane's review/recovery dependencies have ended. After
-   Brandon merges the feature PR into `develop`, do the same for its delivery tree. Retention
+   the feature PR merges into `develop`, do the same for its delivery tree. Retention
    needs a reason, owner and next review point in the existing receipt; age alone is insufficient.
 2. Recheck Git and manager inventories, current PR/integration evidence and active session/process
    ownership. Preserve main/base, locked and manager-protected trees. Verify the entire branch

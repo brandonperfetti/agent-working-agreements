@@ -19,7 +19,7 @@ names read without a profile, and its studio-only rules open **Selected studio p
 | [`evidence-capture.md`](evidence-capture.md) | A2 | labelling from irreproducible bytes, trusting a probe, quoting a file |
 | [`orchestration-seats.md`](orchestration-seats.md) | A4 | dispatching a lane, holding more than one seat, running an initiative |
 | [`rule-zero-check.md`](rule-zero-check.md) | A4 | before a push, merge, presentation or `git am` |
-| [`review-findings.md`](review-findings.md) | A4 | a delivery ready for review; a bot or reviewer finding |
+| [`review-findings.md`](review-findings.md) | A4 | a delivery ready for review; a bot or reviewer finding; a PR about to merge |
 | [`worktree-lifecycle.md`](worktree-lifecycle.md) | A4, A6, B2 | worktree creation/adoption/movement/retirement and delivery closeout |
 | [`t3-adapter.md`](t3-adapter.md) | A2, A3, A4, A6, B0 | working or delegating through T3 |
 | [`agent-workspace-layout.md`](agent-workspace-layout.md) | A6 | writing any artifact; a scratch clone |
