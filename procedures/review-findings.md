@@ -68,8 +68,10 @@ for work with no initiative under the `_agent/` root's one-off `reviews/`.
   composition (every change it ships, each accepted or reviewed now), source identity (the shipped
   content is the accepted content), base compatibility, release metadata (version, changelog, built
   artifacts), the verification basis, and what the release merge deploys or publishes. Release-cut
-  work and new release risk are reviewed as any change. A matching patch-id alone never establishes
-  acceptance; a second PR alone never invalidates it. Required CI and behaviour proof still run.
+  work and new release risk are reviewed as any change. The release record names each carried
+  acceptance's head, base and spec, the delta since (zero, stated, when none) and the conclusions it
+  affects. A matching patch-id alone never establishes acceptance; a second PR alone never
+  invalidates it. Required CI and behaviour proof still run.
 
 ## Bot stages
 
