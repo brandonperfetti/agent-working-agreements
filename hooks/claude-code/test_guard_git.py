@@ -487,12 +487,23 @@ class AnyBaseMergeTest(unittest.TestCase):
                 with mock.patch.object(guard_git, "gh_read", side_effect=read):
                     self.assertIn("master", guard_git.check_command(command, "/tmp"))
 
+    def test_a_unicode_space_stays_part_of_the_selector(self):
+        # bash keeps U+00A0 in the word; gh then reads branch `7\u00a0`, not PR 7 (focused review at 12315c1).
+        def read(args, directory, env):
+            return "feature" if args[:3] == ["pr", "view", "7"] else "master"
+
+        for suffix in ("\u00a0", "\u2003", "\u0085", "\r"):
+            for command in ("gh pr merge --squash 7" + suffix, EXACT + suffix):
+                with self.subTest(command=command):
+                    with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                        self.assertIsNotNone(guard_git.check_command(command, "/tmp"))
+
     def test_a_quoted_final_redirect_is_the_selector_read(self):
         # A quoted `2>&1` is a branch selector gh reads, not a redirect (Spec review at 12315c1).
         def read(args, directory, env):
             return "master" if args[:3] == ["pr", "view", "2>&1"] else "feature"
 
-        for command in ("gh pr merge --squash '2>&1'", 'gh pr merge --squash "2>&1"', "gh pr merge --squash '2>&1' 2>&1"):
+        for command in ("gh pr merge --squash '2>&1'", 'gh pr merge --squash "2>&1"', "gh pr merge --squash 2'>&'1", "gh pr merge --squash '2>&1' 2>&1"):
             with self.subTest(command=command):
                 with mock.patch.object(guard_git, "gh_read", side_effect=read):
                     self.assertIn("master", guard_git.check_command(command, "/tmp"))

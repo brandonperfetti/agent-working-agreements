@@ -458,6 +458,7 @@ PLAIN_CALL = re.compile(r"gh( [A-Za-z0-9_./@=:+-]+)+")
 # A call that mentions gh and a merge is read only when it is one simple gh command, word for word:
 # assignments, a gh path, plain or quoted words holding no expansion, at most a trailing `2>&1`.
 MERGE_WORDS = re.compile(r"merge", re.IGNORECASE)
+BLANKS = " \t\n"  # the shell's blanks around a call; str.strip() would also drop Unicode spaces bash keeps
 GH_WORD = re.compile(r"(?:^|[^A-Za-z0-9_-])gh(?:[^A-Za-z0-9_-]|$)")
 _WORD = r"""(?:[A-Za-z0-9_./@=:+,%-]|'[^'\n]*'|"[^"$`\\\n]*")+"""
 MERGE_CALL = re.compile(
@@ -536,8 +537,8 @@ def merge_bearing(command):
     text = re.sub(r"['\"\\\n]", "", command)
     if not (MERGE_WORDS.search(text) and GH_WORD.search(text)):
         return False
-    if GIT_CALL.fullmatch(command.strip()):
-        words = shlex.split(command.strip())
+    if GIT_CALL.fullmatch(command.strip(BLANKS)):
+        words = shlex.split(command.strip(BLANKS))
         return any(w.startswith(("-c", "--config-env")) for w in words[1:])
     return True
 
@@ -601,14 +602,14 @@ def check_command(command, directory, inherited=None, nested=False):
     parts = segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command.replace("\\\n", "")))
     # Only a call that is one plain `gh` command, with no prefix, wrapper, redirect, quote, chain or
     # expansion, can carry the route: its words are exactly the argv gh receives.
-    sole = not nested and bool(PLAIN_CALL.fullmatch(command.strip()))
+    sole = not nested and bool(PLAIN_CALL.fullmatch(command.strip(BLANKS)))
     if merge_bearing(command):
         # Beside anything else (a chain, substitution, wrapper, shell, redirect or continuation) a
         # merge's base read can be stale or of another PR before it runs, so only this shape is read.
-        if nested or not MERGE_CALL.fullmatch(command.strip()):
+        if nested or not MERGE_CALL.fullmatch(command.strip(BLANKS)):
             return "a gh merge in a call the guard cannot read word for word"
         # Only an unquoted trailing `2>&1` is a redirect; a quoted one is gh's argument.
-        words = shlex.split(re.sub(r"[ \t]+2>&1$", "", command.strip()))
+        words = shlex.split(re.sub(r"[ \t]+2>&1$", "", command.strip(BLANKS)))
         env = dict(exported)
         while ASSIGNMENT.match(words[0]):
             env.update([words.pop(0).split("=", 1)])
