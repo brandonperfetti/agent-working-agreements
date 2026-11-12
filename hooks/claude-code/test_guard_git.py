@@ -426,12 +426,38 @@ class AnyBaseMergeTest(unittest.TestCase):
         "env '-S/usr/bin/gh pr merge 7 --squash'",
         "env --split-string='gh pr merge 7 --squash'",
         "sudo -u root git push --force origin feature",
+        # Focused re-review at 01f5204, R1-R6: whatever is beside a merge can retarget it, hide its
+        # repository or hide the merge itself, so a merge is read only as one simple gh command.
+        "X=`gh pr edit 7 --repo o/r --base master` gh pr merge 7 --repo o/r --squash",
+        "gh pr edit 7 --repo o/r --base master && gh pr merge 7 --repo o/r --squash",
+        "gh pr edit 7 --repo o/r --base develop; gh pr merge 7 --repo o/r --admin --squash",
+        "gh api -X PATCH repos/o/r/pulls/7 -f base=master && gh pr merge 7 --repo o/r",
+        "gh pr merge 7 --body '>note' --repo x/y --squash 2>&1 -R x/y",
+        "env -S'gh pr merge 7 --repo o/r --squash'",
+        "bash -ce 'gh pr merge 7 --repo o/r --squash'",
+        "bash -cE 'gh pr merge 7 --repo o/r --squash'",
+        "gh pr \\\nmerge 7 --repo o/r --squash",
+        "gh pr mer\\\nge 7 --repo o/r --squash",
+        "g\\\nh pr merge 7 --repo o/r --squash",
+        "gh pr 'mer'ge 7 --body x\n--squash",
+        "env GH_TOKEN=x gh pr merge 7 --squash",
+        "command gh pr merge 7 --squash",
+        'gh pr merge 7 --body "$(cat notes)"',
+        "gh pr merge 7 --squash | cat",
+        "git log --oneline && gh pr merge 7",
+        "git -c alias.x='!gh pr merge 7' x",
+        "bash -ce 'git push --force origin feature'",
+        "git push \\\n--force origin feature",
     )
     PASSES = (
         "gh pr merge 7 --squash",
         "gh pr merge 7 -R o/r --squash 2>&1",
         "GH_TOKEN=x gh pr merge 7 --squash",
-        "env GH_TOKEN=x gh pr merge 7 --squash",
+        "/usr/local/bin/gh pr merge 7 --squash",
+        "gh pr merge 7 --squash --body 'a >note, ; & | text'",
+        "gh pr view 7 --json mergeable",
+        "git log --grep='gh pr merge'",
+        'git commit -m "docs: name the gh pr merge form"',
     )
 
     def test_a_repository_after_a_redirect_is_the_one_read(self):
@@ -449,6 +475,17 @@ class AnyBaseMergeTest(unittest.TestCase):
             with self.subTest(command=command):
                 with mock.patch.object(guard_git, "gh_read", side_effect=read):
                     self.assertIsNotNone(guard_git.check_command(command, "/tmp"))
+
+    def test_a_quoted_value_that_looks_like_a_redirect_keeps_the_repository_after_it(self):
+        bases = {"o/r": "feature", "x/y": "master"}
+
+        def read(args, directory, env):
+            return bases.get(args[args.index("--repo") + 1], "feature") if "--repo" in args else "feature"
+
+        for command in ("gh pr merge 7 --body '>note' --repo x/y --squash", "gh pr merge 7 --subject '<note' -R x/y --merge"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
 
     def test_unreadable_shapes_are_refused_into_a_feature_base(self):
         for command in self.REFUSED:
@@ -529,14 +566,23 @@ class MergeBaseTest(unittest.TestCase):
     def test_env_prefix_reaches_the_lookup(self):
         for command, env in (
             ("GH_TOKEN=x gh pr merge 1", {"GH_TOKEN": "x"}),
-            ("export GH_REPO=o/r && gh pr merge 3", {"GH_REPO": "o/r"}),
-            ("export GH_REPO=o/r; GH_HOST=h gh pr merge 3", {"GH_REPO": "o/r", "GH_HOST": "h"}),
-            ("export GH_REPO=o/r; eval gh pr merge 3", {"GH_REPO": "o/r"}),
-            ("GH_REPO=o/r bash -c 'gh pr merge 3'", {"GH_REPO": "o/r"}),
+            ("GH_REPO=o/r GH_HOST=h gh pr merge 3", {"GH_REPO": "o/r", "GH_HOST": "h"}),
         ):
             with self.subTest(command=command):
                 _, read = self.check(command, "feature")
                 self.assertEqual(read.call_args[0][2], env)
+
+    def test_a_merge_beside_another_command_is_refused_without_a_lookup(self):
+        for command in (
+            "export GH_REPO=o/r && gh pr merge 3",
+            "export GH_REPO=o/r; GH_HOST=h gh pr merge 3",
+            "export GH_REPO=o/r; eval gh pr merge 3",
+            "GH_REPO=o/r bash -c 'gh pr merge 3'",
+        ):
+            with self.subTest(command=command):
+                reason, read = self.check(command, "feature")
+                self.assertIsNotNone(reason)
+                read.assert_not_called()
 
     def test_probe_and_unresolvable_merges_stay_blocked_without_a_lookup(self):
         for command in (

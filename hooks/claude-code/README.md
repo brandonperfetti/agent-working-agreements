@@ -63,10 +63,14 @@ feature, wave, lane or hotfix branches passes; it refuses when that read fails. 
 --auto` is refused whatever the base, since a stacked PR can be retargeted to `develop` before
 it lands.
 
-Whatever the base, a PR merge is refused when the guard sees the call hold a substitution or
-heredoc (it can retarget the PR after the base is read), name its repository twice, or sit
-behind wrapper options (`env -u`, `env -S`, `sudo -u`). Into `develop` exactly one form
-passes, the delegated route of
+A call that names `gh` and a merge (read past quotes and line continuations) is read only as one
+simple `gh` command: assignments, then `gh` or its path, then plain or quoted words with no
+expansion, and at most a trailing `2>&1`; a simple `git` command without `-c` whose values name
+them is read as git. Beside a chain, substitution, wrapper, shell `-c`, continuation or other
+redirect, a merge is refused whatever the base, since the base read could be stale or of another
+PR by the time it runs; a merge naming its repository twice is refused too, and so is a git or
+gh command behind wrapper options (`env -u`, `env -S`, `sudo -u`). Into `develop` exactly one
+form passes, the delegated route of
 [`review-findings.md`](../../procedures/review-findings.md#base-merges), as the whole tool call
 in plain words (no prefix, wrapper, path, quote, redirect, chain, background, `eval` or `sh -c`):
 `gh pr merge <N> --repo <owner/name> --merge --match-head-commit <40-hex> --author-email

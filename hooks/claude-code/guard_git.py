@@ -456,7 +456,17 @@ REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 PR_NUMBER = re.compile(r"[1-9][0-9]*")
 # The whole tool call, for the route: plain words only, so the argv gh gets is the one checked here.
 PLAIN_CALL = re.compile(r"gh( [A-Za-z0-9_./@=:+-]+)+")
-EXPANSION = re.compile(r"\$\(|`|<<|[<>]\(")
+# A call that mentions gh and a merge is read only when it is one simple gh command, word for word:
+# assignments, a gh path, plain or quoted words holding no expansion, at most a trailing `2>&1`.
+MERGE_WORDS = re.compile(r"merge", re.IGNORECASE)
+GH_WORD = re.compile(r"(?:^|[^A-Za-z0-9_-])gh(?:[^A-Za-z0-9_-]|$)")
+_WORD = r"""(?:[A-Za-z0-9_./@=:+,%-]|'[^'\n]*'|"[^"$`\\\n]*")+"""
+MERGE_CALL = re.compile(
+    r"(?:[A-Za-z_]\w*=(?:{w})?[ \t]+)*(?:[A-Za-z0-9_./-]*/)?gh(?:[ \t]+{w})*(?:[ \t]+2>&1)?".format(w=_WORD)
+)
+# One simple git command, word for word, without `-c`: text such as a `--grep` or `-m` value that
+# names gh and a merge is only text there, so the call is read as git.
+GIT_CALL = re.compile(r"git(?:[ \t]+{w})*(?:[ \t]+2>&1)?".format(w=_WORD))
 
 
 def check_route_form(positional, options, sole):
@@ -522,16 +532,24 @@ def gh_options(tokens):
     return positional, options
 
 
-def check_gh(tokens, directory, env, sole=False, expands=False):
+def merge_bearing(command):
+    """True when a call names gh and a merge anywhere, read past quotes and line continuations."""
+    text = re.sub(r"['\"\\\n]", "", command)
+    if not (MERGE_WORDS.search(text) and GH_WORD.search(text)):
+        return False
+    if GIT_CALL.fullmatch(command.strip()):
+        words = shlex.split(command.strip())
+        return any(w.startswith(("-c", "--config-env")) for w in words[1:])
+    return True
+
+
+def check_gh(tokens, directory, env, sole=False):
     """The rule a `gh` command breaks, or None: PR merges into a protected base, by any gh route,
     except the delegated route's one form into develop. `sole` is True only when the whole tool call
-    is that one plain `gh` command; `expands` when the call holds a substitution or heredoc."""
+    is that one plain `gh` command."""
     positional, options = gh_options(tokens[1:])
     repos = options.get("-R", []) + options.get("--repo", [])
     repo = ["--repo", repos[-1]] if repos else []
-    if positional[:2] == ["pr", "merge"] and expands:
-        # A substitution runs in the same call, after the base is read, and can retarget the PR.
-        return "a PR merge beside a substitution or heredoc the guard does not run"
     if positional[:2] == ["pr", "merge"] and len(repos) > 1:
         # gh takes the last in argv order; the guard does not track that order across spellings.
         return "a PR merge that names its repository more than once"
@@ -584,7 +602,19 @@ def check_command(command, directory, inherited=None, nested=False):
     # Only a call that is one plain `gh` command, with no prefix, wrapper, redirect, quote, chain or
     # expansion, can carry the route: its words are exactly the argv gh receives.
     sole = not nested and bool(PLAIN_CALL.fullmatch(command.strip()))
-    expands = bool(EXPANSION.search(command))
+    if merge_bearing(command):
+        # Beside anything else (a chain, substitution, wrapper, shell, redirect or continuation) a
+        # merge's base read can be stale or of another PR before it runs, so only this shape is read.
+        if nested or not MERGE_CALL.fullmatch(command.strip()):
+            return "a gh merge in a call the guard cannot read word for word"
+        words = shlex.split(command.strip())
+        if words[-1] == "2>&1":
+            words = words[:-1]
+        env = dict(exported)
+        while ASSIGNMENT.match(words[0]):
+            env.update([words.pop(0).split("=", 1)])
+        return check_gh(words, directory, env, sole=sole)
+    command = command.replace("\\\n", "")  # the shell joins a backslash-newline before reading words
     for tokens in parts:
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
@@ -612,13 +642,13 @@ def check_command(command, directory, inherited=None, nested=False):
             reason = check_command(" ".join(tokens[1:]), directory, env, nested=True)
         elif head in SHELLS:
             for index, token in enumerate(tokens[:-1]):
-                if re.fullmatch(r"-[a-z]*c", token):
+                if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", token):
                     reason = check_command(tokens[index + 1], directory, env, nested=True)
                     break
         elif head == "git":
             reason = check_git(tokens, directory, env)
         elif head == "gh":
-            reason = check_gh(tokens, directory, env, sole=sole, expands=expands)
+            reason = check_gh(tokens, directory, env, sole=sole)
         if reason:
             return reason
     return None
@@ -654,6 +684,12 @@ def main():
                 "--match-head-commit <40-hex head> --author-email {}. A refusal here is not "
                 "routed around; see procedures/review-findings.md, Base merges."
             ).format(AUTHOR_EMAIL)
+        elif reason.startswith("a gh merge in a call"):
+            advice = (
+                "Run the gh merge as its own tool call: one gh command, with no chain, pipe, "
+                "substitution, wrapper, shell -c, line continuation or redirect but a trailing 2>&1; "
+                "pass a message with --body-file."
+            )
         elif "through xargs" in reason:
             advice = "Pass the git or gh command and its arguments directly, without xargs."
         elif reason.startswith(("a commit", "a push of commits")):
