@@ -84,6 +84,7 @@ BLOCKED_ANYWHERE = [
     'git commit -anm "fix: x"',
     'git commit --no-v -m "fix: x"',
     'git commit -mtrim --no-verify',
+    'git commit -m fix 2>&1 --no-verify',
     "git commit -m --dry-run -n --allow-empty",
     "if git push --force origin feature; then echo ok; fi",
     "while git push origin master; do :; done",
@@ -245,8 +246,333 @@ class GuardTest(unittest.TestCase):
         self.assertEqual(run("git status"), "")
 
 
+SHA = "0123456789abcdef0123456789abcdef01234567"
+EXACT = "gh pr merge 7 --repo o/r --merge --match-head-commit {} --author-email {}".format(
+    SHA, guard_git.AUTHOR_EMAIL
+)
+
+
+class RouteFormTest(unittest.TestCase):
+    """Into develop only the delegated route's one form passes; it is a form check, not eligibility
+    (review-findings.md, Base merges). Releases and unknown bases stay refused in every form."""
+
+    PASSES = (
+        EXACT,
+        "gh pr merge 7 -R o/r -m --match-head-commit {} -A {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh pr merge --repo=o/r --merge --match-head-commit={} --author-email={} 7".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh -R o/r pr merge 7 --merge --match-head-commit {} --author-email {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh pr merge 7 -mR o/r --match-head-commit {} -A {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh pr merge --repo o/r --merge --match-head-commit {} --author-email {} -- 7".format(SHA, guard_git.AUTHOR_EMAIL),
+        "  " + EXACT + "  ",
+    )
+
+    REFUSED = (
+        # A flag missing.
+        "gh pr merge 7 --repo o/r --match-head-commit {} --author-email {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh pr merge 7 --repo o/r --merge --author-email {}".format(guard_git.AUTHOR_EMAIL),
+        "gh pr merge 7 --repo o/r --merge --match-head-commit {}".format(SHA),
+        "gh pr merge 7 --merge --match-head-commit {} --author-email {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "GH_REPO=o/r gh pr merge 7 --merge --match-head-commit {} --author-email {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        # Duplicated or conflicting values: gh keeps the last, the guard reads none.
+        EXACT + " -m",
+        EXACT + " --match-head-commit {}".format(SHA),
+        EXACT + " --match-head-commit " + "f" * 40,
+        EXACT + " -A {}".format(guard_git.AUTHOR_EMAIL),
+        EXACT + " --author-email other@example.com",
+        EXACT + " -R o/r",
+        EXACT + " --repo x/y",
+        EXACT.replace("--merge", "--merge=false"),
+        EXACT.replace("--merge", "--merge=true"),
+        EXACT.replace("--merge", "--merge="),
+        EXACT.replace("--merge", "-m=false"),
+        # Another method, a bypass, a later merge, a branch deletion or a custom message.
+        EXACT + " --squash",
+        EXACT + " -s",
+        EXACT + " --rebase",
+        EXACT + " -r",
+        EXACT + " --admin",
+        EXACT + " --auto",
+        EXACT + " --disable-auto",
+        EXACT + " --delete-branch",
+        EXACT + " -d",
+        EXACT.replace("--merge", "-ms"),
+        EXACT.replace("--merge", "-md"),
+        EXACT + " --body 'Co-authored-by: x <x@example.com>'",
+        EXACT + " -b x",
+        EXACT + " --body-file msg.txt",
+        EXACT + " -F msg.txt",
+        EXACT + " --subject x",
+        EXACT + " -t x",
+        # A head that is not a full lowercase SHA, another identity, a repository or PR not named plainly.
+        EXACT.replace(SHA, SHA[:12]),
+        EXACT.replace(SHA, SHA.upper()),
+        EXACT.replace(SHA, SHA + "8"),
+        EXACT.replace(SHA, "g" * 40),
+        EXACT.replace(guard_git.AUTHOR_EMAIL, "Brandon@brandonperfetti.com"),
+        EXACT.replace(guard_git.AUTHOR_EMAIL, "other@example.com"),
+        EXACT.replace("--repo o/r", "--repo o"),
+        EXACT.replace("--repo o/r", "--repo https://github.com/o/r"),
+        EXACT.replace("merge 7", "merge"),
+        EXACT.replace("merge 7", "merge '#7'"),
+        EXACT.replace("merge 7", "merge https://github.com/o/r/pull/7"),
+        EXACT.replace("merge 7", "merge feature-branch"),
+        EXACT.replace("merge 7", "merge 7 8"),
+        EXACT.replace("merge 7", "merge 07"),
+        EXACT.replace("merge 7", "merge \u0667"),
+        # Not plain: a prefix, wrapper, path, quote, redirect or grouping changes what the guard reads.
+        "GH_TOKEN=x " + EXACT,
+        "env GH_PROMPT_DISABLED=1 " + EXACT,
+        "env -u GH_REPO " + EXACT,
+        "sudo -u root " + EXACT,
+        "/usr/local/bin/" + EXACT,
+        EXACT.replace("o/r", "'o/r'"),
+        EXACT + " 2>&1",
+        EXACT + " >out.txt 2>&1",
+        "{ " + EXACT + "; }",
+        "(" + EXACT + ")",
+        # Flags hidden behind a redirect still reach gh (focused review H1).
+        EXACT + " 2>&1 --merge=false --squash",
+        EXACT + " 2>&1 --admin",
+        EXACT + " 2>&1 --auto",
+        EXACT + " 2>&1 --author-email other@example.com",
+        EXACT + " 2>&1 --match-head-commit " + "f" * 40,
+        EXACT + " 2>&1 -R x/y",
+        EXACT + " 1>&2 --merge=false --rebase",
+        EXACT + " 2>&1 --help",
+        # A substitution or heredoc runs in the same call and can retarget the PR (focused review H2).
+        'X="$(gh pr edit 7 --repo o/r --base master)" ' + EXACT,
+        EXACT + ' >"$(gh pr edit 7 --repo o/r --base master; printf /dev/null)"',
+        "gh pr merge 7 <<EOF\n$(gh pr edit 7 --base master)\nEOF",
+        EXACT + " `true`",
+        # Not a command on its own: something beside it could retarget the PR after the base read.
+        "gh pr edit 7 --base master && " + EXACT,
+        "gh pr edit 7 --base master; " + EXACT,
+        EXACT + "; echo done",
+        EXACT + " | cat",
+        "echo $(" + EXACT + ")",
+        "eval " + EXACT,
+        "bash -c '" + EXACT + "'",
+        "zsh -lc '" + EXACT + "'",
+        "echo 7 | xargs " + EXACT.replace(" 7 ", " "),
+        "(" + EXACT + ") && gh pr edit 7 --base master",
+        EXACT + " &",
+        "nohup " + EXACT + " &",
+        EXACT + " & gh pr edit 7 --base master",
+        EXACT + "\ngh pr edit 7 --base master",
+        # The API stays refused into develop, whatever head precondition it carries.
+        "gh api -X PUT repos/o/r/pulls/7/merge -f sha={} -f merge_method=merge".format(SHA),
+        "gh api graphql -f query='mutation { mergePullRequest(input: {pullRequestId: \"x\", expectedHeadOid: \"%s\"}) { clientMutationId } }'" % SHA,
+        # The live probe stays a refusal.
+        "gh pr merge --help",
+        EXACT + " --help",
+        EXACT + " -h",
+    )
+
+    def check(self, command, base):
+        with mock.patch.object(guard_git, "gh_read", return_value=base) as read:
+            return guard_git.check_command(command, "/tmp"), read
+
+    def test_the_exact_form_into_develop_passes(self):
+        for command in self.PASSES:
+            with self.subTest(command=command):
+                self.assertIsNone(self.check(command, "develop")[0])
+
+    def test_every_other_form_into_develop_is_refused(self):
+        for command in self.REFUSED:
+            with self.subTest(command=command):
+                self.assertIsNotNone(self.check(command, "develop")[0])
+
+    def test_the_exact_form_into_a_release_or_unknown_base_is_refused(self):
+        for base in ("main", "master", None):
+            for command in self.PASSES:
+                with self.subTest(base=base, command=command):
+                    reason, _ = self.check(command, base)
+                    self.assertIsNotNone(reason)
+                    self.assertIn(base or "could not be read", reason)
+
+    def test_the_lookup_reads_the_named_pr_and_repository(self):
+        _, read = self.check(EXACT, "develop")
+        self.assertEqual(
+            read.call_args[0][0],
+            ["pr", "view", "7", "--repo", "o/r", "--json", "baseRefName", "--jq", ".baseRefName"],
+        )
+
+    def test_a_refusal_names_the_form(self):
+        payload = json.dumps({"tool_input": {"command": EXACT + " --squash"}, "cwd": "/tmp"})
+        with mock.patch.object(guard_git, "gh_read", return_value="develop"), mock.patch(
+            "sys.stdin", __import__("io").StringIO(payload)
+        ), mock.patch("builtins.print") as printed:
+            guard_git.main()
+        decision = json.loads(printed.call_args[0][0])["hookSpecificOutput"]
+        self.assertEqual(decision["permissionDecision"], "deny")
+        self.assertIn("--match-head-commit <40-hex head>", decision["permissionDecisionReason"])
+
+
+class AnyBaseMergeTest(unittest.TestCase):
+    """Shapes the guard cannot read are refused whatever base the lookup returns (focused review
+    H2-H4, 2026-11-12): a base read before a same-call retarget, the wrong repository, a wrapper."""
+
+    REFUSED = (
+        "gh pr merge 7 --repo o/r -R x/y --squash",
+        "gh pr merge 7 -R x/y --repo o/r",
+        "gh pr merge 7 --repo o/r --repo x/y",
+        'X="$(gh pr edit 7 --base master)" gh pr merge 7 --squash',
+        'gh pr merge 7 --squash >"$(gh pr edit 7 --base master; printf /dev/null)"',
+        "env -u GH_REPO gh pr merge 7 --squash",
+        "env -i gh pr merge 7 --squash",
+        "sudo -u root gh pr merge 7 --squash",
+        "env -S 'gh pr merge 7 --squash'",
+        "env '-Sgh pr merge 7 --repo o/r --squash'",
+        "env '-S/usr/bin/gh pr merge 7 --squash'",
+        "env --split-string='gh pr merge 7 --squash'",
+        "sudo -u root git push --force origin feature",
+        # Focused re-review at 01f5204, R1-R6: whatever is beside a merge can retarget it, hide its
+        # repository or hide the merge itself, so a merge is read only as one simple gh command.
+        "X=`gh pr edit 7 --repo o/r --base master` gh pr merge 7 --repo o/r --squash",
+        "gh pr edit 7 --repo o/r --base master && gh pr merge 7 --repo o/r --squash",
+        "gh pr edit 7 --repo o/r --base develop; gh pr merge 7 --repo o/r --admin --squash",
+        "gh api -X PATCH repos/o/r/pulls/7 -f base=master && gh pr merge 7 --repo o/r",
+        "gh pr merge 7 --body '>note' --repo x/y --squash 2>&1 -R x/y",
+        "env -S'gh pr merge 7 --repo o/r --squash'",
+        "bash -ce 'gh pr merge 7 --repo o/r --squash'",
+        "bash -cE 'gh pr merge 7 --repo o/r --squash'",
+        "gh pr \\\nmerge 7 --repo o/r --squash",
+        "gh pr mer\\\nge 7 --repo o/r --squash",
+        "g\\\nh pr merge 7 --repo o/r --squash",
+        "gh pr 'mer'ge 7 --body x\n--squash",
+        "env GH_TOKEN=x gh pr merge 7 --squash",
+        "command gh pr merge 7 --squash",
+        'gh pr merge 7 --body "$(cat notes)"',
+        "gh pr merge 7 --squash | cat",
+        "git log --oneline && gh pr merge 7",
+        "git -c alias.x='!gh pr merge 7' x",
+        "gh pr merge --squash -- --comments=false",
+        "gh pr merge --squash -- '--comments=false'",
+        "gh pr merge --squash -- -h",
+        "bash -ce 'git push --force origin feature'",
+        "git push \\\n--force origin feature",
+    )
+    PASSES = (
+        "gh pr merge 7 --squash",
+        "gh pr merge 7 -R o/r --squash 2>&1",
+        "GH_TOKEN=x gh pr merge 7 --squash",
+        "/usr/local/bin/gh pr merge 7 --squash",
+        "gh pr merge 7 --squash --body 'a >note, ; & | text'",
+        "gh pr view 7 --json mergeable",
+        "git log --grep='gh pr merge'",
+        'git commit -m "docs: name the gh pr merge form"',
+    )
+
+    def test_a_repository_after_a_redirect_is_the_one_read(self):
+        # gh takes the last repository in argv; words after `2>&1` are still its argv (Spec review).
+        bases = {"o/r": "feature", "x/y": "master"}
+
+        def read(args, directory, env):
+            return bases.get(args[args.index("--repo") + 1]) if "--repo" in args else None
+
+        for command in (
+            "gh pr merge 7 --repo o/r --squash 2>&1 -R x/y",
+            "gh pr merge 7 --repo o/r --squash 1>&2 --repo x/y",
+            "gh pr merge 7 --squash 2>&1 -R x/y",
+        ):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIsNotNone(guard_git.check_command(command, "/tmp"))
+
+    def test_a_quoted_value_that_looks_like_a_redirect_keeps_the_repository_after_it(self):
+        bases = {"o/r": "feature", "x/y": "master"}
+
+        def read(args, directory, env):
+            return bases.get(args[args.index("--repo") + 1], "feature") if "--repo" in args else "feature"
+
+        for command in ("gh pr merge 7 --body '>note' --repo x/y --squash", "gh pr merge 7 --subject '<note' -R x/y --merge"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
+    def test_a_unicode_space_stays_part_of_the_selector(self):
+        # bash keeps U+00A0 in the word; gh then reads branch `7\u00a0`, not PR 7 (focused review at 12315c1).
+        def read(args, directory, env):
+            return "feature" if args[:3] == ["pr", "view", "7"] else "master"
+
+        for suffix in ("\u00a0", "\u2003", "\u0085", "\r"):
+            for command in ("gh pr merge --squash 7" + suffix, EXACT + suffix):
+                with self.subTest(command=command):
+                    with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                        self.assertIsNotNone(guard_git.check_command(command, "/tmp"))
+
+    def test_an_attached_empty_value_takes_no_next_word(self):
+        # pflag reads `-b=` as the body `=`, so `7` or `--repo x/y` after it stays gh's (focused review at c033b4f).
+        def read(args, directory, env):
+            return "master" if args[2] in ("7", "https://github.com/x/y/pull/7") else "feature"
+
+        for command in ("gh pr merge -b= 7 --squash", "gh pr merge '-b=' 7 --squash", "gh pr merge -t= 7 --squash",
+                        "gh pr merge -b= --repo x/y 7 --squash", "gh pr merge -b= https://github.com/x/y/pull/7 --squash"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
+    def test_an_equals_inside_a_short_cluster_is_read_as_pflag_reads_it(self):
+        # `-d=f` sets the Boolean -d and `-iX=PUT` sets -X (focused review at de35d47, G3 and G4).
+        def read(args, directory, env):
+            return "master" if args[:5] == ["pr", "view", "7", "--repo", "x/y"] or args[:2] == ["api", "repos/x/y/pulls/7"] else "feature"
+
+        for command in ("gh pr merge -d=f 7 --squash --repo x/y", "gh pr merge -d=F --repo x/y 7 --squash",
+                        "gh api -iX=PUT repos/x/y/pulls/7/merge", "gh pr merge -sR=x/y 7"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
+    def test_the_last_method_in_argv_is_the_one_read(self):
+        # gh keeps the last of -X and --method (focused review at 688a37e, G5): a final GET reads.
+        for command in ("gh api -X PUT --method GET repos/x/y/pulls/7/merge", "gh api --method PUT -X GET repos/x/y/pulls/7/merge",
+                        "gh api -XPUT -XGET repos/x/y/pulls/7/merge", "gh api -iX=PUT --method=GET repos/x/y/pulls/7/merge"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", return_value="master") as read:
+                    self.assertIsNone(guard_git.check_command(command, "/tmp"))
+                read.assert_not_called()
+        for command in ("gh api --method GET -X PUT repos/x/y/pulls/7/merge", "gh api -XGET --method=PUT repos/x/y/pulls/7/merge"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", return_value="master"):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
+    def test_an_attached_empty_value_keeps_the_repository_after_it(self):
+        with mock.patch.object(guard_git, "gh_read", return_value="feature") as read:
+            guard_git.check_command("gh pr merge -b= --repo x/y 7 --squash", "/tmp")
+        self.assertEqual(read.call_args[0][0][:5], ["pr", "view", "7", "--repo", "x/y"])
+
+    def test_a_quoted_final_redirect_is_the_selector_read(self):
+        # A quoted `2>&1` is a branch selector gh reads, not a redirect (Spec review at 12315c1).
+        def read(args, directory, env):
+            return "master" if args[:3] == ["pr", "view", "2>&1"] else "feature"
+
+        for command in ("gh pr merge --squash '2>&1'", 'gh pr merge --squash "2>&1"', "gh pr merge --squash 2'>&'1", "gh pr merge --squash '2>&1' 2>&1"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
+    def test_unreadable_shapes_are_refused_into_a_feature_base(self):
+        for command in self.REFUSED:
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", return_value="feature"):
+                    self.assertIsNotNone(guard_git.check_command(command, "/tmp"))
+
+    def test_readable_merges_into_a_feature_base_pass(self):
+        for command in self.PASSES:
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", return_value="feature"):
+                    self.assertIsNone(guard_git.check_command(command, "/tmp"))
+
+    def test_a_short_repository_value_drops_pflags_equals(self):
+        with mock.patch.object(guard_git, "gh_read", return_value="feature") as read:
+            guard_git.check_command("gh pr merge 7 -R=o/r", "/tmp")
+        self.assertEqual(read.call_args[0][0][:4], ["pr", "view", "7", "--repo"])
+        self.assertEqual(read.call_args[0][0][4], "o/r")
+
+
 class MergeBaseTest(unittest.TestCase):
-    """Merges into develop, main or master stay with Brandon; others pass (2026-10-30)."""
+    """Merges into develop, main or master stay with Brandon outside the route's one form; others
+    pass (2026-10-30; the develop form, 2026-11-12)."""
 
     MERGES = (
         "gh pr merge 12",
@@ -304,14 +630,23 @@ class MergeBaseTest(unittest.TestCase):
     def test_env_prefix_reaches_the_lookup(self):
         for command, env in (
             ("GH_TOKEN=x gh pr merge 1", {"GH_TOKEN": "x"}),
-            ("export GH_REPO=o/r && gh pr merge 3", {"GH_REPO": "o/r"}),
-            ("export GH_REPO=o/r; GH_HOST=h gh pr merge 3", {"GH_REPO": "o/r", "GH_HOST": "h"}),
-            ("export GH_REPO=o/r; eval gh pr merge 3", {"GH_REPO": "o/r"}),
-            ("GH_REPO=o/r bash -c 'gh pr merge 3'", {"GH_REPO": "o/r"}),
+            ("GH_REPO=o/r GH_HOST=h gh pr merge 3", {"GH_REPO": "o/r", "GH_HOST": "h"}),
         ):
             with self.subTest(command=command):
                 _, read = self.check(command, "feature")
                 self.assertEqual(read.call_args[0][2], env)
+
+    def test_a_merge_beside_another_command_is_refused_without_a_lookup(self):
+        for command in (
+            "export GH_REPO=o/r && gh pr merge 3",
+            "export GH_REPO=o/r; GH_HOST=h gh pr merge 3",
+            "export GH_REPO=o/r; eval gh pr merge 3",
+            "GH_REPO=o/r bash -c 'gh pr merge 3'",
+        ):
+            with self.subTest(command=command):
+                reason, read = self.check(command, "feature")
+                self.assertIsNotNone(reason)
+                read.assert_not_called()
 
     def test_probe_and_unresolvable_merges_stay_blocked_without_a_lookup(self):
         for command in (

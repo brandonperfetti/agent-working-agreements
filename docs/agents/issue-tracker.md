@@ -31,7 +31,8 @@ agents to file findings through `writing-tickets`; those issues carry the
 
 Closing is not a delivery agent's call. Closing or relabelling an existing issue
 is orchestrator-only and must be cited. For issue-backed delivery, Brandon triggers
-closure by merging the release PR. Brandon alone merges pull requests.
+closure by merging the release PR. Brandon merges release PRs, and every other PR no active
+delegated route covers.
 
 ## Reference an issue from a pull request
 

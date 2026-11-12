@@ -147,9 +147,10 @@ A lane merge that conflicts goes back to the lane the same way (Git contract abo
    finding, has the orchestrator redispatch the fixes A4 calls for to lanes (worktrees, review,
    merge, push as above), replies per thread with receipts, monitors re-reviews to clean.
    Brandon's review is the PR's final state, not the threads.
-4. **Brandon merges, manually, in the GitHub UI** — delivery PRs into `develop` unless a qualified
-   delegated route applies ([base merges](review-findings.md#base-merges)), and always the release
-   PR `develop → master`, which the delivery owner may open as a draft with a changelog. Closing
-   keywords fire on the default branch; the orchestrator moves issues to In Review at PR time.
+4. **Brandon merges, manually, in the GitHub UI** — delivery PRs into `develop` unless the
+   binding's route is active for them ([base merges](review-findings.md#base-merges)), and always
+   the release PR `develop → master`, which the delivery owner may open as a draft with a
+   changelog. Closing keywords fire on the default branch; the orchestrator moves issues to In
+   Review at PR time.
 5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`, and
    any friction the wave met goes to its `friction/` (A6).
