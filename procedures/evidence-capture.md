@@ -24,8 +24,9 @@ recorded claim turns out to be wrong.
 - **The generalization boundary is part of the label** — "[measured] on the first item" is never
   written as "[measured] on all N". A label is **never inherited across revisions**: re-measure or
   downgrade. [learnings: 2026-09-04 wave-5 §2]
-- **The instrument is part of the claim.** Positive-control a probe before believing its negatives;
-  grep a "green" run for skip markers before calling assertions proven; name every required env
+- **The instrument is part of the claim.** Positive-control a probe before believing its negatives:
+  a green run shows no skips only through output that one run with a known skip shows reporting
+  them; the reporter-specific read belongs to the project recipe (#265). Name every required env
   export in a gate line. **A tool call that succeeded is not proof its whole output reached you** —
   reads and command output truncate silently; check for a truncation notice, and re-read in slices
   before quoting a file as `[source]`. [learnings: 2026-08-30 §1; 2026-09-04 wave-5 §1, §8]
