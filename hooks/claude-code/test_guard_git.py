@@ -512,6 +512,11 @@ class AnyBaseMergeTest(unittest.TestCase):
                 with mock.patch.object(guard_git, "gh_read", side_effect=read):
                     self.assertIn("master", guard_git.check_command(command, "/tmp"))
 
+    def test_an_attached_empty_value_keeps_the_repository_after_it(self):
+        with mock.patch.object(guard_git, "gh_read", return_value="feature") as read:
+            guard_git.check_command("gh pr merge -b= --repo x/y 7 --squash", "/tmp")
+        self.assertEqual(read.call_args[0][0][:5], ["pr", "view", "7", "--repo", "x/y"])
+
     def test_a_quoted_final_redirect_is_the_selector_read(self):
         # A quoted `2>&1` is a branch selector gh reads, not a redirect (Spec review at 12315c1).
         def read(args, directory, env):
