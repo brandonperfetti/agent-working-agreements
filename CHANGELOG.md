@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-12 — A dormant, head-bound route for routine `develop` merges.** `review-findings.md`
+  states one operation (`gh pr merge --merge --match-head-commit --author-email`), independent
+  carry-forward when the base moves, read-back before any retry, and suspension on a wrong head,
+  author or shape. Agents repair; a control's denial stops. The platform pins the head, not the
+  base, and Brandon accepted that race for routine AWA and claude-skills work. The binding ships
+  dormant until fixture qualification; the Claude Code guard admits only that one form into
+  `develop`. Releases and control changes stay his. Brandon decided.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/264).
+
 - **2026-11-11 — One independent reviewer by default; acceptance carries forward; merges can be
   delegated once a route qualifies.** One reviewer now records distinct Standards and Spec
   conclusions, with a second focused reviewer for named risks. A fix or release carries the prior
