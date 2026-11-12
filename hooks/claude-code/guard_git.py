@@ -561,6 +561,9 @@ def check_gh(tokens, directory, env, sole=False):
         if "--auto" in options:
             return "an auto-merge, whose base can change before it lands"
         selector = positional[2:3]
+        if selector and selector[0].startswith("-"):
+            # Read back without its `--`, a selector such as `--comments=false` would be a view option.
+            return "a PR merge whose selector begins with a dash"
         base = gh_read(
             ["pr", "view"] + selector + repo + ["--json", "baseRefName", "--jq", ".baseRefName"],
             directory,

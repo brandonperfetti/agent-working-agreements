@@ -446,6 +446,9 @@ class AnyBaseMergeTest(unittest.TestCase):
         "gh pr merge 7 --squash | cat",
         "git log --oneline && gh pr merge 7",
         "git -c alias.x='!gh pr merge 7' x",
+        "gh pr merge --squash -- --comments=false",
+        "gh pr merge --squash -- '--comments=false'",
+        "gh pr merge --squash -- -h",
         "bash -ce 'git push --force origin feature'",
         "git push \\\n--force origin feature",
     )
