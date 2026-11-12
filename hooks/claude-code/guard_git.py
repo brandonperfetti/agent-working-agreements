@@ -497,8 +497,13 @@ def check_route_form(positional, options, sole):
 
 
 def gh_options(tokens):
-    """Split gh arguments as gh reads them: `-sb x` clusters, `--opt=x`, and `--`."""
+    """Split gh arguments as gh reads them: `-sb x` clusters, `--opt=x`, and `--`. `-X` is filed
+    under `--method`, one flag in gh, so the last method in argv order is the list's last."""
     positional, options, index = [], {}, 0
+
+    def add(name, value):
+        options.setdefault("--method" if name == "-X" else name, []).append(value)
+
     while index < len(tokens):
         token = tokens[index]
         if token == "--":
@@ -511,7 +516,7 @@ def gh_options(tokens):
                 value = tokens[index] if index < len(tokens) else ""
             elif name not in GH_ARG_VALUE_OPTS and equals:
                 value = "=" + value  # `--merge=` and `--merge=false` are not a bare `--merge`
-            options.setdefault(name, []).append(value)
+            add(name, value)
         elif token.startswith("-") and len(token) > 1:
             for position in range(1, len(token)):
                 name = "-" + token[position]
@@ -519,15 +524,15 @@ def gh_options(tokens):
                 if len(rest) > 1 and rest[0] == "=":
                     # pflag, at any letter of a cluster: `-iX=PUT` sets -X, `-d=f` sets the Boolean -d.
                     value = rest[1:] if name in GH_ARG_VALUE_OPTS else rest
-                    options.setdefault(name, []).append(value)
+                    add(name, value)
                     break
                 if name in GH_ARG_VALUE_OPTS:
                     if not rest:
                         index += 1
                         rest = tokens[index] if index < len(tokens) else ""
-                    options.setdefault(name, []).append(rest)  # a lone `-b=` is the body `=`
+                    add(name, rest)  # a lone `-b=` is the body `=`
                     break
-                options.setdefault(name, []).append("")
+                add(name, "")
         else:
             positional.append(token)
         index += 1
@@ -580,9 +585,9 @@ def check_gh(tokens, directory, env, sole=False):
             return "a PR merge"
         if re.search(r"repos/[^/\s]+/[^/\s]+/merges\b", call):
             return "a branch merge through the API"
-        methods = [m.upper() for m in options.get("-X", []) + options.get("--method", [])]
-        if "PUT" not in methods:
-            return None
+        methods = options.get("--method", [])
+        if not methods or methods[-1].upper() != "PUT":
+            return None  # gh sends the last method given, by either spelling
         endpoint = positional[1] if len(positional) > 1 else ""
         merge_url = re.fullmatch(r"(.*\brepos/[^/]+/[^/]+/pulls/[^/]+)/merge/?", endpoint)
         if merge_url:

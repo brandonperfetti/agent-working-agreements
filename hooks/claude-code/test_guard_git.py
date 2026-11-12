@@ -523,6 +523,19 @@ class AnyBaseMergeTest(unittest.TestCase):
                 with mock.patch.object(guard_git, "gh_read", side_effect=read):
                     self.assertIn("master", guard_git.check_command(command, "/tmp"))
 
+    def test_the_last_method_in_argv_is_the_one_read(self):
+        # gh keeps the last of -X and --method (focused review at 688a37e, G5): a final GET reads.
+        for command in ("gh api -X PUT --method GET repos/x/y/pulls/7/merge", "gh api --method PUT -X GET repos/x/y/pulls/7/merge",
+                        "gh api -XPUT -XGET repos/x/y/pulls/7/merge", "gh api -iX=PUT --method=GET repos/x/y/pulls/7/merge"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", return_value="master") as read:
+                    self.assertIsNone(guard_git.check_command(command, "/tmp"))
+                read.assert_not_called()
+        for command in ("gh api --method GET -X PUT repos/x/y/pulls/7/merge", "gh api -XGET --method=PUT repos/x/y/pulls/7/merge"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", return_value="master"):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
     def test_an_attached_empty_value_keeps_the_repository_after_it(self):
         with mock.patch.object(guard_git, "gh_read", return_value="feature") as read:
             guard_git.check_command("gh pr merge -b= --repo x/y 7 --squash", "/tmp")
