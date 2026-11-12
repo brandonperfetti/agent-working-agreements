@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-12 — Skip evidence comes from output shown to report skips (#265).** Evidence capture
+  told agents to grep a green run for skip markers, but the BP pilot's Playwright run printed no
+  skip reasons to its terminal, so zero hits proved nothing. A run now shows no skips only through
+  output that one run with a known skip shows reporting them, and the reporter-specific read stays
+  in the project recipe.
+  Brandon approved the E03–E04 batch.
+  [Receipt](https://github.com/brandonperfetti/bp-portfolio/pull/315).
+
 - **2026-11-12 — A dormant, head-bound route for routine `develop` merges.** `review-findings.md`
   states one operation (`gh pr merge --merge --match-head-commit --author-email`), independent
   carry-forward when the base moves, read-back before any retry, and suspension on a wrong head,
