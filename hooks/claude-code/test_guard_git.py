@@ -245,8 +245,147 @@ class GuardTest(unittest.TestCase):
         self.assertEqual(run("git status"), "")
 
 
+SHA = "0123456789abcdef0123456789abcdef01234567"
+EXACT = "gh pr merge 7 --repo o/r --merge --match-head-commit {} --author-email {}".format(
+    SHA, guard_git.AUTHOR_EMAIL
+)
+
+
+class RouteFormTest(unittest.TestCase):
+    """Into develop only the delegated route's one form passes; it is a form check, not eligibility
+    (review-findings.md, Base merges). Releases and unknown bases stay refused in every form."""
+
+    PASSES = (
+        EXACT,
+        "gh pr merge 7 -R o/r -m --match-head-commit {} -A {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh pr merge --repo=o/r --merge --match-head-commit={} --author-email={} 7".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh -R o/r pr merge 7 --merge --match-head-commit {} --author-email {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh pr merge 7 -mR o/r --match-head-commit {} -A {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh pr merge --repo o/r --merge --match-head-commit {} --author-email {} -- 7".format(SHA, guard_git.AUTHOR_EMAIL),
+        "GH_TOKEN=x " + EXACT,
+        "env GH_PROMPT_DISABLED=1 " + EXACT,
+        EXACT + " 2>&1",
+        EXACT + " >out.txt 2>&1",
+        "{ " + EXACT + "; }",
+        "(" + EXACT + ")",
+    )
+
+    REFUSED = (
+        # A flag missing.
+        "gh pr merge 7 --repo o/r --match-head-commit {} --author-email {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "gh pr merge 7 --repo o/r --merge --author-email {}".format(guard_git.AUTHOR_EMAIL),
+        "gh pr merge 7 --repo o/r --merge --match-head-commit {}".format(SHA),
+        "gh pr merge 7 --merge --match-head-commit {} --author-email {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        "GH_REPO=o/r gh pr merge 7 --merge --match-head-commit {} --author-email {}".format(SHA, guard_git.AUTHOR_EMAIL),
+        # Duplicated or conflicting values: gh keeps the last, the guard reads none.
+        EXACT + " -m",
+        EXACT + " --match-head-commit {}".format(SHA),
+        EXACT + " --match-head-commit " + "f" * 40,
+        EXACT + " -A {}".format(guard_git.AUTHOR_EMAIL),
+        EXACT + " --author-email other@example.com",
+        EXACT + " -R o/r",
+        EXACT + " --repo x/y",
+        EXACT.replace("--merge", "--merge=false"),
+        EXACT.replace("--merge", "--merge=true"),
+        # Another method, a bypass, a later merge, a branch deletion or a custom message.
+        EXACT + " --squash",
+        EXACT + " -s",
+        EXACT + " --rebase",
+        EXACT + " -r",
+        EXACT + " --admin",
+        EXACT + " --auto",
+        EXACT + " --disable-auto",
+        EXACT + " --delete-branch",
+        EXACT + " -d",
+        EXACT.replace("--merge", "-ms"),
+        EXACT.replace("--merge", "-md"),
+        EXACT + " --body 'Co-authored-by: x <x@example.com>'",
+        EXACT + " -b x",
+        EXACT + " --body-file msg.txt",
+        EXACT + " -F msg.txt",
+        EXACT + " --subject x",
+        EXACT + " -t x",
+        # A head that is not a full lowercase SHA, another identity, a repository or PR not named plainly.
+        EXACT.replace(SHA, SHA[:12]),
+        EXACT.replace(SHA, SHA.upper()),
+        EXACT.replace(SHA, SHA + "8"),
+        EXACT.replace(SHA, "g" * 40),
+        EXACT.replace(guard_git.AUTHOR_EMAIL, "Brandon@brandonperfetti.com"),
+        EXACT.replace(guard_git.AUTHOR_EMAIL, "other@example.com"),
+        EXACT.replace("--repo o/r", "--repo o"),
+        EXACT.replace("--repo o/r", "--repo https://github.com/o/r"),
+        EXACT.replace("merge 7", "merge"),
+        EXACT.replace("merge 7", "merge '#7'"),
+        EXACT.replace("merge 7", "merge https://github.com/o/r/pull/7"),
+        EXACT.replace("merge 7", "merge feature-branch"),
+        EXACT.replace("merge 7", "merge 7 8"),
+        # Not a command on its own: something beside it could retarget the PR after the base read.
+        "gh pr edit 7 --base master && " + EXACT,
+        "gh pr edit 7 --base master; " + EXACT,
+        EXACT + "; echo done",
+        EXACT + " | cat",
+        "echo $(" + EXACT + ")",
+        "eval " + EXACT,
+        "bash -c '" + EXACT + "'",
+        "zsh -lc '" + EXACT + "'",
+        "echo 7 | xargs " + EXACT.replace(" 7 ", " "),
+        "(" + EXACT + ") && gh pr edit 7 --base master",
+        EXACT + " &",
+        "nohup " + EXACT + " &",
+        EXACT + " & gh pr edit 7 --base master",
+        EXACT + "\ngh pr edit 7 --base master",
+        # The API stays refused into develop, whatever head precondition it carries.
+        "gh api -X PUT repos/o/r/pulls/7/merge -f sha={} -f merge_method=merge".format(SHA),
+        "gh api graphql -f query='mutation { mergePullRequest(input: {pullRequestId: \"x\", expectedHeadOid: \"%s\"}) { clientMutationId } }'" % SHA,
+        # The live probe stays a refusal.
+        "gh pr merge --help",
+        EXACT + " --help",
+        EXACT + " -h",
+    )
+
+    def check(self, command, base):
+        with mock.patch.object(guard_git, "gh_read", return_value=base) as read:
+            return guard_git.check_command(command, "/tmp"), read
+
+    def test_the_exact_form_into_develop_passes(self):
+        for command in self.PASSES:
+            with self.subTest(command=command):
+                self.assertIsNone(self.check(command, "develop")[0])
+
+    def test_every_other_form_into_develop_is_refused(self):
+        for command in self.REFUSED:
+            with self.subTest(command=command):
+                self.assertIsNotNone(self.check(command, "develop")[0])
+
+    def test_the_exact_form_into_a_release_or_unknown_base_is_refused(self):
+        for base in ("main", "master", None):
+            for command in self.PASSES:
+                with self.subTest(base=base, command=command):
+                    reason, _ = self.check(command, base)
+                    self.assertIsNotNone(reason)
+                    self.assertIn(base or "could not be read", reason)
+
+    def test_the_lookup_reads_the_named_pr_and_repository(self):
+        _, read = self.check(EXACT, "develop")
+        self.assertEqual(
+            read.call_args[0][0],
+            ["pr", "view", "7", "--repo", "o/r", "--json", "baseRefName", "--jq", ".baseRefName"],
+        )
+
+    def test_a_refusal_names_the_form(self):
+        payload = json.dumps({"tool_input": {"command": EXACT + " --squash"}, "cwd": "/tmp"})
+        with mock.patch.object(guard_git, "gh_read", return_value="develop"), mock.patch(
+            "sys.stdin", __import__("io").StringIO(payload)
+        ), mock.patch("builtins.print") as printed:
+            guard_git.main()
+        decision = json.loads(printed.call_args[0][0])["hookSpecificOutput"]
+        self.assertEqual(decision["permissionDecision"], "deny")
+        self.assertIn("--match-head-commit <40-hex head>", decision["permissionDecisionReason"])
+
+
 class MergeBaseTest(unittest.TestCase):
-    """Merges into develop, main or master stay with Brandon; others pass (2026-10-30)."""
+    """Merges into develop, main or master stay with Brandon outside the route's one form; others
+    pass (2026-10-30; the develop form, 2026-11-12)."""
 
     MERGES = (
         "gh pr merge 12",

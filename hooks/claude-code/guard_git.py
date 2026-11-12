@@ -3,7 +3,8 @@
 
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
-ritual and merge boundary; commits and merges that skip the commit-msg hook or
+ritual and merge boundary, save one exact command form into develop, the
+delegated route (check_route_form; a form check, not eligibility); commits and merges that skip the commit-msg hook or
 carry a configuration override (read from the command's words as the lexer
 splits them, so a flag placed after a compound redirect such as `2>&1` is not
 seen, and a commit so made skips the hook: the push-time scan and the read
@@ -432,6 +433,42 @@ def check_merge_base(base):
     return None
 
 
+# The one command form review-findings.md "Base merges" names for a delegated merge into develop.
+INTEGRATION_BASE = "develop"
+ROUTE_FLAGS = {"-m": "--merge", "--merge": "--merge", "-A": "--author-email",
+               "--author-email": "--author-email", "--match-head-commit": "--match-head-commit",
+               "-R": "--repo", "--repo": "--repo"}
+FULL_SHA = re.compile(r"[0-9a-f]{40}")
+REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+
+
+def check_route_form(positional, options, sole):
+    """None when a PR merge into develop is exactly the route's form; otherwise why it is not.
+    The form is checked, not eligibility: acceptance, checks and effects stay the route's to prove,
+    and the base was read before the command runs, so a retarget in that window is not caught."""
+    if not sole:
+        return "a PR merge into develop that is not a command on its own"
+    extra = sorted(name for name in options if name not in ROUTE_FLAGS)
+    if extra:
+        return "a PR merge into develop with {}, which the route does not use".format(", ".join(extra))
+    given = {}
+    for name, values in options.items():
+        given.setdefault(ROUTE_FLAGS[name], []).extend(values)
+    if any(len(values) != 1 for values in given.values()) or len(given) != len(set(ROUTE_FLAGS.values())):
+        return "a PR merge into develop without each of --merge, --match-head-commit, --author-email and --repo exactly once"
+    if given["--merge"] != [""]:
+        return "a PR merge into develop whose --merge carries a value"
+    if not FULL_SHA.fullmatch(given["--match-head-commit"][0]):
+        return "a PR merge into develop whose --match-head-commit is not a full lowercase SHA"
+    if given["--author-email"][0] != AUTHOR_EMAIL:
+        return "a PR merge into develop with another author email"
+    if not REPOSITORY.fullmatch(given["--repo"][0]):
+        return "a PR merge into develop whose --repo is not owner/name"
+    if len(positional) != 3 or not positional[2].isdigit():
+        return "a PR merge into develop that does not name one PR by number"
+    return None
+
+
 def gh_options(tokens):
     """Split gh arguments as gh reads them: `-sb x` clusters, `--opt=x`, and `--`."""
     positional, options, index = [], {}, 0
@@ -464,8 +501,10 @@ def gh_options(tokens):
     return positional, options
 
 
-def check_gh(tokens, directory, env):
-    """The rule a `gh` command breaks, or None: PR merges into a protected base, by any gh route."""
+def check_gh(tokens, directory, env, sole=False):
+    """The rule a `gh` command breaks, or None: PR merges into a protected base, by any gh route,
+    except the delegated route's one form into develop. `sole` is True only for a command that is
+    the whole tool call, not wrapped and not chained, so nothing beside it can retarget the PR."""
     positional, options = gh_options(tokens[1:])
     repos = options.get("-R", []) + options.get("--repo", [])
     repo = ["--repo", repos[-1]] if repos else []
@@ -482,6 +521,8 @@ def check_gh(tokens, directory, env):
             directory,
             env,
         )
+        if base == INTEGRATION_BASE:
+            return check_route_form(positional, options, sole)
         return check_merge_base(base)
     if positional[:1] == ["api"]:
         call = " ".join(tokens[1:])
@@ -506,10 +547,21 @@ def check_gh(tokens, directory, env):
     return None
 
 
-def check_command(command, directory, inherited=None):
-    """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
+def check_command(command, directory, inherited=None, nested=False):
+    """The first rule the command breaks, or None. `inherited` is a calling shell's environment;
+    `nested` marks a command read from inside `eval` or a shell's `-c`."""
     exported = dict(inherited or {})
-    for tokens in segments(command):
+    parts = segments(command)
+    # A descriptor duplication (`2>&1`) splits at its `&` but chains nothing, so it is not counted;
+    # a backgrounded command (`… &`) is not on its own, since the next call can run beside it.
+    plain = re.sub(r"\d*[<>]&(\d+|-)", " ", command)
+    counted = segments(plain)
+    sole = (
+        not nested
+        and not re.search(r"(?<!&)&(?!&)", plain)
+        and sum(1 for p in counted if strip_prefix(strip_redirects(p))) == 1
+    )
+    for tokens in parts:
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
@@ -531,16 +583,16 @@ def check_command(command, directory, inherited=None):
         elif head == "cd" and len(tokens) == 2:
             directory = os.path.join(directory, os.path.expanduser(tokens[1]))
         elif head == "eval":
-            reason = check_command(" ".join(tokens[1:]), directory, env)
+            reason = check_command(" ".join(tokens[1:]), directory, env, nested=True)
         elif head in SHELLS:
             for index, token in enumerate(tokens[:-1]):
                 if re.fullmatch(r"-[a-z]*c", token):
-                    reason = check_command(tokens[index + 1], directory, env)
+                    reason = check_command(tokens[index + 1], directory, env, nested=True)
                     break
         elif head == "git":
             reason = check_git(tokens, directory, env)
         elif head == "gh":
-            reason = check_gh(tokens, directory, env)
+            reason = check_gh(tokens, directory, env, sole=sole)
         if reason:
             return reason
     return None
@@ -569,6 +621,13 @@ def main():
             advice = "The guard must see what is pushed. Name the remote and the branch, with its destination, on the command line, without -c."
         elif "could not be read for the author" in reason:
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
+        elif reason.startswith("a PR merge into develop "):
+            advice = (
+                "Only an accepted PR whose binding's route is active merges into develop, as one "
+                "command on its own: gh pr merge <N> --repo <owner/name> --merge "
+                "--match-head-commit <40-hex head> --author-email {}. A refusal here is not "
+                "routed around; see procedures/review-findings.md, Base merges."
+            ).format(AUTHOR_EMAIL)
         elif "through xargs" in reason:
             advice = "Pass the git or gh command and its arguments directly, without xargs."
         elif reason.startswith(("a commit", "a push of commits")):
