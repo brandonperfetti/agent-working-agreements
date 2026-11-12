@@ -11,9 +11,10 @@ of amendments in that batch**, not an ordinal; the two notations predate each ot
 being retrofitted onto the other.
 
 - **2026-11-12 — Skip evidence comes from output shown to report skips (#265).** Evidence capture
-  told agents to grep a green run for skip markers, but Playwright's terminal output never prints
-  them, so zero hits proved nothing. A run now shows no skips only through output that one run with
-  a known skip shows reporting them, and the reporter-specific read stays in the project recipe.
+  told agents to grep a green run for skip markers, but the BP pilot's Playwright run printed no
+  skip reasons to its terminal, so zero hits proved nothing. A run now shows no skips only through
+  output that one run with a known skip shows reporting them, and the reporter-specific read stays
+  in the project recipe.
   Brandon approved the E03–E04 batch.
   [Receipt](https://github.com/brandonperfetti/bp-portfolio/pull/315).
 
