@@ -501,6 +501,17 @@ class AnyBaseMergeTest(unittest.TestCase):
                     with mock.patch.object(guard_git, "gh_read", side_effect=read):
                         self.assertIsNotNone(guard_git.check_command(command, "/tmp"))
 
+    def test_an_attached_empty_value_takes_no_next_word(self):
+        # pflag reads `-b=` as an empty body, so `7` or `--repo x/y` after it stays gh's (focused review at c033b4f).
+        def read(args, directory, env):
+            return "master" if args[2] in ("7", "https://github.com/x/y/pull/7") else "feature"
+
+        for command in ("gh pr merge -b= 7 --squash", "gh pr merge '-b=' 7 --squash", "gh pr merge -t= 7 --squash",
+                        "gh pr merge -b= --repo x/y 7 --squash", "gh pr merge -b= https://github.com/x/y/pull/7 --squash"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
     def test_a_quoted_final_redirect_is_the_selector_read(self):
         # A quoted `2>&1` is a branch selector gh reads, not a redirect (Spec review at 12315c1).
         def read(args, directory, env):

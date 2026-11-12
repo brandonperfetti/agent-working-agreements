@@ -518,11 +518,11 @@ def gh_options(tokens):
                 value = ""
                 if name in GH_ARG_VALUE_OPTS:
                     value = token[position + 1 :]
-                    if position == 1 and value.startswith("="):
-                        value = value[1:]  # pflag reads `-R=o/r` as `-R o/r`
                     if not value:
                         index += 1
                         value = tokens[index] if index < len(tokens) else ""
+                    elif position == 1 and value.startswith("="):
+                        value = value[1:]  # pflag reads `-R=o/r` as `-R o/r`, and `-b=` as an empty body
                 options.setdefault(name, []).append(value)
                 if name in GH_ARG_VALUE_OPTS:
                     break
