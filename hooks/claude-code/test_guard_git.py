@@ -502,12 +502,23 @@ class AnyBaseMergeTest(unittest.TestCase):
                         self.assertIsNotNone(guard_git.check_command(command, "/tmp"))
 
     def test_an_attached_empty_value_takes_no_next_word(self):
-        # pflag reads `-b=` as an empty body, so `7` or `--repo x/y` after it stays gh's (focused review at c033b4f).
+        # pflag reads `-b=` as the body `=`, so `7` or `--repo x/y` after it stays gh's (focused review at c033b4f).
         def read(args, directory, env):
             return "master" if args[2] in ("7", "https://github.com/x/y/pull/7") else "feature"
 
         for command in ("gh pr merge -b= 7 --squash", "gh pr merge '-b=' 7 --squash", "gh pr merge -t= 7 --squash",
                         "gh pr merge -b= --repo x/y 7 --squash", "gh pr merge -b= https://github.com/x/y/pull/7 --squash"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
+    def test_an_equals_inside_a_short_cluster_is_read_as_pflag_reads_it(self):
+        # `-d=f` sets the Boolean -d and `-iX=PUT` sets -X (focused review at de35d47, G3 and G4).
+        def read(args, directory, env):
+            return "master" if args[:5] == ["pr", "view", "7", "--repo", "x/y"] or args[:2] == ["api", "repos/x/y/pulls/7"] else "feature"
+
+        for command in ("gh pr merge -d=f 7 --squash --repo x/y", "gh pr merge -d=F --repo x/y 7 --squash",
+                        "gh api -iX=PUT repos/x/y/pulls/7/merge", "gh pr merge -sR=x/y 7"):
             with self.subTest(command=command):
                 with mock.patch.object(guard_git, "gh_read", side_effect=read):
                     self.assertIn("master", guard_git.check_command(command, "/tmp"))

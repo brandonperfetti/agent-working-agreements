@@ -515,17 +515,19 @@ def gh_options(tokens):
         elif token.startswith("-") and len(token) > 1:
             for position in range(1, len(token)):
                 name = "-" + token[position]
-                value = ""
-                if name in GH_ARG_VALUE_OPTS:
-                    value = token[position + 1 :]
-                    if not value:
-                        index += 1
-                        value = tokens[index] if index < len(tokens) else ""
-                    elif position == 1 and value.startswith("="):
-                        value = value[1:]  # pflag reads `-R=o/r` as `-R o/r`, and `-b=` as an empty body
-                options.setdefault(name, []).append(value)
-                if name in GH_ARG_VALUE_OPTS:
+                rest = token[position + 1 :]
+                if len(rest) > 1 and rest[0] == "=":
+                    # pflag, at any letter of a cluster: `-iX=PUT` sets -X, `-d=f` sets the Boolean -d.
+                    value = rest[1:] if name in GH_ARG_VALUE_OPTS else rest
+                    options.setdefault(name, []).append(value)
                     break
+                if name in GH_ARG_VALUE_OPTS:
+                    if not rest:
+                        index += 1
+                        rest = tokens[index] if index < len(tokens) else ""
+                    options.setdefault(name, []).append(rest)  # a lone `-b=` is the body `=`
+                    break
+                options.setdefault(name, []).append("")
         else:
             positional.append(token)
         index += 1
