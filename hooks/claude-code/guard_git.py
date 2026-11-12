@@ -6,9 +6,8 @@ main or master (or whose base it cannot read), per the Sans Faux profile's Git
 ritual and merge boundary, save one exact command form into develop, the
 delegated route (check_route_form; a form check, not eligibility); commits and merges that skip the commit-msg hook or
 carry a configuration override (read from the command's words as the lexer
-splits them, so a flag placed after a compound redirect such as `2>&1` is not
-seen, and a commit so made skips the hook: the push-time scan and the read
-before presentation are the controls for that shape); and, best effort, pushes whose commits new to
+splits them, so a shape that hides a flag from them skips the hook: the push-time
+scan and the read before presentation are the controls for that shape); and, best effort, pushes whose commits new to
 the destination remote's tracking refs carry another author or an attribution
 line (RULE ZERO; stale tracking refs are the documented limit, and the read
 before a delivery is presented is the complete check). The author and message
@@ -598,7 +597,8 @@ def check_command(command, directory, inherited=None, nested=False):
     exported = dict(inherited or {})
     # A descriptor duplication (`2>&1`) would split at its `&` and hide the words after it from the
     # command they belong to, so it is dropped before splitting: `gh … 2>&1 -R x/y` stays one argv.
-    parts = segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command))
+    # The shell also joins a backslash-newline before reading words.
+    parts = segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command.replace("\\\n", "")))
     # Only a call that is one plain `gh` command, with no prefix, wrapper, redirect, quote, chain or
     # expansion, can carry the route: its words are exactly the argv gh receives.
     sole = not nested and bool(PLAIN_CALL.fullmatch(command.strip()))
@@ -607,14 +607,12 @@ def check_command(command, directory, inherited=None, nested=False):
         # merge's base read can be stale or of another PR before it runs, so only this shape is read.
         if nested or not MERGE_CALL.fullmatch(command.strip()):
             return "a gh merge in a call the guard cannot read word for word"
-        words = shlex.split(command.strip())
-        if words[-1] == "2>&1":
-            words = words[:-1]
+        # Only an unquoted trailing `2>&1` is a redirect; a quoted one is gh's argument.
+        words = shlex.split(re.sub(r"[ \t]+2>&1$", "", command.strip()))
         env = dict(exported)
         while ASSIGNMENT.match(words[0]):
             env.update([words.pop(0).split("=", 1)])
         return check_gh(words, directory, env, sole=sole)
-    command = command.replace("\\\n", "")  # the shell joins a backslash-newline before reading words
     for tokens in parts:
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)

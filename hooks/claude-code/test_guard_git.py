@@ -487,6 +487,16 @@ class AnyBaseMergeTest(unittest.TestCase):
                 with mock.patch.object(guard_git, "gh_read", side_effect=read):
                     self.assertIn("master", guard_git.check_command(command, "/tmp"))
 
+    def test_a_quoted_final_redirect_is_the_selector_read(self):
+        # A quoted `2>&1` is a branch selector gh reads, not a redirect (Spec review at 12315c1).
+        def read(args, directory, env):
+            return "master" if args[:3] == ["pr", "view", "2>&1"] else "feature"
+
+        for command in ("gh pr merge --squash '2>&1'", 'gh pr merge --squash "2>&1"', "gh pr merge --squash '2>&1' 2>&1"):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIn("master", guard_git.check_command(command, "/tmp"))
+
     def test_unreadable_shapes_are_refused_into_a_feature_base(self):
         for command in self.REFUSED:
             with self.subTest(command=command):
