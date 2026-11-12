@@ -115,14 +115,15 @@ def fed_by_xargs(prefix, tokens):
 
 def wrapped_with_options(prefix, tokens):
     """True when a wrapper's options precede a git or gh word: `env -u GH_REPO gh`, `sudo -u root
-    git` and `env -S 'gh …'` change what runs, or where, in ways strip_prefix does not model."""
+    git` and `env -S 'gh …'` (or `'-Sgh …'`, the operand attached) change what runs, or where, in
+    ways strip_prefix does not model. The options themselves are read too, for an attached command."""
     names = [os.path.basename(t) for t in prefix]
     flagged = any(
         name in WRAPPERS and index + 1 < len(prefix) and prefix[index + 1].startswith("-")
         for index, name in enumerate(names)
     )
-    words = (word for token in tokens for word in token.split())
-    return flagged and any(os.path.basename(word) in {"git", "gh"} for word in words)
+    named = re.compile(r"(?:^|[\s/=]|^-[A-Za-z]*S)(git|gh)(?=\s|$)")
+    return flagged and any(named.search(token) for token in prefix + tokens if not ASSIGNMENT.match(token))
 
 
 def strip_prefix(tokens):
@@ -577,7 +578,9 @@ def check_command(command, directory, inherited=None, nested=False):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment;
     `nested` marks a command read from inside `eval` or a shell's `-c`."""
     exported = dict(inherited or {})
-    parts = segments(command)
+    # A descriptor duplication (`2>&1`) would split at its `&` and hide the words after it from the
+    # command they belong to, so it is dropped before splitting: `gh … 2>&1 -R x/y` stays one argv.
+    parts = segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command))
     # Only a call that is one plain `gh` command, with no prefix, wrapper, redirect, quote, chain or
     # expansion, can carry the route: its words are exactly the argv gh receives.
     sole = not nested and bool(PLAIN_CALL.fullmatch(command.strip()))
@@ -589,6 +592,8 @@ def check_command(command, directory, inherited=None, nested=False):
         env = dict(exported)
         env.update(token.split("=", 1) for token in prefix if ASSIGNMENT.match(token))
         tokens = command_tokens
+        if wrapped_with_options(prefix, command_tokens):
+            return "a git or gh command behind wrapper options the guard does not parse"
         if not tokens:
             continue
         head = os.path.basename(tokens[0])
@@ -599,8 +604,6 @@ def check_command(command, directory, inherited=None, nested=False):
             return "a command the guard cannot read: a segment begins with an option"
         if fed_by_xargs(prefix, command_tokens):
             return "a git or gh command whose arguments arrive through xargs and are not visible here"
-        if wrapped_with_options(prefix, command_tokens):
-            return "a git or gh command behind wrapper options the guard does not parse"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
         elif head == "cd" and len(tokens) == 2:

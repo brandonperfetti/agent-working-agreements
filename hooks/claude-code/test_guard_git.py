@@ -84,6 +84,7 @@ BLOCKED_ANYWHERE = [
     'git commit -anm "fix: x"',
     'git commit --no-v -m "fix: x"',
     'git commit -mtrim --no-verify',
+    'git commit -m fix 2>&1 --no-verify',
     "git commit -m --dry-run -n --allow-empty",
     "if git push --force origin feature; then echo ok; fi",
     "while git push origin master; do :; done",
@@ -421,6 +422,9 @@ class AnyBaseMergeTest(unittest.TestCase):
         "env -i gh pr merge 7 --squash",
         "sudo -u root gh pr merge 7 --squash",
         "env -S 'gh pr merge 7 --squash'",
+        "env '-Sgh pr merge 7 --repo o/r --squash'",
+        "env '-S/usr/bin/gh pr merge 7 --squash'",
+        "env --split-string='gh pr merge 7 --squash'",
         "sudo -u root git push --force origin feature",
     )
     PASSES = (
@@ -429,6 +433,22 @@ class AnyBaseMergeTest(unittest.TestCase):
         "GH_TOKEN=x gh pr merge 7 --squash",
         "env GH_TOKEN=x gh pr merge 7 --squash",
     )
+
+    def test_a_repository_after_a_redirect_is_the_one_read(self):
+        # gh takes the last repository in argv; words after `2>&1` are still its argv (Spec review).
+        bases = {"o/r": "feature", "x/y": "master"}
+
+        def read(args, directory, env):
+            return bases.get(args[args.index("--repo") + 1]) if "--repo" in args else None
+
+        for command in (
+            "gh pr merge 7 --repo o/r --squash 2>&1 -R x/y",
+            "gh pr merge 7 --repo o/r --squash 1>&2 --repo x/y",
+            "gh pr merge 7 --squash 2>&1 -R x/y",
+        ):
+            with self.subTest(command=command):
+                with mock.patch.object(guard_git, "gh_read", side_effect=read):
+                    self.assertIsNotNone(guard_git.check_command(command, "/tmp"))
 
     def test_unreadable_shapes_are_refused_into_a_feature_base(self):
         for command in self.REFUSED:

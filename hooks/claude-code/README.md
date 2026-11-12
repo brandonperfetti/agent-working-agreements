@@ -7,7 +7,7 @@ other clients, git aliases).
 
 | Hook | Event | What it does |
 | --- | --- | --- |
-| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main` (the matching refspec `:` and `--all` included), PR merges into `main` or `master` (or whose base it cannot read), PR merges into `develop` in any form but the delegated route's one (below), git or gh arguments fed through `xargs`, a commit that skips the commit-msg hook (`--no-verify`; a courtesy read of the command's words, so a flag placed after `2>&1` is not seen and such a commit skips the hook; the push-time scan and the read before presentation are the controls for that shape), a push with a `-c` setting or whose targets `remote.<name>.push` would choose, and, best effort, a push whose commits new to the destination remote's tracking refs carry another author or an attribution line (RULE ZERO). The author and message of a commit being made are [`../git/commit-msg`](../git/README.md)'s to read; the complete read is the one before a delivery is presented |
+| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main` (the matching refspec `:` and `--all` included), PR merges into `main` or `master` (or whose base it cannot read), PR merges into `develop` in any form but the delegated route's one (below), git or gh arguments fed through `xargs`, a commit that skips the commit-msg hook (`--no-verify`; a courtesy read of the command's words, so a shape that hides the flag from them skips the hook; the push-time scan and the read before presentation are the controls for that shape), a push with a `-c` setting or whose targets `remote.<name>.push` would choose, and, best effort, a push whose commits new to the destination remote's tracking refs carry another author or an attribution line (RULE ZERO). The author and message of a commit being made are [`../git/commit-msg`](../git/README.md)'s to read; the complete read is the one before a delivery is presented |
 | `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode and the agreement paths after each compaction |
 | `look_again.py` | `Stop` | Sends the agent back once when a file it read or wrote since your last prompt has changed since, naming the file, so it reads it again before it reports |
 
@@ -63,9 +63,10 @@ feature, wave, lane or hotfix branches passes; it refuses when that read fails. 
 --auto` is refused whatever the base, since a stacked PR can be retargeted to `develop` before
 it lands.
 
-Whatever the base, a PR merge is refused when the call holds a substitution or heredoc (it can
-retarget the PR after the base is read), names its repository twice, or sits behind wrapper
-options (`env -u`, `sudo -u`). Into `develop` exactly one form passes, the delegated route of
+Whatever the base, a PR merge is refused when the guard sees the call hold a substitution or
+heredoc (it can retarget the PR after the base is read), name its repository twice, or sit
+behind wrapper options (`env -u`, `env -S`, `sudo -u`). Into `develop` exactly one form
+passes, the delegated route of
 [`review-findings.md`](../../procedures/review-findings.md#base-merges), as the whole tool call
 in plain words (no prefix, wrapper, path, quote, redirect, chain, background, `eval` or `sh -c`):
 `gh pr merge <N> --repo <owner/name> --merge --match-head-commit <40-hex> --author-email
