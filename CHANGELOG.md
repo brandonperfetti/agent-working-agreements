@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-12 — Skip evidence comes from output shown to report skips (#265).** Evidence capture
+  told agents to grep a green run for skip markers, but Playwright's terminal output never prints
+  them, so zero hits proved nothing. A run now shows no skips only through output that one run with
+  a known skip shows reporting them, and the reporter-specific read stays in the project recipe.
+  Brandon approved the E03–E04 batch.
+  [Receipt](https://github.com/brandonperfetti/bp-portfolio/pull/315).
+
 - **2026-11-11 — One independent reviewer by default; acceptance carries forward; merges can be
   delegated once a route qualifies.** One reviewer now records distinct Standards and Spec
   conclusions, with a second focused reviewer for named risks. A fix or release carries the prior
