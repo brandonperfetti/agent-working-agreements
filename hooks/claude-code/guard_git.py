@@ -113,6 +113,18 @@ def fed_by_xargs(prefix, tokens):
     return any(os.path.basename(t) in {"git", "gh"} | SHELLS for t in after)  # `xargs sh -c 'git {}'` too
 
 
+def wrapped_with_options(prefix, tokens):
+    """True when a wrapper's options precede a git or gh word: `env -u GH_REPO gh`, `sudo -u root
+    git` and `env -S 'gh …'` change what runs, or where, in ways strip_prefix does not model."""
+    names = [os.path.basename(t) for t in prefix]
+    flagged = any(
+        name in WRAPPERS and index + 1 < len(prefix) and prefix[index + 1].startswith("-")
+        for index, name in enumerate(names)
+    )
+    words = (word for token in tokens for word in token.split())
+    return flagged and any(os.path.basename(word) in {"git", "gh"} for word in words)
+
+
 def strip_prefix(tokens):
     """Drop env assignments and wrappers such as `env` or `sudo`."""
     while tokens:
@@ -440,6 +452,10 @@ ROUTE_FLAGS = {"-m": "--merge", "--merge": "--merge", "-A": "--author-email",
                "-R": "--repo", "--repo": "--repo"}
 FULL_SHA = re.compile(r"[0-9a-f]{40}")
 REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+PR_NUMBER = re.compile(r"[1-9][0-9]*")
+# The whole tool call, for the route: plain words only, so the argv gh gets is the one checked here.
+PLAIN_CALL = re.compile(r"gh( [A-Za-z0-9_./@=:+-]+)+")
+EXPANSION = re.compile(r"\$\(|`|<<|[<>]\(")
 
 
 def check_route_form(positional, options, sole):
@@ -447,7 +463,7 @@ def check_route_form(positional, options, sole):
     The form is checked, not eligibility: acceptance, checks and effects stay the route's to prove,
     and the base was read before the command runs, so a retarget in that window is not caught."""
     if not sole:
-        return "a PR merge into develop that is not a command on its own"
+        return "a PR merge into develop that is not a plain command on its own"
     extra = sorted(name for name in options if name not in ROUTE_FLAGS)
     if extra:
         return "a PR merge into develop with {}, which the route does not use".format(", ".join(extra))
@@ -464,7 +480,7 @@ def check_route_form(positional, options, sole):
         return "a PR merge into develop with another author email"
     if not REPOSITORY.fullmatch(given["--repo"][0]):
         return "a PR merge into develop whose --repo is not owner/name"
-    if len(positional) != 3 or not positional[2].isdigit():
+    if len(positional) != 3 or not PR_NUMBER.fullmatch(positional[2]):
         return "a PR merge into develop that does not name one PR by number"
     return None
 
@@ -482,6 +498,8 @@ def gh_options(tokens):
             if name in GH_ARG_VALUE_OPTS and not equals:
                 index += 1
                 value = tokens[index] if index < len(tokens) else ""
+            elif name not in GH_ARG_VALUE_OPTS and equals:
+                value = "=" + value  # `--merge=` and `--merge=false` are not a bare `--merge`
             options.setdefault(name, []).append(value)
         elif token.startswith("-") and len(token) > 1:
             for position in range(1, len(token)):
@@ -489,6 +507,8 @@ def gh_options(tokens):
                 value = ""
                 if name in GH_ARG_VALUE_OPTS:
                     value = token[position + 1 :]
+                    if position == 1 and value.startswith("="):
+                        value = value[1:]  # pflag reads `-R=o/r` as `-R o/r`
                     if not value:
                         index += 1
                         value = tokens[index] if index < len(tokens) else ""
@@ -501,13 +521,19 @@ def gh_options(tokens):
     return positional, options
 
 
-def check_gh(tokens, directory, env, sole=False):
+def check_gh(tokens, directory, env, sole=False, expands=False):
     """The rule a `gh` command breaks, or None: PR merges into a protected base, by any gh route,
-    except the delegated route's one form into develop. `sole` is True only for a command that is
-    the whole tool call, not wrapped and not chained, so nothing beside it can retarget the PR."""
+    except the delegated route's one form into develop. `sole` is True only when the whole tool call
+    is that one plain `gh` command; `expands` when the call holds a substitution or heredoc."""
     positional, options = gh_options(tokens[1:])
     repos = options.get("-R", []) + options.get("--repo", [])
     repo = ["--repo", repos[-1]] if repos else []
+    if positional[:2] == ["pr", "merge"] and expands:
+        # A substitution runs in the same call, after the base is read, and can retarget the PR.
+        return "a PR merge beside a substitution or heredoc the guard does not run"
+    if positional[:2] == ["pr", "merge"] and len(repos) > 1:
+        # gh takes the last in argv order; the guard does not track that order across spellings.
+        return "a PR merge that names its repository more than once"
     if positional[:2] == ["pr", "merge"]:
         # The guard's documented live probe: answered here, with no lookup.
         if "--help" in options or "-h" in options:
@@ -552,15 +578,10 @@ def check_command(command, directory, inherited=None, nested=False):
     `nested` marks a command read from inside `eval` or a shell's `-c`."""
     exported = dict(inherited or {})
     parts = segments(command)
-    # A descriptor duplication (`2>&1`) splits at its `&` but chains nothing, so it is not counted;
-    # a backgrounded command (`… &`) is not on its own, since the next call can run beside it.
-    plain = re.sub(r"\d*[<>]&(\d+|-)", " ", command)
-    counted = segments(plain)
-    sole = (
-        not nested
-        and not re.search(r"(?<!&)&(?!&)", plain)
-        and sum(1 for p in counted if strip_prefix(strip_redirects(p))) == 1
-    )
+    # Only a call that is one plain `gh` command, with no prefix, wrapper, redirect, quote, chain or
+    # expansion, can carry the route: its words are exactly the argv gh receives.
+    sole = not nested and bool(PLAIN_CALL.fullmatch(command.strip()))
+    expands = bool(EXPANSION.search(command))
     for tokens in parts:
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
@@ -578,6 +599,8 @@ def check_command(command, directory, inherited=None, nested=False):
             return "a command the guard cannot read: a segment begins with an option"
         if fed_by_xargs(prefix, command_tokens):
             return "a git or gh command whose arguments arrive through xargs and are not visible here"
+        if wrapped_with_options(prefix, command_tokens):
+            return "a git or gh command behind wrapper options the guard does not parse"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
         elif head == "cd" and len(tokens) == 2:
@@ -592,7 +615,7 @@ def check_command(command, directory, inherited=None, nested=False):
         elif head == "git":
             reason = check_git(tokens, directory, env)
         elif head == "gh":
-            reason = check_gh(tokens, directory, env, sole=sole)
+            reason = check_gh(tokens, directory, env, sole=sole, expands=expands)
         if reason:
             return reason
     return None

@@ -63,12 +63,15 @@ feature, wave, lane or hotfix branches passes; it refuses when that read fails. 
 --auto` is refused whatever the base, since a stacked PR can be retargeted to `develop` before
 it lands.
 
-Into `develop` exactly one form passes, the delegated route of
-[`review-findings.md`](../../procedures/review-findings.md#base-merges), as a command on its own
-(no chain, pipe, background, `eval` or `sh -c`): `gh pr merge <N> --repo <owner/name> --merge
---match-head-commit <40-hex> --author-email brandon@brandonperfetti.com`, each flag once, and no
-other flag (no squash, rebase, `--admin`, `--auto`, branch deletion or custom message). Every
-`gh api` merge into `develop` stays refused. This checks the command's form, not whether the
-route is active or the PR eligible; those are the procedure's. Its limits: the base is read
-before the command runs, so a retarget by another session in that window is not caught (only the
-head is pinned on the server); `gh` aliases and extensions are not resolved.
+Whatever the base, a PR merge is refused when the call holds a substitution or heredoc (it can
+retarget the PR after the base is read), names its repository twice, or sits behind wrapper
+options (`env -u`, `sudo -u`). Into `develop` exactly one form passes, the delegated route of
+[`review-findings.md`](../../procedures/review-findings.md#base-merges), as the whole tool call
+in plain words (no prefix, wrapper, path, quote, redirect, chain, background, `eval` or `sh -c`):
+`gh pr merge <N> --repo <owner/name> --merge --match-head-commit <40-hex> --author-email
+brandon@brandonperfetti.com`, each flag once and no other (no squash, rebase, `--admin`, `--auto`,
+branch deletion or message). Every `gh api` merge into `develop` stays refused. This checks form,
+not whether the route is active or the PR eligible; those are the procedure's. Its limits: the
+base is read before the command runs, so another session's retarget in that window is not caught
+(only the head is pinned on the server); shell functions, `PATH`, `gh` aliases and extensions are
+not resolved; and on a base with a merge queue `gh` may enqueue rather than merge.
