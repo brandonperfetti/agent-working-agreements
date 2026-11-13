@@ -164,10 +164,10 @@ owner, who restores an authorized route if one is intended.
 **After the merge,** the merge commit's parents, author, committer and message are read. A wrong
 accepted head, a wrong author or a prohibited attribution, or another merge shape suspends the route
 in that repository: whoever finds the fault opens an issue there labelled `route-suspended` (one
-that cannot be opened is reported to the owner, and no delegated merge runs there until it is),
-history is kept, the restoration and incident owner is named, and no direct push or unapproved
-rollback follows; the owner closing that issue restores the route. A red result or a material base
-interaction is corrected by a normal reviewed PR into the integration branch.
+that cannot be opened is reported to the owner, and the finder makes no delegated merge there until
+it is), history is kept, the restoration and incident owner is named, and no direct push or
+unapproved rollback follows; the owner closing that issue restores the route. A red result or a
+material base interaction is corrected by a normal reviewed PR into the integration branch.
 
 **What the route does not guarantee.** The platform pins the head, not the base; checks, findings
 and effects are read, not bound by the server. A base can move between the last read and the
