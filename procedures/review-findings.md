@@ -142,11 +142,12 @@ gate and its PR-triggered workflows; on `H` each is present, completed, the late
 success — skipped or neutral only where that workflow's own conditions explain it. An absent check
 fails; a repository with no expected PR check records its disposition (the full gate on the merge
 result, seen by the reviewer). Commits in the base-to-`H` range pass the author and attribution
-read. If the base has moved since acceptance, the delivery owner gathers what the movement changes
-— behaviour, workflows, effects, the verification basis, not only paths — and the independent
-reviewer carries the acceptance forward or renews it (*Acceptance and staleness*); the producer
-never issues it. A moved head, conflict, failing, pending or absent check, stale review or open
-finding is the delivery owner's to repair, within the existing bounds: the conflict procedure's
+read. The repository has no open issue labelled `route-suspended`; a check that cannot be read
+counts as suspended. If the base has moved since acceptance, the delivery owner gathers what the
+movement changes — behaviour, workflows, effects, the verification basis, not only paths — and the
+independent reviewer carries the acceptance forward or renews it (*Acceptance and staleness*); the
+producer never issues it. A moved head, conflict, failing, pending or absent check, stale review or
+open finding is the delivery owner's to repair, within the existing bounds: the conflict procedure's
 progress rule, the three-round stop above, and B2's restoration rule.
 
 **The operation** is one command, alone: `gh pr merge <N> --repo <owner/name> --merge
@@ -161,9 +162,10 @@ owner, who restores an authorized route if one is intended.
 
 **After the merge,** the merge commit's parents, author, committer and message are read. A wrong
 accepted head, a wrong author or a prohibited attribution, or another merge shape suspends the
-route in that repository: history is kept, the restoration and incident owner is named, and no
-direct push or unapproved rollback follows. A red result or a material base interaction is
-corrected by a normal reviewed PR into the integration branch.
+route in that repository: whoever finds the fault opens an issue there labelled `route-suspended`,
+history is kept, the restoration and incident owner is named, and no direct push or unapproved
+rollback follows; the owner closing that issue restores the route. A red result or a material
+base interaction is corrected by a normal reviewed PR into the integration branch.
 
 **What the route does not guarantee.** The platform pins the head, not the base; checks, findings
 and effects are read, not bound by the server. A base can move between the last read and the

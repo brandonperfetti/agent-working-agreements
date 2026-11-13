@@ -15,7 +15,8 @@ being retrofitted onto the other.
   `agent-working-agreements` and `claude-skills`, merged by Claude Code with the installed guard.
   It qualified on a disposable fixture on Claude Code 2.1.322, as the released procedure requires,
   and an independent review accepted it. Codex, T3-hosted Codex and OpenClaw stay Brandon's to
-  merge until each qualifies. Brandon authorized it and merges it.
+  merge until each qualifies. A suspension is an open `route-suspended` issue in that repository,
+  checked before each delegated merge, until Brandon closes it. Brandon decided.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/269).
 
 - **2026-11-12 — Skip evidence comes from output shown to report skips (#265).** Evidence capture
