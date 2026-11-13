@@ -16,7 +16,7 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 | Core term | Sans Faux binding |
 | --- | --- |
 | `owner` | Brandon Perfetti; he merges releases and every merge no active route covers, by hand in the host's UI |
-| `delegated merge route` | **dormant** — the head-bound route of [`review-findings.md`](../procedures/review-findings.md#base-merges), for routine work into `develop` of `agent-working-agreements` and `claude-skills`; activated by a reviewed change here naming the qualified clients and its fixture record; until then Brandon merges |
+| `delegated merge route` | **active for Claude Code only** — the head-bound route of [`review-findings.md`](../procedures/review-findings.md#base-merges), for routine work into `develop` of `agent-working-agreements` and `claude-skills`, merged by Claude Code with the installed `hooks/claude-code` guard; qualified 2026-11-13 on Claude Code 2.1.322 (#269: fixture record `_agent/initiatives/fleet-mega-s03-adoption/evidence/2026-11-13-develop-route-fixture-qualification.md`, review `…/reviews/2026-11-13-develop-route-fixture-review.md`); Codex, T3-hosted Codex and OpenClaw are not qualified, so Brandon merges for them until a reviewed change here names each |
 | `author identity` | `brandon@brandonperfetti.com`, exactly — RULE ZERO below |
 | `attribution` | none, except the agent line on comments to other owners' repositories — RULE ZERO below |
 | `integration branch` | `develop` |
