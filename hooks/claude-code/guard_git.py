@@ -3,11 +3,11 @@
 
 Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
-ritual and merge boundary; commits and merges that skip the commit-msg hook or
+ritual and merge boundary, save one exact command form into develop, the
+delegated route (check_route_form; a form check, not eligibility); commits and merges that skip the commit-msg hook or
 carry a configuration override (read from the command's words as the lexer
-splits them, so a flag placed after a compound redirect such as `2>&1` is not
-seen, and a commit so made skips the hook: the push-time scan and the read
-before presentation are the controls for that shape); and, best effort, pushes whose commits new to
+splits them, so a shape that hides a flag from them skips the hook: the push-time
+scan and the read before presentation are the controls for that shape); and, best effort, pushes whose commits new to
 the destination remote's tracking refs carry another author or an attribution
 line (RULE ZERO; stale tracking refs are the documented limit, and the read
 before a delivery is presented is the complete check). The author and message
@@ -110,6 +110,19 @@ def fed_by_xargs(prefix, tokens):
         return False
     after = (prefix + tokens)[names.index("xargs") + 1 :]
     return any(os.path.basename(t) in {"git", "gh"} | SHELLS for t in after)  # `xargs sh -c 'git {}'` too
+
+
+def wrapped_with_options(prefix, tokens):
+    """True when a wrapper's options precede a git or gh word: `env -u GH_REPO gh`, `sudo -u root
+    git` and `env -S 'gh …'` (or `'-Sgh …'`, the operand attached) change what runs, or where, in
+    ways strip_prefix does not model. The options themselves are read too, for an attached command."""
+    names = [os.path.basename(t) for t in prefix]
+    flagged = any(
+        name in WRAPPERS and index + 1 < len(prefix) and prefix[index + 1].startswith("-")
+        for index, name in enumerate(names)
+    )
+    named = re.compile(r"(?:^|[\s/=]|^-[A-Za-z]*S)(git|gh)(?=\s|$)")
+    return flagged and any(named.search(token) for token in prefix + tokens if not ASSIGNMENT.match(token))
 
 
 def strip_prefix(tokens):
@@ -432,9 +445,65 @@ def check_merge_base(base):
     return None
 
 
+# The one command form review-findings.md "Base merges" names for a delegated merge into develop.
+INTEGRATION_BASE = "develop"
+ROUTE_FLAGS = {"-m": "--merge", "--merge": "--merge", "-A": "--author-email",
+               "--author-email": "--author-email", "--match-head-commit": "--match-head-commit",
+               "-R": "--repo", "--repo": "--repo"}
+FULL_SHA = re.compile(r"[0-9a-f]{40}")
+REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+PR_NUMBER = re.compile(r"[1-9][0-9]*")
+# The whole tool call, for the route: plain words only, so the argv gh gets is the one checked here.
+PLAIN_CALL = re.compile(r"gh( [A-Za-z0-9_./@=:+-]+)+")
+# A call that mentions gh and a merge is read only when it is one simple gh command, word for word:
+# assignments, a gh path, plain or quoted words holding no expansion, at most a trailing `2>&1`.
+MERGE_WORDS = re.compile(r"merge", re.IGNORECASE)
+BLANKS = " \t\n"  # the shell's blanks around a call; str.strip() would also drop Unicode spaces bash keeps
+GH_WORD = re.compile(r"(?:^|[^A-Za-z0-9_-])gh(?:[^A-Za-z0-9_-]|$)")
+_WORD = r"""(?:[A-Za-z0-9_./@=:+,%-]|'[^'\n]*'|"[^"$`\\\n]*")+"""
+MERGE_CALL = re.compile(
+    r"(?:[A-Za-z_]\w*=(?:{w})?[ \t]+)*(?:[A-Za-z0-9_./-]*/)?gh(?:[ \t]+{w})*(?:[ \t]+2>&1)?".format(w=_WORD)
+)
+# One simple git command, word for word, without `-c`: text such as a `--grep` or `-m` value that
+# names gh and a merge is only text there, so the call is read as git.
+GIT_CALL = re.compile(r"git(?:[ \t]+{w})*(?:[ \t]+2>&1)?".format(w=_WORD))
+
+
+def check_route_form(positional, options, sole):
+    """None when a PR merge into develop is exactly the route's form; otherwise why it is not.
+    The form is checked, not eligibility: acceptance, checks and effects stay the route's to prove,
+    and the base was read before the command runs, so a retarget in that window is not caught."""
+    if not sole:
+        return "a PR merge into develop that is not a plain command on its own"
+    extra = sorted(name for name in options if name not in ROUTE_FLAGS)
+    if extra:
+        return "a PR merge into develop with {}, which the route does not use".format(", ".join(extra))
+    given = {}
+    for name, values in options.items():
+        given.setdefault(ROUTE_FLAGS[name], []).extend(values)
+    if any(len(values) != 1 for values in given.values()) or len(given) != len(set(ROUTE_FLAGS.values())):
+        return "a PR merge into develop without each of --merge, --match-head-commit, --author-email and --repo exactly once"
+    if given["--merge"] != [""]:
+        return "a PR merge into develop whose --merge carries a value"
+    if not FULL_SHA.fullmatch(given["--match-head-commit"][0]):
+        return "a PR merge into develop whose --match-head-commit is not a full lowercase SHA"
+    if given["--author-email"][0] != AUTHOR_EMAIL:
+        return "a PR merge into develop with another author email"
+    if not REPOSITORY.fullmatch(given["--repo"][0]):
+        return "a PR merge into develop whose --repo is not owner/name"
+    if len(positional) != 3 or not PR_NUMBER.fullmatch(positional[2]):
+        return "a PR merge into develop that does not name one PR by number"
+    return None
+
+
 def gh_options(tokens):
-    """Split gh arguments as gh reads them: `-sb x` clusters, `--opt=x`, and `--`."""
+    """Split gh arguments as gh reads them: `-sb x` clusters, `--opt=x`, and `--`. `-X` is filed
+    under `--method`, one flag in gh, so the last method in argv order is the list's last."""
     positional, options, index = [], {}, 0
+
+    def add(name, value):
+        options.setdefault("--method" if name == "-X" else name, []).append(value)
+
     while index < len(tokens):
         token = tokens[index]
         if token == "--":
@@ -445,30 +514,52 @@ def gh_options(tokens):
             if name in GH_ARG_VALUE_OPTS and not equals:
                 index += 1
                 value = tokens[index] if index < len(tokens) else ""
-            options.setdefault(name, []).append(value)
+            elif name not in GH_ARG_VALUE_OPTS and equals:
+                value = "=" + value  # `--merge=` and `--merge=false` are not a bare `--merge`
+            add(name, value)
         elif token.startswith("-") and len(token) > 1:
             for position in range(1, len(token)):
                 name = "-" + token[position]
-                value = ""
-                if name in GH_ARG_VALUE_OPTS:
-                    value = token[position + 1 :]
-                    if not value:
-                        index += 1
-                        value = tokens[index] if index < len(tokens) else ""
-                options.setdefault(name, []).append(value)
-                if name in GH_ARG_VALUE_OPTS:
+                rest = token[position + 1 :]
+                if len(rest) > 1 and rest[0] == "=":
+                    # pflag, at any letter of a cluster: `-iX=PUT` sets -X, `-d=f` sets the Boolean -d.
+                    value = rest[1:] if name in GH_ARG_VALUE_OPTS else rest
+                    add(name, value)
                     break
+                if name in GH_ARG_VALUE_OPTS:
+                    if not rest:
+                        index += 1
+                        rest = tokens[index] if index < len(tokens) else ""
+                    add(name, rest)  # a lone `-b=` is the body `=`
+                    break
+                add(name, "")
         else:
             positional.append(token)
         index += 1
     return positional, options
 
 
-def check_gh(tokens, directory, env):
-    """The rule a `gh` command breaks, or None: PR merges into a protected base, by any gh route."""
+def merge_bearing(command):
+    """True when a call names gh and a merge anywhere, read past quotes and line continuations."""
+    text = re.sub(r"['\"\\\n]", "", command)
+    if not (MERGE_WORDS.search(text) and GH_WORD.search(text)):
+        return False
+    if GIT_CALL.fullmatch(command.strip(BLANKS)):
+        words = shlex.split(command.strip(BLANKS))
+        return any(w.startswith(("-c", "--config-env")) for w in words[1:])
+    return True
+
+
+def check_gh(tokens, directory, env, sole=False):
+    """The rule a `gh` command breaks, or None: PR merges into a protected base, by any gh route,
+    except the delegated route's one form into develop. `sole` is True only when the whole tool call
+    is that one plain `gh` command."""
     positional, options = gh_options(tokens[1:])
     repos = options.get("-R", []) + options.get("--repo", [])
     repo = ["--repo", repos[-1]] if repos else []
+    if positional[:2] == ["pr", "merge"] and len(repos) > 1:
+        # gh takes the last in argv order; the guard does not track that order across spellings.
+        return "a PR merge that names its repository more than once"
     if positional[:2] == ["pr", "merge"]:
         # The guard's documented live probe: answered here, with no lookup.
         if "--help" in options or "-h" in options:
@@ -477,11 +568,16 @@ def check_gh(tokens, directory, env):
         if "--auto" in options:
             return "an auto-merge, whose base can change before it lands"
         selector = positional[2:3]
+        if selector and selector[0].startswith("-"):
+            # Read back without its `--`, a selector such as `--comments=false` would be a view option.
+            return "a PR merge whose selector begins with a dash"
         base = gh_read(
             ["pr", "view"] + selector + repo + ["--json", "baseRefName", "--jq", ".baseRefName"],
             directory,
             env,
         )
+        if base == INTEGRATION_BASE:
+            return check_route_form(positional, options, sole)
         return check_merge_base(base)
     if positional[:1] == ["api"]:
         call = " ".join(tokens[1:])
@@ -489,9 +585,9 @@ def check_gh(tokens, directory, env):
             return "a PR merge"
         if re.search(r"repos/[^/\s]+/[^/\s]+/merges\b", call):
             return "a branch merge through the API"
-        methods = [m.upper() for m in options.get("-X", []) + options.get("--method", [])]
-        if "PUT" not in methods:
-            return None
+        methods = options.get("--method", [])
+        if not methods or methods[-1].upper() != "PUT":
+            return None  # gh sends the last method given, by either spelling
         endpoint = positional[1] if len(positional) > 1 else ""
         merge_url = re.fullmatch(r"(.*\brepos/[^/]+/[^/]+/pulls/[^/]+)/merge/?", endpoint)
         if merge_url:
@@ -506,16 +602,37 @@ def check_gh(tokens, directory, env):
     return None
 
 
-def check_command(command, directory, inherited=None):
-    """The first rule the command breaks, or None. `inherited` is a calling shell's environment."""
+def check_command(command, directory, inherited=None, nested=False):
+    """The first rule the command breaks, or None. `inherited` is a calling shell's environment;
+    `nested` marks a command read from inside `eval` or a shell's `-c`."""
     exported = dict(inherited or {})
-    for tokens in segments(command):
+    # A descriptor duplication (`2>&1`) would split at its `&` and hide the words after it from the
+    # command they belong to, so it is dropped before splitting: `gh … 2>&1 -R x/y` stays one argv.
+    # The shell also joins a backslash-newline before reading words.
+    parts = segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command.replace("\\\n", "")))
+    # Only a call that is one plain `gh` command, with no prefix, wrapper, redirect, quote, chain or
+    # expansion, can carry the route: its words are exactly the argv gh receives.
+    sole = not nested and bool(PLAIN_CALL.fullmatch(command.strip(BLANKS)))
+    if merge_bearing(command):
+        # Beside anything else (a chain, substitution, wrapper, shell, redirect or continuation) a
+        # merge's base read can be stale or of another PR before it runs, so only this shape is read.
+        if nested or not MERGE_CALL.fullmatch(command.strip(BLANKS)):
+            return "a gh merge in a call the guard cannot read word for word"
+        # Only an unquoted trailing `2>&1` is a redirect; a quoted one is gh's argument.
+        words = shlex.split(re.sub(r"[ \t]+2>&1$", "", command.strip(BLANKS)))
+        env = dict(exported)
+        while ASSIGNMENT.match(words[0]):
+            env.update([words.pop(0).split("=", 1)])
+        return check_gh(words, directory, env, sole=sole)
+    for tokens in parts:
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
         env = dict(exported)
         env.update(token.split("=", 1) for token in prefix if ASSIGNMENT.match(token))
         tokens = command_tokens
+        if wrapped_with_options(prefix, command_tokens):
+            return "a git or gh command behind wrapper options the guard does not parse"
         if not tokens:
             continue
         head = os.path.basename(tokens[0])
@@ -531,16 +648,16 @@ def check_command(command, directory, inherited=None):
         elif head == "cd" and len(tokens) == 2:
             directory = os.path.join(directory, os.path.expanduser(tokens[1]))
         elif head == "eval":
-            reason = check_command(" ".join(tokens[1:]), directory, env)
+            reason = check_command(" ".join(tokens[1:]), directory, env, nested=True)
         elif head in SHELLS:
             for index, token in enumerate(tokens[:-1]):
-                if re.fullmatch(r"-[a-z]*c", token):
-                    reason = check_command(tokens[index + 1], directory, env)
+                if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", token):
+                    reason = check_command(tokens[index + 1], directory, env, nested=True)
                     break
         elif head == "git":
             reason = check_git(tokens, directory, env)
         elif head == "gh":
-            reason = check_gh(tokens, directory, env)
+            reason = check_gh(tokens, directory, env, sole=sole)
         if reason:
             return reason
     return None
@@ -569,6 +686,19 @@ def main():
             advice = "The guard must see what is pushed. Name the remote and the branch, with its destination, on the command line, without -c."
         elif "could not be read for the author" in reason:
             advice = "RULE ZERO: the history read failed or timed out. Check the revision and retry once; if it keeps failing, hand the push back to Brandon."
+        elif reason.startswith("a PR merge into develop "):
+            advice = (
+                "Only an accepted PR whose binding's route is active merges into develop, as one "
+                "command on its own: gh pr merge <N> --repo <owner/name> --merge "
+                "--match-head-commit <40-hex head> --author-email {}. A refusal here is not "
+                "routed around; see procedures/review-findings.md, Base merges."
+            ).format(AUTHOR_EMAIL)
+        elif reason.startswith("a gh merge in a call"):
+            advice = (
+                "Run the gh merge as its own tool call: one gh command, with no chain, pipe, "
+                "substitution, wrapper, shell -c, line continuation or redirect but a trailing 2>&1; "
+                "pass a message with --body-file."
+            )
         elif "through xargs" in reason:
             advice = "Pass the git or gh command and its arguments directly, without xargs."
         elif reason.startswith(("a commit", "a push of commits")):

@@ -28,7 +28,7 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
   operation, not a switch of the delivery or team to B1: the team continues on its supported
   routes and stops at the first operation with no safe route, naming the capability and its
   restoration owner (B2 item 5); likewise for a role with no supported route. Use approved fallbacks
-  in the team operating model; Brandon is never the command runner and alone merges base PRs.
+  in the team operating model; Brandon is never the command runner; he merges what no active route covers.
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 - **Resolve the active workspace and target checkout from live inventory**; do not assume every
   specialist shares main's working directory.
@@ -40,7 +40,7 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
 | Orchestrator | **Camina** (`main`), chief of staff, assigns the accountable lead; every staff member may orchestrate work in their domain |
 | Delivery owner | **Judy** (`coder`), or the assigned delivery specialist |
 | Independent reviewer | **Amos** (`reviewer`), or the assigned reviewer; where no reviewer can be seated, A4's bot-plus-merge rule applies and the PR body says so |
-| Merge | **Brandon**, by hand, into `develop`, `master` or `main` |
+| Merge | **Brandon**, by hand, into `master` or `main`, and into `develop` except a merge the profile's delegated route covers once it is active for this client |
 
 The roster and route mechanics live in `~/.openclaw/workspace/docs/team-operating-model.md`.
 Brandon may instruct any staff member directly; staff reconcile relevant operational context with

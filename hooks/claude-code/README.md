@@ -7,7 +7,7 @@ other clients, git aliases).
 
 | Hook | Event | What it does |
 | --- | --- | --- |
-| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main` (the matching refspec `:` and `--all` included), PR merges into `develop`, `main` or `master` (or whose base it cannot read), git or gh arguments fed through `xargs`, a commit that skips the commit-msg hook (`--no-verify`; a courtesy read of the command's words, so a flag placed after `2>&1` is not seen and such a commit skips the hook; the push-time scan and the read before presentation are the controls for that shape), a push with a `-c` setting or whose targets `remote.<name>.push` would choose, and, best effort, a push whose commits new to the destination remote's tracking refs carry another author or an attribution line (RULE ZERO). The author and message of a commit being made are [`../git/commit-msg`](../git/README.md)'s to read; the complete read is the one before a delivery is presented |
+| `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main` (the matching refspec `:` and `--all` included), PR merges into `main` or `master` (or whose base it cannot read), PR merges into `develop` in any form but the delegated route's one (below), git or gh arguments fed through `xargs`, a commit that skips the commit-msg hook (`--no-verify`; a courtesy read of the command's words, so a shape that hides the flag from them skips the hook; the push-time scan and the read before presentation are the controls for that shape), a push with a `-c` setting or whose targets `remote.<name>.push` would choose, and, best effort, a push whose commits new to the destination remote's tracking refs carry another author or an attribution line (RULE ZERO). The author and message of a commit being made are [`../git/commit-msg`](../git/README.md)'s to read; the complete read is the one before a delivery is presented |
 | `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode and the agreement paths after each compaction |
 | `look_again.py` | `Stop` | Sends the agent back once when a file it read or wrote since your last prompt has changed since, naming the file, so it reads it again before it reports |
 
@@ -62,3 +62,23 @@ The guard reads a PR's base with `gh pr view` (or `gh api` for a REST merge), so
 feature, wave, lane or hotfix branches passes; it refuses when that read fails. `gh pr merge
 --auto` is refused whatever the base, since a stacked PR can be retargeted to `develop` before
 it lands.
+
+A call that names `gh` and a merge (read past quotes and line continuations) is read only as one
+simple `gh` command: assignments, then `gh` or its path, then plain or quoted words with no
+expansion, and at most a trailing `2>&1`; a simple `git` command without `-c` whose values name them
+is read as git. Beside a chain, substitution, wrapper, shell `-c`, continuation or other redirect, a
+merge is refused whatever the base, since the base read could be stale or of another PR by the time
+it runs. Harmless text and read-only chains that mention both are refused the same way, so run them
+as their own call. A merge naming its repository twice is refused too, and so is a git or gh command
+behind wrapper options (`env -u`, `env -S`, `sudo -u`). Into `develop` exactly one form passes, the
+delegated route of [`review-findings.md`](../../procedures/review-findings.md#base-merges), as the
+whole tool call in plain words (no prefix, wrapper, path, quote, redirect, chain, background, `eval`
+or `sh -c`): `gh pr merge <N> --repo <owner/name> --merge --match-head-commit <40-hex>
+--author-email brandon@brandonperfetti.com`, each flag once and no other (no squash, rebase,
+`--admin`, `--auto`, branch deletion or message). Every `gh api` merge into `develop` stays refused.
+This checks form, not whether the route is active or the PR eligible; those are the procedure's. Its
+limits: the base is read before the command runs, so another session's retarget in that window is
+not caught (only the head is pinned on the server); names the shell builds (`$'g\x68'`, `$(printf
+gh)`, variables), shell functions, `PATH`, configured git aliases and `--exec-path`, and `gh`
+aliases and extensions are not resolved, so this guards literal commands, not an adversarial shell;
+and on a base with a merge queue `gh` may enqueue rather than merge.

@@ -21,8 +21,9 @@ working the findings; the orchestrator for routing fixes to lanes.
 threshold and its three outcomes, base merges.
 
 **Stop:** A verified harmful finding holds the merge until fixed; spending outside an approved
-allowance holds the paid review, never the push (B2); a delegated merge with any condition unmet
-is not made, and the owner merges.
+allowance holds the paid review, never the push (B2); a delegated merge with a condition unmet
+is not made — the delivery owner repairs a repairable one, and a control's denial stops that
+operation with its restoring owner named (*Base merges*).
 
 ---
 
@@ -116,30 +117,57 @@ reviews; an exhausted allowance or unapproved charge holds that paid review, nev
 
 ## Base merges
 
-The owner merges base branches. An integration-branch merge may be delegated to the delivery
-owner only through a route the binding names as qualified; with none named, the owner merges.
-Installing a skill or passing a source scenario names no route.
+The owner merges every release. An integration-branch merge is the delivery owner's only through a
+route the binding names and records as **active**, for the repositories and clients it names;
+otherwise, a dormant or missing route included, the owner merges. Merging this procedure, a
+skill, a guard or a passing source scenario activates nothing: a route is activated by a reviewed
+change to the binding after its qualification on a disposable fixture (positive and refusal cases
+on the server and on each client named), never by an otherwise unauthorized real merge. Later
+real merges are observations, not qualification.
 
-**Eligible work** — the independent reviewer confirms it in the verdict at the exact head; the
-producer's own label never suffices: already-approved scope, predictable localized effects,
-adequate proof, inexpensive recovery, a Spec conclusion against an actual spec (a missing spec is
-an evidence gap, never a pass), no escalation trigger above, and an integration merge that deploys,
-publishes or notifies nothing outside the repository, read from the repository's actual workflows
-and hosting, not inferred from the branch name; an unknown effect is ineligible, and a text revert
-is no proof of recovery from deployment, data or notifications. Work integrated under A4's
-no-reviewer exception is never eligible. Changes to authority, review or merge controls
-(an agreement, a review or merge skill, branch protection, the CI gate) are never eligible. File
-count and Markdown-only status are no evidence. The release branch is never delegated; the owner
-approves and merges every release.
+**Eligible work** — routine work in the binding's scope, confirmed by the independent reviewer at
+the exact head; the producer's own label never suffices. Already-approved scope; whole-branch
+Standards and Spec acceptance at head `H` against an actual spec (a missing spec is an evidence
+gap, never a pass); no open escalation trigger; every effect of the merge known and inside the
+repository's recorded effects — workflows on the base, hosting (deploy matchers, build hooks),
+environments, webhooks and integrations; a surface that could not be read is recorded as
+uninspected, never as no effect, and "no workflow" is never "no effect". An unknown effect is
+investigation before the merge. **Never delegated:** a release; a change to authority, review or
+merge controls (an agreement, a review or merge skill, a guard hook, branch protection, the CI
+gate), which stays the owner's merge with its focused reviewer; work integrated under A4's
+no-reviewer exception. File count and Markdown-only status are no evidence.
 
-**A qualified route establishes, at the moment of merging and on the platform's current state:**
-the PR's head is the accepted SHA; its base is the integration branch at an expected SHA, so the
-merge result is the reviewed result; required checks passed and findings are dispositioned on
-that head; the merge commit carries the bound author identity; and the actual repository effects
-are as checked. A head pin alone does not guard a moving base, a locally pinned commit does not
-prove the PR's head stayed unchanged, and a normal non-force push only refuses a push that is not
-a descendant of the remote tip: an ancestry check, not a compare-and-swap against an expected base
-SHA. Required checks, protections and hooks stay as they are; a guard that refuses an operation is
-not routed around with another command. Qualification uses disposable fixtures for its positive
-and refusal cases, never an otherwise unauthorized real merge. Any unmet condition or refusal ends
-the attempt, without a retry under other arguments, and the owner merges.
+**Before the merge.** The expected checks are named by context and source from the repository's
+gate and its PR-triggered workflows; on `H` each is present, completed, the latest run, and a
+success — skipped or neutral only where that workflow's own conditions explain it. An absent check
+fails; a repository with no expected PR check records its disposition (the full gate on the merge
+result, seen by the reviewer). Commits in the base-to-`H` range pass the author and attribution
+read. If the base has moved since acceptance, the delivery owner gathers what the movement changes
+— behaviour, workflows, effects, the verification basis, not only paths — and the independent
+reviewer carries the acceptance forward or renews it (*Acceptance and staleness*); the producer
+never issues it. A moved head, conflict, failing, pending or absent check, stale review or open
+finding is the delivery owner's to repair, within the existing bounds: the conflict procedure's
+progress rule, the three-round stop above, and B2's restoration rule.
+
+**The operation** is one command, alone: `gh pr merge <N> --repo <owner/name> --merge
+--match-head-commit <H> --author-email <bound author>` — never `--admin`, `--auto`, a squash, a
+rebase, branch deletion or a custom message. No API call is an equivalent route; one may qualify
+later under this procedure, and none is switched to after a refusal. The response is read, not
+its status code alone: a repairable state goes back to repair; an ambiguous or failed transport is
+followed by reading the PR, the branch and the commit before any fresh attempt, and a still
+unknown outcome is reconciled, never assumed failed or repeated. A denial by a permission, ruleset
+or hook stops that operation — no other flag, API, account or hook edit — and names the control's
+owner, who restores an authorized route if one is intended.
+
+**After the merge,** the merge commit's parents, author, committer and message are read. A wrong
+accepted head, a wrong author or a prohibited attribution, or another merge shape suspends the
+route in that repository: history is kept, the restoration and incident owner is named, and no
+direct push or unapproved rollback follows. A red result or a material base interaction is
+corrected by a normal reviewed PR into the integration branch.
+
+**What the route does not guarantee.** The platform pins the head, not the base; checks, findings
+and effects are read, not bound by the server. A base can move between the last read and the
+merge, and the merged result can run its effects before anyone looks. A post-merge gate detects
+some faults; it bounds no other consequence and reverses no deployment or data effect. The owner
+accepted this for the binding's scope (Brandon, 2026-11-12, #264); a repository whose effects
+need more uses a stronger pre-merge control, and the release branch is never delegated.

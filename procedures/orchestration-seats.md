@@ -47,9 +47,9 @@ objectives, or expansion of the authorized scope.
     full gate, and never supplies the confirmation a delegated merge needs.
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
-  neither seat makes it the reviewer of its own work, and neither merges a base branch but by a
-  qualified delegated route ([base merges](review-findings.md#base-merges)); Brandon does (the
-  profile's Git ritual, step 6). A client appendix may name who fills each
+  neither seat makes it the reviewer of its own work, and neither merges a base branch but by an
+  active delegated route ([base merges](review-findings.md#base-merges)); Brandon does otherwise
+  (the profile's Git ritual, step 6). A client appendix may name who fills each
   seat there (Brandon, 2026-10-23, #173).
 - **The MPD is the spine.** The owner conversation establishes the objective and decisions;
   `MASTER-PRIORITY-DOCUMENT.md` records them and §0's mode. The lead advances the next justified

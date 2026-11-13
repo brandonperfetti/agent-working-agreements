@@ -15,8 +15,8 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 
 | Core term | Sans Faux binding |
 | --- | --- |
-| `owner` | Brandon Perfetti; he merges base branches, by hand in the host's UI |
-| `delegated merge route` | none qualified, so Brandon merges every PR — *Review and merge* below |
+| `owner` | Brandon Perfetti; he merges releases and every merge no active route covers, by hand in the host's UI |
+| `delegated merge route` | **dormant** — the head-bound route of [`review-findings.md`](../procedures/review-findings.md#base-merges), for routine work into `develop` of `agent-working-agreements` and `claude-skills`; activated by a reviewed change here naming the qualified clients and its fixture record; until then Brandon merges |
 | `author identity` | `brandon@brandonperfetti.com`, exactly — RULE ZERO below |
 | `attribution` | none, except the agent line on comments to other owners' repositories — RULE ZERO below |
 | `integration branch` | `develop` |
@@ -71,7 +71,7 @@ disagree, the rule is wrong.
 
 1. **Feature work branches off `develop`**, with nested feature, bugfix and lane branches as needed.
 2. **That branch opens a PR into `develop`.** The review bot reviews it; findings are worked **on
-   the feature branch**; Brandon merges it into `develop`.
+   the feature branch**; it merges into `develop` as the `delegated merge route` binding says.
 3. **When `develop` is ready to ship, a PR is opened from `develop` into `master`.** Its **head is
    `develop`** — there is no release branch. Release branches were **rejected** (Brandon,
    2026-09-12): they add a step to every release to buy a constraint he does not want.
@@ -81,8 +81,8 @@ disagree, the rule is wrong.
 5. **Release-cut work lands on `develop` the same way** — the version bump, the CHANGELOG section
    rename and any built artifact, reviewed on that PR. The only per-repo difference is whether a
    repo has a version to bump at all.
-6. **Brandon merges both base-branch PRs, by hand in the host's UI.** The delivery owner merges
-   reviewed lanes.
+6. **Brandon merges the release PR, by hand in the host's UI,** and any `develop` merge no active
+   route covers. The delivery owner merges reviewed lanes.
 7. **Brandon tags on `master`**, where the repo publishes releases; the tag fires the release
    workflow.
 8. **The back-merge carries `master` home to `develop`** — a direct push by the workflow, why

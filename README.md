@@ -69,7 +69,8 @@ conventions stay in each repository's own `AGENTS.md`, and workflow procedures i
 names (#173).
 
 **Who does what in a delivery** is A4's to say, in its three seats — the orchestrator, the
-delivery owner and the independent reviewer — and only Brandon merges. A client appendix may name
+delivery owner and the independent reviewer; Brandon merges releases and whatever no active
+delegated route covers. A client appendix may name
 who fills each seat there.
 
 ## How this reaches each client
