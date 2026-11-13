@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-13 — The `develop` route is active for Claude Code only (#269).** The profile's
+  `delegated merge route` binding moves from dormant to active for routine `develop` work in
+  `agent-working-agreements` and `claude-skills`, merged by Claude Code with the installed guard.
+  It qualified on a disposable fixture on Claude Code 2.1.322, as the released procedure requires,
+  and an independent review accepted it. Codex, T3-hosted Codex and OpenClaw stay Brandon's to
+  merge until each qualifies. A suspension is an open `route-suspended` issue in that repository,
+  checked before each delegated merge, until Brandon closes it. Brandon decided.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/269).
+
 - **2026-11-12 — Skip evidence comes from output shown to report skips (#265).** Evidence capture
   told agents to grep a green run for skip markers, but the BP pilot's Playwright run printed no
   skip reasons to its terminal, so zero hits proved nothing. A run now shows no skips only through
