@@ -137,18 +137,19 @@ merge controls (an agreement, a review or merge skill, a guard hook, branch prot
 gate), which stays the owner's merge with its focused reviewer; work integrated under A4's
 no-reviewer exception. File count and Markdown-only status are no evidence.
 
-**Before the merge.** The expected checks are named by context and source from the repository's
-gate and its PR-triggered workflows; on `H` each is present, completed, the latest run, and a
-success — skipped or neutral only where that workflow's own conditions explain it. An absent check
-fails; a repository with no expected PR check records its disposition (the full gate on the merge
-result, seen by the reviewer). Commits in the base-to-`H` range pass the author and attribution
-read. The repository has no open issue labelled `route-suspended`; a check that cannot be read
-counts as suspended. If the base has moved since acceptance, the delivery owner gathers what the
-movement changes — behaviour, workflows, effects, the verification basis, not only paths — and the
-independent reviewer carries the acceptance forward or renews it (*Acceptance and staleness*); the
-producer never issues it. A moved head, conflict, failing, pending or absent check, stale review or
-open finding is the delivery owner's to repair, within the existing bounds: the conflict procedure's
-progress rule, the three-round stop above, and B2's restoration rule.
+**Before the merge.** The expected checks are named by context and source from the repository's gate
+and its PR-triggered workflows; on `H` each is present, completed, the latest run, and a success —
+skipped or neutral only where that workflow's own conditions explain it. An absent check fails; a
+repository with no expected PR check records its disposition (the full gate on the merge result,
+seen by the reviewer). Commits in the base-to-`H` range pass the author and attribution read. The
+repository has no open issue labelled `route-suspended`; a check that cannot be read counts as
+suspended, and a suspension opened after that read does not stop a merge already under way. If the
+base has moved since acceptance, the delivery owner gathers what the movement changes — behaviour,
+workflows, effects, the verification basis, not only paths — and the independent reviewer carries
+the acceptance forward or renews it (*Acceptance and staleness*); the producer never issues it. A
+moved head, conflict, failing, pending or absent check, stale review or open finding is the delivery
+owner's to repair, within the existing bounds: the conflict procedure's progress rule, the
+three-round stop above, and B2's restoration rule.
 
 **The operation** is one command, alone: `gh pr merge <N> --repo <owner/name> --merge
 --match-head-commit <H> --author-email <bound author>` — never `--admin`, `--auto`, a squash, a
@@ -161,11 +162,12 @@ or hook stops that operation — no other flag, API, account or hook edit — an
 owner, who restores an authorized route if one is intended.
 
 **After the merge,** the merge commit's parents, author, committer and message are read. A wrong
-accepted head, a wrong author or a prohibited attribution, or another merge shape suspends the
-route in that repository: whoever finds the fault opens an issue there labelled `route-suspended`,
+accepted head, a wrong author or a prohibited attribution, or another merge shape suspends the route
+in that repository: whoever finds the fault opens an issue there labelled `route-suspended` (one
+that cannot be opened is reported to the owner, and no delegated merge runs there until it is),
 history is kept, the restoration and incident owner is named, and no direct push or unapproved
-rollback follows; the owner closing that issue restores the route. A red result or a material
-base interaction is corrected by a normal reviewed PR into the integration branch.
+rollback follows; the owner closing that issue restores the route. A red result or a material base
+interaction is corrected by a normal reviewed PR into the integration branch.
 
 **What the route does not guarantee.** The platform pins the head, not the base; checks, findings
 and effects are read, not bound by the server. A base can move between the last read and the
