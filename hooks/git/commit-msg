@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """RULE ZERO where git holds the final message: the commit-msg hook (and, linked, applypatch-msg).
 
-Denies a commit whose message carries an attribution line (`Co-Authored-By`, a
-`*-Session` line, "generated with", the agent label) or whose author is not Brandon's email, on
-every route that commits through git on this Mac: Claude Code, Codex, OpenClaw,
+Denies a commit whose message carries a banned attribution line (`Co-Authored-By`, a
+`*-Session` line or a session or chat link, "generated with", the retired agent label), more than
+one `Agent:` declaration or one not in the standard shape, or whose author is not Brandon's email,
+on every route that commits through git on this Mac: Claude Code, Codex, OpenClaw,
 a shell. Git hands it the message file and has already resolved the author, so
 nothing here guesses what a shell command will produce. `--no-verify` skips
 every commit-msg hook; the Claude Code guard denies that flag, and the guard's
@@ -17,14 +18,44 @@ import sys
 # installed-by: agent-working-agreements/hooks/claude-code/install.py (the installer updates files carrying this line)
 
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|^[#>*+\- \t]*posted by an agent\b", re.IGNORECASE | re.MULTILINE)  # a comment, quote or list prefix is still that line's start
+# The attribution check; hooks/claude-code/guard_git.py carries the same patterns and function,
+# and test_commit_msg.py holds the two copies to one table. A comment, quote or list prefix is still
+# a line's start.
+BANNED = re.compile(
+    r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:"  # a contributor or session trailer
+    r"|generated with"  # a promotional footer, anywhere
+    r"|^[#>*+\- \t]*posted by an agent\b"  # the agent label the declaration replaced
+    r"|claude\.ai/(chat|share|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/",  # a session or chat link
+    re.IGNORECASE | re.MULTILINE,
+)
+DECLARATION = re.compile(r"^[#>*+\- \t]*[*_]*agent[*_]*(?:[ \t]*\([^)\n]*\))?[*_]*[ \t]*:", re.IGNORECASE)  # **Agent**: and Agent (x): too
+CLIENT = r"[^\s\u00b7](?:[^\u00b7\n]*[^\s\u00b7])?"  # the client, as it names itself
+MODEL = r" \u00b7 [A-Za-z0-9][\w.:/@+\[\]-]*(?: \(requested\))?"  # the model id, marked when unattested
+EFFORT = r" \u00b7 [a-z][a-z0-9-]*(?: \(requested\))?"  # the effort, marked the same way
+AGENT_LINE = re.compile(
+    r"Agent: (?:" + CLIENT + r" \(OpenClaw\)" + MODEL + "(?:" + EFFORT + ")?"  # OpenClaw: client and model
+    r"|" + CLIENT + MODEL + EFFORT + ")"  # every other client: client, model and effort
+)
+
+
+def attribution_problem(message):
+    """What in one commit message breaks RULE ZERO's attribution clause, or None. The declaration
+    is optional here; when present it is one line, in the standard shape."""
+    if BANNED.search(message):
+        return "no Co-Authored-By, session or chat link, or generated-with line on a commit"
+    declarations = [line for line in message.split("\n") if DECLARATION.match(line)]
+    if len(declarations) > 1:
+        return "one Agent: line per commit, not {}".format(len(declarations))
+    if declarations and not AGENT_LINE.fullmatch(declarations[0].rstrip()):
+        return "an Agent: line reads exactly `Agent: <client> \u00b7 <model> \u00b7 <effort>`, not {!r}".format(declarations[0].strip())
+    return None
 
 
 def read_message(path):
     """The whole message file. Below a scissors line git may have appended the staged diff
     (`commit -v`): whether git then discards that text (an editor with `strip` cleanup) or keeps it
     (`verbatim`, `whitespace`, a reused COMMIT_EDITMSG) is not visible here, so all of it is read.
-    A `commit -v` whose diff carries attribution text is refused; commit without `-v`."""
+    A `commit -v` whose diff carries attribution or `Agent:` text is refused; commit without `-v`."""
     with open(path, encoding="utf-8", errors="replace") as handle:
         return handle.read()
 
@@ -51,17 +82,15 @@ def author_email(hook):
 
 def main(argv):
     """Check the message file git names in argv[1] and the author git resolved; 0 to allow, 1 to refuse."""
+    sys.stderr.reconfigure(errors="backslashreplace")  # a middle dot under an ASCII locale still prints
     if len(argv) < 2:
         print("commit-msg: git gave no message file; refusing the commit.", file=sys.stderr)
         return 1
     message = read_message(argv[1])
     # Comment lines are read too: `--cleanup=verbatim` keeps them, and a trailer in one is a mistake.
-    if TRAILER.search(message):
-        print(
-            "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
-            "Remove the line from the message and commit again.",
-            file=sys.stderr,
-        )
+    problem = attribution_problem(message)
+    if problem:
+        print("RULE ZERO: {}. Fix or remove the line and commit again.".format(problem), file=sys.stderr)
         return 1
     email = author_email(os.path.basename(argv[0]))
     if email is None:
@@ -77,9 +106,10 @@ def main(argv):
     code = chain(argv)
     if code:
         return code
-    if TRAILER.search(read_message(argv[1])):  # the repository's hook may have rewritten the message
-            print("RULE ZERO: the repository's own hook added an attribution line; remove it there.", file=sys.stderr)
-            return 1
+    problem = attribution_problem(read_message(argv[1]))  # the repository's hook may have rewritten the message
+    if problem:
+        print("RULE ZERO: the repository's own hook broke the attribution rule ({}); fix it there.".format(problem), file=sys.stderr)
+        return 1
     return 0
 
 

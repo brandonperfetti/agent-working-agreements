@@ -2,6 +2,8 @@
 """End-to-end tests for hooks/git/commit-msg: real `git commit`s in a scratch repository whose
 `core.hooksPath` is this repository's hooks/git folder. Kept beside the Claude Code hook tests so
 the one `unittest discover` of the CI gate runs them."""
+import importlib.machinery
+import importlib.util
 import os
 import shlex
 import subprocess
@@ -9,10 +11,81 @@ import tempfile
 import unittest
 from unittest import mock
 
+import guard_git
+
 HOOKS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "git")
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 OTHER = "someone@example.com"
 TRAILER = "Co-Authored-By: Claude <noreply@anthropic.com>"
+DECLARED = "Agent: Claude Code \u00b7 claude-opus-5-5 \u00b7 medium"
+BANNED_WORDS = "Co-Authored-By, session or chat link, or generated-with"
+
+
+def load_commit_msg():
+    """The hook as a module: it has no .py suffix, so the loader is named."""
+    path = os.path.join(HOOKS_DIR, "commit-msg")
+    loader = importlib.machinery.SourceFileLoader("commit_msg_hook", path)
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader(loader.name, loader))
+    loader.exec_module(module)
+    return module
+
+
+# (message, the verdict's start or None): one table for both copies of the check.
+DECLARATION_CASES = (
+    ("fix: x", None),
+    ("fix: x\n\n" + DECLARED, None),
+    ("fix: x\n\nReviewed-by: B <b@c>\n" + DECLARED, None),
+    ("fix: x\n\nAgent: Camina (OpenClaw) \u00b7 gpt-5.5", None),
+    ("fix: x\n\nAgent: Camina (OpenClaw) \u00b7 gpt-5.5 \u00b7 high", None),
+    ("fix: x\n\nAgent: Codex \u00b7 gpt-6.1-sol", "an Agent: line reads exactly"),  # only OpenClaw omits the effort
+    ("fix: x\n\nAgent: Claude Code \u00b7 claude-opus-5-5 (requested)", "an Agent: line reads exactly"),
+    ("fix: x\n\nAgent: Codex \u00b7 gpt-5.5-codex (requested) \u00b7 high", None),
+    ("fix: x\n\nAgent: Claude Code \u00b7 claude-opus-5-5[1m] \u00b7 xhigh (requested)", None),
+    ("fix: x\n\n" + DECLARED + "  ", None),  # trailing blanks are not shape
+    ("fix: x\n\nagents: two of them", None),  # a word, not the key
+    ("fix: x\n\n" + DECLARED + "\n" + DECLARED, "one Agent: line per commit, not 2"),
+    ("fix: x\n\n" + DECLARED + "\n\n# " + DECLARED, "one Agent: line per commit, not 2"),
+    ("fix: x\n\nAgent: Claude Code", "an Agent: line reads exactly"),
+    ("fix: x\n\nagent: Claude Code \u00b7 claude-opus-5-5 \u00b7 medium", "an Agent: line reads exactly"),
+    ("fix: x\n\nAgent:Claude Code \u00b7 claude-opus-5-5 \u00b7 medium", "an Agent: line reads exactly"),
+    ("fix: x\n\nAgent: Claude Code - claude-opus-5-5 - medium", "an Agent: line reads exactly"),
+    ("fix: x\n\nAgent: Claude Code \u00b7 claude opus \u00b7 medium", "an Agent: line reads exactly"),
+    ("fix: x\n\nAgent: Claude Code \u00b7 claude-opus-5-5 \u00b7 medium \u00b7 extra", "an Agent: line reads exactly"),
+    ("fix: x\n\nAgent: Claude Code \u00b7 claude-opus-5-5 (served) \u00b7 medium", "an Agent: line reads exactly"),
+    ("fix: x\n\n> " + DECLARED, "an Agent: line reads exactly"),  # a prefix is still that line's start
+    ("fix: x\n\n" + DECLARED + "\n" + TRAILER, "no Co-Authored-By"),
+    ("fix: x\n\n" + DECLARED + "\nGenerated with Claude Code", "no Co-Authored-By"),
+    ("fix: x\n\nPosted by an agent on Brandon Perfetti's behalf.", "no Co-Authored-By"),
+    ("fix: x\n\nhttps://claude.ai/code/session_01AbC", "no Co-Authored-By"),
+    ("fix: x\n\nSee https://chatgpt.com/share/abc for the chat", "no Co-Authored-By"),
+    ("fix: x\n\nhttps://claude.ai/share/0a1b2c", "no Co-Authored-By"),
+    ("fix: x\n\n" + DECLARED + "\n**Agent**: Claude Code", "one Agent: line per commit, not 2"),
+    ("fix: x\n\n" + DECLARED + "\nAgent (Claude Code): opus", "one Agent: line per commit, not 2"),
+    ("fix: x\n\n_Agent_: Claude Code \u00b7 claude-opus-5-5 \u00b7 medium", "an Agent: line reads exactly"),
+    ("fix: x\n\nagent behaviour: unchanged", None),  # prose that starts with the word is not a declaration
+)
+
+
+class AttributionCheckTest(unittest.TestCase):
+    """The check itself, in both hooks that carry it: the commit-msg hook and the push-time guard."""
+
+    def test_both_copies_agree_on_every_case(self):
+        copies = {"commit-msg": load_commit_msg().attribution_problem, "guard_git": guard_git.attribution_problem}
+        for name, check in copies.items():
+            for message, verdict in DECLARATION_CASES:
+                with self.subTest(copy=name, message=message):
+                    problem = check(message)
+                    if verdict is None:
+                        self.assertIsNone(problem)
+                    else:
+                        self.assertTrue((problem or "").startswith(verdict), problem)
+
+    def test_both_copies_share_their_patterns(self):
+        hook = load_commit_msg()
+        for name in ("BANNED", "DECLARATION", "AGENT_LINE"):  # CLIENT, MODEL and EFFORT build AGENT_LINE
+            with self.subTest(pattern=name):
+                self.assertEqual(getattr(hook, name).pattern, getattr(guard_git, name).pattern)
+                self.assertEqual(getattr(hook, name).flags, getattr(guard_git, name).flags)
 
 
 class CommitMsgTest(unittest.TestCase):
@@ -69,9 +142,39 @@ class CommitMsgTest(unittest.TestCase):
         )
         for name, *args in cases:
             with self.subTest(route=name):
-                self.assert_denied(self.commit(*args), "Co-Authored-By, session or generated-with")
+                self.assert_denied(self.commit(*args), BANNED_WORDS)
         result = subprocess.run(["bash", "-c", shell], capture_output=True, text=True)
         self.assert_denied(result)
+        self.assertEqual(self.git("rev-list", "--count", "HEAD").stdout.strip(), "1")  # nothing was committed
+
+    def test_one_well_formed_declaration_commits(self):
+        cases = (
+            ("-m", "-m", "fix: x\n\n" + DECLARED),
+            ("--trailer", "-m", "fix: x", "--trailer", DECLARED),
+            ("OpenClaw", "-m", "fix: x\n\nAgent: Camina (OpenClaw) \u00b7 gpt-5.5"),
+            ("requested", "-m", "fix: x\n\nAgent: Codex \u00b7 gpt-5.5 (requested) \u00b7 high"),
+        )
+        for name, *args in cases:
+            with self.subTest(route=name):
+                result = self.commit(*args)
+                self.assertEqual(result.returncode, 0, result.stderr)
+        trailers = self.git("log", "-1", "--format=%(trailers:key=Agent,valueonly)").stdout.strip()
+        self.assertEqual(trailers, "Codex \u00b7 gpt-5.5 (requested) \u00b7 high")  # git reads it as a trailer
+
+    def test_a_second_or_malformed_declaration_is_denied(self):
+        cases = (
+            ("two -m", "-m", "fix: x\n\n" + DECLARED, "-m", DECLARED),
+            ("body and --trailer", "-m", "fix: x\n\n" + DECLARED, "--trailer", "Agent: Codex \u00b7 gpt-5.5 \u00b7 high"),
+            ("no model", "-m", "fix: x\n\nAgent: Claude Code"),
+            ("no effort", "-m", "fix: x\n\nAgent: Codex \u00b7 gpt-6.1-sol"),
+            ("wrong separator", "-m", "fix: x\n\nAgent: Claude Code | claude-opus-5-5 | medium"),
+            ("--trailer key=value", "-m", "fix: x", "--trailer", "Agent=Claude Code"),
+        )
+        for name, *args in cases:
+            with self.subTest(route=name):
+                self.assert_denied(self.commit(*args), "Agent: line")
+        self.assert_denied(self.commit("-m", "fix: x\n\n" + DECLARED + "\n" + TRAILER), BANNED_WORDS)
+        self.assert_denied(self.commit("-m", "fix: x\n\n" + DECLARED, env={"GIT_AUTHOR_EMAIL": OTHER}), OTHER)  # declared, still Brandon's
         self.assertEqual(self.git("rev-list", "--count", "HEAD").stdout.strip(), "1")  # nothing was committed
 
     def test_amend_and_reuse_reread_the_message(self):

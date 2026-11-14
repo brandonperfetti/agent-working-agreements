@@ -780,9 +780,33 @@ class AuthorTest(unittest.TestCase):
         self.assertIn(self.OTHER, guard_git.check_command("git push origin feature", self.mine) or "")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "--reset-author", "-m", "fix: x\n\nCo-Authored-By: A <a@b>")
         git(self.mine, "push", "-q", "origin", "HEAD~1:refs/heads/other")  # the foreign commit is now on a remote
-        self.assertIn("attribution trailer", guard_git.check_command("git push origin feature", self.mine) or "")
+        self.assertIn("attribution rule", guard_git.check_command("git push origin feature", self.mine) or "")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: clean")
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+
+    def test_push_scan_reads_each_commits_declaration(self):
+        declared = "Agent: Claude Code \u00b7 claude-opus-5-5 \u00b7 medium"
+        for _ in range(2):  # one declaration in each of two commits: one per commit, not one per push
+            git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: x\n\n" + declared)
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+        git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: x\n\n" + declared + "\n" + declared)
+        self.assertIn("one Agent: line per commit", guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: x\n\nAgent: Claude Code")
+        self.assertIn("an Agent: line reads exactly", guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: x\n\n" + declared + "\nGenerated with Claude Code")
+        self.assertIn("attribution rule", guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: x\n\n" + declared)
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+        git(self.mine, "config", "i18n.logOutputEncoding", "ISO-8859-1")  # the scan asks for UTF-8 whatever the config says
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+
+    def test_the_attribution_advice_names_the_declaration(self):
+        git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: x\n\nAgent: Claude Code")
+        payload = json.dumps({"tool_input": {"command": "git push origin feature"}, "cwd": self.mine})
+        result = subprocess.run(["/usr/bin/python3", "-I", guard_git.__file__], input=payload, capture_output=True, text=True, check=True)
+        reason = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecisionReason"]
+        self.assertIn("Agent: <client> \u00b7 <model> \u00b7 <effort>", reason)
+        self.assertIn("Co-Authored-By", reason)
 
     def test_push_scan_reads_the_repository_the_command_selects(self):
         commit_as(self.other, self.OTHER)  # `other` holds a foreign commit; cwd is the clean repo
