@@ -63,7 +63,7 @@ owner decision.
   objective. Lanes keep to named files and their own worktree.
 - **Model and effort are chosen per task**; reports separate requested from attested.
 - **Authorship:** every agent commit carries the bound author identity, checked before push,
-  merge and presentation; attribution follows the binding. No credit footer is required anywhere.
+  merge and presentation; attribution and any agent declaration follow the binding.
 - **Independent review with distinct Standards and Spec conclusions** via the bound route before
   acceptance, fixes and conflict resolutions included, no size exemption; never a producer's own
   report; a second, focused reviewer for consequence, uncertainty or disagreement. **Before any
