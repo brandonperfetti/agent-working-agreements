@@ -8,7 +8,7 @@ other clients, git aliases).
 | Hook | Event | What it does |
 | --- | --- | --- |
 | `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main` (the matching refspec `:` and `--all` included), PR merges into `main` or `master` (or whose base it cannot read), PR merges into `develop` in any form but the delegated route's one (below), git or gh arguments fed through `xargs`, a commit that skips the commit-msg hook (`--no-verify`; a courtesy read of the command's words, so a shape that hides the flag from them skips the hook; the push-time scan and the read before presentation are the controls for that shape), a push with a `-c` setting or whose targets `remote.<name>.push` would choose, and, best effort, a push whose commits new to the destination remote's tracking refs carry another author, a banned attribution line, or an `Agent:` declaration that is malformed or not that commit's only one (RULE ZERO). The author and message of a commit being made are [`../git/commit-msg`](../git/README.md)'s to read; the complete read is the one before a delivery is presented |
-| `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode and the agreement paths after each compaction |
+| `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode, who merges and the agreement paths after each compaction |
 | `look_again.py` | `Stop` | Sends the agent back once when a file it read or wrote since your last prompt has changed since, naming the file, so it reads it again before it reports |
 
 `look_again.py` sees only the files the agent touched with its file tools since your last prompt;

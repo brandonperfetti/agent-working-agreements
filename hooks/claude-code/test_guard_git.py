@@ -784,6 +784,35 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: clean")
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
 
+    def test_a_bare_push_redirected_by_configuration_is_denied(self):
+        """#236: a push with no refspec goes where git config sends it, so the guard reads that."""
+        commit_as(self.mine, guard_git.AUTHOR_EMAIL)
+        git(self.mine, "push", "-q", "origin", "feature:master")  # master on the remote
+        git(self.mine, "branch", "-q", "master")  # and locally
+        git(self.mine, "fetch", "-q", "origin")
+        git(self.mine, "branch", "-q", "--set-upstream-to=origin/master", "feature")
+        # Each redirect given with -c: denied, whatever it names.
+        for setting in ("push.default=upstream", "remote.origin.push=HEAD:master", "push.default=matching"):
+            with self.subTest(setting=setting):
+                self.assertIn("configuration setting", guard_git.check_command("git -c {} push".format(setting), self.mine) or "")
+        # The same three, set in the repository's config instead.
+        git(self.mine, "config", "push.default", "upstream")
+        self.assertIn("release branch (master)", guard_git.check_command("git push", self.mine) or "")
+        git(self.mine, "config", "push.default", "matching")
+        self.assertIn("chosen by", guard_git.check_command("git push", self.mine) or "")
+        git(self.mine, "config", "--unset", "push.default")
+        git(self.mine, "config", "remote.origin.push", "HEAD:master")
+        self.assertIn("chosen by", guard_git.check_command("git push", self.mine) or "")
+        git(self.mine, "config", "--unset", "remote.origin.push")
+        # Under the default (simple), a bare push from a feature branch passes and is still scanned.
+        git(self.mine, "branch", "-q", "--unset-upstream", "feature")
+        self.assertIsNone(guard_git.check_command("git push", self.mine))
+        commit_as(self.mine, self.OTHER)
+        self.assertIn(self.OTHER, guard_git.check_command("git push", self.mine) or "")
+        # A destination git cannot name (a detached HEAD) is denied and says so.
+        git(self.mine, "checkout", "-q", "--detach")
+        self.assertIn("could not be resolved", guard_git.check_command("git push", self.mine) or "")
+
     def test_push_scan_reads_each_commits_declaration(self):
         declared = "Agent: Claude Code \u00b7 claude-opus-5-5 \u00b7 medium"
         for _ in range(2):  # one declaration in each of two commits: one per commit, not one per push

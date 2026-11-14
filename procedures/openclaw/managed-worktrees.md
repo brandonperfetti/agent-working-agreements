@@ -18,6 +18,11 @@ service context; Bull for host and runtime facts.
 **Stop:** Any failed fetch, OID mismatch, dirty tree, path overlap or unreadable inventory: stop,
 retain and report; never force. The stop names its restoration owner (B2 item 5).
 
+These steps' stop and retention branches are tested in CI by
+[`scripts/openclaw/runbook.test.sh`](../../scripts/openclaw/runbook.test.sh), against disposable
+repositories and a stub `openclaw` (#191). That harness proves the logic only. This text stays the
+route, and the harness resolves no Gateway service context.
+
 ---
 
 ## Instruction-source isolation and freshness
