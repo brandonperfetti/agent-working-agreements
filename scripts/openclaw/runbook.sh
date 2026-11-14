@@ -17,8 +17,11 @@
 
 PYTHON=/usr/bin/python3
 # `git -C <dir>` does not override an inherited repository selector: every command here acts on the
-# repository its arguments name, so the selectors a caller exported are dropped.
-unset GIT_DIR GIT_WORK_TREE GIT_COMMON_DIR GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
+# repository its arguments name, so the selectors a caller exported are dropped, and so is the
+# `-c`-style configuration a caller injected (which can name hooks); repository and global
+# configuration still apply.
+unset GIT_DIR GIT_WORK_TREE GIT_COMMON_DIR GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES \
+  GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS
 
 audit() { printf 'audit: %s\n' "$*"; }
 stop() { printf 'STOP: %s\n' "$*" >&2; exit 3; }

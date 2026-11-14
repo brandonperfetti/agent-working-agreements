@@ -21,7 +21,8 @@ printf '[user]\n\tname = Fixture\n\temail = fixture@example.com\n[init]\n\tdefau
   >"$fixture/gitconfig"
 export GIT_CONFIG_GLOBAL="$fixture/gitconfig" GIT_CONFIG_NOSYSTEM=1
 unset GIT_DIR GIT_COMMON_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES \
-  GIT_CONFIG GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS OPENCLAW_STATE_DIR OPENCLAW_CONFIG_PATH OPENCLAW_HOME
+  GIT_CONFIG GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS GIT_TEMPLATE_DIR \
+  OPENCLAW_STATE_DIR OPENCLAW_CONFIG_PATH OPENCLAW_HOME
 export OPENCLAW_PROFILE=ambient  # the probing shell's profile, which no bound invocation may inherit
 
 mkdir -p "$fixture/bin" "$fixture/shim"
@@ -40,9 +41,11 @@ done
 case $2 in
   list)
     [ -f "$STUB_DIR/list.exit" ] && exit "$(cat "$STUB_DIR/list.exit")"
+    [ -f "$STUB_DIR/list.sh" ] && sh "$STUB_DIR/list.sh"
     cat "$STUB_DIR/list.json" ;;
   remove)
     [ -f "$STUB_DIR/remove.sh" ] && sh "$STUB_DIR/remove.sh"
+    [ -f "$STUB_DIR/remove.exit" ] && exit "$(cat "$STUB_DIR/remove.exit")"
     cat "$STUB_DIR/remove.json" ;;
   *) exit 64 ;;
 esac
@@ -57,6 +60,8 @@ case " $* " in
   *" worktree list --porcelain "*)
     count=$(cat "$SHIM_STATE/lists" 2>/dev/null || echo 0); count=$((count + 1))
     echo "$count" >"$SHIM_STATE/lists"
+    [ -n "${SHIM_LIST_FAIL:-}" ] && { echo "fatal: refused by the test shim" >&2; exit 1; }
+    [ "$count" -ge 2 ] && [ -n "${SHIM_LIST_FAIL_SECOND:-}" ] && { echo "fatal: refused by the test shim" >&2; exit 1; }
     if [ -n "${SHIM_PORCELAIN:-}" ]; then cat "$SHIM_PORCELAIN"; exit 0; fi
     if [ "$count" -ge 2 ] && [ -n "${SHIM_PORCELAIN_SECOND:-}" ]; then cat "$SHIM_PORCELAIN_SECOND"; exit 0; fi ;;
   *" worktree remove "*)
@@ -227,6 +232,15 @@ holds "refresh: the named root, not the inherited repository, serves the remote'
   grep -qx "serves $(g -C "$base/seed" rev-parse HEAD)" "$out"
 holds "refresh: the inherited repository is untouched" test "$(g -C "$base/other" rev-parse HEAD)" = "$other_head"
 
+new_fixture refresh-injected
+advance master
+mkdir -p "$base/canary"
+printf '#!/bin/sh\ntouch "%s/ran"\n' "$base" >"$base/canary/post-merge"
+chmod 755 "$base/canary/post-merge"
+GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0="$base/canary" \
+  expect 0 '' "refresh: injected configuration naming a hook does not reach the refresh" -- refresh-root "$base/root"
+holds "refresh: the injected hook never ran" test ! -e "$base/ran"
+
 new_fixture refresh-dirty
 g -C "$base/root" switch -q develop
 touch "$base/root/stray"
@@ -308,6 +322,10 @@ holds "cleanup: the retained worktree is still there" test -d "$base/managed/fp/
 holds "cleanup: the retained worktree keeps its branch" has_branch feature/x
 printf 'not json\n' >"$STUB_DIR/remove.json"
 expect 3 'cannot be read' "cleanup: an unreadable removal result stops" -- "${args[@]}"
+echo 1 >"$STUB_DIR/remove.exit"
+expect 3 'openclaw worktrees remove wt-1 failed' "cleanup: a failed managed removal stops" -- "${args[@]}"
+holds "cleanup: a failed managed removal has no git fallback" test -d "$base/managed/fp/x"
+holds "cleanup: a failed managed removal keeps the branch" has_branch feature/x
 
 new_fixture inventory
 delivery "$base/wt-x"
@@ -360,6 +378,10 @@ holds "cleanup: the ignored file alone leaves a plain status empty" \
 expect 3 'untracked or ignored files' "cleanup: an ignored file stops" -- "${args[@]}"
 holds "cleanup: the worktree with ignored content is retained" test -e "$base/wt-x/build.log"
 holds "cleanup: no inventory query ran for a dirty worktree" test ! -e "$STUB_DIR/calls"
+rm "$base/wt-x/build.log"
+printf 'touch "%s/build.log"\n' "$base/wt-x" >"$STUB_DIR/list.sh"  # arrives during the inventory query
+expect 3 'no longer clean' "cleanup: an ignored file that arrives after the first check stops" -- "${args[@]}"
+holds "cleanup: the late ignored file is retained" test -e "$base/wt-x/build.log"
 
 new_fixture ancestry
 delivery "$base/wt-x"
@@ -418,6 +440,18 @@ printf 'worktree %s\nHEAD 0\nbranch refs/heads/master\n\nworktree %s\nHEAD 0\nbr
   "$base/root" "$base/wt-x" >"$base/porcelain"
 PATH="$fixture/shim:$PATH" SHIM_PORCELAIN="$base/porcelain" \
   expect 3 'no worktree line' "cleanup: an inventory record with no worktree line stops" -- "${args[@]}"
+ln -s "$base/wt-x" "$base/wt-alias"
+printf 'worktree %s\nHEAD 0\nbranch refs/heads/master\n\nworktree %s\nHEAD 0\nbranch refs/heads/feature/x\n\nworktree %s\nHEAD 0\ndetached\n\n' \
+  "$base/root" "$base/wt-x" "$base/wt-alias" >"$base/porcelain"
+PATH="$fixture/shim:$PATH" SHIM_PORCELAIN="$base/porcelain" \
+  expect 3 'protected worktree (detached)' "cleanup: a detached record at the path is protected" -- "${args[@]}"
+PATH="$fixture/shim:$PATH" SHIM_LIST_FAIL=1 \
+  expect 3 'git worktree list --porcelain cannot be read' "cleanup: an unreadable git inventory stops" -- "${args[@]}"
+rm -f "$SHIM_STATE/lists"
+PATH="$fixture/shim:$PATH" SHIM_LIST_FAIL_SECOND=1 \
+  expect 3 'second git worktree list --porcelain cannot be read' \
+  "cleanup: an unreadable second git inventory stops" -- "${args[@]}"
+holds "cleanup: the worktree survives the unreadable inventories" test -d "$base/wt-x"
 g -C "$base/root" worktree list --porcelain | sed 's|refs/heads/feature/x|refs/heads/feature/swapped|' >"$base/porcelain"
 rm -f "$SHIM_STATE/lists"
 PATH="$fixture/shim:$PATH" SHIM_PORCELAIN_SECOND="$base/porcelain" \
