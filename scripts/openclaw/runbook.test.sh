@@ -21,7 +21,7 @@ printf '[user]\n\tname = Fixture\n\temail = fixture@example.com\n[init]\n\tdefau
   >"$fixture/gitconfig"
 export GIT_CONFIG_GLOBAL="$fixture/gitconfig" GIT_CONFIG_NOSYSTEM=1
 unset GIT_DIR GIT_COMMON_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES \
-  OPENCLAW_STATE_DIR OPENCLAW_CONFIG_PATH OPENCLAW_HOME
+  GIT_CONFIG GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS OPENCLAW_STATE_DIR OPENCLAW_CONFIG_PATH OPENCLAW_HOME
 export OPENCLAW_PROFILE=ambient  # the probing shell's profile, which no bound invocation may inherit
 
 mkdir -p "$fixture/bin" "$fixture/shim"
@@ -196,6 +196,7 @@ expect 3 'overlaps the artifact store' "overlap: a path inside the store stops" 
 expect 3 'overlaps the artifact store' "overlap: a root containing the protected root stops" -- "${overlap_args[@]}" "$base"
 expect 3 'overlaps the artifact store' "overlap: a symlink into the store stops" -- "${overlap_args[@]}" "$base/link/inside"
 expect 3 'cannot be canonicalized' "overlap: a path that cannot be canonicalized stops" -- "${overlap_args[@]}" "$base/nowhere"
+expect 3 'overlaps the artifact store' "overlap: the filesystem root contains both and stops" -- "${overlap_args[@]}" /
 expect 2 '' "overlap: no store or root named is a usage error" -- check-overlap "$base/managed"
 expect 2 '' "overlap: an option with no value is a usage error, not a loop" -- check-overlap --agent-store
 
@@ -214,6 +215,17 @@ expect 0 '' "refresh: a local branch named origin/master does not shadow the rem
   -- refresh-root "$base/root"
 holds "refresh: the shadowed root still serves the remote's master" \
   grep -qx "serves $(g -C "$base/seed" rev-parse HEAD)" "$out"
+
+new_fixture refresh-selector
+advance master
+g init -q "$base/other"
+g -C "$base/other" commit -q --allow-empty -m other
+other_head=$(g -C "$base/other" rev-parse HEAD)
+GIT_DIR="$base/other/.git" GIT_WORK_TREE="$base/other" \
+  expect 0 '' "refresh: an inherited GIT_DIR does not redirect the refresh" -- refresh-root "$base/root"
+holds "refresh: the named root, not the inherited repository, serves the remote's master" \
+  grep -qx "serves $(g -C "$base/seed" rev-parse HEAD)" "$out"
+holds "refresh: the inherited repository is untouched" test "$(g -C "$base/other" rev-parse HEAD)" = "$other_head"
 
 new_fixture refresh-dirty
 g -C "$base/root" switch -q develop
@@ -258,7 +270,9 @@ expect 3 'not clean after the fast-forward' "refresh: a tree dirty after the fas
 new_fixture plain
 delivery "$base/wt-x"
 cleanup_args
-expect 0 '' "cleanup: a clean, merged plain worktree is removed" -- "${args[@]}"
+mkdir -p "$base/tmp"
+TMPDIR="$base/tmp" expect 0 '' "cleanup: a clean, merged plain worktree is removed" -- "${args[@]}"
+holds "cleanup: a successful cleanup leaves no scratch directory" test -z "$(ls -A "$base/tmp")"
 holds "cleanup: the plain worktree is gone" test ! -e "$base/wt-x"
 holds "cleanup: its branch is deleted" no_branch feature/x
 holds "cleanup: the inventory query ran bound, with the profile unset" \

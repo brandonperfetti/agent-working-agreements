@@ -16,6 +16,9 @@
 # Audit lines go to stdout as `audit: ...`; the reason for a stop or a retention goes to stderr.
 
 PYTHON=/usr/bin/python3
+# `git -C <dir>` does not override an inherited repository selector: every command here acts on the
+# repository its arguments name, so the selectors a caller exported are dropped.
+unset GIT_DIR GIT_WORK_TREE GIT_COMMON_DIR GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
 
 audit() { printf 'audit: %s\n' "$*"; }
 stop() { printf 'STOP: %s\n' "$*" >&2; exit 3; }
@@ -39,8 +42,9 @@ except OSError as error:
 ' "$1"
 }
 
-# True when one canonical path equals, lies inside or contains the other.
+# True when one canonical path equals, lies inside or contains the other; `/` contains every path.
 overlaps() {
+  [ "$1" = / ] || [ "$2" = / ] && return 0
   case "$1/" in "$2/"*) return 0 ;; esac
   case "$2/" in "$1/"*) return 0 ;; esac
   return 1
@@ -221,8 +225,11 @@ cleanup() {
   done
   [ -n "$repo" ] && [ -n "$branch" ] && [ -n "$root" ] && [ -n "$managed_root" ] && [ -n "$openclaw" ] &&
     [ -n "$state_dir" ] && [ -n "$config_path" ] && [ -n "$profile_bound" ] || usage "$usage_line"
-  scratch=$(mktemp -d) || stop "no scratch directory for the inventory"
-  trap 'rm -rf -- "$scratch"' EXIT
+  # A template, so TMPDIR is honoured on macOS too, where a bare `mktemp -d` ignores it.
+  scratch=$(mktemp -d "${TMPDIR:-/tmp}/openclaw-runbook.XXXXXX") || stop "no scratch directory for the inventory"
+  # Expanded now: the trap runs at exit, after this function's locals are gone.
+  # shellcheck disable=SC2064
+  trap "rm -rf -- $(printf '%q' "$scratch")" EXIT
 
   local inventory status i path='' candidates='' matches=0 why canonical_other canonical_repo
   inventory=$(git -C "$repo" worktree list --porcelain) ||
