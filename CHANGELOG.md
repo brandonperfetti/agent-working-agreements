@@ -14,8 +14,9 @@ being retrofitted onto the other.
   (#167).** At delivery close, an item that is durable or recurring, owned by one repository,
   reproducible and actionable becomes a labelled `friction` issue there, from a new issue form; one
   confirmed defect is enough, and a match gets a comment. The record stays as raw capture. A
-  recurring item names the cheapest check that stops it. The board moves a closed issue to Done;
-  a feature PR's `Refs` links nothing, so In Review stays the orchestrator's. Brandon decided.
+  recurring item names the cheapest check that stops it. The board moves a closed issue to Done.
+  Brandon decided; that In Review stays the orchestrator's, because a feature PR's `Refs` links no
+  issue, is a measured correction to his brief, for him to confirm.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/167).
 
 - **2026-11-14 — A bot's own text is not an agent credit; the compaction hook names the develop

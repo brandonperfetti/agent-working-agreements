@@ -41,5 +41,6 @@ call the GitHub API through the MCP or Kody.
   workflow is on its default branch, where issue events run it; the `setup-board-intake` skill
   installs it, once per repository. The board's own workflows move Status: a PR linked to the issue
   moves its card to In Review, and closing the issue moves it to Done. A feature PR's `Refs #N`
-  does not link it, so the orchestrator moves that card to In Review at PR time; it also sets In
-  Progress, when work is claimed, and Blocked.
+  links no issue, so the orchestrator moves the card to In Review by hand — at PR time in
+  autonomous mode (B2's review loop), and at commit time in attended mode, where no PR exists when
+  a delivery is reviewed. It also sets In Progress, when work is claimed, and Blocked.
