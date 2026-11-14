@@ -291,6 +291,8 @@ class CompactHookTest(unittest.TestCase):
         output = json.loads(out)["hookSpecificOutput"]
         self.assertEqual(output["hookEventName"], "SessionStart")
         self.assertIn("brandon@brandonperfetti.com", output["additionalContext"])
+        self.assertIn("Agent: <client> \u00b7 <model id> \u00b7 <effort>", output["additionalContext"])
+        self.assertIn("No Co-Authored-By", output["additionalContext"])
 
 
 if __name__ == "__main__":

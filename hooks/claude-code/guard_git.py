@@ -8,9 +8,10 @@ delegated route (check_route_form; a form check, not eligibility); commits and m
 carry a configuration override (read from the command's words as the lexer
 splits them, so a shape that hides a flag from them skips the hook: the push-time
 scan and the read before presentation are the controls for that shape); and, best effort, pushes whose commits new to
-the destination remote's tracking refs carry another author or an attribution
-line (RULE ZERO; stale tracking refs are the documented limit, and the read
-before a delivery is presented is the complete check). The author and message
+the destination remote's tracking refs carry another author, a banned attribution
+line, or an agent declaration that is malformed or not the commit's only one
+(RULE ZERO; stale tracking refs are the documented limit, and the read before a
+delivery is presented is the complete check). The author and message
 of a commit being made are the commit-msg hook's to read (hooks/git), where git
 holds them final; this guard reads only what git has already written. Merges
 between feature, wave, lane and hotfix branches pass. It parses the command rather than grepping it,
@@ -28,7 +29,22 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-TRAILER = re.compile(r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:|generated with|^[#>*+\- \t]*posted by an agent\b", re.IGNORECASE | re.MULTILINE)  # a comment, quote or list prefix is still that line's start
+# The attribution check; hooks/git/commit-msg carries the same three names and function,
+# and test_commit_msg.py holds the two copies to one table. A comment, quote or list prefix is still
+# a line's start.
+BANNED = re.compile(
+    r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:"  # a contributor or session trailer
+    r"|generated with"  # a promotional footer, anywhere
+    r"|^[#>*+\- \t]*posted by an agent\b"  # the agent label the declaration replaced
+    r"|claude\.ai/(chat|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/",  # a session or chat link
+    re.IGNORECASE | re.MULTILINE,
+)
+DECLARATION = re.compile(r"^[#>*+\- \t]*agent[ \t]*:", re.IGNORECASE)
+AGENT_LINE = re.compile(
+    r"Agent: [^\s\u00b7](?:[^\u00b7\n]*[^\s\u00b7])?"  # the client, as it names itself
+    r" \u00b7 [A-Za-z0-9][\w.:/@+\[\]-]*(?: \(requested\))?"  # the model id, marked when unattested
+    r"(?: \u00b7 [a-z][a-z0-9-]*(?: \(requested\))?)?"  # the effort, where the client has one
+)
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
@@ -54,6 +70,19 @@ HEREDOC = re.compile(
     r"^(?P<head>[^\n]*<<-?[ \t]*['\"]?(?P<tag>\w+)['\"]?[^\n]*)\n.*?^\s*(?P=tag)\s*$",
     re.DOTALL | re.MULTILINE,
 )
+
+
+def attribution_problem(message):
+    """What in one commit message breaks RULE ZERO's attribution clause, or None. The declaration
+    is optional here; when present it is one line, in the standard shape."""
+    if BANNED.search(message):
+        return "no Co-Authored-By, session or chat link, or generated-with line on a commit"
+    declarations = [line for line in message.split("\n") if DECLARATION.match(line)]
+    if len(declarations) > 1:
+        return "one Agent: line per commit, not {}".format(len(declarations))
+    if declarations and not AGENT_LINE.fullmatch(declarations[0].rstrip()):
+        return "an Agent: line reads exactly `Agent: <client> \u00b7 <model> \u00b7 <effort>`, not {!r}".format(declarations[0].strip())
+    return None
 
 
 def drop_heredoc(match):
@@ -173,7 +202,8 @@ def git_lines(directory, args, env=None, raw=False):
             ["git", "-C", directory] + args,
             capture_output=True,
             text=True,
-            errors="replace",  # a message with bytes outside the locale is still read, not a traceback
+            encoding="utf-8",  # git writes messages as UTF-8 by default; the locale may say otherwise
+            errors="replace",  # a message with bytes outside the encoding is still read, not a traceback
             timeout=5,
             env=env,
         )
@@ -280,8 +310,10 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None, 
     others = sorted({r.split("\x1f", 1)[0].strip() for r in records} - {AUTHOR_EMAIL})
     if others:
         return "a push of commits authored as {}".format(", ".join(others))
-    if TRAILER.search("\n".join(r.split("\x1f", 1)[1] if "\x1f" in r else "" for r in records)):
-        return "a push of commits carrying an attribution trailer"
+    for record in records:  # one message at a time: one declaration each, not one per push
+        problem = attribution_problem(record.split("\x1f", 1)[1] if "\x1f" in record else "")
+        if problem:
+            return "a push of commits breaking the attribution rule ({})".format(problem)
     return None
 
 
@@ -669,10 +701,11 @@ def main():
     command = payload.get("tool_input", {}).get("command", "")
     reason = check_command(command, payload.get("cwd") or os.getcwd())
     if reason:
-        if "attribution trailer" in reason:
+        if "attribution rule" in reason:
             advice = (
-                "RULE ZERO: no Co-Authored-By, session or generated-with line on a commit. "
-                "Remove the trailer (git commit --amend for a commit already made) and retry."
+                "RULE ZERO: at most one Agent: <client> \u00b7 <model> \u00b7 <effort> trailer, and no "
+                "Co-Authored-By, session or chat link, or generated-with line, on a commit. Fix the "
+                "message (git commit --amend for a commit already made) and retry."
             )
         elif "cannot be read" in reason and "segment" in reason:
             advice = "Quote redirect targets without shell separators, or split the command, so the guard can read each part."
