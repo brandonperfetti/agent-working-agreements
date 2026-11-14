@@ -52,7 +52,7 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   folders, never loose; never a clone in `_agent/`. The layout, friction path and clone rule are
   [`agent-workspace-layout.md`](../procedures/agent-workspace-layout.md)'s (#185).
 - **A7.** `gh` is primary. The GitHub MCP and Kody's `@brandonperfetti/github` never author commits.
-  Board intake is each repo's `add-to-project` workflow; the orchestrator moves "In Review" by hand.
+  Board intake and Status moves: [`github-paths.md`](../procedures/github-paths.md).
 - **B0.** Never ask Brandon the mode at session start. Base protection by role: `develop` blocks
   force-pushes and deletions with no PR rule; `master` requires a PR and the gate. Where the core,
   this profile or an adapter is named but unreachable, every client but OpenClaw continues the
