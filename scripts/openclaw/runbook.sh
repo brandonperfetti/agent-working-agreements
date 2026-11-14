@@ -56,7 +56,7 @@ capture_base() {
   audit "named fetch of develop and master: exit $status"
   [ "$status" -eq 0 ] || stop "the named fetch failed (exit $status); create no worktree"
   for name in develop master; do
-    local_oid=$(git -C "$root" rev-parse --verify -q "origin/$name^{commit}") ||
+    local_oid=$(git -C "$root" rev-parse --verify -q "refs/remotes/origin/$name^{commit}") ||
       stop "rev-parse of origin/$name failed; create no worktree"
     listing=$(git -C "$root" ls-remote origin "refs/heads/$name") ||
       stop "ls-remote of refs/heads/$name failed; create no worktree"
@@ -97,6 +97,9 @@ verify_head() {
 check_overlap() {
   local store='' root='' path canonical_path canonical_store canonical_root
   while [ $# -gt 0 ]; do
+    case $1 in --agent-store | --protected-root)
+      [ $# -ge 2 ] || usage "check-overlap --agent-store <dir> --protected-root <dir> <path>..." ;;
+    esac
     case $1 in
       --agent-store) store=$2; shift 2 ;;
       --protected-root) root=$2; shift 2 ;;
@@ -139,12 +142,12 @@ refresh_root() {
   git -C "$root" fetch -q origin +refs/heads/master:refs/remotes/origin/master >&2
   status=$?; audit "named fetch of master: exit $status"
   [ "$status" -eq 0 ] || stop "the named fetch of master failed (exit $status); run no later step"
-  git -C "$root" merge -q --ff-only origin/master >&2
+  git -C "$root" merge -q --ff-only refs/remotes/origin/master >&2
   status=$?; audit "git merge --ff-only origin/master: exit $status"
   [ "$status" -eq 0 ] || stop "the fast-forward failed (exit $status); run no later step"
   require_clean "$root" "after the fast-forward" || stop "the protected root is not clean after the fast-forward"
   head=$(git -C "$root" rev-parse -q --verify HEAD) || stop "HEAD of the protected root cannot be read"
-  want=$(git -C "$root" rev-parse -q --verify 'origin/master^{commit}') || stop "origin/master cannot be read"
+  want=$(git -C "$root" rev-parse -q --verify 'refs/remotes/origin/master^{commit}') || stop "origin/master cannot be read"
   audit "HEAD $head, origin/master $want"
   [ "$head" = "$want" ] || stop "the protected root is at $head, not origin/master $want"
   printf 'serves %s\n' "$head"
@@ -229,7 +232,7 @@ cleanup() {
   git -C "$repo" fetch -q origin +refs/heads/develop:refs/remotes/origin/develop >&2
   status=$?; audit "named fetch of develop: exit $status"
   [ "$status" -eq 0 ] || stop "the named fetch of develop failed; retain and report $branch and its worktree"
-  git -C "$repo" merge-base --is-ancestor "refs/heads/$branch" origin/develop
+  git -C "$repo" merge-base --is-ancestor "refs/heads/$branch" refs/remotes/origin/develop
   status=$?; audit "merge-base --is-ancestor $branch origin/develop: exit $status"
   [ "$status" -eq 0 ] || stop "$branch is not an ancestor of origin/develop (exit $status); retain and report it"
 

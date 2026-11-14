@@ -20,7 +20,8 @@ export REAL_GIT
 printf '[user]\n\tname = Fixture\n\temail = fixture@example.com\n[init]\n\tdefaultBranch = master\n' \
   >"$fixture/gitconfig"
 export GIT_CONFIG_GLOBAL="$fixture/gitconfig" GIT_CONFIG_NOSYSTEM=1
-unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE OPENCLAW_STATE_DIR OPENCLAW_CONFIG_PATH OPENCLAW_HOME
+unset GIT_DIR GIT_COMMON_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES \
+  OPENCLAW_STATE_DIR OPENCLAW_CONFIG_PATH OPENCLAW_HOME
 export OPENCLAW_PROFILE=ambient  # the probing shell's profile, which no bound invocation may inherit
 
 mkdir -p "$fixture/bin" "$fixture/shim"
@@ -196,6 +197,7 @@ expect 3 'overlaps the artifact store' "overlap: a root containing the protected
 expect 3 'overlaps the artifact store' "overlap: a symlink into the store stops" -- "${overlap_args[@]}" "$base/link/inside"
 expect 3 'cannot be canonicalized' "overlap: a path that cannot be canonicalized stops" -- "${overlap_args[@]}" "$base/nowhere"
 expect 2 '' "overlap: no store or root named is a usage error" -- check-overlap "$base/managed"
+expect 2 '' "overlap: an option with no value is a usage error, not a loop" -- check-overlap --agent-store
 
 # --- The protected root's release refresh -----------------------------------------------------
 
@@ -203,6 +205,14 @@ new_fixture refresh
 advance master
 expect 0 '' "refresh: a clean root fast-forwards to origin/master" -- refresh-root "$base/root"
 holds "refresh: the root serves the remote's master" \
+  grep -qx "serves $(g -C "$base/seed" rev-parse HEAD)" "$out"
+
+new_fixture refresh-shadow
+advance master
+g -C "$base/root" branch -q origin/master master  # a local branch named like the remote-tracking ref
+expect 0 '' "refresh: a local branch named origin/master does not shadow the remote-tracking ref" \
+  -- refresh-root "$base/root"
+holds "refresh: the shadowed root still serves the remote's master" \
   grep -qx "serves $(g -C "$base/seed" rev-parse HEAD)" "$out"
 
 new_fixture refresh-dirty
