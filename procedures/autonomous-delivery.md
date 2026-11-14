@@ -150,7 +150,8 @@ A lane merge that conflicts goes back to the lane the same way (Git contract abo
 4. **Brandon merges, manually, in the GitHub UI** — delivery PRs into `develop` unless the
    binding's route is active for them ([base merges](review-findings.md#base-merges)), and always
    the release PR `develop → master`, which the delivery owner may open as a draft with a
-   changelog. Closing keywords fire on the default branch; the orchestrator moves issues to In
-   Review at PR time.
+   changelog. Closing keywords fire on the default branch; the board moves a linked issue to In
+   Review and a closed one to Done ([`github-paths.md`](github-paths.md)).
 5. `what-did-we-learn` runs at wave close; promoted lessons go to `_agent/learnings/`, and
-   any friction the wave met goes to its `friction/` (A6).
+   any friction the wave met goes to its `friction/` (A6); at that close, each item that meets
+   A6's bar becomes an issue ([promotion](agent-workspace-layout.md)).
