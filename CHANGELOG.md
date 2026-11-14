@@ -10,12 +10,12 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
-- **2026-11-14 — Friction that meets the bar becomes an issue; the board moves its own cards
+- **2026-11-14 — Friction that meets the bar becomes an issue; the board's automation is named
   (#167).** At delivery close, an item that is durable or recurring, owned by one repository,
   reproducible and actionable becomes a labelled `friction` issue there, from a new issue form; one
   confirmed defect is enough, and a match gets a comment. The record stays as raw capture. A
-  recurring item names the cheapest check that stops it. The board's workflows move In Review and
-  Done; the orchestrator sets only In Progress and Blocked. Brandon decided.
+  recurring item names the cheapest check that stops it. The board moves a closed issue to Done;
+  a feature PR's `Refs` links nothing, so In Review stays the orchestrator's. Brandon decided.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/167).
 
 - **2026-11-14 — A bot's own text is not an agent credit; the compaction hook names the develop

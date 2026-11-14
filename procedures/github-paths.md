@@ -40,5 +40,6 @@ call the GitHub API through the MCP or Kody.
   repository secret, set by the repository owner. A repository joins the board's intake once that
   workflow is on its default branch, where issue events run it; the `setup-board-intake` skill
   installs it, once per repository. The board's own workflows move Status: a PR linked to the issue
-  moves its card to In Review, and closing the issue moves it to Done. The orchestrator sets only
-  In Progress, when work is claimed, and Blocked.
+  moves its card to In Review, and closing the issue moves it to Done. A feature PR's `Refs #N`
+  does not link it, so the orchestrator moves that card to In Review at PR time; it also sets In
+  Progress, when work is claimed, and Blocked.
