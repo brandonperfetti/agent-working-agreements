@@ -36,6 +36,9 @@ DECLARATION_CASES = (
     ("fix: x\n\n" + DECLARED, None),
     ("fix: x\n\nReviewed-by: B <b@c>\n" + DECLARED, None),
     ("fix: x\n\nAgent: Camina (OpenClaw) \u00b7 gpt-5.5", None),
+    ("fix: x\n\nAgent: Camina (OpenClaw) \u00b7 gpt-5.5 \u00b7 high", None),
+    ("fix: x\n\nAgent: Codex \u00b7 gpt-6.1-sol", "an Agent: line reads exactly"),  # only OpenClaw omits the effort
+    ("fix: x\n\nAgent: Claude Code \u00b7 claude-opus-5-5 (requested)", "an Agent: line reads exactly"),
     ("fix: x\n\nAgent: Codex \u00b7 gpt-5.5-codex (requested) \u00b7 high", None),
     ("fix: x\n\nAgent: Claude Code \u00b7 claude-opus-5-5[1m] \u00b7 xhigh (requested)", None),
     ("fix: x\n\n" + DECLARED + "  ", None),  # trailing blanks are not shape
@@ -74,7 +77,7 @@ class AttributionCheckTest(unittest.TestCase):
 
     def test_both_copies_share_their_patterns(self):
         hook = load_commit_msg()
-        for name in ("BANNED", "DECLARATION", "AGENT_LINE"):
+        for name in ("BANNED", "DECLARATION", "AGENT_LINE"):  # CLIENT, MODEL and EFFORT build AGENT_LINE
             with self.subTest(pattern=name):
                 self.assertEqual(getattr(hook, name).pattern, getattr(guard_git, name).pattern)
                 self.assertEqual(getattr(hook, name).flags, getattr(guard_git, name).flags)
@@ -158,6 +161,7 @@ class CommitMsgTest(unittest.TestCase):
             ("two -m", "-m", "fix: x\n\n" + DECLARED, "-m", DECLARED),
             ("body and --trailer", "-m", "fix: x\n\n" + DECLARED, "--trailer", "Agent: Codex \u00b7 gpt-5.5 \u00b7 high"),
             ("no model", "-m", "fix: x\n\nAgent: Claude Code"),
+            ("no effort", "-m", "fix: x\n\nAgent: Codex \u00b7 gpt-6.1-sol"),
             ("wrong separator", "-m", "fix: x\n\nAgent: Claude Code | claude-opus-5-5 | medium"),
             ("--trailer key=value", "-m", "fix: x", "--trailer", "Agent=Claude Code"),
         )

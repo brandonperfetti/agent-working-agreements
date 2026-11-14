@@ -29,7 +29,7 @@ import sys
 RELEASE_BRANCHES = {"master", "main"}
 PROTECTED_BASES = {"develop", "main", "master"}
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
-# The attribution check; hooks/git/commit-msg carries the same three names and function,
+# The attribution check; hooks/git/commit-msg carries the same patterns and function,
 # and test_commit_msg.py holds the two copies to one table. A comment, quote or list prefix is still
 # a line's start.
 BANNED = re.compile(
@@ -40,10 +40,12 @@ BANNED = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 DECLARATION = re.compile(r"^[#>*+\- \t]*agent[ \t]*:", re.IGNORECASE)
+CLIENT = r"[^\s\u00b7](?:[^\u00b7\n]*[^\s\u00b7])?"  # the client, as it names itself
+MODEL = r" \u00b7 [A-Za-z0-9][\w.:/@+\[\]-]*(?: \(requested\))?"  # the model id, marked when unattested
+EFFORT = r" \u00b7 [a-z][a-z0-9-]*(?: \(requested\))?"  # the effort, marked the same way
 AGENT_LINE = re.compile(
-    r"Agent: [^\s\u00b7](?:[^\u00b7\n]*[^\s\u00b7])?"  # the client, as it names itself
-    r" \u00b7 [A-Za-z0-9][\w.:/@+\[\]-]*(?: \(requested\))?"  # the model id, marked when unattested
-    r"(?: \u00b7 [a-z][a-z0-9-]*(?: \(requested\))?)?"  # the effort, where the client has one
+    r"Agent: (?:" + CLIENT + r" \(OpenClaw\)" + MODEL + "(?:" + EFFORT + ")?"  # OpenClaw: client and model
+    r"|" + CLIENT + MODEL + EFFORT + ")"  # every other client: client, model and effort
 )
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
@@ -202,7 +204,7 @@ def git_lines(directory, args, env=None, raw=False):
             ["git", "-C", directory] + args,
             capture_output=True,
             text=True,
-            encoding="utf-8",  # git writes messages as UTF-8 by default; the locale may say otherwise
+            encoding="utf-8",  # the push scan asks git for UTF-8 (--encoding); the locale may say otherwise
             errors="replace",  # a message with bytes outside the encoding is still read, not a traceback
             timeout=5,
             env=env,
@@ -303,7 +305,7 @@ def check_push_authors(refspecs, directory, tags=False, selectors=(), env=None, 
     # are only ever revisions. One read of author and message per commit, record-separated:
     # `splitlines` would eat `\x1e`.
     tag_option = ["--tags"] if tags else []
-    text = git_lines(directory, list(selectors) + ["log", "--format=%x1e%ae%x1f%B", "--not", "--remotes=" + remote, "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True, env=environment(env))
+    text = git_lines(directory, list(selectors) + ["log", "--encoding=UTF-8", "--format=%x1e%ae%x1f%B", "--not", "--remotes=" + remote, "--not"] + tag_option + ["--end-of-options"] + sources + ["--"], raw=True, env=environment(env))
     if text is None:  # the scan failed or timed out: nothing was checked
         return "a push whose commits could not be read for the author and trailer checks"
     records = [r for r in text.split("\x1e") if r.strip()]

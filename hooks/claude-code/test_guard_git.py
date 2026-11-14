@@ -797,6 +797,8 @@ class AuthorTest(unittest.TestCase):
         self.assertIn("attribution rule", guard_git.check_command("git push origin feature", self.mine) or "")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: x\n\n" + declared)
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
+        git(self.mine, "config", "i18n.logOutputEncoding", "ISO-8859-1")  # the scan asks for UTF-8 whatever the config says
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
 
     def test_the_attribution_advice_names_the_declaration(self):
         git(self.mine, "commit", "-q", "--allow-empty", "-m", "fix: x\n\nAgent: Claude Code")
