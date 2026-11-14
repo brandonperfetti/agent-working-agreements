@@ -294,6 +294,19 @@ class CompactHookTest(unittest.TestCase):
         self.assertIn("Agent: <client> \u00b7 <model id> \u00b7 <effort>", output["additionalContext"])
         self.assertIn("No Co-Authored-By", output["additionalContext"])
 
+    def test_restates_the_merge_route_not_a_blanket_ban(self):
+        # The develop route is active for Claude Code (profile `delegated merge route`); the
+        # restatement once said only Brandon merges develop.
+        script = os.path.join(HERE, "agreements_after_compact.py")
+        out = subprocess.run(
+            ["/usr/bin/python3", "-I", script], capture_output=True, text=True, check=True
+        ).stdout
+        context = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+        self.assertNotIn("Only Brandon merges develop", context)
+        self.assertIn("every develop merge no active route covers", context)
+        self.assertIn("route-suspended", context)
+        self.assertIn("procedures/review-findings.md", context)
+
 
 if __name__ == "__main__":
     unittest.main()
