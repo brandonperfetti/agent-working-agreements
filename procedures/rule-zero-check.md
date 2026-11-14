@@ -53,13 +53,14 @@ issue body, comment or thread reply, on Brandon's repositories and others' alike
 read the messages of the commits the delivery adds for the banned lines:
 
 ```sh
-git log --format='%B' <base>..HEAD | grep -inE '^[#>*+[:blank:]-]*(co-authored-by|[a-z-]*-session)[[:blank:]]*:|generated with|^[#>*+[:blank:]-]*posted by an agent([^[:alnum:]_]|$)|claude\.ai/(chat|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/'
+git log --format='%B' <base>..HEAD | grep -inE '^[#>*+[:blank:]-]*(co-authored-by|[a-z-]*-session)[[:blank:]]*:|generated with|^[#>*+[:blank:]-]*posted by an agent([^[:alnum:]_]|$)|claude\.ai/(chat|share|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/'
 ```
 
-and list each commit's declaration lines, any case and any prefix:
+and list each commit's declaration lines, in any case, with a list or quote prefix, emphasis or a
+parenthetical around the key:
 
 ```sh
-git rev-list <base>..HEAD | while read -r c; do git log -1 --format='%B' "$c" | grep -iE '^[#>*+[:blank:]-]*agent[[:blank:]]*:' | sed "s/^/$c /"; done
+git rev-list <base>..HEAD | while read -r c; do git log -1 --format='%B' "$c" | grep -iE '^[#>*+[:blank:]-]*[*_]*agent[*_]*([[:blank:]]*\([^)]*\))?[*_]*[[:blank:]]*:' | sed "s/^/$c /"; done
 ```
 
 A banned match, a commit with two lines, or a line not in the shape above is a send-back. A

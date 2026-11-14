@@ -36,10 +36,10 @@ BANNED = re.compile(
     r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:"  # a contributor or session trailer
     r"|generated with"  # a promotional footer, anywhere
     r"|^[#>*+\- \t]*posted by an agent\b"  # the agent label the declaration replaced
-    r"|claude\.ai/(chat|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/",  # a session or chat link
+    r"|claude\.ai/(chat|share|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/",  # a session or chat link
     re.IGNORECASE | re.MULTILINE,
 )
-DECLARATION = re.compile(r"^[#>*+\- \t]*agent[ \t]*:", re.IGNORECASE)
+DECLARATION = re.compile(r"^[#>*+\- \t]*[*_]*agent[*_]*(?:[ \t]*\([^)\n]*\))?[*_]*[ \t]*:", re.IGNORECASE)  # **Agent**: and Agent (x): too
 CLIENT = r"[^\s\u00b7](?:[^\u00b7\n]*[^\s\u00b7])?"  # the client, as it names itself
 MODEL = r" \u00b7 [A-Za-z0-9][\w.:/@+\[\]-]*(?: \(requested\))?"  # the model id, marked when unattested
 EFFORT = r" \u00b7 [a-z][a-z0-9-]*(?: \(requested\))?"  # the effort, marked the same way

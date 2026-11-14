@@ -58,6 +58,11 @@ DECLARATION_CASES = (
     ("fix: x\n\nPosted by an agent on Brandon Perfetti's behalf.", "no Co-Authored-By"),
     ("fix: x\n\nhttps://claude.ai/code/session_01AbC", "no Co-Authored-By"),
     ("fix: x\n\nSee https://chatgpt.com/share/abc for the chat", "no Co-Authored-By"),
+    ("fix: x\n\nhttps://claude.ai/share/0a1b2c", "no Co-Authored-By"),
+    ("fix: x\n\n" + DECLARED + "\n**Agent**: Claude Code", "one Agent: line per commit, not 2"),
+    ("fix: x\n\n" + DECLARED + "\nAgent (Claude Code): opus", "one Agent: line per commit, not 2"),
+    ("fix: x\n\n_Agent_: Claude Code \u00b7 claude-opus-5-5 \u00b7 medium", "an Agent: line reads exactly"),
+    ("fix: x\n\nagent behaviour: unchanged", None),  # prose that starts with the word is not a declaration
 )
 
 
