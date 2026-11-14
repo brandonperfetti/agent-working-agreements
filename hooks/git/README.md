@@ -6,7 +6,7 @@ needed. Each stops honest mistakes, not a determined bypass.
 
 | Hook | When git runs it | What it does |
 | --- | --- | --- |
-| `commit-msg` | After the message is final, before the commit object is written | Denies a commit whose message file carries a `Co-Authored-By`, `*-Session` or "generated with" line (the staged diff `commit -v` appends included, since the hook cannot tell whether git will keep it), or whose author email is not `brandon@brandonperfetti.com` (RULE ZERO), printing the fix; then runs the repository's own `commit-msg` hook if it has one |
+| `commit-msg` | After the message is final, before the commit object is written | Denies a commit whose message file carries a `Co-Authored-By`, `*-Session` or "generated with" line, a session or chat link or the retired "Posted by an agent" label, more than one `Agent:` line, or one not in the shape `Agent: <client> · <model id> · <effort>` (only an `(OpenClaw)` client may omit the effort; either field may be followed by `(requested)`; a missing declaration passes); the staged diff `commit -v` appends is read too, since the hook cannot tell whether git will keep it. It also denies an author email other than `brandon@brandonperfetti.com` (RULE ZERO), printing the fix; then runs the repository's own `commit-msg` hook if it has one |
 | `chain-repo-hook` | Installed under every other hook name git knows | Runs the repository's own hook of that name, so a global `core.hooksPath` hides no repository check |
 
 ## Install or update

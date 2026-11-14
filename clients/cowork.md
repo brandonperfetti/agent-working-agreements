@@ -60,9 +60,9 @@ The mounted local clone **blocks `unlink` and `open(O_TRUNC)`** but allows same-
   "Evidence store" is discarded, which costs a rebuildable clone nothing; whether a clone can be
   made there has not been measured. Never under `_agent/`.
 - **Attribution (RULE ZERO):** the harness carries Claude Code's attribution instruction with no
-  switch; remove each line before a PR body or reply is written. A commit over the bridge is made
-  after approval and pushed from Brandon's clone (B1), where the installed hook refuses a trailer or
-  a wrong author.
+  switch; replace each line with the one `Agent:` declaration before a PR body or reply is written.
+  A commit over the bridge is made after approval and pushed from Brandon's clone (B1), where the
+  installed hook refuses a banned line, a malformed or second declaration or a wrong author.
 - Browser QA interacts with elements, never remembered coordinates; smoke checklists are
   environment-aware. [learnings: 2026-08-30 §2, §8]
 - **Kody tool names (A7):** the same connector is named differently per client. A permission rule

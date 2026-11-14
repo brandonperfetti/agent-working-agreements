@@ -46,8 +46,8 @@ Measurements behind it are in the history file; **re-measure on yours**.
   behind, MCP or app config changed, or you are about to close the window on a dispatched worker.
 - **Worktrees:** use native create/archive for app-managed trees; follow [lifecycle](../procedures/worktree-lifecycle.md).
   Scratch placement remains unmeasured, outside `_agent/`. T3: [adapter](../procedures/t3-adapter.md).
-- **Attribution (RULE ZERO):** the profile forbids it; this environment injects nothing (measured
-  2026-11-07); the `commit-msg` hook refuses a trailer or a wrong author, `--no-verify` aside.
+- **Attribution (RULE ZERO):** declare `Agent: Codex · <model id> · <effort>`; none is injected
+  (measured 2026-11-07); the `commit-msg` hook checks each commit, `--no-verify` aside.
 
 ## History
 

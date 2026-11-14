@@ -18,7 +18,7 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 | `owner` | Brandon Perfetti; he merges releases and every merge no active route covers, by hand in the host's UI |
 | `delegated merge route` | **active for Claude Code only** — the head-bound route of [`review-findings.md`](../procedures/review-findings.md#base-merges), for routine work into `develop` of `agent-working-agreements` and `claude-skills`, merged by Claude Code with the installed `hooks/claude-code` guard; qualified 2026-11-13 on Claude Code 2.1.322 (#269: fixture record `_agent/initiatives/fleet-mega-s03-adoption/evidence/2026-11-13-develop-route-fixture-qualification.md`, review `…/reviews/2026-11-13-develop-route-fixture-review.md`); suspended in a repository while it has an open issue labelled `route-suspended` (checked before every delegated merge; an unreadable check counts as suspended) until Brandon closes it; Codex, T3-hosted Codex and OpenClaw are not qualified, so Brandon merges for them until a reviewed change here names each |
 | `author identity` | `brandon@brandonperfetti.com`, exactly — RULE ZERO below |
-| `attribution` | none, except the agent line on comments to other owners' repositories — RULE ZERO below |
+| `attribution` | one agent declaration line per item, and nothing else — RULE ZERO below |
 | `integration branch` | `develop` |
 | `release branch` | `master` |
 | `artifact store` | the agent root's `_agent/` — A6 below |
@@ -34,14 +34,14 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 - **Initiatives.** Orchestrated multi-wave work lives in `_agent/initiatives/<project>-<slug>/`.
   Its `MASTER-PRIORITY-DOCUMENT.md` is the spine, born from an attended Genesis, §0 recording the
   mode; leads advance approved work across waves. Bounded work outside one needs none of it (A1).
-- **RULE ZERO: a commit carries Brandon's author identity.** Every commit an agent makes on his
-  behalf has the author email `brandon@brandonperfetti.com`, exactly; an outside contribution keeps
-  its author's identity, and a PR carrying Brandon's identity from another account is not merged
-  until re-authored (Brandon, 2026-10-13). **No attribution:** no `Co-Authored-By` or session
-  trailer, footer or crediting line on a commit, PR body, issue or thread reply (Brandon's override,
-  #226). Exception: an agent comment on another owner's repository carries the line "Posted by an
-  agent on Brandon Perfetti's behalf." (Brandon, 2026-11-06, #245). The `commit-msg` hook and Claude
-  Code guard refuse the known forms; read every message and author before push, merge, presentation.
+- **RULE ZERO: Brandon's identity, one honest declaration.** An agent's commit on his behalf has the
+  author email `brandon@brandonperfetti.com`, exactly; an outside contribution keeps its author's,
+  and a PR carrying his identity from another account is not merged until re-authored (Brandon,
+  2026-10-13). **New work declares its agent once**, as a commit trailer or the closing line of a PR
+  or issue body, comment or reply: `Agent: <client> · <model id> · <effort>` (OpenClaw:
+  `Agent: Camina (OpenClaw) · <model>`), the served model if attested, else marked `(requested)`. No
+  `Co-Authored-By`, generated-with or promotional footer, session or chat link, or second
+  declaration (Brandon, 2026-11-14). Read each message and author before push, merge, presentation.
 - **Review and merge.** [`review-findings.md`](../procedures/review-findings.md) carries where
   verdicts go, reviewer escalation, release carry-forward, the paid allowance, the bot's outcomes
   and delegated-merge conditions; close-out is where the big finds happen [learnings: 2026-08-30 §9].

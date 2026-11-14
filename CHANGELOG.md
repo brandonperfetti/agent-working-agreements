@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-14 — One agent declaration replaces RULE ZERO's no-attribution clause.** New work
+  carries one `Agent: <client> · <model id> · <effort>` line, as a commit trailer or the closing
+  line of a PR, issue, comment or reply, so Brandon can judge which models and efforts do the best
+  work. The author email is unchanged; `Co-Authored-By`, generated-with footers, session links and
+  a second declaration stay banned. #245's agent label on other owners' repositories is absorbed:
+  the declaration is the one line there too. The hooks check a declaration's shape, not its
+  presence. Brandon decided. [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/273).
+
 - **2026-11-13 — The `develop` route is active for Claude Code only (#269).** The profile's
   `delegated merge route` binding moves from dormant to active for routine `develop` work in
   `agent-working-agreements` and `claude-skills`, merged by Claude Code with the installed guard.
