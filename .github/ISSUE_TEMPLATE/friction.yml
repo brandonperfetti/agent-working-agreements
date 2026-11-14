@@ -1,0 +1,66 @@
+name: Friction
+description: One workflow friction item promoted from a delivery's friction record, at delivery close.
+title: "Friction: "
+labels:
+  - friction
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        One item per issue. File only an item that meets the bar in
+        procedures/agent-workspace-layout.md (Promotion): durable or recurring,
+        owned by this repository, reproducible, and actionable without the
+        session; one confirmed defect is enough. Search open `friction` issues
+        first and comment on a match instead. An agent also applies
+        `agent-filed` and ends the body with its declaration line.
+  - type: input
+    id: delivery-step
+    attributes:
+      label: Delivery/step
+      description: The delivery (PR URL, or origin URL and head SHA) and the workflow step where it happened.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What was observed, with A2 labels and evidence locators where they exist.
+    validations:
+      required: true
+  - type: textarea
+    id: what-you-wanted
+    attributes:
+      label: What you wanted
+    validations:
+      required: true
+  - type: textarea
+    id: how-to-reproduce
+    attributes:
+      label: How to reproduce
+      description: The steps or command, and whether it is first-seen or recurring.
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: Cost
+      description: Time, retries, frequency, and the workaround, if any.
+    validations:
+      required: true
+  - type: textarea
+    id: preliminary-investigation
+    attributes:
+      label: Preliminary investigation
+      description: >-
+        A2 labels ([measured], [source], [inference]); no invented root cause.
+        Mark a proposed fix as a suggestion, naming the cheapest check that would
+        stop it recurring.
+    validations:
+      required: true
+  - type: textarea
+    id: relevant-files
+    attributes:
+      label: Relevant files
+      description: Optional.
+    validations:
+      required: false

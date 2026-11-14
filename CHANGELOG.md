@@ -10,6 +10,22 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-14 — Friction that meets the bar becomes an issue; the board's automation is named
+  (#167).** At delivery close, an item that is durable or recurring, owned by one repository,
+  reproducible and actionable becomes a labelled `friction` issue there, from a new issue form; one
+  confirmed defect is enough, and a match gets a comment. The record stays as raw capture. A
+  recurring item names the cheapest check that stops it. The board moves a closed issue to Done.
+  Brandon decided; that In Review stays the orchestrator's, because a feature PR's `Refs` links no
+  issue, is a measured correction to his brief, for him to confirm.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/167).
+
+- **2026-11-14 — A bot's own text is not an agent credit; the compaction hook names the develop
+  route; the OpenClaw runbook is tested (#191, #236, #243).** CodeRabbit's PR summary stays: it is
+  not the credit RULE ZERO bans. The compaction restatement no longer says only Brandon merges
+  develop. A harness in the `check` job drives the managed-worktree runbook's stop and retention
+  branches on fixtures. A test pins #236's push denials, which #251 shipped. Brandon decided.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/191).
+
 - **2026-11-14 — One agent declaration replaces RULE ZERO's no-attribution clause.** New work
   carries one `Agent: <client> · <model id> · <effort>` line, as a commit trailer or the closing
   line of a PR, issue, comment or reply, so Brandon can judge which models and efforts do the best

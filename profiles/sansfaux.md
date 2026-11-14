@@ -41,7 +41,8 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
   or issue body, comment or reply: `Agent: <client> · <model id> · <effort>` (OpenClaw:
   `Agent: Camina (OpenClaw) · <model>`), the served model if attested, else marked `(requested)`. No
   `Co-Authored-By`, generated-with or promotional footer, session or chat link, or second
-  declaration (Brandon, 2026-11-14). Read each message and author before push, merge, presentation.
+  declaration (Brandon, 2026-11-14); a bot's own text, such as CodeRabbit's PR summary, is not an
+  agent credit. Read each message and author before push, merge, presentation.
 - **Review and merge.** [`review-findings.md`](../procedures/review-findings.md) carries where
   verdicts go, reviewer escalation, release carry-forward, the paid allowance, the bot's outcomes
   and delegated-merge conditions; close-out is where the big finds happen [learnings: 2026-08-30 §9].
@@ -50,9 +51,8 @@ percolates up, working style never down. Paths are relative to the `sansfaux/` r
 - **A6.** Initiative work goes in its initiative folder, one-off work in `_agent/`'s one-off
   folders, never loose; never a clone in `_agent/`. The layout, friction path and clone rule are
   [`agent-workspace-layout.md`](../procedures/agent-workspace-layout.md)'s (#185).
-- **A7.** `gh` is primary. The GitHub MCP and Kody's `@brandonperfetti/github` never author
-  commits. Board intake is a repository's `add-to-project` workflow; the orchestrator moves "In
-  Review" by hand.
+- **A7.** `gh` is primary. The GitHub MCP and Kody's `@brandonperfetti/github` never author commits.
+  Board intake and Status moves: [`github-paths.md`](../procedures/github-paths.md).
 - **B0.** Never ask Brandon the mode at session start. Base protection by role: `develop` blocks
   force-pushes and deletions with no PR rule; `master` requires a PR and the gate. Where the core,
   this profile or an adapter is named but unreachable, every client but OpenClaw continues the

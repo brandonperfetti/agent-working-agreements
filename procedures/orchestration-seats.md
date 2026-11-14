@@ -23,7 +23,7 @@ objectives, or expansion of the authorized scope.
   B1 and B2 carry procedure only, not further duties.
   - The **orchestrator** coordinates and synthesizes: it briefs, fences, dispatches and
     redispatches lanes, extends a lane's fence where a fix needs it (below), holds tracker
-    coordination (issues, closing and relabelling, board Status and moving issues to In Review,
+    coordination (issues, closing and relabelling, the board Status moves no workflow makes,
     A7), owns any attended live/browser verification (B1), routes review evidence, and writes the
     decision-ready hand-back.
   - The **delivery owner** is the qualified specialist assigned to the delivery, or the

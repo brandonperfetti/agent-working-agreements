@@ -35,6 +35,9 @@ jobs:
       - name: Claude Code hook tests
         if: ${{ !cancelled() }}
         run: /usr/bin/python3 -m unittest discover -s hooks/claude-code
+      - name: OpenClaw runbook harness
+        if: ${{ !cancelled() }}
+        run: ./scripts/openclaw/runbook.test.sh
       # A step in this job, never a job of its own: a new job reports a new check
       # name, which master's required check (`check`) would not cover.
       # Runs even when the index check failed, so one failure never hides the other.

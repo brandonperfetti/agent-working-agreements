@@ -87,7 +87,7 @@ An entry names the delivery and the workflow step; what was observed, with A2 la
 locators where they exist; the cost (interruption, retries, rework, or elapsed time when
 measured); the workaround, if any; first-seen or recurring, and how to reproduce; and the proposed
 durable fix, or `unknown`. Friction is a workflow cost, kept apart from evidence (A2), review
-findings (`reviews/`), learnings (`what-did-we-learn`) and issues (filed after triage); it may link
+findings (`reviews/`), learnings (`what-did-we-learn`) and issues (promoted below); it may link
 to any of them. Preserve the raw record; correct it in place under A2, quoting the old text,
 marked and dated. Whoever later acts on it adds a dated disposition to the same record: link the
 fix, issue or receipt that already covers it; fix a confirmed defect the delivery's authority
@@ -96,6 +96,19 @@ covers, since one confirmed defect needs no recurrence (a claim that it recurs k
 that holds it under existing authority; or say why none is needed. A lesson or prevention it
 verifies goes to its existing learning, rule, skill or script, by that home's owner. Capture is
 non-blocking: it waits for no disposition, creates no checkpoint and stops nothing.
+
+**Promotion, at delivery close.** The agent closing the delivery, never mid-task, makes each item
+that meets the bar an issue in the repository that owns its fix. The bar: durable or recurring, one
+owning repository, a reproducible gap, and actionable without this session; one confirmed defect is
+enough. Search that repository's open `friction` issues first and comment on a match instead of
+filing. A new issue follows the repository's friction form (`.github/ISSUE_TEMPLATE/friction.yml`,
+title `Friction: …`) and is filed with both labels on the command (`gh issue create` with `--label
+friction --label agent-filed`), or through the `file-friction` skill. The record stays the raw
+capture and links each issue it spawned; an item below the bar stays in the record and is not swept.
+The sweep skips an issue labelled `needs-brandon`. A recurring item names the cheapest check that
+stops it, first that fits of a type or lint rule, a test, a script, then docs; the check proves it
+catches the original failure, says how to remove it, and changes this agreement only through its
+amendment rules (#167).
 
 **Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
 lives in the client's own scratch directory, outside `_agent/` — your client file names that
