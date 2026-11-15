@@ -398,13 +398,26 @@ expect 3 'no longer clean' "cleanup: an ignored file that arrives after the firs
 holds "cleanup: the late ignored file is retained" test -e "$base/wt-x/build.log"
 
 # Flagged index entries hide an edit from both status checks and from git's own removal (#279).
-new_fixture git-flagged
+for flag in --assume-unchanged --skip-worktree; do
+  new_fixture "git-flagged$flag"
+  delivery "$base/wt-x"
+  flagged_edit "$flag"
+  holds "flagged: a $flag edit leaves the ignored-inclusive status empty" \
+    test -z "$(g -C "$base/wt-x" status --porcelain --untracked-files=all --ignored)"
+  g -C "$base/root" worktree remove "$base/wt-x" 2>/dev/null
+  holds "flagged: git worktree remove without --force deletes the hidden $flag edit" test ! -e "$base/wt-x"
+done
+
+new_fixture flagged-newline
 delivery "$base/wt-x"
-flagged_edit --assume-unchanged
-holds "flagged: an assume-unchanged edit leaves the ignored-inclusive status empty" \
-  test -z "$(g -C "$base/wt-x" status --porcelain --untracked-files=all --ignored)"
-g -C "$base/root" worktree remove "$base/wt-x" 2>/dev/null
-holds "flagged: git worktree remove without --force deletes the hidden edit" test ! -e "$base/wt-x"
+name=$'innocent\nS apparent-flag'
+printf 'one\n' >"$base/wt-x/$name"
+g -C "$base/wt-x" add -- "$name"
+g -C "$base/wt-x" commit -q -m "a name holding a newline"
+g -C "$base/wt-x" push -q origin HEAD:develop
+cleanup_args
+expect 0 '' "cleanup: an unflagged file whose name holds a newline and a tag is not read as flagged" -- "${args[@]}"
+holds "cleanup: the worktree with the newline name is removed" test ! -e "$base/wt-x"
 
 for flag in --assume-unchanged --skip-worktree; do
   new_fixture "flagged$flag"

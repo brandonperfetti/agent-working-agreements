@@ -288,8 +288,8 @@ verify it: in a disposable repository, add a worktree whose only local content i
 and the file is gone. Then run `git --no-optional-locks -C <path> ls-files -v -z`, which must exit
 0 and list no entry tagged with a lowercase letter or `S`. Those tags mark `assume-unchanged` and
 `skip-worktree` entries, whose edits neither status nor a non-forced `git worktree remove` sees
-[measured 2026-11-14, #279: the harness's `git-flagged` fixture]. On such an entry or a failure,
-stop, and retain and report the worktree and branch.
+[measured 2026-11-14, #279: the harness's `git-flagged` fixtures, one per flag]. On such an
+entry or a failure, stop, and retain and report the worktree and branch.
 
 ```sh
 env <profile-binding> \

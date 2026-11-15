@@ -141,12 +141,18 @@ require_clean() {
 
 # Index entries whose edits status and a non-forced `git worktree remove` do not see (#279):
 # `git ls-files -v` tags assume-unchanged with a lowercase letter and skip-worktree with `S`.
-# Exit 0 and no such entry, or the stop; a path holding a newline can only add a false match.
+# Exit 0 and no such entry, or the stop. Each NUL-ended record's tag is read, so a path holding a
+# newline stays one record.
 require_unflagged() {
-  local out status flagged
-  out=$(set -o pipefail; git --no-optional-locks -C "$1" ls-files -v -z 2>&1 | tr '\0' '\n')
+  local flagged status
+  flagged=$(set -o pipefail; git --no-optional-locks -C "$1" ls-files -v -z | "$PYTHON" -I -c '
+import sys
+for record in sys.stdin.buffer.read().split(b"\0"):
+    tag = record[:1]
+    if record[1:2] == b" " and (tag.islower() or tag == b"S"):
+        print(record.decode("utf-8", "replace").replace("\n", "\\n"))
+')
   status=$?
-  flagged=$(printf '%s\n' "$out" | grep -E '^([a-z]|S) ')
   audit "flagged index entries of $1 ($2): exit $status, ${flagged:+not }empty${flagged:+: $(printf '%s' "$flagged" | tr '\n' '|')}"
   [ "$status" -eq 0 ] && [ -z "$flagged" ]
 }
