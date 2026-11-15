@@ -152,7 +152,17 @@ delivery() {
 cleanup_args() {
   args=(cleanup --repo "$base/root" --branch feature/x --protected-root "$base/root"
     --managed-root "$base/managed" --openclaw "$fixture/bin/openclaw" --state-dir "$base/state"
-    --config-path "$base/state/openclaw.json" --no-profile)
+    --config-path "$base/state/openclaw.json" --quiesced-by delivery-owner --no-profile)
+}
+
+# A tracked file on feature/x, merged into origin/develop, then flagged and edited in the worktree.
+flagged_edit() {
+  printf 'one\n' >"$base/wt-x/tracked.txt"
+  g -C "$base/wt-x" add tracked.txt
+  g -C "$base/wt-x" commit -q -m "add tracked"
+  g -C "$base/wt-x" push -q origin HEAD:develop
+  g -C "$base/wt-x" update-index "$1" tracked.txt
+  printf 'local edit\n' >"$base/wt-x/tracked.txt"
 }
 
 has_branch() { g -C "$base/root" show-ref --verify -q "refs/heads/$1"; }
@@ -293,6 +303,10 @@ holds "cleanup: the inventory query ran bound, with the profile unset" \
   grep -qxF "env: STATE=$base/state CONFIG=$base/state/openclaw.json PROFILE=<unset>" "$STUB_DIR/calls"
 holds "cleanup: the inventory query is list --json, with no --profile or --dev" \
   grep -qxF 'argv: [worktrees] [list] [--json]' "$STUB_DIR/calls"
+holds "cleanup: the audit records the quiescence guarantee and its owner" \
+  grep -q '^audit: quiescence: .*guaranteed by delivery-owner$' "$out"
+holds "cleanup: the audit records both flagged-entry checks" \
+  test "$(grep -c '^audit: flagged index entries of .*: exit 0, empty$' "$out")" -eq 2
 
 new_fixture managed
 delivery "$base/managed/fp/x"
@@ -382,6 +396,50 @@ rm "$base/wt-x/build.log"
 printf 'touch "%s/build.log"\n' "$base/wt-x" >"$STUB_DIR/list.sh"  # arrives during the inventory query
 expect 3 'no longer clean' "cleanup: an ignored file that arrives after the first check stops" -- "${args[@]}"
 holds "cleanup: the late ignored file is retained" test -e "$base/wt-x/build.log"
+
+# Flagged index entries hide an edit from both status checks and from git's own removal (#279).
+for flag in --assume-unchanged --skip-worktree; do
+  new_fixture "git-flagged$flag"
+  delivery "$base/wt-x"
+  flagged_edit "$flag"
+  holds "flagged: a $flag edit leaves the ignored-inclusive status empty" \
+    test -z "$(g -C "$base/wt-x" status --porcelain --untracked-files=all --ignored)"
+  g -C "$base/root" worktree remove "$base/wt-x" 2>/dev/null
+  holds "flagged: git worktree remove without --force deletes the hidden $flag edit" test ! -e "$base/wt-x"
+done
+
+new_fixture flagged-newline
+delivery "$base/wt-x"
+name=$'innocent\nS apparent-flag'
+printf 'one\n' >"$base/wt-x/$name"
+g -C "$base/wt-x" add -- "$name"
+g -C "$base/wt-x" commit -q -m "a name holding a newline"
+g -C "$base/wt-x" push -q origin HEAD:develop
+cleanup_args
+expect 0 '' "cleanup: an unflagged file whose name holds a newline and a tag is not read as flagged" -- "${args[@]}"
+holds "cleanup: the worktree with the newline name is removed" test ! -e "$base/wt-x"
+
+for flag in --assume-unchanged --skip-worktree; do
+  new_fixture "flagged$flag"
+  delivery "$base/wt-x"
+  flagged_edit "$flag"
+  cleanup_args
+  expect 3 'assume-unchanged or skip-worktree' "cleanup: an edited $flag file stops" -- "${args[@]}"
+  holds "cleanup: the $flag edit is retained" grep -qx 'local edit' "$base/wt-x/tracked.txt"
+  holds "cleanup: no inventory query ran for a $flag worktree" test ! -e "$STUB_DIR/calls"
+  holds "cleanup: the $flag worktree keeps its branch" has_branch feature/x
+done
+
+new_fixture flagged-late
+delivery "$base/wt-x"
+flagged_edit --no-assume-unchanged
+g -C "$base/wt-x" checkout -q -- tracked.txt
+printf '"$REAL_GIT" -C "%s" update-index --skip-worktree tracked.txt\nprintf "late\\n" >"%s/tracked.txt"\n' \
+  "$base/wt-x" "$base/wt-x" >"$STUB_DIR/list.sh"  # flagged and edited during the inventory query
+cleanup_args
+expect 3 'now has assume-unchanged or skip-worktree' \
+  "cleanup: an entry flagged after the first check stops before removal" -- "${args[@]}"
+holds "cleanup: the late flagged edit is retained" grep -qx 'late' "$base/wt-x/tracked.txt"
 
 new_fixture ancestry
 delivery "$base/wt-x"
@@ -483,6 +541,11 @@ expect 2 '' "cleanup: no openclaw command named is a usage error" -- cleanup --r
 expect 2 '' "cleanup: no profile binding is a usage error" -- cleanup --repo "$base/root" --branch feature/x \
   --protected-root "$base/root" --managed-root "$base/managed" --openclaw "$fixture/bin/openclaw" \
   --state-dir "$base/state" --config-path "$base/state/openclaw.json"
+cleanup_args
+unset 'args[15]' 'args[16]'
+holds "cleanup: the case below drops exactly --quiesced-by and its owner" \
+  test "${#args[@]}" -eq 16 -a "${args[14]}" = "$base/state/openclaw.json" -a "${args[17]}" = --no-profile
+expect 2 '' "cleanup: no quiescence owner named is a usage error" -- "${args[@]}"
 holds "cleanup: a usage error touches nothing" test -d "$base/wt-x" -a ! -e "$STUB_DIR/calls"
 
 if [ "$fail" -ne 0 ]; then

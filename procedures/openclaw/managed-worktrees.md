@@ -246,6 +246,10 @@ protected instruction-source root working tree serves.
 These safeguards govern only this manual post-merge cleanup route, for every delivery worktree it
 removes, managed or an existing plain Git worktree; they do not bind OpenClaw's own background
 cleanup (see the background-cleanup paragraph after this procedure).
+**Quiescence:** its checks are lossless only while nothing writes to the worktree from the first
+status check through removal, and the shell cannot hold a writer off without a lock. Before that
+check, the delivery owner guarantees that no session, lane, agent run or process still uses the
+worktree, and the cleanup audit records the guarantee and its owner (#279).
 Run it from any of the repository's worktrees; the protected instruction-source root working tree
 may serve, but only for Git administration and never against its working tree. First read
 `git worktree list --porcelain` once and keep that output; if it cannot be read, stop, and retain
@@ -281,7 +285,11 @@ branch, with no inventory query, removal route, or branch deletion. Then run
 files count, since [inference] `git worktree remove` without `--force` deletes them. What would
 verify it: in a disposable repository, add a worktree whose only local content is a file matched by
 `.gitignore`, run `git worktree remove <worktree>` without `--force`, and check that it exits 0
-and the file is gone.
+and the file is gone. Then run `git --no-optional-locks -C <path> ls-files -v -z`, which must exit
+0 and list no entry tagged with a lowercase letter or `S`. Those tags mark `assume-unchanged` and
+`skip-worktree` entries, whose edits neither status nor a non-forced `git worktree remove` sees
+[measured 2026-11-14, #279: the harness's `git-flagged` fixtures, one per flag]. On such an
+entry or a failure, stop, and retain and report the worktree and branch.
 
 ```sh
 env <profile-binding> \
@@ -318,7 +326,8 @@ if it cannot be read, stop, and retain and report the worktree and branch:
   managed worktree root qualifies; one with no record inside that root is retained and reported.
   Immediately before removal, repeat the
   `git --no-optional-locks -C <path> status --porcelain --untracked-files=all --ignored` check,
-  which must again exit 0 with empty output, and read `git worktree list --porcelain` again, which
+  which must again exit 0 with empty output, and the `ls-files -v -z` check, which must again list
+  no flagged entry, and read `git worktree list --porcelain` again, which
   must contain exactly one record whose canonical `worktree` path is `<path>`, with `branch` line
   `refs/heads/<branch>`. On any failure, output, or mismatch, stop, and retain and report the
   worktree and branch. Then run `git worktree remove <path>` without `--force`.
@@ -326,15 +335,15 @@ if it cannot be read, stop, and retain and report the worktree and branch:
 On exit 0, with one match, and outside those exclusions, remove by that route; then, only if that
 removal succeeded and `refs/heads/<branch>` still exists, `git branch -d <branch>`. Any refusal or
 retention from either command is left as it is and reported, never overridden. The cleanup audit
-records the inventory read and its output, each record's classification with the line that decided
-it, and every canonicalization and comparison the cleanup makes with its outcome, including a
-failure or a stop: the named root and each inventory worktree, each compared with `<path>`; every
-candidate record for `<branch>`, and `<path>` with its existence lookup; the clean-status check of
-`<path>` with its exit status and output; each `worktrees` record's canonical `path`, or its skip
-with the existence lookup that allowed it, compared with `<path>`,
-and its `branch` compared with `<branch>`; and, on the plain Git route, the check of `<path>`
-against the resolved managed worktree root and the repeated status and inventory checks with their
-outputs.
+records the quiescence guarantee and its owner, the inventory read and its output, each record's
+classification with the line that decided it, and every canonicalization and comparison the
+cleanup makes with its outcome, including a failure or a stop: the named root and each inventory
+worktree, each compared with `<path>`; every candidate record for `<branch>`, and `<path>` with its
+existence lookup; the clean-status and flagged-entry checks of `<path>` with their exit statuses
+and outputs; each `worktrees` record's canonical `path`, or its skip with the existence lookup that
+allowed it, compared with `<path>`, and its `branch` compared with `<branch>`; and, on the plain
+Git route, the check of `<path>` against the resolved managed worktree root and the repeated
+status, flagged-entry and inventory checks with their outputs.
 
 [measured 2026-09-23, issue #57] The delivery host went from 13 to 16 registered worktrees in one
 delivery cycle; the dry-run and live cleanup the ticket records then removed 14 merged worktrees
