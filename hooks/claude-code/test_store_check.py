@@ -115,6 +115,41 @@ class StoreCheckTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("unmeasured: ", out)
 
+    @unittest.skipIf(os.geteuid() == 0, "root can read a mode-000 directory")
+    def test_cli_fails_when_an_unreadable_tree_hides_an_install(self):
+        path = self.make("evidence", "locked", "node_modules", "a.js", size=131_072)
+        locked = os.path.dirname(os.path.dirname(path))
+        os.chmod(locked, 0)
+        try:
+            code, out = self.cli("--cap-gb", "0.000065536")
+            self.assertEqual(code, 1)
+            self.assertIn("unmeasured: ", out)
+            self.assertIn(locked, out)
+        finally:
+            os.chmod(locked, 0o700)
+
+    def test_cli_reports_a_size_read_error_as_unmeasured(self):
+        path = self.make("evidence", "receipt.json", size=100)
+        original = os.lstat
+
+        def fail_on_receipt(name, *args, **kwargs):
+            if name == path:
+                raise PermissionError(13, "Permission denied", path)
+            return original(name, *args, **kwargs)
+
+        out = io.StringIO()
+        with mock.patch.object(os, "lstat", side_effect=fail_on_receipt), mock.patch("sys.stdout", out), mock.patch("sys.stderr", io.StringIO()):
+            self.assertEqual(store_check.cli(["check", "--store", self.store]), 1)
+        self.assertIn("unmeasured: ", out.getvalue())
+        self.assertIn(path, out.getvalue())
+
+    def test_an_unreadable_hook_walk_leaves_the_snapshot_unchanged(self):
+        self.hook("SessionStart")
+        self.make("evidence", "node_modules", "a.js")
+        with mock.patch.object(store_check, "install_roots", side_effect=PermissionError(13, "Permission denied", self.store)):
+            self.assertIsNone(self.hook("Stop"))
+        self.assertEqual(self.hook("Stop")["decision"], "block")
+
     def test_cli_with_no_store_is_a_usage_error(self):
         with tempfile.TemporaryDirectory() as elsewhere:
             result = subprocess.run([sys.executable, "-I", SCRIPT, "check"], cwd=elsewhere, capture_output=True)

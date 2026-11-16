@@ -10,9 +10,9 @@ As a CLI, for a person or a scheduled pulse on any client:
 
 It exits 1 and lists every `node_modules` root under the store and every top-level tree over the
 cap. A top-level tree is a folder directly under `_agent/`, or under `_agent/initiatives/` (one
-initiative). Sizes are disk usage, as `du` counts them. A walk that outruns its budget fails too,
-since a store too big to measure in that time is over the cap. With no --store it uses the agent
-root found by walking upward from the working directory.
+initiative). Sizes are disk usage, as `du` counts them. A walk that outruns its budget or cannot
+read a tree fails as unmeasured. With no --store it uses the agent root found by walking upward
+from the working directory.
 
 As a Claude Code hook pair (no arguments, the hook's JSON on stdin): at SessionStart it records the
 store's `node_modules` roots once per session; at Stop it blocks once when a root has appeared
@@ -43,6 +43,11 @@ class OutOfTime(Exception):
     pass
 
 
+def raise_walk_error(error):
+    """Propagate an unreadable directory instead of treating its contents as absent."""
+    raise error
+
+
 def find_store(start):
     """The `_agent/` directory of the agent root above start, or None off-fleet."""
     path = os.path.abspath(start)
@@ -60,7 +65,7 @@ def install_roots(store, deadline=None):
     """Every `node_modules` directory under store, outermost only, outside `*.app` bundles;
     OutOfTime past the deadline."""
     roots = []
-    for top, dirs, _ in os.walk(store):
+    for top, dirs, _ in os.walk(store, onerror=raise_walk_error):
         if deadline is not None and time.monotonic() > deadline:
             raise OutOfTime(store)
         keep = []
@@ -96,14 +101,11 @@ def top_trees(store):
 def disk_usage(path, deadline):
     """Bytes on disk under path, as du counts them; OutOfTime past the deadline."""
     total, seen = 0, set()
-    for top, dirs, files in os.walk(path):
+    for top, dirs, files in os.walk(path, onerror=raise_walk_error):
         if time.monotonic() > deadline:
             raise OutOfTime(path)
         for name in dirs + files:
-            try:
-                info = os.lstat(os.path.join(top, name))
-            except OSError:
-                continue
+            info = os.lstat(os.path.join(top, name))
             if info.st_nlink > 1:
                 if (info.st_dev, info.st_ino) in seen:
                     continue
@@ -139,7 +141,10 @@ def cli(argv):
     if not store or not os.path.isdir(store):
         print("store_check: no _agent/ store found", file=sys.stderr)
         return 2
-    problems = check(os.path.abspath(store), args.cap_gb * 1e9, args.budget)
+    try:
+        problems = check(os.path.abspath(store), args.cap_gb * 1e9, args.budget)
+    except OSError as error:
+        problems = ["unmeasured: {}".format(error)]
     for line in problems:
         print(line)
     if problems:
@@ -187,8 +192,8 @@ def decide(payload):
         return None  # the first snapshot holds: a resume or compaction keeps it
     try:
         current = install_roots(store, time.monotonic() + HOOK_WALK)
-    except OutOfTime:
-        return None  # too slow to walk inside a hook: the CLI is the check for that store
+    except (OutOfTime, OSError):
+        return None  # an incomplete walk cannot replace the baseline; the CLI reports the gap
     if snapshot is None:
         state[store] = {"seen": current, "reported": []}
         save_state(state_path, state)
