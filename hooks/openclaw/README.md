@@ -14,8 +14,12 @@ all block. It also blocks any non-text tool whose parameters name GitHub and a m
 MCP `execute`, because no API call is an equivalent route.
 
 A plugin that is not loaded blocks nothing. So before every delegated merge, the delivery owner
-runs the canary `gh pr merge --help` as its own tool call. Only a refusal that begins
+runs the canary `gh pr merge --help` as its own tool call. Only a refusal whose reason carries
 `awa-guard-git:` counts; any other outcome sends the merge to Brandon.
+
+On the Codex-native shell the relay applies, but Codex's own sandbox refuses `gh`, and its
+approval reviewer refused the escalation in qualification. That path is guarded, not a merge route.
+The merge goes through OpenClaw `exec`: Code Mode, or a claude-cli turn's `mcp__openclaw__exec`.
 
 ## Install
 
@@ -30,6 +34,9 @@ node hooks/openclaw/install.mjs --check         # bytes match, and OpenClaw list
 The files go to `~/.openclaw/hooks/awa-guard/`. The installer never edits OpenClaw's config.
 The OpenClaw control-plane owner applies the patch (`plugins.allow`, `plugins.load.paths`,
 `plugins.entries`) with `openclaw config patch`. Plugin config reloads without a Gateway restart.
+Apply it, or reload an edited plugin, at a quiet moment, then run the canary. At the first apply,
+the plugin was briefly reported not found, and no guard ran for about three seconds. A reload under
+load once replaced the plugin but timed out restarting another plugin's service.
 Decisions on blocked and merge-bearing calls are logged to
 `~/.openclaw/logs/awa-guard-git.jsonl`.
 

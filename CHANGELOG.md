@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-16 — The develop route is qualified for OpenClaw's exec path (#272).** A new
+  `hooks/openclaw` plugin hands every OpenClaw tool call to the unchanged `guard_git.py` and fails
+  closed. Its tests join the gate. The binding names OpenClaw `exec` (Code Mode and the claude-cli
+  MCP bridge), with a per-session canary. The Codex-native shell is guarded, not a merge route.
+  Brandon approved the live install and the fixture.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/272).
+
 - **2026-11-14 — Friction that meets the bar becomes an issue; the board's automation is named
   (#167).** At delivery close, an item that is durable or recurring, owned by one repository,
   reproducible and actionable becomes a labelled `friction` issue there, from a new issue form; one
