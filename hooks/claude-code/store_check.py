@@ -105,12 +105,16 @@ def disk_usage(path, deadline):
         if time.monotonic() > deadline:
             raise OutOfTime(path)
         for name in dirs + files:
+            if time.monotonic() > deadline:
+                raise OutOfTime(path)
             info = os.lstat(os.path.join(top, name))
             if info.st_nlink > 1:
                 if (info.st_dev, info.st_ino) in seen:
                     continue
                 seen.add((info.st_dev, info.st_ino))
             total += info.st_blocks * 512
+    if time.monotonic() > deadline:
+        raise OutOfTime(path)
     return total
 
 

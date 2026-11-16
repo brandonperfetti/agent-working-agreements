@@ -115,6 +115,22 @@ class StoreCheckTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("unmeasured: ", out)
 
+    def test_cli_fails_when_a_positive_budget_expires_during_the_final_stat(self):
+        path = self.make("initiatives", "fleet-a", "analysis", "receipt.json", size=100)
+        clock = [0.0]
+        original = os.lstat
+
+        def slow_stat(name, *args, **kwargs):
+            info = original(name, *args, **kwargs)
+            if name == path:
+                clock[0] += 2.0
+            return info
+
+        out = io.StringIO()
+        with mock.patch.object(os, "lstat", side_effect=slow_stat), mock.patch.object(store_check.time, "monotonic", side_effect=lambda: clock[0]), mock.patch("sys.stdout", out), mock.patch("sys.stderr", io.StringIO()):
+            self.assertEqual(store_check.cli(["check", "--store", self.store, "--budget", "1"]), 1)
+        self.assertIn("unmeasured: ", out.getvalue())
+
     @unittest.skipIf(os.geteuid() == 0, "root can read a mode-000 directory")
     def test_cli_fails_when_an_unreadable_tree_hides_an_install(self):
         path = self.make("evidence", "locked", "node_modules", "a.js", size=131_072)

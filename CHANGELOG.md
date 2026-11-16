@@ -14,9 +14,9 @@ being retrofitted onto the other.
   (#283).** "Clones" now covers installs, `node_modules` and build output: that scratch goes in the
   client scratch directory, and the store keeps receipts, logs and hashes. A brief's scratch
   location is that directory. The `experiments/` line no longer pulls installs into the store.
-  `store_check.py` fails on any `node_modules` root (outside `*.app` bundles) or any tree over 5 GB,
-  and blocks a Claude Code session once when it makes one. Why: a store grew to 196 GB. Brandon
-  decided. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/283).
+  `store_check.py check` fails on `node_modules` outside `*.app` bundles or a top-level tree over
+  5 GB. The Stop hook blocks once on roots new since session start; size is CLI-only. A store grew
+  to 196 GB; Brandon decided. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/283).
 
 - **2026-11-14 — Friction that meets the bar becomes an issue; the board's automation is named
   (#167).** At delivery close, an item that is durable or recurring, owned by one repository,
