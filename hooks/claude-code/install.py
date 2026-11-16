@@ -48,6 +48,8 @@ HOOKS = [
     ("PreToolUse", "Bash", "guard_git.py", {"timeout": 10, "onFailure": "block"}),
     ("SessionStart", "compact", "agreements_after_compact.py", {"timeout": 10}),
     ("Stop", None, "look_again.py", {"timeout": 30}),
+    ("SessionStart", None, "store_check.py", {"timeout": 30}),
+    ("Stop", None, "store_check.py", {"timeout": 30}),
 ]
 
 

@@ -10,6 +10,7 @@ other clients, git aliases).
 | `guard_git.py` | `PreToolUse`, matcher `Bash`, fails closed (Claude Code 2.1.295 or later) | Denies force-pushes, pushes to `master` or `main` (the matching refspec `:` and `--all` included), PR merges into `main` or `master` (or whose base it cannot read), PR merges into `develop` in any form but the delegated route's one (below), git or gh arguments fed through `xargs`, a commit that skips the commit-msg hook (`--no-verify`; a courtesy read of the command's words, so a shape that hides the flag from them skips the hook; the push-time scan and the read before presentation are the controls for that shape), a push with a `-c` setting or whose targets `remote.<name>.push` would choose, and, best effort, a push whose commits new to the destination remote's tracking refs carry another author, a banned attribution line, or an `Agent:` declaration that is malformed or not that commit's only one (RULE ZERO). The author and message of a commit being made are [`../git/commit-msg`](../git/README.md)'s to read; the complete read is the one before a delivery is presented |
 | `agreements_after_compact.py` | `SessionStart`, matcher `compact` | Restates RULE ZERO, the mode, who merges and the agreement paths after each compaction |
 | `look_again.py` | `Stop` | Sends the agent back once when a file it read or wrote since your last prompt has changed since, naming the file, so it reads it again before it reports |
+| `store_check.py` | `SessionStart` and `Stop` | Records the `_agent/` store's `node_modules` roots when a session starts, and sends the agent back once at a stop when a new one has appeared, naming it and the fix (move it to the client scratch directory, keep receipts, logs and hashes). Roots there before the session never block. A `node_modules` inside a `*.app` bundle is exempt. Run as `store_check.py check`, it is the CLI any client or pulse can run: exit 1 on any `node_modules` root, or any top-level tree (a store folder or an initiative) over 5 GB (#283) |
 
 `look_again.py` sees only the files the agent touched with its file tools since your last prompt;
 a file it later named in a Bash command counts as seen. A file gone with its folder (a removed
@@ -25,7 +26,7 @@ From this clone, on each Mac:
 /usr/bin/python3 ~/dev/sansfaux/agent-working-agreements/hooks/claude-code/install.py
 ```
 
-`install.py` copies the three hooks into `~/.claude/hooks/` and registers them in the `hooks`
+`install.py` copies the four hooks into `~/.claude/hooks/` and registers them in the `hooks`
 block of `~/.claude/settings.json`; it also installs the git hooks under
 [`../git`](../git/README.md). Every other setting and every other hook stays as it was;
 `settings.json` is backed up beside itself before it changes. Re-running it updates a hook
