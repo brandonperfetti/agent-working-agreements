@@ -75,8 +75,11 @@ export function verdict(result) {
   return block("the guard's verdict could not be read; hand it back rather than routing around this");
 }
 
-/** Decide one tool call. `runGuard(command, cwd)` resolves to { code, stdout, error }. */
-export async function decide(toolName, params, runGuard) {
+/** Decide one tool call. `runGuard(command, cwd)` resolves to { code, stdout, error }. A Code Mode
+ * cell (`kind` code_mode_exec, or JavaScript input) is not a shell command: each tool it calls
+ * re-enters OpenClaw and this hook as its own call, and is decided there. */
+export async function decide(toolName, params, runGuard, { kind, inputKind } = {}) {
+  if (kind === "code_mode_exec" || inputKind === "javascript") return { block: false };
   const args = params && typeof params === "object" && !Array.isArray(params) ? params : {};
   const command = commandOf(args);
   if (command === null) return block("a shell command the relay cannot read");

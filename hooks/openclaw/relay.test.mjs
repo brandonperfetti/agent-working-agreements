@@ -90,6 +90,15 @@ test("decide blocks a GitHub merge through a non-shell tool, and passes text too
   assert.deepEqual(await decide("web_search", { query: "git merge conflicts" }, never), { block: false });
 });
 
+test("decide leaves a Code Mode cell to its nested calls", async () => {
+  const never = async () => assert.fail("the guard is not run");
+  const cell = { command: 'const r = await exec({command: "gh pr merge 1 --admin"});' };
+  assert.deepEqual(await decide("exec", cell, never, { kind: "code_mode_exec" }), { block: false });
+  assert.deepEqual(await decide("exec", cell, never, { inputKind: "javascript" }), { block: false });
+  const nested = await decide("exec", { command: "gh pr merge 1 --admin" }, async () => DENY("no"), {});
+  assert.equal(nested.block, true);
+});
+
 test("the real guard: a read passes, a force-push and the canary block", async () => {
   assert.deepEqual(verdict(await real("git status")), { block: false });
   const force = verdict(await real("git push --force origin feature"));

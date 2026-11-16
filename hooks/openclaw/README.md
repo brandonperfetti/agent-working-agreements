@@ -3,7 +3,8 @@
 `awa-guard-git` is an OpenClaw plugin. It sends every shell command an OpenClaw agent runs
 to [`../claude-code/guard_git.py`](../claude-code/guard_git.py), unchanged, through
 OpenClaw's `before_tool_call` hook. That covers OpenClaw's own `exec` tool and the Codex-native
-shell relayed to the hook. The guard owns the rules: force-pushes, release-branch pushes, RULE
+shell relayed to the hook. A Code Mode cell is not read as a command: each tool it calls
+re-enters the hook as its own call. The guard owns the rules: force-pushes, release-branch pushes, RULE
 ZERO, and PR merges into a protected base other than the delegated route's one form. The relay
 only carries the command and reads the verdict.
 
@@ -37,6 +38,8 @@ Decisions on blocked and merge-bearing calls are logged to
 - It inherits the guard's limits: it stops honest mistakes, not a determined bypass.
 - Another plugin that rewrites a tool's parameters after this hook has read them is not seen.
   Codex-native calls cannot be rewritten at all.
+- Code Mode's default Node executor is not a security boundary, so guest code that reaches
+  the host directly instead of through a tool is not seen.
 - A command that a file tool writes into a script, and the shell then runs by name, is
   checked by name only.
 

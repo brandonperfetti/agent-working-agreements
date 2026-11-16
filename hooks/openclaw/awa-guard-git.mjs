@@ -40,7 +40,10 @@ export default {
     api.on(
       "before_tool_call",
       async (event, ctx) => {
-        const decision = await decide(event.toolName, event.params, runGuard);
+        const decision = await decide(event.toolName, event.params, runGuard, {
+          kind: event.toolKind ?? ctx?.toolKind,
+          inputKind: event.toolInputKind ?? ctx?.toolInputKind,
+        });
         await record(event, ctx, decision);
         return decision.block ? { block: true, blockReason: decision.reason } : undefined;
       },
