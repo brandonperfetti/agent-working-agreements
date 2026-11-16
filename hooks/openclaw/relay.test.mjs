@@ -101,6 +101,7 @@ test("decide blocks shell-session input that names git or gh, and passes other i
     { action: "paste", sessionId: "s", text: "ls\ngit push\n" },
   ]) {
     assert.equal((await decide("process", params, never)).block, true, JSON.stringify(params));
+    assert.equal((await decide("gateway_process", params, never)).block, true, `gateway_process ${JSON.stringify(params)}`);
   }
   for (const params of [
     { action: "poll", sessionId: "s", timeout: 1000 },

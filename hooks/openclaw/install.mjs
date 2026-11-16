@@ -84,10 +84,14 @@ export function readList(path, get = configGet) {
   throw new Error(`OpenClaw's ${path} is not a list of strings`);
 }
 
+function openclaw(args) {
+  return execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
+}
+
 function configGet(path) {
   let out;
   try {
-    out = execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), ["config", "get", path, "--json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
+    out = openclaw(["config", "get", path, "--json"]);
   } catch (error) {
     throw new Error(`openclaw config get ${path} failed: ${(error.stdout || error.message).trim()}`);
   }
@@ -111,7 +115,7 @@ function main(argv) {
     const problems = checkFiles(target);
     if (!flag("--no-live")) {
       try {
-        const out = execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), ["plugins", "inspect", PLUGIN_ID, "--runtime", "--json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
+        const out = openclaw(["plugins", "inspect", PLUGIN_ID, "--runtime", "--json"]);
         problems.push(...checkInspection(JSON.parse(out), target));
       } catch (error) {
         problems.push(`OpenClaw's plugin inspection could not be read: ${error.message}`);

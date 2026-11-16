@@ -20,12 +20,13 @@ command that needs the checkout, such as a push, is then refused. Give `exec` an
 `workdir`, or `cd` to an absolute path in the command.
 
 A plugin that is not loaded blocks nothing. So before every delegated merge, the delivery owner
-runs the canary `gh pr merge --help` as its own tool call. Only a refusal whose reason carries
-`awa-guard-git:` counts; any other outcome sends the merge to Brandon.
+runs the canary `gh pr merge --help` alone, through the tool the merge will use. Only a refusal
+whose reason carries `awa-guard-git:` counts; any other outcome sends the merge to Brandon.
 
-On the Codex-native shell the relay applies, but Codex's own sandbox refuses `gh`, and its
-approval reviewer refused the escalation in qualification. That path is guarded, not a merge route.
-The merge goes through OpenClaw `exec`: Code Mode, or a claude-cli turn's `mcp__openclaw__exec`.
+The merge route is an OpenClaw-runtime turn's Code Mode `exec`, or a claude-cli turn's
+`mcp__openclaw__exec`, qualified on OpenClaw 2026.11.1. In a Codex-harness turn the relay applies,
+but Codex's sandbox refuses `gh`, its approval reviewer refused the escalation, and its
+`gateway_exec` was not measured: every tool there is guarded, not a merge route.
 
 ## Install
 

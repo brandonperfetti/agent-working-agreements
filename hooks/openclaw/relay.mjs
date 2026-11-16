@@ -26,7 +26,9 @@ export const TEXT_TOOLS = new Set([
   "read", "write", "edit", "apply_patch", "message", "sessions_send", "memory_write",
   "memory_search", "memory_get", "web_search", "web_fetch", "session_status", "tool_search",
 ]);
-const SHELLS = new Set(["bash", "sh", "zsh"]);
+// Tools that send input to a running shell session: OpenClaw's, and the Codex harness's twin.
+export const SESSION_TOOLS = new Set(["process", "gateway_process"]);
+const SHELL_BINARIES = new Set(["bash", "sh", "zsh"]);
 const MERGE = /merge/i;
 const GITHUB = /(^|[^A-Za-z0-9_-])gh([^A-Za-z0-9_-]|$)|github|pulls?\b|pull_?request/i;
 const SHELL_WORD = /(^|[^A-Za-z0-9_-])(git|gh)([^A-Za-z0-9_-]|$)/;
@@ -44,7 +46,7 @@ export function commandOf(params) {
     if (typeof value === "string") return value;
     if (Array.isArray(value) && value.length > 0 && value.every((w) => typeof w === "string")) {
       // `bash -lc '<script>'` runs the script; anything else is an argv, quoted back into words.
-      if (value.length === 3 && SHELLS.has(basename(value[0])) && /^-[A-Za-z]*c[A-Za-z]*$/.test(value[1])) {
+      if (value.length === 3 && SHELL_BINARIES.has(basename(value[0])) && /^-[A-Za-z]*c[A-Za-z]*$/.test(value[1])) {
         return value[2];
       }
       return value.map(shellQuote).join(" ");
@@ -102,7 +104,7 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
     return verdict(await runGuard(command, cwd));
   }
   if (SHELL_TOOLS.has(toolName)) return block("a shell tool call with no command the relay can read");
-  if (toolName === "process" && SHELL_WORD.test(sessionInput(args))) {
+  if (SESSION_TOOLS.has(toolName) && SHELL_WORD.test(sessionInput(args))) {
     return block("input to a running shell session that names git or gh; run git and gh through exec, where the guard reads the whole command");
   }
   if (!TEXT_TOOLS.has(toolName)) {
