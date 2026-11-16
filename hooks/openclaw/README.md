@@ -43,9 +43,10 @@ node hooks/openclaw/install.mjs --check         # bytes match, and OpenClaw list
 The files go to `~/.openclaw/hooks/awa-guard/`. The installer never edits OpenClaw's config.
 The OpenClaw control-plane owner applies the patch (`plugins.allow`, `plugins.load.paths`,
 `plugins.entries`) with `openclaw config patch`. Plugin config reloads without a Gateway restart.
-Apply it, or reload an edited plugin, at a quiet moment, then run the canary. At the first apply,
-the plugin was briefly reported not found, and no guard ran for about three seconds. A reload under
-load once replaced the plugin but timed out restarting another plugin's service.
+Apply it, reload an edited plugin, or re-enable a disabled one at a quiet moment. The change counts
+only once the canary is refused with `awa-guard-git:`. If it is not, restart the Gateway: a patch
+can persist without reaching the running Gateway, and a second patch then finds nothing to apply.
+At the first apply, no guard ran for about three seconds.
 Decisions on blocked and merge-bearing calls are logged to
 `~/.openclaw/logs/awa-guard-git.jsonl`, with each assignment's and `env` entry's value removed.
 An unset or empty `plugins.allow` is unrestricted, and the printed patch leaves it so.
