@@ -288,6 +288,9 @@ test("the log keeps a credential's name, never its value", () => {
     `TOKEN=""${V} gh pr view 1`,
     `X='q'${V}"r" ls`,
     `curl --password "a"${V} x`,
+    `TOKEN=public\\ ${V} gh pr view 1`,
+    `TOKEN=\\"${V} ls`,
+    `curl --token a\\ ${V} x`,
   ]) {
     assert.doesNotMatch(redact({ command }), seen, command);
     assert.doesNotMatch(scrubText(`a commit whose message reads ${command}`), seen, command);
@@ -303,7 +306,7 @@ test("the log keeps a credential's name, never its value", () => {
   assert.equal(JSON.parse(redact({ command: route })).command, route);
   assert.equal(redact(undefined), "{}");
   // Hostile lengths stay cheap: the hook runs on the Gateway's thread.
-  for (const long of ["-key".repeat(50000), "-token ".repeat(30000), "-".repeat(200000), "--x".repeat(70000), 'a="\\'.repeat(50000), "a=".repeat(100000), "://".repeat(60000)]) {
+  for (const long of ["a=\\ ".repeat(70000), "--token " + "\\".repeat(200000), "-key".repeat(50000), "-token ".repeat(30000), "-".repeat(200000), "--x".repeat(70000), 'a="\\'.repeat(50000), "a=".repeat(100000), "://".repeat(60000)]) {
     const started = Date.now();
     redact({ command: long, env: { X: long } });
     assert.ok(Date.now() - started < 250, `${long.slice(0, 8)}… took ${Date.now() - started} ms`);
