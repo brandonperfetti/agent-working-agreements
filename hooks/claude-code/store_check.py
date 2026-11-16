@@ -182,16 +182,16 @@ def decide(payload):
     session = os.path.basename(str(payload.get("session_id") or "unknown"))
     state_path = os.path.join(STATE_DIR, session + ".json")
     state = load_state(state_path)
+    snapshot = state.get(store)
+    if snapshot is not None and payload.get("hook_event_name") == "SessionStart":
+        return None  # the first snapshot holds: a resume or compaction keeps it
     try:
         current = install_roots(store, time.monotonic() + HOOK_WALK)
     except OutOfTime:
         return None  # too slow to walk inside a hook: the CLI is the check for that store
-    snapshot = state.get(store)
-    if snapshot is None:  # the first snapshot holds: a resume or compaction keeps it
+    if snapshot is None:
         state[store] = {"seen": current, "reported": []}
         save_state(state_path, state)
-        return None
-    if payload.get("hook_event_name") == "SessionStart":
         return None
     reported = set(snapshot.get("reported", []))
     seen = set(snapshot.get("seen", []))
