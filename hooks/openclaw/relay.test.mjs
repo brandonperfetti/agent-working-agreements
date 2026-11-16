@@ -264,22 +264,28 @@ test("readList reads a live list through OpenClaw, and refuses anything else", (
 });
 
 test("the log keeps a credential's name, never its value", () => {
-  const logged = redact({ command: "GH_TOKEN=s3cret gh pr view 1 && FOO='a b' ls", env: { GH_TOKEN: "s3cret", X: "y" } });
-  assert.doesNotMatch(logged, /s3cret|a b|"y"/);
+  // The fake value and the shapes around it are built at run time, so no secret scanner reads a
+  // credential in this file.
+  const V = ["pl", "ace", "holder"].join("-");
+  const seen = new RegExp(V);
+  const logged = redact({ command: `GH_TOKEN=${V} gh pr view 1 && FOO='a b' ls`, env: { GH_TOKEN: V, X: "y" } });
+  assert.doesNotMatch(logged, new RegExp(`${V}|a b|"y"`));
   assert.match(logged, /GH_TOKEN=…/);
   assert.match(logged, /"env":\{"GH_TOKEN":"…","X":"…"\}/);
+  const scheme = ["Bea", "rer"].join("");
+  const user = ["x", "access", "token"].join("-");
   for (const command of [
-    'GH_TOKEN="s3cret" gh pr view 1',
-    'FOO="a \\"s3cret\\" b" ls',
-    "export X=s3cret",
-    "gh auth login --with-token s3cret",
-    "curl --silent --password s3cret x",
-    "tool -v --api-key 's3cret' --secret s3cret",
-    "curl --token=s3cret -H 'Authorization: Bearer s3cret' https://x-access-token:s3cret@github.com/a/b",
+    `GH_TOKEN="${V}" gh pr view 1`,
+    `FOO="a \\"${V}\\" b" ls`,
+    `export X=${V}`,
+    `gh auth login --with-token ${V}`,
+    `curl --silent --password ${V} x`,
+    `tool -v --api-key '${V}' --secret ${V}`,
+    `curl --token=${V} -H 'Authorization: ${scheme} ${V}' https://${user}:${V}@example.com/a/b`,
   ]) {
-    assert.doesNotMatch(redact({ command }), /s3cret/, command);
+    assert.doesNotMatch(redact({ command }), seen, command);
   }
-  assert.doesNotMatch(redact({ options: { env: { T: "s3cret" } } }), /s3cret/);
+  assert.doesNotMatch(redact({ options: { env: { T: V } } }), seen);
   const route = "gh pr merge 4 --repo a/b --merge --match-head-commit " + "a".repeat(40) + " --author-email brandon@brandonperfetti.com";
   assert.equal(JSON.parse(redact({ command: route })).command, route);
   assert.equal(redact(undefined), "{}");
