@@ -181,17 +181,28 @@ def save_state(path, state):
 
 def decide(payload):
     """The hook's JSON reply, or None."""
-    store = find_store(payload.get("cwd") or os.getcwd())
-    if not store:
-        return None
     session = os.path.basename(str(payload.get("session_id") or "unknown"))
     state_path = os.path.join(STATE_DIR, session + ".json")
     state = load_state(state_path)
+    store = find_store(payload.get("cwd") or os.getcwd())
+    stores = [store] if store else []
+    if payload.get("hook_event_name") == "Stop":
+        stores = list(dict.fromkeys(list(state) + stores))
+    deadline = time.monotonic() + HOOK_WALK
+    for store in stores:
+        reply = check_session_store(payload, store, state, state_path, deadline)
+        if reply:
+            return reply
+    return None
+
+
+def check_session_store(payload, store, state, state_path, deadline):
+    """Check one recorded store, even after cwd leaves it, within the shared hook budget."""
     snapshot = state.get(store)
     if snapshot is not None and payload.get("hook_event_name") == "SessionStart":
         return None  # the first snapshot holds: a resume or compaction keeps it
     try:
-        current = install_roots(store, time.monotonic() + HOOK_WALK)
+        current = install_roots(store, deadline)
     except (OutOfTime, OSError):
         return None  # an incomplete walk cannot replace the baseline; the CLI reports the gap
     if snapshot is None:

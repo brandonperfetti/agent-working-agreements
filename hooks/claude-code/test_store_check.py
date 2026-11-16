@@ -179,6 +179,33 @@ class StoreCheckTest(unittest.TestCase):
         self.hook("SessionStart")  # compaction re-fires SessionStart
         self.assertEqual(self.hook("Stop")["decision"], "block")
 
+    def test_stop_checks_the_recorded_store_after_moving_to_scratch(self):
+        self.hook("SessionStart")
+        self.make("evidence", "node_modules", "a.js")
+        with tempfile.TemporaryDirectory() as scratch:
+            payload = {"hook_event_name": "Stop", "session_id": "s1", "cwd": scratch}
+            reply = store_check.decide(payload)
+            self.assertEqual(reply["decision"], "block")
+            self.assertIn(self.store, reply["reason"])
+            self.assertIsNone(store_check.decide(payload))
+
+    def test_stop_keeps_both_stores_when_the_session_changes_fleets(self):
+        self.hook("SessionStart")
+        with tempfile.TemporaryDirectory() as other:
+            second = os.path.join(other, "_agent")
+            os.makedirs(second)
+            payload = {"hook_event_name": "SessionStart", "session_id": "s1", "cwd": other}
+            self.assertIsNone(store_check.decide(payload))
+            self.make("evidence", "node_modules", "a.js")
+            os.makedirs(os.path.join(second, "node_modules"))
+            payload.update(hook_event_name="Stop", cwd="/")
+            replies = [store_check.decide(payload), store_check.decide(payload)]
+            self.assertTrue(all(reply and reply["decision"] == "block" for reply in replies))
+            reasons = "\n".join(reply["reason"] for reply in replies)
+            self.assertIn(self.store, reasons)
+            self.assertIn(os.path.realpath(second), reasons)
+            self.assertIsNone(store_check.decide(payload))
+
     def test_a_hook_installed_mid_session_snapshots_at_its_first_stop(self):
         self.make("initiatives", "fleet-a", "analysis", "old", "node_modules", "a.js")
         self.assertIsNone(self.hook("Stop"))
