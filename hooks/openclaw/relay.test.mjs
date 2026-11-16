@@ -268,5 +268,17 @@ test("the log keeps a credential's name, never its value", () => {
   assert.doesNotMatch(logged, /s3cret|a b|"y"/);
   assert.match(logged, /GH_TOKEN=…/);
   assert.match(logged, /"env":\{"GH_TOKEN":"…","X":"…"\}/);
+  for (const command of [
+    'GH_TOKEN="s3cret" gh pr view 1',
+    'FOO="a \\"s3cret\\" b" ls',
+    "export X=s3cret",
+    "gh auth login --with-token s3cret",
+    "curl --token=s3cret -H 'Authorization: Bearer s3cret' https://x-access-token:s3cret@github.com/a/b",
+  ]) {
+    assert.doesNotMatch(redact({ command }), /s3cret/, command);
+  }
+  assert.doesNotMatch(redact({ options: { env: { T: "s3cret" } } }), /s3cret/);
+  const route = "gh pr merge 4 --repo a/b --merge --match-head-commit " + "a".repeat(40) + " --author-email brandon@brandonperfetti.com";
+  assert.equal(JSON.parse(redact({ command: route })).command, route);
   assert.equal(redact(undefined), "{}");
 });

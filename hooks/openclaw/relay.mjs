@@ -172,14 +172,25 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
   return { block: false };
 }
 
-/** The parameters as logged: an env keeps its names only, and an assignment in any string field
- * (`NAME=value`) keeps its name only, so a credential never reaches the log. */
+/** The parameters as logged, so a credential never reaches the log: an `env` at any depth keeps its
+ * names only, and in every string an assignment, a token flag's or auth scheme's value and a URL's
+ * user part are removed. Space-separated route flags stay readable. */
 export function redact(params) {
-  const p = params && typeof params === "object" && !Array.isArray(params) ? { ...params } : params;
-  if (p && typeof p === "object" && p.env && typeof p.env === "object") {
-    p.env = Object.fromEntries(Object.keys(p.env).map((k) => [k, "…"]));
-  }
-  return JSON.stringify(p ?? {}).replace(/\b([A-Za-z_][A-Za-z0-9_]*)=("[^"]*"|'[^']*'|[^\s"'\\]+)/g, "$1=…");
+  return JSON.stringify(scrub(params ?? {}));
+}
+function scrub(value, key) {
+  if (typeof value === "string") return scrubText(value);
+  if (Array.isArray(value)) return value.map((v) => scrub(v));
+  if (!value || typeof value !== "object") return value;
+  if (key === "env") return Object.fromEntries(Object.keys(value).map((k) => [k, "…"]));
+  return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, scrub(v, k)]));
+}
+function scrubText(text) {
+  return text
+    .replace(/\b([A-Za-z_][A-Za-z0-9_]*)=("(?:[^"\\]|\\.)*"|'[^']*'|[^\s"']+)/g, "$1=…")
+    .replace(/(--?[\w-]*(?:token|password|passwd|secret|key|auth(?!or))[\w-]*)(\s+)("(?:[^"\\]|\\.)*"|'[^']*'|[^\s"']+)/gi, "$1$2…")
+    .replace(/\b(Bearer|Basic|token)(\s+)[^\s"']+/gi, "$1$2…")
+    .replace(/(:\/\/)[^\s/@"']+@/g, "$1…@");
 }
 
 /** Run guard_git.py on one command, as Claude Code's PreToolUse hook would. With no directory it
