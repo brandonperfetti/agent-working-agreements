@@ -1,6 +1,6 @@
 // Tests for the OpenClaw relay: node --test hooks/openclaw/relay.test.mjs
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
@@ -132,6 +132,40 @@ test("decide blocks shell-session input that names git or gh, and passes other i
     assert.deepEqual(await decide("process", params, never), PASS("session"), JSON.stringify(params));
   }
   assert.equal(sessionInput({ literal: "a", hex: ["0x62", "zz"], keys: ["c", "Space", "Enter"] }), "\n\nabc \n");
+});
+
+test("session input is checked before an unrelated command can reach the guard", async () => {
+  const never = async () => assert.fail("session stdin must not be replaced by the command field");
+  for (const tool of ["process", "gateway_process"]) {
+    for (const command of [{ command: "true" }, { cmd: "true" }, { command: ["true"] }]) {
+      for (const input of [
+        { action: "write", data: "git push --force origin feature\n" },
+        { action: "paste", text: "gh pr merge 4 --admin\n" },
+        { action: "send-keys", literal: "git status", keys: ["Enter"] },
+        { action: "send-keys", hex: ["67", "68", "20"], keys: ["Enter"] },
+      ]) {
+        const decision = await decide(tool, { sessionId: "s", ...command, ...input }, never);
+        assert.equal(decision.block, true);
+        assert.equal(decision.reasonCode, "session-input");
+      }
+    }
+    const unreadable = await decide(tool, { command: 7, data: "git status" }, never);
+    assert.equal(unreadable.reasonCode, "command-unreadable", "unreadable command handling stays first");
+    for (const options of [{ kind: "code_mode_exec" }, { inputKind: "javascript" }]) {
+      assert.deepEqual(await decide(tool, { command: "true", data: "git status" }, never, options), PASS("code-mode"));
+    }
+    const seen = [];
+    const pass = async (command, cwd) => { seen.push([command, cwd]); return { code: 0, stdout: "" }; };
+    assert.deepEqual(await decide(tool, { action: "write", command: "true", data: "y\n", workdir: "/fixture" }, pass), PASS("guard"));
+    assert.deepEqual(seen, [["true", "/fixture"]]);
+    assert.deepEqual(await decide(tool, { action: "poll", sessionId: "s" }, never), PASS("session"));
+    const refused = await decide(tool, { action: "write", command: "git push", data: "y\n" }, async () => DENY("original guard reason"));
+    assert.equal(refused.reason, `${PLUGIN_ID}: original guard reason`);
+  }
+  const command = "gh pr merge 4 --repo a/b --merge --match-head-commit " + "a".repeat(40) + " --author-email brandon@brandonperfetti.com";
+  let seen;
+  assert.deepEqual(await decide("exec", { command, workdir: "/fixture", data: "git status" }, async (input, cwd) => { seen = [input, cwd]; return { code: 0, stdout: "" }; }), PASS("guard"));
+  assert.deepEqual(seen, [command, "/fixture"], "ordinary exec handoff is unchanged");
 });
 
 test("decide refuses an exec env that changes git or gh, and passes other env", async () => {
@@ -386,4 +420,31 @@ test("metadata logging preserves allow, block and delegated route decisions", as
   assertLogSchema(rows);
   assert.deepEqual(rows.map((row) => row.reason), ["allowed", "allowed", "guard-denied", "shell-command-missing", "command-unreadable", "exec-env", "session-input"]);
   assert.equal(readFileSync(LOG_FILE, "utf8").slice(offset).includes("--match-head-commit"), false);
+});
+
+test("unavailable log parents leave enforcement intact without creating a fallback log", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "awa-guard-log-failure-"));
+  const notDirectory = join(dir, "not-a-directory");
+  writeFileSync(notDirectory, "fixture\n");
+  const priorLog = readFileSync(LOG_FILE, "utf8");
+  const priorEnv = process.env.AWA_GUARD_GIT_LOG;
+  try {
+    for (const [index, target] of [join(dir, "missing", "log.jsonl"), join(notDirectory, "log.jsonl")].entries()) {
+      process.env.AWA_GUARD_GIT_LOG = target;
+      const isolated = await import(new URL(`./awa-guard-git.mjs?log-failure-${index}`, import.meta.url));
+      const hooks = [];
+      isolated.default.register({ on: (_name, handler) => hooks.push(handler) });
+      const result = await hooks[0]({ toolName: "exec", params: {} }, {});
+      assert.equal(result.block, true);
+      assert.match(result.blockReason, /^awa-guard-git: a shell tool call with no command/);
+      assert.equal(await hooks[0]({ toolName: "read", params: { path: "a" } }, {}), undefined);
+      await assert.doesNotReject(() => isolated.record("exec", PASS("guard")));
+      assert.equal(existsSync(target), false);
+    }
+  } finally {
+    process.env.AWA_GUARD_GIT_LOG = priorEnv;
+  }
+  assert.equal(existsSync(join(dir, "missing")), false, "logging creates no parent");
+  assert.equal(statSync(notDirectory).isFile(), true);
+  assert.equal(readFileSync(LOG_FILE, "utf8"), priorLog, "there is no fallback to the original log");
 });

@@ -47,8 +47,11 @@ Apply it, reload an edited plugin, or re-enable a disabled one at a quiet moment
 only once the canary is refused with `awa-guard-git:`. If it is not, restart the Gateway: a patch
 can persist without reaching the running Gateway, and a second patch then finds nothing to apply.
 At the first apply, no guard ran for about three seconds.
-Blocked calls and guard-checked shell decisions are logged to
-`~/.openclaw/logs/awa-guard-git.jsonl` (created with mode `0600`). Each event has only:
+The plugin attempts to log blocked calls and guard-checked shell decisions to
+`~/.openclaw/logs/awa-guard-git.jsonl` (created with mode `0600`). Logging is best-effort
+operational evidence, separate from enforcement: a missing or unwritable parent can leave no
+event. The logger creates no parent directories, and a write failure leaves the allow/block
+decision unchanged. Each event that is written has only:
 
 - `at`: a locally generated ISO timestamp; `block`: a boolean.
 - `tool`: `shell`, `session`, `text` or `unknown`.

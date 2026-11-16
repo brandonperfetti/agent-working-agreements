@@ -152,6 +152,9 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
   const args = params && typeof params === "object" && !Array.isArray(params) ? params : {};
   const command = commandOf(args);
   if (command === null) return block("a shell command the relay cannot read", "command-unreadable", "shell");
+  if (SESSION_TOOLS.has(toolName) && SHELL_WORD.test(sessionInput(args))) {
+    return block("input to a running shell session that names git or gh; run git and gh through exec, where the guard reads the whole command", "session-input", "session");
+  }
   if (typeof command === "string") {
     const env = envProblem(args.env);
     if (env) return block(env, "exec-env", "shell");
@@ -162,9 +165,6 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
     return verdict(await runGuard(command, cwd));
   }
   if (SHELL_TOOLS.has(toolName)) return block("a shell tool call with no command the relay can read", "shell-command-missing", "shell");
-  if (SESSION_TOOLS.has(toolName) && SHELL_WORD.test(sessionInput(args))) {
-    return block("input to a running shell session that names git or gh; run git and gh through exec, where the guard reads the whole command", "session-input", "session");
-  }
   // A sessions_spawn brief is text when the child is an OpenClaw subagent, whose tools are hooked;
   // an ACP child is an outside harness this hook never sees, so its brief is checked.
   const textTool = TEXT_TOOLS.has(toolName) && !(toolName === "sessions_spawn" && args.runtime === "acp");
