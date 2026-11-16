@@ -172,6 +172,16 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
   return { block: false };
 }
 
+/** The parameters as logged: an env keeps its names only, and an assignment in any string field
+ * (`NAME=value`) keeps its name only, so a credential never reaches the log. */
+export function redact(params) {
+  const p = params && typeof params === "object" && !Array.isArray(params) ? { ...params } : params;
+  if (p && typeof p === "object" && p.env && typeof p.env === "object") {
+    p.env = Object.fromEntries(Object.keys(p.env).map((k) => [k, "…"]));
+  }
+  return JSON.stringify(p ?? {}).replace(/\b([A-Za-z_][A-Za-z0-9_]*)=("[^"]*"|'[^']*'|[^\s"'\\]+)/g, "$1=…");
+}
+
 /** Run guard_git.py on one command, as Claude Code's PreToolUse hook would. With no directory it
  * runs in `noRepoDir`, a directory outside any repository (git may not search above it), never in
  * the Gateway's own directory; a check that needs the checkout then blocks. */

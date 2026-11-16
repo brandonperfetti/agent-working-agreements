@@ -47,7 +47,8 @@ Apply it, or reload an edited plugin, at a quiet moment, then run the canary. At
 the plugin was briefly reported not found, and no guard ran for about three seconds. A reload under
 load once replaced the plugin but timed out restarting another plugin's service.
 Decisions on blocked and merge-bearing calls are logged to
-`~/.openclaw/logs/awa-guard-git.jsonl`.
+`~/.openclaw/logs/awa-guard-git.jsonl`, with each assignment's and `env` entry's value removed.
+An unset or empty `plugins.allow` is unrestricted, and the printed patch leaves it so.
 
 ## Limits
 

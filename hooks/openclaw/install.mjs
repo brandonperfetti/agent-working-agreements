@@ -66,9 +66,11 @@ export function checkInspection(inspection, target = INSTALL_DIR) {
  * replaces the live one. */
 export function patchFor(allow, paths, target = INSTALL_DIR) {
   const entry = join(target, ENTRY);
+  // An empty or unset allow list is unrestricted; writing one would disable every unlisted plugin.
+  const allowed = allow.length === 0 ? {} : { allow: allow.includes(PLUGIN_ID) ? allow : [...allow, PLUGIN_ID] };
   return {
     plugins: {
-      allow: allow.includes(PLUGIN_ID) ? allow : [...allow, PLUGIN_ID],
+      ...allowed,
       load: { paths: paths.some((p) => resolve(p) === entry) ? paths : [...paths, entry] },
       entries: { [PLUGIN_ID]: { enabled: true } },
     },
@@ -84,6 +86,16 @@ export function readList(path, get = configGet) {
   throw new Error(`OpenClaw's ${path} is not a list of strings`);
 }
 
+/** OpenClaw's answer for a schema path that holds no value: exit 1, with this message. */
+export function isUnset(stdout) {
+  try {
+    const message = JSON.parse(stdout || "").error?.message;
+    return typeof message === "string" && message.startsWith("Config path is valid but unset:");
+  } catch {
+    return false;
+  }
+}
+
 function openclaw(args) {
   return execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
 }
@@ -93,6 +105,7 @@ function configGet(path) {
   try {
     out = openclaw(["config", "get", path, "--json"]);
   } catch (error) {
+    if (isUnset(error.stdout)) return undefined;
     throw new Error(`openclaw config get ${path} failed: ${(error.stdout || error.message).trim()}`);
   }
   return out.trim() === "" ? undefined : JSON.parse(out);

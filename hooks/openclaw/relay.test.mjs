@@ -7,8 +7,8 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 process.env.AWA_GUARD_GIT_LOG = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl");
-const { commandOf, decide, runGuard, sessionInput, verdict, PLUGIN_ID } = await import("./relay.mjs");
-const { checkFiles, checkInspection, install, patchFor, readList, SOURCES } = await import("./install.mjs");
+const { commandOf, decide, redact, runGuard, sessionInput, verdict, PLUGIN_ID } = await import("./relay.mjs");
+const { checkFiles, checkInspection, install, isUnset, patchFor, readList, SOURCES } = await import("./install.mjs");
 const plugin = (await import("./awa-guard-git.mjs")).default;
 
 const GUARD = join(dirname(fileURLToPath(import.meta.url)), "..", "claude-code", "guard_git.py");
@@ -186,13 +186,18 @@ test("with no directory the guard runs outside any repository, never in the Gate
 
 test("a missing guard, a failing interpreter and a slow guard all block", async () => {
   const dir = mkdtempSync(join(tmpdir(), "awa-guard-"));
-  assert.equal(verdict(await runGuard("git status", undefined, { guard: join(dir, "absent.py") })).block, true);
-  assert.equal(verdict(await runGuard("git status", undefined, { python: join(dir, "no-python") })).block, true);
+  // Each case runs in a directory that exists, so it blocks for its own reason, not a missing cwd.
+  const absent = verdict(await runGuard("git status", undefined, { guard: join(dir, "absent.py"), noRepoDir: NO_REPO }));
+  assert.equal(absent.block, true);
+  assert.match(absent.reason, /the guard exited 2/);
+  const noPython = verdict(await runGuard("git status", undefined, { python: join(dir, "no-python"), noRepoDir: NO_REPO }));
+  assert.equal(noPython.block, true);
+  assert.match(noPython.reason, /could not run/);
   const slow = join(dir, "slow");
   writeFileSync(slow, "#!/bin/sh\nsleep 5\n");
   chmodSync(slow, 0o755);
   const started = Date.now();
-  const decision = verdict(await runGuard("git status", undefined, { python: slow, timeoutMs: 200 }));
+  const decision = verdict(await runGuard("git status", undefined, { python: slow, timeoutMs: 200, noRepoDir: NO_REPO }));
   assert.equal(decision.block, true);
   assert.match(decision.reason, /timed out/);
   assert.ok(Date.now() - started < 3000);
@@ -238,6 +243,9 @@ test("patchFor keeps the live allow list and load paths, and adds the plugin onc
   assert.deepEqual(patch.plugins.allow, ["telegram", "codex", PLUGIN_ID]);
   assert.deepEqual(patch.plugins.load.paths, ["/p/other.mjs", "/x/awa-guard/awa-guard-git.mjs"]);
   assert.deepEqual(patch.plugins.entries, { [PLUGIN_ID]: { enabled: true } });
+  const open = patchFor([], [], "/x/awa-guard");
+  assert.equal(Object.hasOwn(open.plugins, "allow"), false, "an unrestricted allow list stays unset");
+  assert.deepEqual(open.plugins.load.paths, ["/x/awa-guard/awa-guard-git.mjs"]);
   const again = patchFor(["codex", PLUGIN_ID], ["/x/awa-guard/awa-guard-git.mjs"], "/x/awa-guard");
   assert.deepEqual(again.plugins.allow, ["codex", PLUGIN_ID]);
   assert.deepEqual(again.plugins.load.paths, ["/x/awa-guard/awa-guard-git.mjs"]);
@@ -249,4 +257,16 @@ test("readList reads a live list through OpenClaw, and refuses anything else", (
   assert.deepEqual(readList("plugins.load.paths", () => null), []);
   assert.throws(() => readList("plugins.allow", () => ({ a: 1 })), /not a list/);
   assert.throws(() => readList("plugins.allow", () => { throw new Error("openclaw config get failed"); }), /failed/);
+  const unset = JSON.stringify({ ok: false, error: { type: "cli_error", message: "Config path is valid but unset: plugins.allow. The runtime default applies" } });
+  assert.equal(isUnset(unset), true);
+  assert.equal(isUnset(JSON.stringify({ ok: false, error: { message: "Unknown config path: plugins.x" } })), false);
+  assert.equal(isUnset("not json"), false);
+});
+
+test("the log keeps a credential's name, never its value", () => {
+  const logged = redact({ command: "GH_TOKEN=s3cret gh pr view 1 && FOO='a b' ls", env: { GH_TOKEN: "s3cret", X: "y" } });
+  assert.doesNotMatch(logged, /s3cret|a b|"y"/);
+  assert.match(logged, /GH_TOKEN=…/);
+  assert.match(logged, /"env":\{"GH_TOKEN":"…","X":"…"\}/);
+  assert.equal(redact(undefined), "{}");
 });

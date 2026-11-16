@@ -5,7 +5,7 @@
 import { appendFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { decide, PLUGIN_ID, runGuard } from "./relay.mjs";
+import { decide, PLUGIN_ID, redact, runGuard } from "./relay.mjs";
 
 const LOG = process.env.AWA_GUARD_GIT_LOG || join(homedir(), ".openclaw", "logs", `${PLUGIN_ID}.jsonl`);
 
@@ -23,7 +23,7 @@ async function record(event, ctx, decision) {
     kind: event.toolKind ?? ctx?.toolKind,
     block: decision.block,
     reason: decision.reason,
-    params: text.slice(0, 600),
+    params: redact(event.params).slice(0, 600),
   };
   try {
     await appendFile(LOG, JSON.stringify(line) + "\n", { mode: 0o600 });
