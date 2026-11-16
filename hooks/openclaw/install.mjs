@@ -3,7 +3,7 @@
 //
 //   node hooks/openclaw/install.mjs                 copy the relay and guard_git.py into place
 //   node hooks/openclaw/install.mjs --check         installed bytes equal this checkout, and
-//                                                   OpenClaw reports the plugin enabled with its hook
+//                                                   OpenClaw loads the plugin with its hook
 //   node hooks/openclaw/install.mjs --print-patch   the `openclaw config patch` JSON that loads it
 //
 // --target DIR replaces ~/.openclaw/hooks/awa-guard (tests); --no-live skips the OpenClaw read.
@@ -48,15 +48,16 @@ export function checkFiles(target = INSTALL_DIR, sources = SOURCES) {
   return problems;
 }
 
-/** What OpenClaw's plugin list says is wrong with the plugin's registration; empty when right. */
-export function checkListing(listing, target = INSTALL_DIR) {
-  const entry = (listing.plugins || []).find((p) => p.id === PLUGIN_ID);
-  if (!entry) return [`OpenClaw lists no plugin ${PLUGIN_ID}`];
+/** What `openclaw plugins inspect <id> --runtime --json` says is wrong with the plugin's
+ * registration; empty when it is enabled, loaded from the target and holds its hook. */
+export function checkInspection(inspection, target = INSTALL_DIR) {
+  const entry = inspection && inspection.plugin;
+  if (!entry || entry.id !== PLUGIN_ID) return [`OpenClaw reports no plugin ${PLUGIN_ID}`];
   const problems = [];
   if (entry.enabled !== true) problems.push(`${PLUGIN_ID} is not enabled`);
+  if (entry.status !== "loaded") problems.push(`${PLUGIN_ID} status is ${entry.status}`);
   if (resolve(entry.source || "") !== resolve(join(target, ENTRY))) problems.push(`${PLUGIN_ID} loads from ${entry.source}, not ${join(target, ENTRY)}`);
-  if (!(entry.hookNames || []).includes("before_tool_call")) problems.push(`${PLUGIN_ID} registers no before_tool_call hook`);
-  if (entry.status && entry.status !== "loaded") problems.push(`${PLUGIN_ID} status is ${entry.status}`);
+  if (!(inspection.typedHooks || []).some((hook) => hook.name === "before_tool_call")) problems.push(`${PLUGIN_ID} registers no before_tool_call hook`);
   return problems;
 }
 
@@ -84,10 +85,10 @@ function main(argv) {
     const problems = checkFiles(target);
     if (!flag("--no-live")) {
       try {
-        const out = execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), ["plugins", "list", "--json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
-        problems.push(...checkListing(JSON.parse(out), target));
+        const out = execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), ["plugins", "inspect", PLUGIN_ID, "--runtime", "--json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
+        problems.push(...checkInspection(JSON.parse(out), target));
       } catch (error) {
-        problems.push(`OpenClaw's plugin list could not be read: ${error.message}`);
+        problems.push(`OpenClaw's plugin inspection could not be read: ${error.message}`);
       }
     }
     for (const problem of problems) console.error(problem);

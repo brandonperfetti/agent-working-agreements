@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 process.env.AWA_GUARD_GIT_LOG = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl");
 const { commandOf, decide, runGuard, verdict, PLUGIN_ID } = await import("./relay.mjs");
-const { checkFiles, checkListing, install, patchFor, SOURCES } = await import("./install.mjs");
+const { checkFiles, checkInspection, install, patchFor, SOURCES } = await import("./install.mjs");
 const plugin = (await import("./awa-guard-git.mjs")).default;
 
 const GUARD = join(dirname(fileURLToPath(import.meta.url)), "..", "claude-code", "guard_git.py");
@@ -139,14 +139,16 @@ test("install copies the three files and check sees a changed byte", () => {
   assert.equal(checkFiles(join(target, "nowhere")).length, 3);
 });
 
-test("checkListing requires the plugin enabled, from the target, with its hook", () => {
+test("checkInspection requires the plugin enabled, loaded from the target, with its hook", () => {
   const target = "/x/awa-guard";
-  const good = { id: PLUGIN_ID, enabled: true, status: "loaded", source: "/x/awa-guard/awa-guard-git.mjs", hookNames: ["before_tool_call"] };
-  assert.deepEqual(checkListing({ plugins: [good] }, target), []);
-  assert.equal(checkListing({ plugins: [] }, target).length, 1);
-  assert.equal(checkListing({ plugins: [{ ...good, enabled: false, status: "disabled" }] }, target).length, 2);
-  assert.equal(checkListing({ plugins: [{ ...good, source: "/y/awa-guard-git.mjs" }] }, target).length, 1);
-  assert.equal(checkListing({ plugins: [{ ...good, hookNames: [] }] }, target).length, 1);
+  const plugin = { id: PLUGIN_ID, enabled: true, status: "loaded", source: "/x/awa-guard/awa-guard-git.mjs" };
+  const good = { plugin, typedHooks: [{ name: "before_tool_call", priority: 1000 }] };
+  assert.deepEqual(checkInspection(good, target), []);
+  assert.equal(checkInspection({}, target).length, 1);
+  assert.equal(checkInspection({ ...good, plugin: { ...plugin, id: "other" } }, target).length, 1);
+  assert.equal(checkInspection({ ...good, plugin: { ...plugin, enabled: false, status: "disabled" } }, target).length, 2);
+  assert.equal(checkInspection({ ...good, plugin: { ...plugin, source: "/y/awa-guard-git.mjs" } }, target).length, 1);
+  assert.equal(checkInspection({ ...good, typedHooks: [] }, target).length, 1);
 });
 
 test("patchFor keeps the live allow list and adds the plugin once", () => {
