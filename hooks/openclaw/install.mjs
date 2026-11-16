@@ -1,0 +1,103 @@
+#!/usr/bin/env node
+// Install the awa-guard-git relay for OpenClaw, check an installation, or print the config patch.
+//
+//   node hooks/openclaw/install.mjs                 copy the relay and guard_git.py into place
+//   node hooks/openclaw/install.mjs --check         installed bytes equal this checkout, and
+//                                                   OpenClaw reports the plugin enabled with its hook
+//   node hooks/openclaw/install.mjs --print-patch   the `openclaw config patch` JSON that loads it
+//
+// --target DIR replaces ~/.openclaw/hooks/awa-guard (tests); --no-live skips the OpenClaw read.
+// The installer never edits OpenClaw's config: the patch is applied by the control-plane owner.
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { INSTALL_DIR, PLUGIN_ID } from "./relay.mjs";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+export const SOURCES = {
+  "awa-guard-git.mjs": join(HERE, "awa-guard-git.mjs"),
+  "relay.mjs": join(HERE, "relay.mjs"),
+  "guard_git.py": join(HERE, "..", "claude-code", "guard_git.py"),
+};
+export const ENTRY = "awa-guard-git.mjs";
+
+export function sha256(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+export function install(target = INSTALL_DIR, sources = SOURCES) {
+  mkdirSync(target, { recursive: true, mode: 0o700 });
+  for (const [name, source] of Object.entries(sources)) {
+    copyFileSync(source, join(target, name));
+    chmodSync(join(target, name), 0o644);
+  }
+  return Object.fromEntries(Object.keys(sources).map((name) => [name, sha256(join(target, name))]));
+}
+
+/** Every way the installed files differ from the checkout's; empty when they match. */
+export function checkFiles(target = INSTALL_DIR, sources = SOURCES) {
+  const problems = [];
+  for (const [name, source] of Object.entries(sources)) {
+    const installed = join(target, name);
+    if (!existsSync(installed)) problems.push(`${installed} is missing`);
+    else if (sha256(installed) !== sha256(source)) problems.push(`${installed} differs from ${source}`);
+  }
+  return problems;
+}
+
+/** What OpenClaw's plugin list says is wrong with the plugin's registration; empty when right. */
+export function checkListing(listing, target = INSTALL_DIR) {
+  const entry = (listing.plugins || []).find((p) => p.id === PLUGIN_ID);
+  if (!entry) return [`OpenClaw lists no plugin ${PLUGIN_ID}`];
+  const problems = [];
+  if (entry.enabled !== true) problems.push(`${PLUGIN_ID} is not enabled`);
+  if (resolve(entry.source || "") !== resolve(join(target, ENTRY))) problems.push(`${PLUGIN_ID} loads from ${entry.source}, not ${join(target, ENTRY)}`);
+  if (!(entry.hookNames || []).includes("before_tool_call")) problems.push(`${PLUGIN_ID} registers no before_tool_call hook`);
+  if (entry.status && entry.status !== "loaded") problems.push(`${PLUGIN_ID} status is ${entry.status}`);
+  return problems;
+}
+
+/** The merge patch that loads the relay; `allow` is the live plugins.allow list, kept whole. */
+export function patchFor(allow, target = INSTALL_DIR) {
+  return {
+    plugins: {
+      allow: allow.includes(PLUGIN_ID) ? allow : [...allow, PLUGIN_ID],
+      load: { paths: [join(target, ENTRY)] },
+      entries: { [PLUGIN_ID]: { enabled: true } },
+    },
+  };
+}
+
+function main(argv) {
+  const flag = (name) => argv.includes(name);
+  const at = argv.indexOf("--target");
+  const target = at >= 0 ? resolve(argv[at + 1]) : INSTALL_DIR;
+  if (flag("--print-patch")) {
+    const config = JSON.parse(readFileSync(join(homedir(), ".openclaw", "openclaw.json"), "utf8"));
+    console.log(JSON.stringify(patchFor(config.plugins?.allow || [], target), null, 2));
+    return 0;
+  }
+  if (flag("--check")) {
+    const problems = checkFiles(target);
+    if (!flag("--no-live")) {
+      try {
+        const out = execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), ["plugins", "list", "--json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
+        problems.push(...checkListing(JSON.parse(out), target));
+      } catch (error) {
+        problems.push(`OpenClaw's plugin list could not be read: ${error.message}`);
+      }
+    }
+    for (const problem of problems) console.error(problem);
+    if (problems.length === 0) console.log(`${PLUGIN_ID}: installed at ${target} and matches this checkout`);
+    return problems.length === 0 ? 0 : 1;
+  }
+  for (const [name, digest] of Object.entries(install(target))) console.log(`${digest}  ${join(target, name)}`);
+  return 0;
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  process.exitCode = main(process.argv.slice(2));
+}
