@@ -194,8 +194,9 @@ function scrub(value, key) {
 // keeps every pattern below cheap inside the hook's budget (they run on the Gateway's thread).
 const SCRUB_MAX = 2048;
 // A shell word's value: quoted segments, escaped characters (`\ ` included) and bare characters
-// joined, as in `T=""value` or `T=a\ b`, read as one. The four alternatives start differently.
-const VALUE = String.raw`(?:"(?:[^"\\]|\\.)*"|'[^']*'|\\[\s\S]|[^\s"'\\])+`;
+// joined, as in `T=""value` or `T=a\ b`, read as one. A quote left open, as the cut below can leave
+// one, runs to the end. The four alternatives start differently, so no match backtracks.
+const VALUE = String.raw`(?:"(?:[^"\\]|\\[\s\S]?)*(?:"|$)|'[^']*(?:'|$)|\\[\s\S]?|[^\s"'\\])+`;
 const ASSIGNMENT = new RegExp(String.raw`\b([A-Za-z_][A-Za-z0-9_]*)=${VALUE}`, "g");
 // Only a secret flag takes a value here, so a plain flag before it is never mistaken for one;
 // a flag starts at a word's start, which with the cut keeps the pattern cheap.
