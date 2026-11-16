@@ -273,6 +273,8 @@ test("the log keeps a credential's name, never its value", () => {
     'FOO="a \\"s3cret\\" b" ls',
     "export X=s3cret",
     "gh auth login --with-token s3cret",
+    "curl --silent --password s3cret x",
+    "tool -v --api-key 's3cret' --secret s3cret",
     "curl --token=s3cret -H 'Authorization: Bearer s3cret' https://x-access-token:s3cret@github.com/a/b",
   ]) {
     assert.doesNotMatch(redact({ command }), /s3cret/, command);
@@ -282,7 +284,7 @@ test("the log keeps a credential's name, never its value", () => {
   assert.equal(JSON.parse(redact({ command: route })).command, route);
   assert.equal(redact(undefined), "{}");
   // Hostile lengths stay cheap: the hook runs on the Gateway's thread.
-  for (const long of ["-key".repeat(50000), "-token ".repeat(30000), 'a="\\'.repeat(50000), "a=".repeat(100000), "://".repeat(60000)]) {
+  for (const long of ["-key".repeat(50000), "-token ".repeat(30000), "-".repeat(200000), "--x".repeat(70000), 'a="\\'.repeat(50000), "a=".repeat(100000), "://".repeat(60000)]) {
     const started = Date.now();
     redact({ command: long, env: { X: long } });
     assert.ok(Date.now() - started < 250, `${long.slice(0, 8)}… took ${Date.now() - started} ms`);
