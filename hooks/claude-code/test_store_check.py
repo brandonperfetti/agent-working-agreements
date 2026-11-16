@@ -55,10 +55,10 @@ class StoreCheckTest(unittest.TestCase):
         self.assertEqual(store_check.find_store(self.cwd), self.store)
 
     def test_off_fleet_has_no_store_and_never_blocks(self):
-        with tempfile.TemporaryDirectory() as elsewhere:
-            payload = {"hook_event_name": "Stop", "session_id": "s", "cwd": elsewhere}
-            with mock.patch.object(store_check, "find_store", return_value=None):
-                self.assertIsNone(store_check.decide(payload))
+        self.assertIsNone(store_check.find_store("/"))  # the filesystem root has no _agent/
+        self.make("initiatives", "fleet-a", "node_modules", "a.js")  # this fleet's store is not above /
+        for event in ("SessionStart", "Stop"):
+            self.assertIsNone(store_check.decide({"hook_event_name": event, "session_id": "s", "cwd": "/"}))
 
     def test_lists_outermost_node_modules_only(self):
         self.make("initiatives", "fleet-a", "analysis", "run-1", "web", "node_modules", "react", "node_modules", "x.js")
@@ -76,6 +76,18 @@ class StoreCheckTest(unittest.TestCase):
         os.makedirs(os.path.join(outside, "pkg"))
         os.symlink(os.path.join(self.root, "scratch"), os.path.join(self.store, "evidence", "link"))
         self.assertEqual(store_check.install_roots(self.store), [])
+
+    def test_a_symlink_named_node_modules_is_not_an_install(self):
+        os.makedirs(os.path.join(self.root, "scratch", "pkg"))
+        os.symlink(os.path.join(self.root, "scratch"), os.path.join(self.store, "evidence", "node_modules"))
+        self.assertEqual(store_check.install_roots(self.store), [])
+
+    def test_a_hard_linked_file_counts_once(self):
+        first = self.make("evidence", "a.bin", size=300_000)
+        for n in range(4):
+            os.link(first, os.path.join(self.store, "evidence", "link{}.bin".format(n)))
+        one = os.lstat(first).st_blocks * 512
+        self.assertLess(store_check.disk_usage(os.path.join(self.store, "evidence"), float("inf")), 2 * one)
 
     # the CLI
 
@@ -137,6 +149,13 @@ class StoreCheckTest(unittest.TestCase):
         self.assertIsNone(self.hook("Stop"))
         self.make("initiatives", "fleet-a", "analysis", "new", "node_modules", "a.js")
         self.assertEqual(self.hook("Stop")["decision"], "block")
+
+    def test_a_walk_past_its_budget_never_blocks(self):
+        self.hook("SessionStart")
+        self.make("initiatives", "fleet-a", "node_modules", "a.js")
+        with mock.patch.object(store_check, "HOOK_WALK", -1):
+            self.assertIsNone(self.hook("Stop"))
+        self.assertEqual(self.hook("Stop")["decision"], "block", "the snapshot still holds")
 
     def test_a_broken_payload_never_traps_the_agent(self):
         with mock.patch("sys.stdin", io.StringIO("not json")), mock.patch("sys.stderr", io.StringIO()):

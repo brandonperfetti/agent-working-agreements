@@ -110,14 +110,13 @@ stops it, first that fits of a type or lint rule, a test, a script, then docs; t
 catches the original failure, says how to remove it, and changes this agreement only through its
 amendment rules (#167).
 
-**Clones.** No clone of a repository, worktree, package install, `node_modules` or build output is
-written under `_agent/`; a `node_modules` inside a captured `*.app` bundle is the app, not an
-install. That scratch lives in the client's own scratch directory, outside `_agent/` — your client
-file names it, or records that it is unmeasured. A brief that names a scratch location names that
-directory, and "move, don't delete" never moves a tree into `_agent/`. What persists is the
-evidence under `evidence/`: the commands run, their output, receipts, logs and hashes, with the
-remote and the commit needed to rebuild a clone. `hooks/claude-code/store_check.py check` fails on
-any `node_modules` root, or any top-level store tree over 5 GB (#283).
+**Clones.** No clone, worktree, package install, `node_modules` or build output is written under
+`_agent/` (a `node_modules` in a captured `*.app` bundle is the app). That scratch, and any brief's
+scratch location, is the client scratch directory your client file names or records as unmeasured;
+"move, don't delete" never moves a tree into `_agent/`. What persists is the evidence under
+`evidence/`: commands, output, receipts, logs and hashes, with the remote and commit to rebuild a
+clone. `hooks/claude-code/store_check.py check` fails on any `node_modules` root or a top-level
+store tree over 5 GB (#283).
 Before the remote, a command or its output is written under `evidence/`, the secret comes out, by
 the remote's form, wherever a remote appears, because a remote can carry credentials, a command
 records one as typed (a `git clone` of a URL with a token in it), and the plain ways of reading a
@@ -129,7 +128,6 @@ output.
 Keeping that evidence is how this sits beside the `experiments/` line's "not /tmp": a
 transcript has to survive the session, a clone or install can be made again. The reason: a clone
 under `_agent/` is a nested repository in a store meant to replicate, a second copy of a project's
-source with its license, and rebuildable (Brandon, 2026-10-12); installs swelled one store to 196 GB
-(Brandon, 2026-11-16, #283).
+source with its license, and rebuildable (Brandon, 2026-10-12, 2026-11-16).
 Scratch-clone rules move no existing lane tree; [worktree lifecycle](worktree-lifecycle.md) governs
 new placement and retirement through the owning manager.

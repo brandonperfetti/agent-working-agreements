@@ -21,7 +21,8 @@ cleaned does not hold every session. Sizes are the CLI's alone: measuring them i
 every turn.
 
 A `node_modules` inside a `*.app` bundle is exempt: a shipped app copied in as evidence, not an
-install. The walk does not enter a bundle, and never follows a symlink.
+install. The walk does not enter a bundle, and never follows a symlink; a symlink named
+`node_modules` is not an install here. A hard-linked file counts once, as `du` counts it.
 """
 import argparse
 import json
@@ -33,6 +34,7 @@ import time
 CAP_GB = 5
 BUDGET = 120.0  # seconds the CLI spends measuring sizes before it fails
 MAX_LISTED = 10
+HOOK_WALK = 20.0  # seconds the hook spends walking the store; a hook entry's timeout is 30
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-store-check")
 RULE = "procedures/agent-workspace-layout.md, \"Clones\", in agent-working-agreements"
 
@@ -47,19 +49,24 @@ def find_store(start):
     while True:
         candidate = os.path.join(path, "_agent")
         if os.path.isdir(candidate) and not os.path.islink(candidate):
-            return candidate
+            return os.path.realpath(candidate)
         parent = os.path.dirname(path)
         if parent == path:
             return None
         path = parent
 
 
-def install_roots(store):
-    """Every `node_modules` directory under store, outermost only, outside `*.app` bundles."""
+def install_roots(store, deadline=None):
+    """Every `node_modules` directory under store, outermost only, outside `*.app` bundles;
+    OutOfTime past the deadline."""
     roots = []
     for top, dirs, _ in os.walk(store):
+        if deadline is not None and time.monotonic() > deadline:
+            raise OutOfTime(store)
         keep = []
         for name in dirs:
+            if os.path.islink(os.path.join(top, name)):
+                continue
             if name == "node_modules":
                 roots.append(os.path.join(top, name))
             elif not name.endswith(".app"):
@@ -88,15 +95,20 @@ def top_trees(store):
 
 def disk_usage(path, deadline):
     """Bytes on disk under path, as du counts them; OutOfTime past the deadline."""
-    total = 0
+    total, seen = 0, set()
     for top, dirs, files in os.walk(path):
         if time.monotonic() > deadline:
             raise OutOfTime(path)
         for name in dirs + files:
             try:
-                total += os.lstat(os.path.join(top, name)).st_blocks * 512
+                info = os.lstat(os.path.join(top, name))
             except OSError:
-                pass
+                continue
+            if info.st_nlink > 1:
+                if (info.st_dev, info.st_ino) in seen:
+                    continue
+                seen.add((info.st_dev, info.st_ino))
+            total += info.st_blocks * 512
     return total
 
 
@@ -137,6 +149,7 @@ def cli(argv):
 
 
 def load_state(path):
+    """The session's state ({store: {"seen": [...], "reported": [...]}}), or {} when unreadable."""
     try:
         with open(path, encoding="utf-8") as handle:
             state = json.load(handle)
@@ -146,11 +159,19 @@ def load_state(path):
 
 
 def save_state(path, state):
+    """Write state atomically, leaving no temp file behind on failure."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     fd, temp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".state-")
-    with os.fdopen(fd, "w", encoding="utf-8") as handle:
-        json.dump(state, handle)
-    os.replace(temp, path)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(state, handle)
+        os.replace(temp, path)
+    except BaseException:
+        try:
+            os.unlink(temp)
+        except OSError:
+            pass
+        raise
 
 
 def decide(payload):
@@ -161,29 +182,35 @@ def decide(payload):
     session = os.path.basename(str(payload.get("session_id") or "unknown"))
     state_path = os.path.join(STATE_DIR, session + ".json")
     state = load_state(state_path)
-    known = state.get(store)
-    if payload.get("hook_event_name") == "SessionStart" or known is None:
-        if known is None:  # the first snapshot holds: a resume or compaction keeps it
-            state[store] = {"seen": install_roots(store), "reported": []}
-            save_state(state_path, state)
+    try:
+        current = install_roots(store, time.monotonic() + HOOK_WALK)
+    except OutOfTime:
+        return None  # too slow to walk inside a hook: the CLI is the check for that store
+    snapshot = state.get(store)
+    if snapshot is None:  # the first snapshot holds: a resume or compaction keeps it
+        state[store] = {"seen": current, "reported": []}
+        save_state(state_path, state)
         return None
-    reported = set(known.get("reported", []))
-    current = install_roots(store)
-    fresh = [root for root in current if root not in set(known.get("seen", [])) and root not in reported]
+    if payload.get("hook_event_name") == "SessionStart":
+        return None
+    reported = set(snapshot.get("reported", []))
+    seen = set(snapshot.get("seen", []))
+    fresh = [root for root in current if root not in seen and root not in reported]
     if not fresh:
         return None
-    known["reported"] = sorted(reported | set(fresh))
+    snapshot["reported"] = sorted(reported | set(fresh))
     save_state(state_path, state)
     lines = ["- {}".format(root) for root in fresh[:MAX_LISTED]]
     if len(fresh) > MAX_LISTED:
         lines.append("- and {} more".format(len(fresh) - MAX_LISTED))
     return {
         "decision": "block",
-        "reason": "A package install appeared under the _agent/ store this session:\n"
+        "reason": "A package install appeared under the _agent/ store since this session started:\n"
         + "\n".join(lines)
-        + "\nMove each tree, with the app or consumer that holds it, to your client scratch directory (the"
-        " scratchpad your session names), and keep only its receipts, logs and hashes in the store. A brief"
-        " that says \"move, don't delete\" still means out of _agent/. The rule: " + RULE + ".",
+        + "\nIf this session made it, move each tree, with the app or consumer that holds it, to your client"
+        " scratch directory (the scratchpad your session names), and keep only its receipts, logs and hashes"
+        " in the store. A brief that says \"move, don't delete\" still means out of _agent/. If another"
+        " session made it, leave it and say so in one line. The rule: " + RULE + ".",
     }
 
 
