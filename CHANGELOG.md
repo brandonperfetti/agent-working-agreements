@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-16 — No package install or `node_modules` under `_agent/`, and a check for it
+  (#283).** "Clones" now covers installs, `node_modules` and build output: that scratch goes in the
+  client scratch directory, and the store keeps receipts, logs and hashes. A brief's scratch
+  location is that directory. The `experiments/` line no longer pulls installs into the store.
+  `store_check.py check` fails on `node_modules` outside `*.app` bundles or a top-level tree over
+  5 GB. The Stop hook blocks once on roots new since session start; size is CLI-only. A store grew
+  to 196 GB; Brandon decided. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/283).
+
 - **2026-11-16 — The develop route is qualified for OpenClaw's exec path (#272).** A new
   `hooks/openclaw` plugin hands every OpenClaw tool call to the unchanged `guard_git.py` and fails
   closed. Its tests join the gate. The binding names OpenClaw-runtime Code Mode and claude-cli's
