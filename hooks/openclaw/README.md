@@ -11,7 +11,13 @@ only carries the command and reads the verdict.
 The relay blocks the call unless the guard exits 0 with nothing on stdout. A denial, a nonzero
 exit, unreadable output, a missing guard, a timeout and a shell call whose command it cannot read
 all block. It also blocks any non-text tool whose parameters name GitHub and a merge, such as an
-MCP `execute`, because no API call is an equivalent route.
+MCP `execute`, because no API call is an equivalent route, and any `process` input to a running
+shell session that names `git` or `gh`: run those through `exec`.
+
+The guard reads the checkout from the call's absolute `workdir` (or `cwd`). The hook is not told
+the session's default directory, so a call without one is checked outside any repository: a
+command that needs the checkout, such as a push, is then refused. Give `exec` an absolute
+`workdir`, or `cd` to an absolute path in the command.
 
 A plugin that is not loaded blocks nothing. So before every delegated merge, the delivery owner
 runs the canary `gh pr merge --help` as its own tool call. Only a refusal whose reason carries
@@ -49,6 +55,8 @@ Decisions on blocked and merge-bearing calls are logged to
   the host directly instead of through a tool is not seen.
 - A command that a file tool writes into a script, and the shell then runs by name, is
   checked by name only.
+- Session input split across several `process` calls, so that no one call names `git` or `gh`,
+  is not seen.
 
 ## Tests
 

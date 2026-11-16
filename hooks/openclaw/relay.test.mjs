@@ -1,18 +1,19 @@
 // Tests for the OpenClaw relay: node --test hooks/openclaw/relay.test.mjs
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 process.env.AWA_GUARD_GIT_LOG = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl");
-const { commandOf, decide, runGuard, verdict, PLUGIN_ID } = await import("./relay.mjs");
-const { checkFiles, checkInspection, install, patchFor, SOURCES } = await import("./install.mjs");
+const { commandOf, decide, runGuard, sessionInput, verdict, PLUGIN_ID } = await import("./relay.mjs");
+const { checkFiles, checkInspection, install, patchFor, readList, SOURCES } = await import("./install.mjs");
 const plugin = (await import("./awa-guard-git.mjs")).default;
 
 const GUARD = join(dirname(fileURLToPath(import.meta.url)), "..", "claude-code", "guard_git.py");
-const real = (command, cwd) => runGuard(command, cwd, { guard: GUARD });
+const NO_REPO = mkdtempSync(join(tmpdir(), "awa-guard-norepo-"));
+const real = (command, cwd) => runGuard(command, cwd, { guard: GUARD, noRepoDir: NO_REPO });
 const DENY = (reason) => ({
   code: 0,
   stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } }),
@@ -67,7 +68,8 @@ test("decide sends a shell command and its directory to the guard", async () => 
   assert.deepEqual(await decide("exec", { command: "git status", workdir: "/w" }, pass), { block: false });
   assert.deepEqual(await decide("local_shell", { command: ["bash", "-lc", "ls"], cwd: "/c" }, pass), { block: false });
   assert.deepEqual(await decide("unknown_tool", { cmd: "pwd" }, pass), { block: false });
-  assert.deepEqual(seen, [["git status", "/w"], ["ls", "/c"], ["pwd", undefined]]);
+  assert.deepEqual(await decide("exec", { command: "git push", workdir: "." }, pass), { block: false });
+  assert.deepEqual(seen, [["git status", "/w"], ["ls", "/c"], ["pwd", undefined], ["git push", undefined]]);
   const denied = await decide("exec", { command: "gh pr merge 1" }, async () => DENY("no"));
   assert.equal(denied.block, true);
 });
@@ -90,6 +92,27 @@ test("decide blocks a GitHub merge through a non-shell tool, and passes text too
   assert.deepEqual(await decide("web_search", { query: "git merge conflicts" }, never), { block: false });
 });
 
+test("decide blocks shell-session input that names git or gh, and passes other input", async () => {
+  const never = async () => assert.fail("the guard is not run");
+  for (const params of [
+    { action: "write", sessionId: "s", data: "git push --force origin feature\n" },
+    { action: "send-keys", sessionId: "s", literal: "gh pr view 1", keys: ["Enter"] },
+    { action: "send-keys", sessionId: "s", hex: ["67", "69", "74", "20", "70"] },
+    { action: "paste", sessionId: "s", text: "ls\ngit push\n" },
+  ]) {
+    assert.equal((await decide("process", params, never)).block, true, JSON.stringify(params));
+  }
+  for (const params of [
+    { action: "poll", sessionId: "s", timeout: 1000 },
+    { action: "write", sessionId: "s", data: "y\n" },
+    { action: "send-keys", sessionId: "s", keys: ["C-c"] },
+    { action: "paste", sessionId: "s", text: "digit github-free text" },
+  ]) {
+    assert.deepEqual(await decide("process", params, never), { block: false }, JSON.stringify(params));
+  }
+  assert.equal(sessionInput({ hex: ["c3", "a9"], data: "a" }).length, 4);
+});
+
 test("decide leaves a Code Mode cell to its nested calls", async () => {
   const never = async () => assert.fail("the guard is not run");
   const cell = { command: 'const r = await exec({command: "gh pr merge 1 --admin"});' };
@@ -109,6 +132,30 @@ test("the real guard: a read passes, a force-push and the canary block", async (
   assert.match(canary.reason, /^awa-guard-git: Blocked by .*this is a PR merge\./);
   const chained = verdict(await real("cd /tmp && gh pr merge 1 --merge"));
   assert.equal(chained.block, true);
+});
+
+test("with no directory the guard runs outside any repository, never in the Gateway's", async () => {
+  // A stub guard that reports where it was run: the payload's cwd, its own, and git's ceiling.
+  const stub = join(mkdtempSync(join(tmpdir(), "awa-guard-stub-")), "where.py");
+  writeFileSync(stub, [
+    "import json, os, sys",
+    "p = json.load(sys.stdin)",
+    "r = '|'.join([p.get('cwd', ''), os.getcwd(), os.environ.get('GIT_CEILING_DIRECTORIES', '')])",
+    "print(json.dumps({'hookSpecificOutput': {'permissionDecision': 'deny', 'permissionDecisionReason': r}}))",
+  ].join("\n"));
+  const where = async (cwd) => verdict(await runGuard("git push", cwd, { guard: stub, noRepoDir: NO_REPO })).reason.replace(`${PLUGIN_ID}: `, "").split("|");
+  const [payload, own, ceiling] = await where(undefined);
+  assert.equal(payload, NO_REPO);
+  assert.equal(realpathSync(own), realpathSync(NO_REPO));
+  assert.equal(ceiling, dirname(NO_REPO));
+  const [given, , none] = await where("/some/checkout");
+  assert.equal(given, "/some/checkout");
+  assert.equal(none, process.env.GIT_CEILING_DIRECTORIES || "");
+  const push = verdict(await real("git push"));
+  assert.equal(push.block, true);
+  assert.match(push.reason, /could not be resolved/);
+  const missing = verdict(await runGuard("git status", undefined, { guard: GUARD, noRepoDir: join(NO_REPO, "absent") }));
+  assert.equal(missing.block, true);
 });
 
 test("a missing guard, a failing interpreter and a slow guard all block", async () => {
@@ -160,10 +207,20 @@ test("checkInspection requires the plugin enabled, loaded from the target, with 
   assert.equal(checkInspection({ ...good, typedHooks: [] }, target).length, 1);
 });
 
-test("patchFor keeps the live allow list and adds the plugin once", () => {
-  const patch = patchFor(["telegram", "codex"], "/x/awa-guard");
+test("patchFor keeps the live allow list and load paths, and adds the plugin once", () => {
+  const patch = patchFor(["telegram", "codex"], ["/p/other.mjs"], "/x/awa-guard");
   assert.deepEqual(patch.plugins.allow, ["telegram", "codex", PLUGIN_ID]);
-  assert.deepEqual(patch.plugins.load.paths, ["/x/awa-guard/awa-guard-git.mjs"]);
+  assert.deepEqual(patch.plugins.load.paths, ["/p/other.mjs", "/x/awa-guard/awa-guard-git.mjs"]);
   assert.deepEqual(patch.plugins.entries, { [PLUGIN_ID]: { enabled: true } });
-  assert.deepEqual(patchFor(["codex", PLUGIN_ID]).plugins.allow, ["codex", PLUGIN_ID]);
+  const again = patchFor(["codex", PLUGIN_ID], ["/x/awa-guard/awa-guard-git.mjs"], "/x/awa-guard");
+  assert.deepEqual(again.plugins.allow, ["codex", PLUGIN_ID]);
+  assert.deepEqual(again.plugins.load.paths, ["/x/awa-guard/awa-guard-git.mjs"]);
+});
+
+test("readList reads a live list through OpenClaw, and refuses anything else", () => {
+  assert.deepEqual(readList("plugins.allow", () => ["a", "b"]), ["a", "b"]);
+  assert.deepEqual(readList("plugins.load.paths", () => undefined), []);
+  assert.deepEqual(readList("plugins.load.paths", () => null), []);
+  assert.throws(() => readList("plugins.allow", () => ({ a: 1 })), /not a list/);
+  assert.throws(() => readList("plugins.allow", () => { throw new Error("openclaw config get failed"); }), /failed/);
 });

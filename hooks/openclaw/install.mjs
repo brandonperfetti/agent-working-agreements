@@ -61,15 +61,37 @@ export function checkInspection(inspection, target = INSTALL_DIR) {
   return problems;
 }
 
-/** The merge patch that loads the relay; `allow` is the live plugins.allow list, kept whole. */
-export function patchFor(allow, target = INSTALL_DIR) {
+/** The merge patch that loads the relay. `allow` and `paths` are the live plugins.allow and
+ * plugins.load.paths lists, each kept whole with the relay added once: an array in a patch
+ * replaces the live one. */
+export function patchFor(allow, paths, target = INSTALL_DIR) {
+  const entry = join(target, ENTRY);
   return {
     plugins: {
       allow: allow.includes(PLUGIN_ID) ? allow : [...allow, PLUGIN_ID],
-      load: { paths: [join(target, ENTRY)] },
+      load: { paths: paths.some((p) => resolve(p) === entry) ? paths : [...paths, entry] },
       entries: { [PLUGIN_ID]: { enabled: true } },
     },
   };
+}
+
+/** One live config list, read through OpenClaw itself (its config file is JSON5, with includes):
+ * an unset list is empty, and anything but a list or nothing is an error. */
+export function readList(path, get = configGet) {
+  const value = get(path);
+  if (value === null || value === undefined) return [];
+  if (Array.isArray(value) && value.every((v) => typeof v === "string")) return value;
+  throw new Error(`OpenClaw's ${path} is not a list of strings`);
+}
+
+function configGet(path) {
+  let out;
+  try {
+    out = execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), ["config", "get", path, "--json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
+  } catch (error) {
+    throw new Error(`openclaw config get ${path} failed: ${(error.stdout || error.message).trim()}`);
+  }
+  return out.trim() === "" ? undefined : JSON.parse(out);
 }
 
 function main(argv) {
@@ -77,8 +99,12 @@ function main(argv) {
   const at = argv.indexOf("--target");
   const target = at >= 0 ? resolve(argv[at + 1]) : INSTALL_DIR;
   if (flag("--print-patch")) {
-    const config = JSON.parse(readFileSync(join(homedir(), ".openclaw", "openclaw.json"), "utf8"));
-    console.log(JSON.stringify(patchFor(config.plugins?.allow || [], target), null, 2));
+    try {
+      console.log(JSON.stringify(patchFor(readList("plugins.allow"), readList("plugins.load.paths"), target), null, 2));
+    } catch (error) {
+      console.error(`no patch printed: ${error.message}`);
+      return 1;
+    }
     return 0;
   }
   if (flag("--check")) {

@@ -5,7 +5,7 @@
 // and reads its verdict, failing closed. It imports nothing from OpenClaw, so it is tested alone.
 import { spawn } from "node:child_process";
 import { homedir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
 
 export const PLUGIN_ID = "awa-guard-git";
 export const INSTALL_DIR = join(homedir(), ".openclaw", "hooks", "awa-guard");
@@ -29,6 +29,7 @@ export const TEXT_TOOLS = new Set([
 const SHELLS = new Set(["bash", "sh", "zsh"]);
 const MERGE = /merge/i;
 const GITHUB = /(^|[^A-Za-z0-9_-])gh([^A-Za-z0-9_-]|$)|github|pulls?\b|pull_?request/i;
+const SHELL_WORD = /(^|[^A-Za-z0-9_-])(git|gh)([^A-Za-z0-9_-]|$)/;
 
 export function shellQuote(word) {
   return /^[A-Za-z0-9_./@=:+,%-]+$/.test(word) ? word : "'" + word.replaceAll("'", "'\\''") + "'";
@@ -51,6 +52,16 @@ export function commandOf(params) {
     return null;
   }
   return undefined;
+}
+
+/** The text a `process` call sends to a running session's stdin: write's `data`, send-keys'
+ * `literal` and `hex`, paste's `text`. Named keys carry no command text. */
+export function sessionInput(params) {
+  const parts = [params.data, params.literal, params.text].filter((v) => typeof v === "string");
+  const hex = Array.isArray(params.hex) ? params.hex : typeof params.hex === "string" ? [params.hex] : [];
+  const bytes = hex.filter((h) => typeof h === "string").join("").replace(/[^0-9a-fA-F]/g, "");
+  if (bytes) parts.push(Buffer.from(bytes, "hex").toString("latin1"));
+  return parts.join(" ");
 }
 
 function block(reason) {
@@ -84,10 +95,16 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
   const command = commandOf(args);
   if (command === null) return block("a shell command the relay cannot read");
   if (typeof command === "string") {
-    const cwd = [args.workdir, args.cwd].find((v) => typeof v === "string" && v !== "");
+    // Only an absolute directory names the checkout the command runs in: the hook is not told the
+    // session's default directory, and a relative one would resolve against the Gateway's. Without
+    // one the guard is run outside any repository (runGuard), so a check that needs one blocks.
+    const cwd = [args.workdir, args.cwd].find((v) => typeof v === "string" && isAbsolute(v));
     return verdict(await runGuard(command, cwd));
   }
   if (SHELL_TOOLS.has(toolName)) return block("a shell tool call with no command the relay can read");
+  if (toolName === "process" && SHELL_WORD.test(sessionInput(args))) {
+    return block("input to a running shell session that names git or gh; run git and gh through exec, where the guard reads the whole command");
+  }
   if (!TEXT_TOOLS.has(toolName)) {
     const text = JSON.stringify(args);
     if (MERGE.test(text) && GITHUB.test(text)) {
@@ -97,12 +114,16 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
   return { block: false };
 }
 
-/** Run guard_git.py on one command, as Claude Code's PreToolUse hook would. */
-export function runGuard(command, cwd, { guard = GUARD, python = PYTHON, timeoutMs = GUARD_TIMEOUT_MS } = {}) {
+/** Run guard_git.py on one command, as Claude Code's PreToolUse hook would. With no directory it
+ * runs in `noRepoDir`, a directory outside any repository (git may not search above it), never in
+ * the Gateway's own directory; a check that needs the checkout then blocks. */
+export function runGuard(command, cwd, { guard = GUARD, python = PYTHON, timeoutMs = GUARD_TIMEOUT_MS, noRepoDir = INSTALL_DIR } = {}) {
   return new Promise((resolve) => {
+    const dir = cwd || noRepoDir;
+    const env = cwd ? process.env : { ...process.env, GIT_CEILING_DIRECTORIES: dirname(noRepoDir) };
     let child;
     try {
-      child = spawn(python, ["-I", guard], { stdio: ["pipe", "pipe", "pipe"] });
+      child = spawn(python, ["-I", guard], { cwd: cwd ? undefined : noRepoDir, env, stdio: ["pipe", "pipe", "pipe"] });
     } catch (error) {
       resolve({ error: String(error && error.message ? error.message : error) });
       return;
@@ -125,6 +146,6 @@ export function runGuard(command, cwd, { guard = GUARD, python = PYTHON, timeout
     child.on("error", (error) => finish({ error: error.message }));
     child.on("close", (code, signal) => finish(signal ? { error: `killed by ${signal}` } : { code, stdout }));
     child.stdin.on("error", () => {});
-    child.stdin.end(JSON.stringify({ tool_input: { command }, ...(cwd ? { cwd } : {}) }));
+    child.stdin.end(JSON.stringify({ tool_input: { command }, cwd: dir }));
   });
 }
