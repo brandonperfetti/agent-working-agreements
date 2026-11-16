@@ -60,6 +60,8 @@ Decisions on blocked and merge-bearing calls are logged to
   checked by name only.
 - Session input split across several `process` calls, so that no one call names `git` or `gh`,
   is not seen.
+- An ACP child (`sessions_spawn` with `runtime: "acp"`) is an outside harness whose tool calls
+  never reach this hook; only its brief is checked.
 
 ## Tests
 

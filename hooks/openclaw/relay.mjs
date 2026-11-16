@@ -31,7 +31,8 @@ export const SESSION_TOOLS = new Set(["process", "gateway_process"]);
 const SHELL_BINARIES = new Set(["bash", "sh", "zsh"]);
 const MERGE = /merge/i;
 const GITHUB = /(^|[^A-Za-z0-9_-])gh([^A-Za-z0-9_-]|$)|github|pulls?\b|pull_?request/i;
-const SHELL_WORD = /(^|[^A-Za-z0-9_-])(git|gh)([^A-Za-z0-9_-]|$)/;
+// Any case: on a case-insensitive disk `GIT` runs git.
+const SHELL_WORD = /(^|[^A-Za-z0-9_-])(git|gh)([^A-Za-z0-9_-]|$)/i;
 
 export function shellQuote(word) {
   return /^[A-Za-z0-9_./@=:+,%-]+$/.test(word) ? word : "'" + word.replaceAll("'", "'\\''") + "'";
@@ -70,15 +71,40 @@ export function sessionInput(params) {
   return [str(params.data), str(params.text), str(params.literal) + bytes + keys].join("\n");
 }
 
-// A key token as text: Space is a space, any other named or modified key a line break (enough to
-// end a word), anything else its own characters.
+// A key token as the text it types, as OpenClaw's encodeKeyToken builds it: modifier prefixes
+// (C-, M-, S-) come off; a named key, a control character or an Alt chord ends a word (a line
+// break here); a single character takes Shift's capital; any other base is sent as its own text.
 function keyText(raw) {
   const token = raw.trim();
-  if (/^space$/i.test(token)) return " ";
-  if (token.length > 1 && (/^(\^|[CMS]-)/i.test(token) || NAMED_KEY.test(token))) return "\n";
-  return token;
+  if (!token) return "";
+  if (token.length === 2 && token.startsWith("^") && isCtrlable(token[1])) return "\n";
+  let rest = token;
+  const mods = { c: false, m: false, s: false };
+  while (rest.length > 2 && rest[1] === "-" && "cms".includes(rest[0].toLowerCase())) {
+    mods[rest[0].toLowerCase()] = true;
+    rest = rest.slice(2);
+  }
+  const lower = rest.toLowerCase();
+  if (lower === "space" && !mods.c && !mods.m) return " ";
+  if (NAMED_KEYS.has(lower)) return "\n";
+  if (rest.length === 1) {
+    if ((mods.c && isCtrlable(rest)) || mods.m) return "\n";
+    return mods.s ? rest.toUpperCase() : rest;
+  }
+  return rest;
 }
-const NAMED_KEY = /^(enter|return|tab|escape|esc|backspace|bspace|delete|del|insert|ins|up|down|left|right|home|end|pageup|pagedown|pgup|pgdn|f\d{1,2})$/i;
+function isCtrlable(char) {
+  const code = char.toUpperCase().charCodeAt(0);
+  return char === "?" || char === " " || (code >= 64 && code <= 95);
+}
+// OpenClaw's namedKeyMap (2026.11.1), Space handled above.
+const NAMED_KEYS = new Set([
+  "up", "down", "right", "left", "home", "end", "pageup", "pgup", "ppage", "pagedown", "pgdn",
+  "npage", "insert", "ic", "delete", "del", "dc", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8",
+  "f9", "f10", "f11", "f12", "enter", "return", "tab", "escape", "esc", "space", "bspace",
+  "backspace", "btab", "kp/", "kp*", "kp-", "kp+", "kp7", "kp8", "kp9", "kp4", "kp5", "kp6", "kp1",
+  "kp2", "kp3", "kp0", "kp.", "kpenter",
+]);
 
 // exec's own `env` reaches the command but not the guard. A variable that changes what git or gh
 // does, or which binary runs, is refused there; others pass, as they do as a command's prefix.
@@ -133,7 +159,10 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
   if (SESSION_TOOLS.has(toolName) && SHELL_WORD.test(sessionInput(args))) {
     return block("input to a running shell session that names git or gh; run git and gh through exec, where the guard reads the whole command");
   }
-  if (!TEXT_TOOLS.has(toolName)) {
+  // A sessions_spawn brief is text when the child is an OpenClaw subagent, whose tools are hooked;
+  // an ACP child is an outside harness this hook never sees, so its brief is checked.
+  const textTool = TEXT_TOOLS.has(toolName) && !(toolName === "sessions_spawn" && args.runtime === "acp");
+  if (!textTool) {
     // The tool's own name counts: a merge tool's parameters need not say "merge".
     const text = `${toolName} ${JSON.stringify(args)}`;
     if (MERGE.test(text) && GITHUB.test(text)) {

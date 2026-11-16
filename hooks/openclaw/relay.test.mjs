@@ -92,6 +92,7 @@ test("decide blocks a GitHub merge through a non-shell tool, and passes text too
   assert.deepEqual(await decide("apply_patch", { input: "+ gh pr merge <N> --merge" }, never), { block: false });
   assert.deepEqual(await decide("message", { text: "merged the GitHub PR" }, never), { block: false });
   assert.deepEqual(await decide("sessions_spawn", { agentId: "coder", task: "review, then merge the GitHub PR" }, never), { block: false });
+  assert.equal((await decide("sessions_spawn", { runtime: "acp", task: "merge the GitHub PR" }, never)).block, true);
   assert.deepEqual(await decide("web_search", { query: "git merge conflicts" }, never), { block: false });
 });
 
@@ -106,6 +107,10 @@ test("decide blocks shell-session input that names git or gh, and passes other i
     { action: "send-keys", sessionId: "s", keys: ["g", "i", "t", "Space", "p"] },
     { action: "send-keys", sessionId: "s", hex: ["0x67", "0x68", "0x20"] },
     { action: "send-keys", sessionId: "s", literal: "g", hex: ["69"], keys: ["t", "Space"] },
+    { action: "send-keys", sessionId: "s", keys: ["C-gh", "Space", "pr", "Space", "merge", "Enter"] },
+    { action: "send-keys", sessionId: "s", keys: ["M-git", "Space", "push", "Enter"] },
+    { action: "send-keys", sessionId: "s", keys: ["S-g", "S-i", "S-t", "Space"] },
+    { action: "write", sessionId: "s", data: "GIT push --force\n" },
   ]) {
     assert.equal((await decide("process", params, never)).block, true, JSON.stringify(params));
     assert.equal((await decide("gateway_process", params, never)).block, true, `gateway_process ${JSON.stringify(params)}`);
@@ -115,6 +120,7 @@ test("decide blocks shell-session input that names git or gh, and passes other i
     { action: "write", sessionId: "s", data: "y\n" },
     { action: "send-keys", sessionId: "s", keys: ["C-c"] },
     { action: "send-keys", sessionId: "s", keys: ["Up", "Up", "Enter"] },
+    { action: "send-keys", sessionId: "s", keys: ["C-c", "^g", "C-h", "M-x", "S-Tab", "kpenter"] },
     { action: "paste", sessionId: "s", text: "digit github-free text" },
   ]) {
     assert.deepEqual(await decide("process", params, never), { block: false }, JSON.stringify(params));
