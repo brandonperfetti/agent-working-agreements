@@ -85,10 +85,13 @@ test("decide blocks a GitHub merge through a non-shell tool, and passes text too
   const never = async () => assert.fail("the guard is not run");
   const kody = { code: "export default async () => kody.github_pr_merge({ repo: 'a/b', number: 1 })" };
   assert.equal((await decide("kody-local-celld__execute", kody, never)).block, true);
+  const named = { repository_full_name: "brandonperfetti/agent-working-agreements", pr_number: 123 };
+  assert.equal((await decide("mcp__github__merge_pull_request", named, never)).block, true);
   assert.equal((await decide("process", { action: "write", data: "gh pr merge 4 --admin\n" }, never)).block, true);
   assert.equal((await decide("mcp_call", { query: "mergePullRequest", url: "https://api.github.com/graphql" }, never)).block, true);
   assert.deepEqual(await decide("apply_patch", { input: "+ gh pr merge <N> --merge" }, never), { block: false });
   assert.deepEqual(await decide("message", { text: "merged the GitHub PR" }, never), { block: false });
+  assert.deepEqual(await decide("sessions_spawn", { agentId: "coder", task: "review, then merge the GitHub PR" }, never), { block: false });
   assert.deepEqual(await decide("web_search", { query: "git merge conflicts" }, never), { block: false });
 });
 
@@ -99,6 +102,10 @@ test("decide blocks shell-session input that names git or gh, and passes other i
     { action: "send-keys", sessionId: "s", literal: "gh pr view 1", keys: ["Enter"] },
     { action: "send-keys", sessionId: "s", hex: ["67", "69", "74", "20", "70"] },
     { action: "paste", sessionId: "s", text: "ls\ngit push\n" },
+    { action: "send-keys", sessionId: "s", keys: ["git", "Space", "push", "Space", "--force", "Enter"] },
+    { action: "send-keys", sessionId: "s", keys: ["g", "i", "t", "Space", "p"] },
+    { action: "send-keys", sessionId: "s", hex: ["0x67", "0x68", "0x20"] },
+    { action: "send-keys", sessionId: "s", literal: "g", hex: ["69"], keys: ["t", "Space"] },
   ]) {
     assert.equal((await decide("process", params, never)).block, true, JSON.stringify(params));
     assert.equal((await decide("gateway_process", params, never)).block, true, `gateway_process ${JSON.stringify(params)}`);
@@ -107,11 +114,23 @@ test("decide blocks shell-session input that names git or gh, and passes other i
     { action: "poll", sessionId: "s", timeout: 1000 },
     { action: "write", sessionId: "s", data: "y\n" },
     { action: "send-keys", sessionId: "s", keys: ["C-c"] },
+    { action: "send-keys", sessionId: "s", keys: ["Up", "Up", "Enter"] },
     { action: "paste", sessionId: "s", text: "digit github-free text" },
   ]) {
     assert.deepEqual(await decide("process", params, never), { block: false }, JSON.stringify(params));
   }
-  assert.equal(sessionInput({ hex: ["c3", "a9"], data: "a" }).length, 4);
+  assert.equal(sessionInput({ literal: "a", hex: ["0x62", "zz"], keys: ["c", "Space", "Enter"] }), "\n\nabc \n");
+});
+
+test("decide refuses an exec env that changes git or gh, and passes other env", async () => {
+  const seen = [];
+  const pass = async (command) => { seen.push(command); return { code: 0, stdout: "" }; };
+  for (const env of [{ GH_REPO: "a/b" }, { GIT_DIR: "/x" }, { PATH: "/tmp/bin" }, { GITHUB_TOKEN: "t" }, ["GH_REPO=a/b"], "GH_REPO=a/b"]) {
+    const decision = await decide("exec", { command: "gh pr merge 1 --squash", env }, pass);
+    assert.equal(decision.block, true, JSON.stringify(env));
+  }
+  assert.deepEqual(await decide("exec", { command: "npm test", env: { NODE_ENV: "test" } }, pass), { block: false });
+  assert.deepEqual(seen, ["npm test"]);
 });
 
 test("decide leaves a Code Mode cell to its nested calls", async () => {

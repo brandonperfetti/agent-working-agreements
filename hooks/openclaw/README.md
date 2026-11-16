@@ -11,8 +11,10 @@ only carries the command and reads the verdict.
 The relay blocks the call unless the guard exits 0 with nothing on stdout. A denial, a nonzero
 exit, unreadable output, a missing guard, a timeout and a shell call whose command it cannot read
 all block. It also blocks any non-text tool whose parameters name GitHub and a merge, such as an
-MCP `execute`, because no API call is an equivalent route, and any `process` input to a running
-shell session that names `git` or `gh`: run those through `exec`.
+MCP `execute` or a merge-named tool, because no API call is an equivalent route; any `process`
+input to a running shell session that names `git` or `gh`, keys and hex bytes included; and an
+`exec` whose own `env` sets a variable that changes git or gh (`GIT_*`, `GH_*`, `GITHUB_*`,
+`PATH`, `HOME` and the like), which the guard would not see: put those in the command.
 
 The guard reads the checkout from the call's absolute `workdir` (or `cwd`). The hook is not told
 the session's default directory, so a call without one is checked outside any repository: a

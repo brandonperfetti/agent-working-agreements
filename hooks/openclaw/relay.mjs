@@ -23,7 +23,7 @@ export const SHELL_TOOLS = new Set([
 // prose, not a call. Every other tool that names GitHub and a merge (an MCP tool such as Kody's
 // execute, a process write) is blocked: no API call is an equivalent route.
 export const TEXT_TOOLS = new Set([
-  "read", "write", "edit", "apply_patch", "message", "sessions_send", "memory_write",
+  "read", "write", "edit", "apply_patch", "message", "sessions_send", "sessions_spawn", "memory_write",
   "memory_search", "memory_get", "web_search", "web_fetch", "session_status", "tool_search",
 ]);
 // Tools that send input to a running shell session: OpenClaw's, and the Codex harness's twin.
@@ -59,11 +59,35 @@ export function commandOf(params) {
 /** The text a `process` call sends to a running session's stdin: write's `data`, send-keys'
  * `literal` and `hex`, paste's `text`. Named keys carry no command text. */
 export function sessionInput(params) {
-  const parts = [params.data, params.literal, params.text].filter((v) => typeof v === "string");
-  const hex = Array.isArray(params.hex) ? params.hex : typeof params.hex === "string" ? [params.hex] : [];
-  const bytes = hex.filter((h) => typeof h === "string").join("").replace(/[^0-9a-fA-F]/g, "");
-  if (bytes) parts.push(Buffer.from(bytes, "hex").toString("latin1"));
-  return parts.join(" ");
+  const str = (v) => (typeof v === "string" ? v : "");
+  // send-keys sends literal, then hex bytes, then keys, with nothing between them (OpenClaw's
+  // encodeKeySequence): a hex byte may carry a `0x` prefix, and a key token that is not a named
+  // key is sent as its own text.
+  const list = (v) => (Array.isArray(v) ? v : typeof v === "string" ? [v] : []).filter((x) => typeof x === "string");
+  const hex = list(params.hex).map((h) => h.trim().toLowerCase().replace(/^0x/, "")).filter((h) => /^[0-9a-f]{1,2}$/.test(h));
+  const bytes = Buffer.from(hex.map((h) => Number.parseInt(h, 16))).toString("latin1");
+  const keys = list(params.keys).map(keyText).join("");
+  return [str(params.data), str(params.text), str(params.literal) + bytes + keys].join("\n");
+}
+
+// A key token as text: Space is a space, any other named or modified key a line break (enough to
+// end a word), anything else its own characters.
+function keyText(raw) {
+  const token = raw.trim();
+  if (/^space$/i.test(token)) return " ";
+  if (token.length > 1 && (/^(\^|[CMS]-)/i.test(token) || NAMED_KEY.test(token))) return "\n";
+  return token;
+}
+const NAMED_KEY = /^(enter|return|tab|escape|esc|backspace|bspace|delete|del|insert|ins|up|down|left|right|home|end|pageup|pagedown|pgup|pgdn|f\d{1,2})$/i;
+
+// exec's own `env` reaches the command but not the guard. A variable that changes what git or gh
+// does, or which binary runs, is refused there; others pass, as they do as a command's prefix.
+const GIT_ENV = /^(GIT_|GH_|GITHUB_)|^(PATH|HOME|XDG_CONFIG_HOME|XDG_CONFIG_DIRS|ZDOTDIR|BASH_ENV|ENV)$/;
+function envProblem(env) {
+  if (env === undefined || env === null) return null;
+  if (typeof env !== "object" || Array.isArray(env)) return "an exec env the relay cannot read";
+  const named = Object.keys(env).filter((k) => GIT_ENV.test(k));
+  return named.length ? `exec's env sets ${named.join(", ")}, which the guard cannot see; set it in the command itself` : null;
 }
 
 function block(reason) {
@@ -97,6 +121,8 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
   const command = commandOf(args);
   if (command === null) return block("a shell command the relay cannot read");
   if (typeof command === "string") {
+    const env = envProblem(args.env);
+    if (env) return block(env);
     // Only an absolute directory names the checkout the command runs in: the hook is not told the
     // session's default directory, and a relative one would resolve against the Gateway's. Without
     // one the guard is run outside any repository (runGuard), so a check that needs one blocks.
@@ -108,7 +134,8 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
     return block("input to a running shell session that names git or gh; run git and gh through exec, where the guard reads the whole command");
   }
   if (!TEXT_TOOLS.has(toolName)) {
-    const text = JSON.stringify(args);
+    // The tool's own name counts: a merge tool's parameters need not say "merge".
+    const text = `${toolName} ${JSON.stringify(args)}`;
     if (MERGE.test(text) && GITHUB.test(text)) {
       return block(`a GitHub merge through ${toolName}, not the shell; no API call is an equivalent route`);
     }
