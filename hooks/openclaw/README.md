@@ -48,7 +48,8 @@ only once the canary is refused with `awa-guard-git:`. If it is not, restart the
 can persist without reaching the running Gateway, and a second patch then finds nothing to apply.
 At the first apply, no guard ran for about three seconds.
 Decisions on blocked and merge-bearing calls are logged to
-`~/.openclaw/logs/awa-guard-git.jsonl`, with each assignment's and `env` entry's value removed.
+`~/.openclaw/logs/awa-guard-git.jsonl`, with each assignment's, secret-named key's and `env`
+entry's value removed, in the parameters and in the guard's reason.
 An unset or empty `plugins.allow` is unrestricted, and the printed patch leaves it so.
 
 ## Limits

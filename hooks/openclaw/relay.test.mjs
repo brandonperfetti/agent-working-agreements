@@ -7,7 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 process.env.AWA_GUARD_GIT_LOG = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl");
-const { commandOf, decide, redact, runGuard, sessionInput, verdict, PLUGIN_ID } = await import("./relay.mjs");
+const { commandOf, decide, redact, runGuard, scrubText, sessionInput, verdict, PLUGIN_ID } = await import("./relay.mjs");
 const { checkFiles, checkInspection, install, isUnset, patchFor, readList, SOURCES } = await import("./install.mjs");
 const plugin = (await import("./awa-guard-git.mjs")).default;
 
@@ -94,6 +94,9 @@ test("decide blocks a GitHub merge through a non-shell tool, and passes text too
   assert.deepEqual(await decide("sessions_spawn", { agentId: "coder", task: "review, then merge the GitHub PR" }, never), { block: false });
   assert.equal((await decide("sessions_spawn", { runtime: "acp", task: "merge the GitHub PR" }, never)).block, true);
   assert.deepEqual(await decide("web_search", { query: "git merge conflicts" }, never), { block: false });
+  const plan = [{ step: "merge the GitHub PR after review", status: "pending" }];
+  assert.deepEqual(await decide("update_plan", { plan }, never), { block: false });
+  assert.deepEqual(await decide("progress_card", { steps: plan }, never), { block: false });
 });
 
 test("decide blocks shell-session input that names git or gh, and passes other input", async () => {
@@ -282,10 +285,20 @@ test("the log keeps a credential's name, never its value", () => {
     `curl --silent --password ${V} x`,
     `tool -v --api-key '${V}' --secret ${V}`,
     `curl --token=${V} -H 'Authorization: ${scheme} ${V}' https://${user}:${V}@example.com/a/b`,
+    `TOKEN=""${V} gh pr view 1`,
+    `X='q'${V}"r" ls`,
+    `curl --password "a"${V} x`,
   ]) {
     assert.doesNotMatch(redact({ command }), seen, command);
+    assert.doesNotMatch(scrubText(`a commit whose message reads ${command}`), seen, command);
   }
   assert.doesNotMatch(redact({ options: { env: { T: V } } }), seen);
+  // A bare value under a secret-named key, as an MCP tool passes it, is removed whole.
+  for (const key of ["token", "password", "apiKey", "client_secret", "private_key", "key", "Authorization"]) {
+    assert.doesNotMatch(redact({ [key]: V, pr_number: 1 }), seen, key);
+  }
+  assert.doesNotMatch(redact({ password: [V], secret: { v: V } }), seen);
+  assert.equal(JSON.parse(redact({ repo: "a/b", pr_number: 1 })).repo, "a/b");
   const route = "gh pr merge 4 --repo a/b --merge --match-head-commit " + "a".repeat(40) + " --author-email brandon@brandonperfetti.com";
   assert.equal(JSON.parse(redact({ command: route })).command, route);
   assert.equal(redact(undefined), "{}");

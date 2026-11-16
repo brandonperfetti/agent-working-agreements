@@ -19,12 +19,14 @@ export const SHELL_TOOLS = new Set([
   "exec", "bash", "shell", "local_shell", "exec_command", "shell_command", "unified_exec",
   "gateway_exec", "container.exec",
 ]);
-// Tools whose parameters are text: a file, a patch, a message or a search. A merge named in them is
-// prose, not a call. Every other tool that names GitHub and a merge (an MCP tool such as Kody's
-// execute, a process write) is blocked: no API call is an equivalent route.
+// Tools whose parameters are text: a file, a patch, a message, a search or a plan (`update_plan`,
+// renamed `progress_card`, only shows its steps). A merge named in them is prose, not a call. Every
+// other tool that names GitHub and a merge (an MCP tool such as Kody's execute, a process write) is
+// blocked: no API call is an equivalent route.
 export const TEXT_TOOLS = new Set([
   "read", "write", "edit", "apply_patch", "message", "sessions_send", "sessions_spawn", "memory_write",
   "memory_search", "memory_get", "web_search", "web_fetch", "session_status", "tool_search",
+  "update_plan", "progress_card",
 ]);
 // Tools that send input to a running shell session: OpenClaw's, and the Codex harness's twin.
 export const SESSION_TOOLS = new Set(["process", "gateway_process"]);
@@ -173,12 +175,15 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
 }
 
 /** The parameters as logged, so a credential never reaches the log: an `env` at any depth keeps its
- * names only, and in every string an assignment, a token flag's or auth scheme's value and a URL's
- * user part are removed. Space-separated route flags stay readable. */
+ * names only, a string under a secret-named key is removed whole, and in every other string an
+ * assignment, a token flag's or auth scheme's value and a URL's user part are removed.
+ * Space-separated route flags stay readable. */
 export function redact(params) {
   return JSON.stringify(scrub(params ?? {}));
 }
+const SECRET_KEY = /token|passw(or)?d|secret|(api|private|access)[_-]?key|^key$|authorization|credential|cookie/i;
 function scrub(value, key) {
+  if (key && SECRET_KEY.test(key) && value != null) return "…";
   if (typeof value === "string") return scrubText(value);
   if (Array.isArray(value)) return value.map((v) => scrub(v));
   if (!value || typeof value !== "object") return value;
@@ -188,13 +193,18 @@ function scrub(value, key) {
 // Each string is cut before it is scrubbed: the log keeps 600 characters, and a bounded input
 // keeps every pattern below cheap inside the hook's budget (they run on the Gateway's thread).
 const SCRUB_MAX = 2048;
-function scrubText(raw) {
+// A shell word's value: quoted and bare segments joined, as in `T=""value`, read as one.
+const VALUE = String.raw`(?:"(?:[^"\\]|\\.)*"|'[^']*'|[^\s"'])+`;
+const ASSIGNMENT = new RegExp(String.raw`\b([A-Za-z_][A-Za-z0-9_]*)=${VALUE}`, "g");
+// Only a secret flag takes a value here, so a plain flag before it is never mistaken for one;
+// a flag starts at a word's start, which with the cut keeps the pattern cheap.
+const SECRET_FLAG = new RegExp(String.raw`(^|\s)(--?[\w-]*?(?:token|password|passwd|secret|key|auth(?!or))[\w-]*)(\s+)${VALUE}`, "gi");
+/** One string as logged; the guard's reason, which can quote the command, goes through it too. */
+export function scrubText(raw) {
   const text = raw.length > SCRUB_MAX ? raw.slice(0, SCRUB_MAX) : raw;
   return text
-    .replace(/\b([A-Za-z_][A-Za-z0-9_]*)=("(?:[^"\\]|\\.)*"|'[^']*'|[^\s"']+)/g, "$1=…")
-    // Only a secret flag takes a value here, so a plain flag before it is never mistaken for one;
-    // a flag starts at a word's start, which with the cut keeps the pattern cheap.
-    .replace(/(^|\s)(--?[\w-]*?(?:token|password|passwd|secret|key|auth(?!or))[\w-]*)(\s+)("(?:[^"\\]|\\.)*"|'[^']*'|[^\s"']+)/gi, "$1$2$3…")
+    .replace(ASSIGNMENT, "$1=…")
+    .replace(SECRET_FLAG, "$1$2$3…")
     .replace(/\b(Bearer|Basic|token)(\s+)[^\s"']+/gi, "$1$2…")
     .replace(/(:\/\/)[^\s/@"']+@/g, "$1…@");
 }
