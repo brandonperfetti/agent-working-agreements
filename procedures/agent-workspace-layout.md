@@ -6,7 +6,7 @@ and a rule here that contradicts one there is the rule that is wrong. The text b
 verbatim on 2026-10-27; "above" and "below" in it refer to the agreement section it implements.
 
 **Trigger:** An agent is about to write any artifact (review, evidence, handoff, note, friction
-record, plan) or to clone or check out a repository for scratch work.
+record, plan), to clone or check out a repository for scratch work, or to install or build there.
 
 **Owner:** The agent writing the artifact; the agent closing a delivery for its friction record.
 
@@ -55,8 +55,8 @@ _agent/
 ├── analysis/      cross-repo findings that belong to no initiative
 ├── evidence/      raw captures for cross-initiative claims
 ├── friction/      one-off delivery friction records — raw workflow cost before promotion
-├── experiments/   harnesses, scripts, and files you write that fit nowhere else (never /tmp —
-│                  the next session can't see it); never a clone or worktree
+├── experiments/   the harness sources and scripts you write that fit nowhere else (not /tmp —
+│                  the next session can't see it); what they install or build is scratch (Clones)
 ├── notes/         session scratch, decisions-in-progress
 ├── quarantine/    superseded docs kept for the trail (move, don't rewrite beyond recognition)
 ├── _trash/        staged for deletion — only Brandon empties this
@@ -110,10 +110,14 @@ stops it, first that fits of a type or lint rule, a test, a script, then docs; t
 catches the original failure, says how to remove it, and changes this agreement only through its
 amendment rules (#167).
 
-**Clones.** No clone of a repository, and no worktree, is written under `_agent/`. A scratch clone
-lives in the client's own scratch directory, outside `_agent/` — your client file names that
-directory, or records that it is unmeasured. What persists is the evidence: the commands run and
-their output, under `evidence/`, with the remote and the commit needed to rebuild the clone.
+**Clones.** No clone of a repository, worktree, package install, `node_modules` or build output is
+written under `_agent/`; a `node_modules` inside a captured `*.app` bundle is the app, not an
+install. That scratch lives in the client's own scratch directory, outside `_agent/` — your client
+file names it, or records that it is unmeasured. A brief that names a scratch location names that
+directory, and "move, don't delete" never moves a tree into `_agent/`. What persists is the
+evidence under `evidence/`: the commands run, their output, receipts, logs and hashes, with the
+remote and the commit needed to rebuild a clone. `hooks/claude-code/store_check.py check` fails on
+any `node_modules` root, or any top-level store tree over 5 GB (#283).
 Before the remote, a command or its output is written under `evidence/`, the secret comes out, by
 the remote's form, wherever a remote appears, because a remote can carry credentials, a command
 records one as typed (a `git clone` of a URL with a token in it), and the plain ways of reading a
@@ -122,9 +126,10 @@ a user name does and the two cannot be told apart; an ssh remote keeps its user 
 password; a remote of any other form loses its whole userinfo; and any credential the clone uses,
 a token or an authentication header among them, is stripped from a captured command and its
 output.
-Keeping that evidence is how this sits beside the `experiments/` line's "never /tmp": a
-transcript has to survive the session, a clone can be made again. The reason: a clone under
-`_agent/` is a nested repository in a store meant to replicate, a second copy of a project's
-source with its license, and the one thing in `_agent/` that is rebuildable (Brandon, 2026-10-12).
+Keeping that evidence is how this sits beside the `experiments/` line's "not /tmp": a
+transcript has to survive the session, a clone or install can be made again. The reason: a clone
+under `_agent/` is a nested repository in a store meant to replicate, a second copy of a project's
+source with its license, and rebuildable (Brandon, 2026-10-12); installs swelled one store to 196 GB
+(Brandon, 2026-11-16, #283).
 Scratch-clone rules move no existing lane tree; [worktree lifecycle](worktree-lifecycle.md) governs
 new placement and retirement through the owning manager.
