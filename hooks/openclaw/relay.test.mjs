@@ -281,4 +281,10 @@ test("the log keeps a credential's name, never its value", () => {
   const route = "gh pr merge 4 --repo a/b --merge --match-head-commit " + "a".repeat(40) + " --author-email brandon@brandonperfetti.com";
   assert.equal(JSON.parse(redact({ command: route })).command, route);
   assert.equal(redact(undefined), "{}");
+  // Hostile lengths stay cheap: the hook runs on the Gateway's thread.
+  for (const long of ["-key".repeat(50000), "-token ".repeat(30000), 'a="\\'.repeat(50000), "a=".repeat(100000), "://".repeat(60000)]) {
+    const started = Date.now();
+    redact({ command: long, env: { X: long } });
+    assert.ok(Date.now() - started < 250, `${long.slice(0, 8)}… took ${Date.now() - started} ms`);
+  }
 });

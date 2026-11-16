@@ -185,10 +185,16 @@ function scrub(value, key) {
   if (key === "env") return Object.fromEntries(Object.keys(value).map((k) => [k, "…"]));
   return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, scrub(v, k)]));
 }
-function scrubText(text) {
+// Each string is cut before it is scrubbed: the log keeps 600 characters, and a bounded input
+// keeps every pattern below cheap inside the hook's budget (they run on the Gateway's thread).
+const SCRUB_MAX = 2048;
+const SECRET_FLAG = /token|password|passwd|secret|key|auth(?!or)/i;
+function scrubText(raw) {
+  const text = raw.length > SCRUB_MAX ? raw.slice(0, SCRUB_MAX) : raw;
   return text
     .replace(/\b([A-Za-z_][A-Za-z0-9_]*)=("(?:[^"\\]|\\.)*"|'[^']*'|[^\s"']+)/g, "$1=…")
-    .replace(/(--?[\w-]*(?:token|password|passwd|secret|key|auth(?!or))[\w-]*)(\s+)("(?:[^"\\]|\\.)*"|'[^']*'|[^\s"']+)/gi, "$1$2…")
+    // A flag starts at a word's start, so each flag is read once.
+    .replace(/(^|\s)(--?[\w-]+)(\s+)("(?:[^"\\]|\\.)*"|'[^']*'|[^\s"']+)/g, (all, lead, flag, gap) => (SECRET_FLAG.test(flag) ? `${lead}${flag}${gap}…` : all))
     .replace(/\b(Bearer|Basic|token)(\s+)[^\s"']+/gi, "$1$2…")
     .replace(/(:\/\/)[^\s/@"']+@/g, "$1…@");
 }
