@@ -5,25 +5,28 @@
 import { appendFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { decide, PLUGIN_ID, redact, runGuard, scrubText } from "./relay.mjs";
+import { decide, PLUGIN_ID, runGuard, SHELL_TOOLS, SESSION_TOOLS, TEXT_TOOLS } from "./relay.mjs";
 
 const LOG = process.env.AWA_GUARD_GIT_LOG || join(homedir(), ".openclaw", "logs", `${PLUGIN_ID}.jsonl`);
 
-async function record(event, ctx, decision) {
-  // Blocks and merge-bearing calls only, so the log holds the route's evidence and not every
-  // command (which can carry secrets in assignments).
-  const text = JSON.stringify(event.params ?? {});
-  if (!decision.block && !/merge/i.test(text)) return;
+const ROUTES = new Set(["guard", "code-mode", "shell", "session", "text", "other"]);
+const REASONS = new Set([
+  "allowed", "guard-error", "guard-exit", "guard-denied", "guard-unreadable",
+  "command-unreadable", "exec-env", "shell-command-missing", "session-input", "non-shell-merge",
+]);
+
+// Only fixed classifications cross the log boundary. Qualification commands and their output
+// belong in separate receipts, never in this operational log.
+export async function record(toolName, decision) {
+  const block = decision.block === true;
+  const { route, reasonCode } = decision;
+  if (!block && route !== "guard") return;
   const line = {
     at: new Date().toISOString(),
-    agent: ctx?.agentId,
-    session: ctx?.sessionKey,
-    runId: event.runId ?? ctx?.runId,
-    tool: event.toolName,
-    kind: event.toolKind ?? ctx?.toolKind,
-    block: decision.block,
-    reason: typeof decision.reason === "string" ? scrubText(decision.reason) : decision.reason,
-    params: redact(event.params).slice(0, 600),
+    block,
+    tool: SHELL_TOOLS.has(toolName) ? "shell" : SESSION_TOOLS.has(toolName) ? "session" : TEXT_TOOLS.has(toolName) ? "text" : "unknown",
+    route: ROUTES.has(route) ? route : "unknown",
+    reason: REASONS.has(reasonCode) ? reasonCode : "unknown",
   };
   try {
     await appendFile(LOG, JSON.stringify(line) + "\n", { mode: 0o600 });
@@ -44,7 +47,7 @@ export default {
           kind: event.toolKind ?? ctx?.toolKind,
           inputKind: event.toolInputKind ?? ctx?.toolInputKind,
         });
-        await record(event, ctx, decision);
+        await record(event.toolName, decision);
         return decision.block ? { block: true, blockReason: decision.reason } : undefined;
       },
       { priority: 1000, timeoutMs: 15000 },

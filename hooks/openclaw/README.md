@@ -47,9 +47,22 @@ Apply it, reload an edited plugin, or re-enable a disabled one at a quiet moment
 only once the canary is refused with `awa-guard-git:`. If it is not, restart the Gateway: a patch
 can persist without reaching the running Gateway, and a second patch then finds nothing to apply.
 At the first apply, no guard ran for about three seconds.
-Decisions on blocked and merge-bearing calls are logged to
-`~/.openclaw/logs/awa-guard-git.jsonl`, with each assignment's, secret-named key's and `env`
-entry's value removed, in the parameters and in the guard's reason.
+Blocked calls and guard-checked shell decisions are logged to
+`~/.openclaw/logs/awa-guard-git.jsonl` (created with mode `0600`). Each event has only:
+
+- `at`: a locally generated ISO timestamp; `block`: a boolean.
+- `tool`: `shell`, `session`, `text` or `unknown`.
+- `route`: `guard`, `code-mode`, `shell`, `session`, `text`, `other` or `unknown`.
+- `reason`: `allowed`, `guard-error`, `guard-exit`, `guard-denied`, `guard-unreadable`,
+  `command-unreadable`, `exec-env`, `shell-command-missing`, `session-input`, `non-shell-merge`
+  or `unknown`.
+
+Classifications come from fixed decision branches and allowlists; arbitrary values become
+`unknown`. Commands, parameters, environment payloads, guard reason text, context and identifiers
+are never persisted in this log. The guard still receives the original command and directory;
+its user-facing block reason is unchanged. Qualification commands, outputs and head bindings
+belong in separate evidence receipts: a metadata event alone does not prove the route command.
+
 An unset or empty `plugins.allow` is unrestricted, and the printed patch leaves it so.
 
 ## Limits

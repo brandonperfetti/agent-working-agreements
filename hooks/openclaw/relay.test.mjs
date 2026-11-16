@@ -1,15 +1,18 @@
 // Tests for the OpenClaw relay: node --test hooks/openclaw/relay.test.mjs
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, realpathSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-process.env.AWA_GUARD_GIT_LOG = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl");
-const { commandOf, decide, redact, runGuard, scrubText, sessionInput, verdict, PLUGIN_ID } = await import("./relay.mjs");
+const LOG_FILE = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl");
+process.env.AWA_GUARD_GIT_LOG = LOG_FILE;
+writeFileSync(LOG_FILE, "", { mode: 0o600 });
+const { commandOf, decide, runGuard, sessionInput, verdict, PLUGIN_ID } = await import("./relay.mjs");
 const { checkFiles, checkInspection, install, isUnset, patchFor, readList, SOURCES } = await import("./install.mjs");
-const plugin = (await import("./awa-guard-git.mjs")).default;
+const { default: plugin, record } = await import("./awa-guard-git.mjs");
+const PASS = (route) => ({ block: false, reasonCode: "allowed", route });
 
 const GUARD = join(dirname(fileURLToPath(import.meta.url)), "..", "claude-code", "guard_git.py");
 const NO_REPO = mkdtempSync(join(tmpdir(), "awa-guard-norepo-"));
@@ -37,8 +40,8 @@ test("commandOf returns null for a command field it cannot read", () => {
 });
 
 test("verdict passes only exit 0 with empty stdout", () => {
-  assert.deepEqual(verdict({ code: 0, stdout: "" }), { block: false });
-  assert.deepEqual(verdict({ code: 0, stdout: " \n" }), { block: false });
+  assert.deepEqual(verdict({ code: 0, stdout: "" }), PASS("guard"));
+  assert.deepEqual(verdict({ code: 0, stdout: " \n" }), PASS("guard"));
   for (const result of [
     { code: 1, stdout: "" },
     { code: 2, stdout: "" },
@@ -65,10 +68,10 @@ test("verdict carries the guard's reason", () => {
 test("decide sends a shell command and its directory to the guard", async () => {
   const seen = [];
   const pass = async (command, cwd) => { seen.push([command, cwd]); return { code: 0, stdout: "" }; };
-  assert.deepEqual(await decide("exec", { command: "git status", workdir: "/w" }, pass), { block: false });
-  assert.deepEqual(await decide("local_shell", { command: ["bash", "-lc", "ls"], cwd: "/c" }, pass), { block: false });
-  assert.deepEqual(await decide("unknown_tool", { cmd: "pwd" }, pass), { block: false });
-  assert.deepEqual(await decide("exec", { command: "git push", workdir: "." }, pass), { block: false });
+  assert.deepEqual(await decide("exec", { command: "git status", workdir: "/w" }, pass), PASS("guard"));
+  assert.deepEqual(await decide("local_shell", { command: ["bash", "-lc", "ls"], cwd: "/c" }, pass), PASS("guard"));
+  assert.deepEqual(await decide("unknown_tool", { cmd: "pwd" }, pass), PASS("guard"));
+  assert.deepEqual(await decide("exec", { command: "git push", workdir: "." }, pass), PASS("guard"));
   assert.deepEqual(seen, [["git status", "/w"], ["ls", "/c"], ["pwd", undefined], ["git push", undefined]]);
   const denied = await decide("exec", { command: "gh pr merge 1" }, async () => DENY("no"));
   assert.equal(denied.block, true);
@@ -89,14 +92,14 @@ test("decide blocks a GitHub merge through a non-shell tool, and passes text too
   assert.equal((await decide("mcp__github__merge_pull_request", named, never)).block, true);
   assert.equal((await decide("process", { action: "write", data: "gh pr merge 4 --admin\n" }, never)).block, true);
   assert.equal((await decide("mcp_call", { query: "mergePullRequest", url: "https://api.github.com/graphql" }, never)).block, true);
-  assert.deepEqual(await decide("apply_patch", { input: "+ gh pr merge <N> --merge" }, never), { block: false });
-  assert.deepEqual(await decide("message", { text: "merged the GitHub PR" }, never), { block: false });
-  assert.deepEqual(await decide("sessions_spawn", { agentId: "coder", task: "review, then merge the GitHub PR" }, never), { block: false });
+  assert.deepEqual(await decide("apply_patch", { input: "+ gh pr merge <N> --merge" }, never), PASS("text"));
+  assert.deepEqual(await decide("message", { text: "merged the GitHub PR" }, never), PASS("text"));
+  assert.deepEqual(await decide("sessions_spawn", { agentId: "coder", task: "review, then merge the GitHub PR" }, never), PASS("text"));
   assert.equal((await decide("sessions_spawn", { runtime: "acp", task: "merge the GitHub PR" }, never)).block, true);
-  assert.deepEqual(await decide("web_search", { query: "git merge conflicts" }, never), { block: false });
+  assert.deepEqual(await decide("web_search", { query: "git merge conflicts" }, never), PASS("text"));
   const plan = [{ step: "merge the GitHub PR after review", status: "pending" }];
-  assert.deepEqual(await decide("update_plan", { plan }, never), { block: false });
-  assert.deepEqual(await decide("progress_card", { steps: plan }, never), { block: false });
+  assert.deepEqual(await decide("update_plan", { plan }, never), PASS("text"));
+  assert.deepEqual(await decide("progress_card", { steps: plan }, never), PASS("text"));
 });
 
 test("decide blocks shell-session input that names git or gh, and passes other input", async () => {
@@ -126,7 +129,7 @@ test("decide blocks shell-session input that names git or gh, and passes other i
     { action: "send-keys", sessionId: "s", keys: ["C-c", "^g", "C-h", "M-x", "S-Tab", "kpenter"] },
     { action: "paste", sessionId: "s", text: "digit github-free text" },
   ]) {
-    assert.deepEqual(await decide("process", params, never), { block: false }, JSON.stringify(params));
+    assert.deepEqual(await decide("process", params, never), PASS("session"), JSON.stringify(params));
   }
   assert.equal(sessionInput({ literal: "a", hex: ["0x62", "zz"], keys: ["c", "Space", "Enter"] }), "\n\nabc \n");
 });
@@ -138,21 +141,21 @@ test("decide refuses an exec env that changes git or gh, and passes other env", 
     const decision = await decide("exec", { command: "gh pr merge 1 --squash", env }, pass);
     assert.equal(decision.block, true, JSON.stringify(env));
   }
-  assert.deepEqual(await decide("exec", { command: "npm test", env: { NODE_ENV: "test" } }, pass), { block: false });
+  assert.deepEqual(await decide("exec", { command: "npm test", env: { NODE_ENV: "test" } }, pass), PASS("guard"));
   assert.deepEqual(seen, ["npm test"]);
 });
 
 test("decide leaves a Code Mode cell to its nested calls", async () => {
   const never = async () => assert.fail("the guard is not run");
   const cell = { command: 'const r = await exec({command: "gh pr merge 1 --admin"});' };
-  assert.deepEqual(await decide("exec", cell, never, { kind: "code_mode_exec" }), { block: false });
-  assert.deepEqual(await decide("exec", cell, never, { inputKind: "javascript" }), { block: false });
+  assert.deepEqual(await decide("exec", cell, never, { kind: "code_mode_exec" }), PASS("code-mode"));
+  assert.deepEqual(await decide("exec", cell, never, { inputKind: "javascript" }), PASS("code-mode"));
   const nested = await decide("exec", { command: "gh pr merge 1 --admin" }, async () => DENY("no"), {});
   assert.equal(nested.block, true);
 });
 
 test("the real guard: a read passes, a force-push and the canary block", async () => {
-  assert.deepEqual(verdict(await real("git status")), { block: false });
+  assert.deepEqual(verdict(await real("git status")), PASS("guard"));
   const force = verdict(await real("git push --force origin feature"));
   assert.equal(force.block, true);
   assert.match(force.reason, /force/);
@@ -266,52 +269,121 @@ test("readList reads a live list through OpenClaw, and refuses anything else", (
   assert.equal(isUnset("not json"), false);
 });
 
-test("the log keeps a credential's name, never its value", () => {
-  // The fake value and the shapes around it are built at run time, so no secret scanner reads a
-  // credential in this file.
-  const V = ["pl", "ace", "holder"].join("-");
-  const seen = new RegExp(V);
-  const logged = redact({ command: `GH_TOKEN=${V} gh pr view 1 && FOO='a b' ls`, env: { GH_TOKEN: V, X: "y" } });
-  assert.doesNotMatch(logged, new RegExp(`${V}|a b|"y"`));
-  assert.match(logged, /GH_TOKEN=…/);
-  assert.match(logged, /"env":\{"GH_TOKEN":"…","X":"…"\}/);
-  const scheme = ["Bea", "rer"].join("");
-  const user = ["x", "access", "token"].join("-");
-  for (const command of [
-    `GH_TOKEN="${V}" gh pr view 1`,
-    `FOO="a \\"${V}\\" b" ls`,
-    `export X=${V}`,
-    `gh auth login --with-token ${V}`,
-    `curl --silent --password ${V} x`,
-    `tool -v --api-key '${V}' --secret ${V}`,
-    `curl --token=${V} -H 'Authorization: ${scheme} ${V}' https://${user}:${V}@example.com/a/b`,
-    `TOKEN=""${V} gh pr view 1`,
-    `X='q'${V}"r" ls`,
-    `curl --password "a"${V} x`,
-    `TOKEN=public\\ ${V} gh pr view 1`,
-    `TOKEN=\\"${V} ls`,
-    `curl --token a\\ ${V} x`,
-    `TOKEN="unterminated ${V}`,
-    `curl --password 'a ${V}`,
-    `PAYLOAD='{"token":"${V}","padding":"${"p".repeat(2100)}"}' gh pr view 1`,
-  ]) {
-    assert.doesNotMatch(redact({ command }), seen, command);
-    assert.doesNotMatch(scrubText(`a commit whose message reads ${command}`), seen, command);
+// Read the actual appendFile output, with an offset so each case owns its observed rows.
+const logOffset = () => readFileSync(LOG_FILE, "utf8").length;
+const logRows = (offset) => readFileSync(LOG_FILE, "utf8").slice(offset).trim().split("\n").filter(Boolean).map(JSON.parse);
+function assertLogSchema(rows) {
+  for (const row of rows) {
+    assert.deepEqual(Object.keys(row).sort(), ["at", "block", "reason", "route", "tool"]);
+    assert.equal(new Date(row.at).toISOString(), row.at);
+    assert.equal(typeof row.block, "boolean");
+    assert.ok(["shell", "session", "text", "unknown"].includes(row.tool));
+    assert.ok(["guard", "code-mode", "shell", "session", "text", "other", "unknown"].includes(row.route));
+    assert.ok(["allowed", "guard-error", "guard-exit", "guard-denied", "guard-unreadable", "command-unreadable", "exec-env", "shell-command-missing", "session-input", "non-shell-merge", "unknown"].includes(row.reason));
   }
-  assert.doesNotMatch(redact({ options: { env: { T: V } } }), seen);
-  // A bare value under a secret-named key, as an MCP tool passes it, is removed whole.
-  for (const key of ["token", "password", "apiKey", "client_secret", "private_key", "key", "Authorization"]) {
-    assert.doesNotMatch(redact({ [key]: V, pr_number: 1 }), seen, key);
+}
+
+test("the persisted log excludes quoted assignment and secret-flag values", async () => {
+  const marker = ["log", "probe", "value"].join("-");
+  const offset = logOffset();
+  const seen = [];
+  for (const quote of ["'", '\"']) {
+    for (const command of [
+      `env ${quote}PASSWORD=first ${marker}${quote} task # merge`,
+      `wget ${quote}--password${quote} ${quote}${marker}${quote} https://example.test/merge-report`,
+    ]) {
+      for (const blocked of [false, true]) {
+        const decision = await decide("exec", { command, workdir: "/fixture" }, async (input, cwd) => {
+          seen.push([input, cwd]);
+          return blocked ? DENY(`guard reason containing ${marker}: ${input}`) : { code: 0, stdout: "" };
+        });
+        assert.equal(decision.block, blocked);
+        if (blocked) assert.ok(decision.reason.includes(marker), "user-facing guard reason stays intact");
+        await record("exec", decision);
+        assert.deepEqual(seen.at(-1), [command, "/fixture"], "the guard receives the original command");
+      }
+    }
   }
-  assert.doesNotMatch(redact({ password: [V], secret: { v: V } }), seen);
-  assert.equal(JSON.parse(redact({ repo: "a/b", pr_number: 1 })).repo, "a/b");
+  const rows = logRows(offset);
+  assert.equal(rows.length, 8);
+  assertLogSchema(rows);
+  assert.equal(rows.filter((row) => row.block).length, 4);
+  assert.ok(rows.every((row) => row.route === "guard" && row.tool === "shell"));
+  const persisted = readFileSync(LOG_FILE, "utf8").slice(offset);
+  assert.equal(persisted.includes(marker), false);
+  assert.equal(persisted.includes("PASSWORD"), false);
+  assert.equal(persisted.includes("example.test"), false);
+});
+
+test("the log discards arbitrary event, context, environment and identifier fields", async () => {
+  const marker = ["arbitrary", "event", "value"].join("-");
+  const hooks = [];
+  plugin.register({ on: (_name, handler) => hooks.push(handler) });
+  const offset = logOffset();
+  const fields = {
+    agentId: marker, sessionKey: marker, runId: marker, toolKind: marker, toolInputKind: marker,
+    at: marker, route: marker, reasonCode: marker, reason: marker, error: marker,
+    identifier: marker, metadata: { value: marker }, env: { [marker]: marker },
+  };
+  const result = await hooks[0]({ ...fields, toolName: `mcp_${marker}`, params: { ...fields, query: "github merge" } }, fields);
+  assert.equal(result.block, true);
+  assert.ok(result.blockReason.includes(marker), "the existing non-shell block message is preserved");
+  assert.equal(await hooks[0]({ ...fields, toolName: "read", params: { ...fields, path: marker } }, fields), undefined);
+  const rows = logRows(offset);
+  assert.equal(rows.length, 1, "an allowed non-shell read is not recorded");
+  assert.deepEqual(rows[0], { at: rows[0].at, block: true, tool: "unknown", route: "other", reason: "non-shell-merge" });
+  assertLogSchema(rows);
+  assert.equal(readFileSync(LOG_FILE, "utf8").slice(offset).includes(marker), false);
+});
+
+test("the logger allowlist rejects arbitrary classifications and guard errors", async () => {
+  const marker = ["untrusted", "classification", "value"].join("-");
+  const offset = logOffset();
+  for (const value of [marker, { value: marker }, [marker], null, undefined, "toString", "__proto__"]) {
+    await record(value, { block: true, route: value, reasonCode: value, reason: marker, params: marker, runId: marker });
+  }
+  const results = [{ error: marker }, { code: marker, stdout: "" }, { code: 0, stdout: marker }, DENY(marker)];
+  for (const result of results) {
+    const decision = verdict(result);
+    assert.equal(decision.block, true);
+    await record("exec", decision);
+  }
+  const rows = logRows(offset);
+  assert.equal(rows.length, 11);
+  assertLogSchema(rows);
+  assert.ok(rows.slice(0, 7).every((row) => row.tool === "unknown" && row.route === "unknown" && row.reason === "unknown"));
+  assert.deepEqual(rows.slice(7).map((row) => row.reason), ["guard-error", "guard-exit", "guard-unreadable", "guard-denied"]);
+  assert.equal(readFileSync(LOG_FILE, "utf8").slice(offset).includes(marker), false);
+  assert.equal(statSync(LOG_FILE).mode & 0o777, 0o600);
+});
+
+test("metadata logging preserves allow, block and delegated route decisions", async () => {
+  const offset = logOffset();
   const route = "gh pr merge 4 --repo a/b --merge --match-head-commit " + "a".repeat(40) + " --author-email brandon@brandonperfetti.com";
-  assert.equal(JSON.parse(redact({ command: route })).command, route);
-  assert.equal(redact(undefined), "{}");
-  // Hostile lengths stay cheap: the hook runs on the Gateway's thread.
-  for (const long of ["a=\\ ".repeat(70000), 'a="\\\\'.repeat(50000), "a='".repeat(70000), "a=\\".repeat(100000), "--token " + "\\".repeat(200000), "-key".repeat(50000), "-token ".repeat(30000), "-".repeat(200000), "--x".repeat(70000), 'a="\\'.repeat(50000), "a=".repeat(100000), "://".repeat(60000)]) {
-    const started = Date.now();
-    redact({ command: long, env: { X: long } });
-    assert.ok(Date.now() - started < 250, `${long.slice(0, 8)}… took ${Date.now() - started} ms`);
+  const inputs = [];
+  const pass = async (command, cwd) => { inputs.push([command, cwd]); return { code: 0, stdout: "" }; };
+  const never = async () => assert.fail("guard should not run");
+  for (const [tool, params, runner, options, blocked, classification] of [
+    ["exec", { command: "git status", workdir: "/fixture" }, pass, {}, false, "guard"],
+    ["gateway_exec", { command: route, cwd: "/fixture" }, pass, {}, false, "guard"],
+    ["exec", { command: "gh pr merge --help" }, async () => DENY("canary"), {}, true, "guard"],
+    ["exec", {}, never, {}, true, "shell"],
+    ["exec", { command: 7 }, never, {}, true, "shell"],
+    ["exec", { command: "git status", env: { GH_REPO: "a/b" } }, never, {}, true, "shell"],
+    ["process", { action: "write", data: "git status" }, never, {}, true, "session"],
+    ["message", { text: "github merge" }, never, {}, false, "text"],
+    ["exec", { command: "nested tool code" }, never, { kind: "code_mode_exec" }, false, "code-mode"],
+    ["unrecognized", {}, never, {}, false, "other"],
+  ]) {
+    const decision = await decide(tool, params, runner, options);
+    assert.equal(decision.block, blocked);
+    assert.equal(decision.route, classification);
+    await record(tool, decision);
   }
+  assert.deepEqual(inputs, [["git status", "/fixture"], [route, "/fixture"]]);
+  const rows = logRows(offset);
+  assert.equal(rows.length, 7);
+  assertLogSchema(rows);
+  assert.deepEqual(rows.map((row) => row.reason), ["allowed", "allowed", "guard-denied", "shell-command-missing", "command-unreadable", "exec-env", "session-input"]);
+  assert.equal(readFileSync(LOG_FILE, "utf8").slice(offset).includes("--match-head-commit"), false);
 });
