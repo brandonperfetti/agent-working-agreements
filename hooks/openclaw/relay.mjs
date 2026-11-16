@@ -155,6 +155,17 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
   if (SESSION_TOOLS.has(toolName) && SHELL_WORD.test(sessionInput(args))) {
     return block("input to a running shell session that names git or gh; run git and gh through exec, where the guard reads the whole command", "session-input", "session");
   }
+  // A sessions_spawn brief is text when the child is an OpenClaw subagent, whose tools are hooked;
+  // an ACP child is an outside harness this hook never sees, so its brief is checked.
+  const textTool = TEXT_TOOLS.has(toolName) && !(toolName === "sessions_spawn" && args.runtime === "acp");
+  if (!SHELL_TOOLS.has(toolName) && !textTool) {
+    // The tool's own name counts: a merge tool's parameters need not say "merge". An incidental
+    // command field cannot turn a non-shell merge call into guarded shell execution.
+    const text = `${toolName} ${JSON.stringify(args)}`;
+    if (MERGE.test(text) && GITHUB.test(text)) {
+      return block(`a GitHub merge through ${toolName}, not the shell; no API call is an equivalent route`, "non-shell-merge", "other");
+    }
+  }
   if (typeof command === "string") {
     const env = envProblem(args.env);
     if (env) return block(env, "exec-env", "shell");
@@ -165,16 +176,6 @@ export async function decide(toolName, params, runGuard, { kind, inputKind } = {
     return verdict(await runGuard(command, cwd));
   }
   if (SHELL_TOOLS.has(toolName)) return block("a shell tool call with no command the relay can read", "shell-command-missing", "shell");
-  // A sessions_spawn brief is text when the child is an OpenClaw subagent, whose tools are hooked;
-  // an ACP child is an outside harness this hook never sees, so its brief is checked.
-  const textTool = TEXT_TOOLS.has(toolName) && !(toolName === "sessions_spawn" && args.runtime === "acp");
-  if (!textTool) {
-    // The tool's own name counts: a merge tool's parameters need not say "merge".
-    const text = `${toolName} ${JSON.stringify(args)}`;
-    if (MERGE.test(text) && GITHUB.test(text)) {
-      return block(`a GitHub merge through ${toolName}, not the shell; no API call is an equivalent route`, "non-shell-merge", "other");
-    }
-  }
   return allow(textTool ? "text" : SESSION_TOOLS.has(toolName) ? "session" : "other");
 }
 

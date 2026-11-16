@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const LOG_FILE = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl");
 process.env.AWA_GUARD_GIT_LOG = LOG_FILE;
 writeFileSync(LOG_FILE, "", { mode: 0o600 });
-const { commandOf, decide, runGuard, sessionInput, verdict, PLUGIN_ID } = await import("./relay.mjs");
+const { commandOf, decide, runGuard, sessionInput, verdict, PLUGIN_ID, SHELL_TOOLS } = await import("./relay.mjs");
 const { checkFiles, checkInspection, install, isUnset, patchFor, readList, SOURCES } = await import("./install.mjs");
 const { default: plugin, record } = await import("./awa-guard-git.mjs");
 const PASS = (route) => ({ block: false, reasonCode: "allowed", route });
@@ -100,6 +100,53 @@ test("decide blocks a GitHub merge through a non-shell tool, and passes text too
   const plan = [{ step: "merge the GitHub PR after review", status: "pending" }];
   assert.deepEqual(await decide("update_plan", { plan }, never), PASS("text"));
   assert.deepEqual(await decide("progress_card", { steps: plan }, never), PASS("text"));
+});
+
+test("non-shell merge refusal precedes incidental command fields", async () => {
+  const never = async () => assert.fail("a non-shell merge must not invoke the shell guard");
+  const channels = [
+    ["mcp__github__merge_pull_request", { repository_full_name: "a/b", pr_number: 1 }],
+    ["kody-local-celld__execute", { code: "export default async () => kody.github_pr_merge({ repo: 'a/b', number: 1 })" }],
+    ["mcp_call", { query: "mergePullRequest", url: "https://api.github.com/graphql" }],
+    ["sessions_spawn", { runtime: "acp", task: "merge the GitHub PR" }],
+  ];
+  const fields = [
+    [{}, "non-shell-merge"],
+    [{ command: "true" }, "non-shell-merge"],
+    [{ cmd: "true" }, "non-shell-merge"],
+    [{ command: ["true"] }, "non-shell-merge"],
+    [{ cmd: ["true"] }, "non-shell-merge"],
+    [{ command: ["bash", "-lc", "true"] }, "non-shell-merge"],
+    [{ command: "true", cmd: "false" }, "non-shell-merge"],
+    [{ command: null }, "command-unreadable"],
+    [{ cmd: null }, "command-unreadable"],
+    [{ command: 7 }, "command-unreadable"],
+    [{ cmd: { script: "true" } }, "command-unreadable"],
+    [{ command: [] }, "command-unreadable"],
+    [{ cmd: ["true", 7] }, "command-unreadable"],
+  ];
+  for (const [tool, params] of channels) {
+    for (const [extra, reason] of fields) {
+      const decision = await decide(tool, { ...params, ...extra }, never);
+      assert.equal(decision.block, true, `${tool} ${JSON.stringify(extra)}`);
+      assert.equal(decision.reasonCode, reason);
+    }
+  }
+});
+
+test("known shell tools retain the complete command, cwd and guard verdict", async () => {
+  const command = "gh pr merge 4 --repo a/b --merge --match-head-commit " + "a".repeat(40) + " --author-email brandon@brandonperfetti.com";
+  for (const tool of SHELL_TOOLS) {
+    for (const result of [{ code: 0, stdout: "" }, DENY("original guard reason")]) {
+      const seen = [];
+      const decision = await decide(tool, { command, workdir: "/fixture", query: "GitHub merge" }, async (input, cwd) => {
+        seen.push([input, cwd]);
+        return result;
+      });
+      assert.deepEqual(seen, [[command, "/fixture"]]);
+      assert.deepEqual(decision, verdict(result));
+    }
+  }
 });
 
 test("decide blocks shell-session input that names git or gh, and passes other input", async () => {
