@@ -97,8 +97,9 @@ An unset or empty `plugins.allow` is unrestricted, and the printed patch leaves 
 - An ACP child (`sessions_spawn` with `runtime: "acp"`) is an outside harness whose tool calls
   never reach this hook; only its brief is checked, and a later `sessions_send` to it is not. Its
   merges are its own client's, never this route's.
-- A merge through GitHub's MCP tool, the REST API or a Kody `execute` is refused on purpose, and
-  stays so: [why the shell form is the only route](../codex/README.md#why-the-shell-form-is-the-only-route).
+- A merge through GitHub's MCP tool, the REST API or a Kody `execute` is no route, and stays
+  none. The relay refuses the ones it can see, which a `curl` to the API is not:
+  [why the shell form is the only route](../codex/README.md#why-the-shell-form-is-the-only-route).
 
 ## Tests
 
