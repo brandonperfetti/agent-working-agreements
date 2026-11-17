@@ -37,7 +37,7 @@ Claude Code fact.
   dispatching lanes: where item 1 makes the probe per worktree, run it in each lane's, naming
   remote and branch as item 1 does — `git worktree add -b` sets no upstream. A lane never installs
   a hook of its own — the repo's install step is the only source of hooks.
-- **Scratch clones (A6, "Clones"):** a scratch clone goes in the scratchpad directory the
+- **Scratch clones and installs (A6, "Clones"):** they go in the scratchpad directory the
   session's environment names, never under `_agent/`. Whether every dispatch shares it is
   unmeasured, so a dispatch names one subdirectory of it per sub-agent.
 - **Agent-tool dispatches in one message run concurrently**; the ceiling is unmeasured.

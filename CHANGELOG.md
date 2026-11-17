@@ -10,6 +10,39 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — The OpenClaw canary runs before each delegated merge, and a Codex-harness lane
+  hands its merge to a qualified turn.** The binding said "in that session". Now: refused with
+  `awa-guard-git:` right before each merge; help text or an unclear refusal goes to Brandon; a
+  refusal never carries across a handoff or a tool, runtime or config change. No Codex-harness tool
+  is the merge tool; `gateway_exec` is checked, not measured live. Such a lane's delivery owner may
+  merge from a qualified turn that runs its own canary and re-reads head and base. Why: a plugin
+  can drop out mid-session, and Camina's team should merge routine work without Brandon. Brandon
+  decided, with Camina's wording.
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/288).
+
+- **2026-11-16 — No package install or `node_modules` under `_agent/`, and a check for it
+  (#283).** "Clones" now covers installs, `node_modules` and build output: that scratch goes in the
+  client scratch directory, and the store keeps receipts, logs and hashes. A brief's scratch
+  location is that directory. The `experiments/` line no longer pulls installs into the store.
+  `store_check.py check` fails on `node_modules` outside `*.app` bundles or a top-level tree over
+  5 GB. The Stop hook blocks once on roots new since session start; size is CLI-only. A store grew
+  to 196 GB; Brandon decided. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/283).
+
+- **2026-11-16 — The develop route is qualified for OpenClaw's exec path (#272).** A new
+  `hooks/openclaw` plugin hands every OpenClaw tool call to the unchanged `guard_git.py` and fails
+  closed. Its tests join the gate. The binding names OpenClaw-runtime Code Mode and claude-cli's
+  MCP exec bridge, with a per-session canary; a Codex-harness turn is guarded, not a merge route.
+  Why: every OpenClaw `develop` merge had gone to Brandon. He approved the install and fixture.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/272).
+
+- **2026-11-15 — Worktree cleanup refuses flagged index entries and names its quiescence owner
+  (#279).** `managed-worktrees.md`'s manual cleanup now runs `git ls-files -v -z` after each clean
+  check and keeps a worktree with an `assume-unchanged` or `skip-worktree` entry. It is lossless
+  only while nothing writes to the worktree; the delivery owner guarantees that, and the audit
+  records it. `runbook.sh` requires `--quiesced-by`. Why: such an edit, or a late write, could be
+  deleted unreported. Brandon chose options A and B.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/279).
+
 - **2026-11-14 — Friction that meets the bar becomes an issue; the board's automation is named
   (#167).** At delivery close, an item that is durable or recurring, owned by one repository,
   reproducible and actionable becomes a labelled `friction` issue there, from a new issue form; one

@@ -7,7 +7,8 @@
 #
 # Each command acts only on the paths, repositories and `openclaw` command named in its arguments.
 # None has a default that reaches a live checkout, state directory, configuration or Gateway: the
-# cleanup refuses to run without --openclaw, --state-dir, --config-path and a profile binding.
+# cleanup refuses to run without --openclaw, --state-dir, --config-path, a profile binding and the
+# owner who guarantees quiescence (--quiesced-by).
 # Resolving the Gateway service's own state directory, config and worktree root is not modelled;
 # the cleanup takes the resolved values.
 #
@@ -138,6 +139,24 @@ require_clean() {
   [ "$status" -eq 0 ] && [ -z "$out" ]
 }
 
+# Index entries whose edits status and a non-forced `git worktree remove` do not see (#279):
+# `git ls-files -v` tags assume-unchanged with a lowercase letter and skip-worktree with `S`.
+# Exit 0 and no such entry, or the stop. Each NUL-ended record's tag is read, so a path holding a
+# newline stays one record.
+require_unflagged() {
+  local flagged status
+  flagged=$(set -o pipefail; git --no-optional-locks -C "$1" ls-files -v -z | "$PYTHON" -I -c '
+import sys
+for record in sys.stdin.buffer.read().split(b"\0"):
+    tag = record[:1]
+    if record[1:2] == b" " and (tag.islower() or tag == b"S"):
+        print(record.decode("utf-8", "replace").replace("\n", "\\n"))
+')
+  status=$?
+  audit "flagged index entries of $1 ($2): exit $status, ${flagged:+not }empty${flagged:+: $(printf '%s' "$flagged" | tr '\n' '|')}"
+  [ "$status" -eq 0 ] && [ -z "$flagged" ]
+}
+
 # After a develop -> master release: fast-forward the protected root, each step only after the last.
 refresh_root() {
   [ $# -eq 1 ] || usage "refresh-root <protected-root>"
@@ -208,9 +227,10 @@ openclaw_bound() {
 # Remove a delivery worktree and its local branch once its feature PR has merged into develop.
 cleanup() {
   local repo='' branch='' root='' managed_root='' openclaw='' state_dir='' config_path=''
-  local profile='' profile_bound='' scratch
+  local profile='' profile_bound='' quiesced_by='' scratch
   local usage_line="cleanup --repo <dir> --branch <name> --protected-root <dir> --managed-root <dir>"
   usage_line="$usage_line --openclaw <cmd> --state-dir <dir> --config-path <file> (--profile <name> | --no-profile)"
+  usage_line="$usage_line --quiesced-by <owner>"
   while [ $# -gt 0 ]; do
     [ $# -ge 2 ] || [ "$1" = --no-profile ] || usage "$usage_line"
     case $1 in
@@ -223,11 +243,15 @@ cleanup() {
       --config-path) config_path=$2; shift 2 ;;
       --profile) profile=$2; profile_bound=set; shift 2 ;;
       --no-profile) profile=''; profile_bound=unset; shift ;;
+      --quiesced-by) quiesced_by=$2; shift 2 ;;
       *) usage "$usage_line" ;;
     esac
   done
   [ -n "$repo" ] && [ -n "$branch" ] && [ -n "$root" ] && [ -n "$managed_root" ] && [ -n "$openclaw" ] &&
-    [ -n "$state_dir" ] && [ -n "$config_path" ] && [ -n "$profile_bound" ] || usage "$usage_line"
+    [ -n "$state_dir" ] && [ -n "$config_path" ] && [ -n "$profile_bound" ] && [ -n "$quiesced_by" ] ||
+    usage "$usage_line"
+  # The shell cannot hold writers off without a lock: the delivery owner's guarantee is recorded (#279).
+  audit "quiescence: nothing writes to the worktree of $branch from the first status check through removal, guaranteed by $quiesced_by"
   # A template, so TMPDIR is honoured on macOS too, where a bare `mktemp -d` ignores it.
   scratch=$(mktemp -d "${TMPDIR:-/tmp}/openclaw-runbook.XXXXXX") || stop "no scratch directory for the inventory"
   # Expanded now: the trap runs at exit, after this function's locals are gone.
@@ -284,6 +308,8 @@ cleanup() {
 
   require_clean "$path" "before the inventory query" --ignored ||
     stop "$path has local changes, untracked or ignored files; retain and report it"
+  require_unflagged "$path" "before the inventory query" ||
+    stop "$path has assume-unchanged or skip-worktree index entries, or they cannot be read; retain and report it"
 
   openclaw_bound "$scratch/list.json" list --json ||
     stop "openclaw worktrees list cannot be read; retain and report $path and $branch"
@@ -360,6 +386,8 @@ print("{} {}".format(str(result["removed"]).lower(), json.dumps(result.get("clea
       stop "$path lies in the managed worktree root with no openclaw record; retain and report it"
     require_clean "$path" "immediately before removal" --ignored ||
       stop "$path is no longer clean; retain and report it"
+    require_unflagged "$path" "immediately before removal" ||
+      stop "$path now has assume-unchanged or skip-worktree index entries, or they cannot be read; retain and report it"
     second=$(git -C "$repo" worktree list --porcelain) ||
       stop "the second git worktree list --porcelain cannot be read; retain and report $path"
     parse_inventory "$second"

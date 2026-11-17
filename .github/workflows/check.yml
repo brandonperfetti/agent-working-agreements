@@ -35,6 +35,9 @@ jobs:
       - name: Claude Code hook tests
         if: ${{ !cancelled() }}
         run: /usr/bin/python3 -m unittest discover -s hooks/claude-code
+      - name: OpenClaw relay tests
+        if: ${{ !cancelled() }}
+        run: node --test hooks/openclaw/relay.test.mjs
       - name: OpenClaw runbook harness
         if: ${{ !cancelled() }}
         run: ./scripts/openclaw/runbook.test.sh
