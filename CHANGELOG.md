@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — After each release of this repository, the orchestrator merges `master` back
+  into `develop` (#292).** Once the tag is pushed, it makes a merge commit of `master` on `develop`,
+  confirms the merge changes no file, and pushes it; a merge that would change a file goes to
+  Brandon. `AGENTS.md` carries the step; ritual step 8 points there and is unchanged for
+  repositories whose workflow does the back-merge. Why: this repository has no release workflow,
+  so after two releases `master` was three merge commits ahead of `develop`. Brandon decided,
+  2026-11-17. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/292).
+
 - **2026-11-17 — Releases of this repository are tagged, and the orchestrator tags them.** After
   Brandon merges a release PR into `master`, the orchestrator pushes an annotated `vYYYY.MM.DD` tag
   on that merge commit, without asking again. `AGENTS.md` carries the name, the message, the
