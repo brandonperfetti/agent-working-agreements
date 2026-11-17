@@ -84,7 +84,7 @@ disagree, the rule is wrong.
 6. **Brandon merges the release PR, by hand in the host's UI,** and any `develop` merge no active
    route covers. The delivery owner merges reviewed lanes.
 7. **Brandon tags on `master`**, where the repo publishes releases; the tag fires the release
-   workflow.
+   workflow. In `agent-working-agreements` the orchestrator tags each release ([`AGENTS.md`](../AGENTS.md#release-tags)).
 8. **The back-merge carries `master` home to `develop`** — a direct push by the workflow, why
    item 4's integration profile keeps accepting pushes.
 

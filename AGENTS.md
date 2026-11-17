@@ -39,6 +39,41 @@ The agreement stays small on purpose; these rules are what keep it small.
 - **Stable anchors.** A1–A8, B0–B2 and the client file names stay; shrink their bodies, never
   rename them.
 
+## Release tags
+
+Rules here take effect at release, so every release carries a tag. The tag names what has been
+in force since, and it is the version a rollback returns to.
+
+- **After Brandon merges a release PR into `master`, the orchestrator tags that merge commit and
+  pushes the tag**, without asking again (Brandon, 2026-11-17). This is ritual step 7 for this
+  repository only. In every other repository Brandon tags, and an agent tags only on his explicit
+  words for that one tag. A pushed tag stays as it is; moving or deleting one is Brandon's.
+- **Name:** `vYYYY.MM.DD`, the date of the merge. A later release on the same day adds `.1`, then
+  `.2`.
+- **Annotated, under RULE ZERO.** The message says in plain words what the release puts in force
+  and closes with one `Agent:` line. The tagger email is Brandon's. Fetch, then name the merge
+  commit: `git tag -a <tag> <merge commit>`. The guard reads the commits a push sends, not the tag
+  itself, so read the tag back (`git cat-file -p <tag>`) for its object, tagger and message before
+  pushing it.
+- **Create the tag in one call and push it in the next:** `git push origin <tag>`, alone. The
+  guard reads a push before the command runs; a tag made in the same call does not exist yet, so
+  that push is refused as unreadable.
+- **That is the whole release:** no GitHub Release page, no version file, no package.
+
+**Rollback** is Brandon's decision. In `~/dev/sansfaux/agent-working-agreements`, check the tag
+out and re-run the installers that version carries; each one's `--check` then says whether the
+installed guard matches it. A tag older than an installer leaves that hook as it was: skip its
+line. Start a new session afterwards, and for OpenClaw run its canary
+([`hooks/openclaw`](hooks/openclaw/README.md)). That checkout is OpenClaw's protected root, so it
+is off `master` until Brandon ends the rollback.
+
+```bash
+git checkout <tag>
+/usr/bin/python3 hooks/claude-code/install.py
+/usr/bin/python3 hooks/codex/install.py
+node hooks/openclaw/install.mjs
+```
+
 ## CI gate
 
 Green is these nine commands, run in this order from the repository root, each

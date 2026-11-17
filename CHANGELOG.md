@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — Releases of this repository are tagged, and the orchestrator tags them.** After
+  Brandon merges a release PR into `master`, the orchestrator pushes an annotated `vYYYY.MM.DD` tag
+  on that merge commit, without asking again. `AGENTS.md` carries the name, the message, the
+  two-call push and the rollback steps; ritual step 7 points there and is unchanged for every other
+  repository. The guard is unchanged; a test pins what it does with a tag push. Why: rules take
+  effect at release, so a tag names "in force since" and gives a rollback its target. Brandon
+  decided, 2026-11-17.
+  [First tag](https://github.com/brandonperfetti/agent-working-agreements/releases/tag/v2026.11.17).
+
 - **2026-11-17 — The develop route is qualified for Codex and for a Codex-harness turn's
   `gateway_exec` (#272).** A new `hooks/codex` hook hands each Codex shell command to the unchanged
   `guard_git.py` and denies on anything but a clean pass; its tests join the gate. The binding
