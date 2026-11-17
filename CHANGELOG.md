@@ -18,7 +18,7 @@ being retrofitted onto the other.
   merge from a qualified turn that runs its own canary and re-reads head and base. Why: a plugin
   can drop out mid-session, and Camina's team should merge routine work without Brandon. Brandon
   decided, with Camina's wording.
-  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/286).
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/288).
 
 - **2026-11-16 — No package install or `node_modules` under `_agent/`, and a check for it
   (#283).** "Clones" now covers installs, `node_modules` and build output: that scratch goes in the

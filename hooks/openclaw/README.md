@@ -33,13 +33,15 @@ The merge route is an OpenClaw-runtime turn's Code Mode `exec`, or a claude-cli 
 but Codex's sandbox refuses `gh` and its approval reviewer refused the escalation.
 `gateway_exec` is checked by the relay implementation but has not been measured live. It is not a
 qualified delegated merge route. So no tool of a Codex-harness turn is the merge tool; those tools
-still do the lane's ordinary git and gh work.
+still do the lane's ordinary git and gh work, where the harness allows it.
 
 A delivery owner whose work ran in a Codex-harness turn may make the merge step from a qualified
-turn. That turn runs its own canary through the merge's tool, immediately before the merge. It
-re-reads the PR and confirms the head equals the accepted head and the base is `develop`. It meets
-every route condition: routine, accepted work, the one form, no open `route-suspended` issue. Only
-when no qualified turn is available does the merge go to Brandon.
+turn: one of the two above, through its named tool. That turn runs its own canary through that
+tool, immediately before the merge. It re-reads the PR and confirms the head equals the accepted
+head and the base is `develop`. It meets every condition of the route
+([Base merges](../../procedures/review-findings.md#base-merges)), among them routine accepted
+work, the one form and no open `route-suspended` issue. Only when no qualified turn is available
+does the merge go to Brandon.
 
 ## Install
 
