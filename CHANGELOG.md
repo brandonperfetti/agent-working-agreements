@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — The agent back-merge of #293 is withdrawn; a workflow carries `master` home.**
+  `.github/workflows/backmerge.yml`, copied from `claude-skills`, merges `master` into `develop`
+  on each push to `master`, or opens a PR; that PR is Brandon's. No agent merges into `develop`
+  for it, so ritual step 8 names the workflow again for every repository. The tag is pushed by
+  full refspec, published once, and named by Brandon's local date. Why: three focused reviews in
+  a row rejected the step-by-step as an agent route. Brandon decided, 2026-11-17.
+  [Release PR](https://github.com/brandonperfetti/agent-working-agreements/pull/294).
+
 - **2026-11-17 — After each release of this repository, the orchestrator merges `master` back
   into `develop` (#292).** Once the tag is pushed, it makes a merge commit of `master` on `develop`,
   confirms the merge changes no file, and pushes it; a merge that would change a file goes to

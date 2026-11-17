@@ -1,0 +1,69 @@
+name: backmerge
+
+# Post-release sync, ritual step 8: carry `master` home to `develop` after a release
+# lands. Push directly when the merge is clean; fall back to a PR when it conflicts
+# or when the push is refused. Copied from brandonperfetti/claude-skills.
+#
+# It cannot loop: it runs on a push to `master` and pushes only `develop`, and a push
+# made with GITHUB_TOKEN starts no workflow run. For the same reason `check` does not
+# run on the back-merge commit.
+
+on:
+  push:
+    branches: [master]
+
+# Nothing by default; the one job declares what it writes.
+permissions: {}
+
+jobs:
+  backmerge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the push to develop
+      pull-requests: write # the fallback PR
+    steps:
+      # persist-credentials stays on (default): this job pushes develop.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Merge master into develop (auto if clean, PR if not)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin master develop
+
+          open_pr() {
+            # Idempotent: skip if a back-merge PR is already open. Otherwise create it and
+            # let real gh failures (API/permission) fail the job — do not swallow errors.
+            # Creating a PR with GITHUB_TOKEN needs the repository setting "Allow GitHub
+            # Actions to create and approve pull requests"; without it this step fails
+            # and the red run is the signal.
+            if gh pr list --base develop --head master --state open \
+              --json number --jq 'length > 0' | grep -qx true; then
+              echo "back-merge PR already open"
+              return
+            fi
+            gh pr create \
+              --base develop --head master \
+              --title "Back-merge master into develop" \
+              --body "The post-release sync could not push the merge of master into develop (a conflict, or the push was refused). Resolve and merge to carry master home to develop."
+            echo "opened back-merge PR"
+          }
+
+          git checkout -B develop origin/develop
+          if git merge --no-ff --no-edit origin/master; then
+            if git push origin develop; then
+              echo "back-merged master -> develop cleanly"
+            else
+              echo "clean merge but push rejected — opening PR"
+              open_pr
+            fi
+          else
+            git merge --abort
+            echo "merge conflict on master -> develop — opening PR"
+            open_pr
+          fi
