@@ -5,7 +5,7 @@
 import { appendFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { decide, PLUGIN_ID, runGuard, SHELL_TOOLS, SESSION_TOOLS, TEXT_TOOLS } from "./relay.mjs";
+import { decide, PLUGIN_ID, runGuard, SHELL_TOOLS, SESSION_TOOLS, TEXT_TOOLS, toolOf } from "./relay.mjs";
 
 const LOG = process.env.AWA_GUARD_GIT_LOG || join(homedir(), ".openclaw", "logs", `${PLUGIN_ID}.jsonl`);
 
@@ -17,7 +17,8 @@ const REASONS = new Set([
 
 // Only fixed classifications cross the log boundary. Qualification commands and their output
 // belong in separate receipts, never in this operational log.
-export async function record(toolName, decision) {
+export async function record(calledAs, decision) {
+  const toolName = toolOf(calledAs);
   const block = decision.block === true;
   const { route, reasonCode } = decision;
   if (!block && route !== "guard") return;

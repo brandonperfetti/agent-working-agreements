@@ -41,7 +41,7 @@ The agreement stays small on purpose; these rules are what keep it small.
 
 ## CI gate
 
-Green is these eight commands, run in this order from the repository root, each
+Green is these nine commands, run in this order from the repository root, each
 exiting 0:
 
 ```bash
@@ -50,6 +50,7 @@ exiting 0:
 ./scripts/check-structure.sh
 ./scripts/check-structure.test.sh
 /usr/bin/python3 -m unittest discover -s hooks/claude-code
+/usr/bin/python3 -m unittest discover -s hooks/codex
 node --test hooks/openclaw/relay.test.mjs
 ./scripts/openclaw/runbook.test.sh
 npx --yes markdownlint-cli2
@@ -61,9 +62,10 @@ every file under `procedures/` but `README.md` to carry its four fields and be
 a row of `procedures/README.md`'s table and a profile's *Triggers* table (or, for
 `procedures/<client>/`, linked from that client's appendix), and rejects a 40- or
 64-hex pin in normative text; `history/` is exempt from the pin rule.
-The `unittest` run tests the Claude Code hooks under `hooks/claude-code/` and their
-installer; `node --test` tests the OpenClaw relay under `hooks/openclaw/`, which
-hands OpenClaw tool calls to that guard. `runbook.test.sh` drives
+The first `unittest` run tests the Claude Code hooks under `hooks/claude-code/` and their
+installer; the second tests the Codex hook under `hooks/codex/`, which hands Codex shell
+commands to that guard, and its installer; `node --test` tests the OpenClaw relay under
+`hooks/openclaw/`, which hands OpenClaw tool calls to that guard. `runbook.test.sh` drives
 `scripts/openclaw/runbook.sh` through the stop and retention branches of
 `procedures/openclaw/managed-worktrees.md`, on disposable repositories and a stub
 `openclaw`; it never reaches a live checkout or Gateway.
