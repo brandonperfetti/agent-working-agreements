@@ -337,6 +337,33 @@ class Installer(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("guard_git.py", out)
 
+    def test_a_hooks_file_changed_while_installing_is_left_as_the_other_writer_left_it(self):
+        theirs = json.dumps({"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "echo theirs"}]}]}})
+        real_merge = install.merge_hook
+
+        def another_writer(config, codex_dir=None):  # runs after the installer has read hooks.json
+            with open(self.hooks, "w", encoding="utf-8") as handle:
+                handle.write(theirs)
+            return real_merge(config, codex_dir)
+
+        for before in (None, json.dumps({"hooks": {}})):  # a file that appears, and one that changes
+            with self.subTest(before=before):
+                shutil.rmtree(self.home)
+                os.makedirs(self.home)
+                if before is not None:
+                    with open(self.hooks, "w", encoding="utf-8") as handle:
+                        handle.write(before)
+                with unittest.mock.patch.object(install, "merge_hook", side_effect=another_writer):
+                    with self.assertRaises(SystemExit) as stop:
+                        self.run_install()
+                self.assertIn("changed", str(stop.exception))
+                with open(self.hooks, encoding="utf-8") as handle:
+                    self.assertEqual(handle.read(), theirs)
+                self.assertEqual([name for name in os.listdir(self.home) if name.startswith(".install-")], [])
+                self.assertEqual(self.run_install()[0], 0)  # a second run reads their file and adds to it
+                self.assertEqual(self.read()["hooks"]["Stop"], json.loads(theirs)["hooks"]["Stop"])
+                self.assertEqual(self.run_install("--check")[0], 0)
+
     def test_a_hooks_file_it_cannot_read_is_left_alone(self):
         for content in ("{not json", "[]", '{"hooks": []}', '{"hooks": {"PreToolUse": {}}}'):
             with self.subTest(content):
