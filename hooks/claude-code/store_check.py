@@ -17,10 +17,10 @@ With no --store it uses the agent root found by walking upward from the working 
 As a Claude Code hook pair (no arguments, the hook's JSON on stdin): at SessionStart it records the
 store's `node_modules` roots once per session; at Stop it blocks when a root has appeared since,
 naming it and the fix. It names ten roots at a stop and the rest at the stops after. Roots that
-were already there never block, so a store still being cleaned does not hold every session. When
-the walk at SessionStart fails there is no baseline: the first Stop says so once and lists the
-roots it sees, which are the baseline from then on. Sizes are the CLI's alone: measuring them is
-too slow for every turn.
+were already there never block, so a store still being cleaned does not hold every session. A
+Stop with no baseline (the walk at SessionStart failed, or there is no record from the start) says
+so once and lists the roots it sees, which are the baseline from then on. Sizes are the CLI's
+alone: measuring them is too slow for every turn.
 
 A `node_modules` under a folder whose name ends in `.app` is exempt: a shipped app copied in as
 evidence, not an install. The folder name is the whole test, so an app's contents copied without
@@ -42,7 +42,7 @@ HOOK_WALK = 20.0  # seconds the hook spends walking the store; a hook entry's ti
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-store-check")
 RULE = "procedures/agent-workspace-layout.md, \"Clones\", in agent-working-agreements"
 
-NO_BASELINE = "The _agent/ store could not be walked when this session started, so this check has no baseline."
+NO_BASELINE = "This check has no record of the _agent/ store from this session's start, so it has no baseline."
 FIX = ("Move each tree this session made, with the app or consumer that holds it, to your client scratch"
        " directory (the scratchpad your session names), and keep only its receipts, logs and hashes in the"
        " store. A brief that says \"move, don't delete\" still means out of _agent/. Leave a tree another"
@@ -92,21 +92,21 @@ def install_roots(store, deadline=None, unreadable=None):
     return sorted(roots)
 
 
-def top_trees(store):
+def top_trees(store, unreadable):
     """The folders a size cap applies to: each child of the store, each initiative in place of
-    `initiatives/` itself."""
+    `initiatives/` itself. A listing that fails adds its error to `unreadable` and the rest go on."""
+    def folders(parent):
+        try:
+            names = sorted(os.listdir(parent))
+        except OSError as error:
+            unreadable.append(error)
+            return []
+        paths = [os.path.join(parent, name) for name in names]
+        return [path for path in paths if os.path.isdir(path) and not os.path.islink(path)]
+
     trees = []
-    for name in sorted(os.listdir(store)):
-        path = os.path.join(store, name)
-        if not os.path.isdir(path) or os.path.islink(path):
-            continue
-        if name == "initiatives":
-            trees.extend(
-                os.path.join(path, child) for child in sorted(os.listdir(path))
-                if os.path.isdir(os.path.join(path, child)) and not os.path.islink(os.path.join(path, child))
-            )
-        else:
-            trees.append(path)
+    for path in folders(store):
+        trees.extend(folders(path) if os.path.basename(path) == "initiatives" else [path])
     return trees
 
 
@@ -134,13 +134,9 @@ def check(store, cap_bytes, budget):
     """The problems found, one line each; empty when the store is clean."""
     unreadable = []
     problems = ["node_modules: {}".format(root) for root in install_roots(store, unreadable=unreadable)]
-    problems.extend("unmeasured: {}".format(error) for error in unreadable)
+    trees = top_trees(store, unreadable)
+    problems.extend(dict.fromkeys("unmeasured: {}".format(error) for error in unreadable))  # each path once
     deadline = time.monotonic() + budget
-    try:
-        trees = top_trees(store)
-    except OSError as error:
-        problems.append("unmeasured: {}".format(error))
-        trees = []
     for tree in trees:
         try:
             size = disk_usage(tree, deadline)
@@ -223,37 +219,39 @@ def decide(payload):
 def check_session_store(payload, store, state, state_path, deadline):
     """Check one recorded store, even after cwd leaves it, within the shared hook budget."""
     snapshot = state.get(store)
-    if snapshot is not None and payload.get("hook_event_name") == "SessionStart":
-        return None  # the first snapshot holds: a resume or compaction keeps it
     stop = payload.get("hook_event_name") == "Stop"
-    no_baseline = snapshot is not None and snapshot.get("baseline") is False
+    if not stop and snapshot is not None:
+        return None  # the first snapshot holds: a resume or compaction keeps it
+    # A stop with no record has no baseline either: the start walk failed under a version that
+    # recorded nothing, the hook was installed mid-session, or the session came to this store later.
+    absent = snapshot is None
+    if absent:
+        snapshot = {"seen": [], "reported": [], "baseline": False}
+    no_baseline = snapshot.get("baseline") is False
     try:
         current = install_roots(store, deadline)
     except (OutOfTime, OSError):
         # An incomplete walk cannot be the baseline, or replace one; the CLI reports the gap.
-        if snapshot is None and not stop:
-            state[store] = {"seen": [], "reported": [], "baseline": False}
+        if not stop or (no_baseline and not snapshot.get("told")):
+            snapshot["told"] = stop
+            state[store] = snapshot
             save_state(state_path, state)
-        elif no_baseline and stop and not snapshot.get("told"):
-            snapshot["told"] = True
-            save_state(state_path, state)
-            return block(NO_BASELINE + " The walk did not finish at this stop either, so run `store_check.py check`"
-                         " for the node_modules roots under it. " + FIX)
-        return None
-    if snapshot is None:
-        state[store] = {"seen": current, "reported": []}
-        save_state(state_path, state)
+            if stop:
+                return block(NO_BASELINE + " The walk did not finish at this stop either, so run"
+                             " `store_check.py check` for the node_modules roots under it. " + FIX)
         return None
     if no_baseline:
-        told = snapshot.get("told")
-        state[store] = {"seen": current, "reported": []}  # what this stop lists is the baseline from here on
+        state[store] = {"seen": current, "reported": []}  # what this walk saw is the baseline from here on
         save_state(state_path, state)
+        if not stop:
+            return None
         if current:
             return block(NO_BASELINE + " These node_modules roots are under it now, and this check cannot tell"
                          " which of them this session made:\n" + listing(current, " (`store_check.py check` lists them all)")
                          + "\n" + FIX)
-        return None if told else block(NO_BASELINE + " It sees no node_modules under the store now, so there is"
-                                       " nothing to move.")
+        # An empty store hides nothing. It is still said once after a start walk that failed.
+        return None if absent or snapshot.get("told") else block(
+            NO_BASELINE + " It sees no node_modules under the store now, so there is nothing to move.")
     reported = set(snapshot.get("reported", []))
     seen = set(snapshot.get("seen", []))
     fresh = [root for root in current if root not in seen and root not in reported]

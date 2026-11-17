@@ -90,16 +90,16 @@ def read_bytes(path):
         return None
 
 
-def write_atomic(path, data, mode=0o644, expect=False):
+def write_atomic(path, data, mode=0o644, unchanged=None):
     """Write `data` to `path` through a temporary file, so a reader never sees half a file. Given
-    `expect` (bytes, or None for no file), the last step before the rename reads `path` again and
-    raises RuntimeError when it holds anything else."""
+    `unchanged`, it is called as the last step before the rename, and a false answer raises
+    RuntimeError with nothing written."""
     fd, temp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".install-")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(data)
         os.chmod(temp, mode)
-        if expect is not False and read_bytes(path) != expect:
+        if unchanged is not None and not unchanged():
             raise RuntimeError(path)
         os.replace(temp, path)
     except BaseException:
@@ -126,7 +126,10 @@ def main(argv=None):
             copies.append((source, target))
 
     config = {}
-    read = read_bytes(hooks_path)  # compared again just before the write
+    # Where hooks.json leads (itself, or a link's target) and its bytes: both are read again just
+    # before the write, so a file or link another writer changed in between is left to them.
+    real_path = os.path.realpath(hooks_path)
+    read = read_bytes(real_path)
     if read is not None:
         try:
             config = json.loads(read.decode("utf-8"))
@@ -169,7 +172,8 @@ def main(argv=None):
             shutil.copy2(hooks_path, backup)
             print("backup {}".format(backup))
         try:
-            write_atomic(os.path.realpath(hooks_path), json.dumps(merged, indent=2, ensure_ascii=False) + "\n", mode, read)
+            write_atomic(real_path, json.dumps(merged, indent=2, ensure_ascii=False) + "\n", mode,
+                         lambda: os.path.realpath(hooks_path) == real_path and read_bytes(real_path) == read)
         except RuntimeError:
             sys.exit("{} changed while installing; nothing written to it. Run the installer again.".format(hooks_path))
     print("Installed. Codex skips the hook until you trust it: run /hooks in the Codex CLI, then")

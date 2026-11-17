@@ -196,6 +196,22 @@ class StoreCheckTest(unittest.TestCase):
         self.assertIn("node_modules: " + install, out.splitlines())
         self.assertTrue([line for line in out.splitlines() if line.startswith("unmeasured: ") and locked in line], out)
 
+    @unittest.skipIf(os.geteuid() == 0, "root can read a mode-000 directory")
+    def test_cli_measures_the_other_trees_when_initiatives_cannot_be_listed(self):
+        self.make("evidence", "big.bin", size=200_000)
+        self.make("reviews", "big.bin", size=200_000)
+        locked = os.path.join(self.store, "initiatives")
+        os.chmod(locked, 0)
+        try:
+            code, out = self.cli("--cap-gb", "0.0001")
+        finally:
+            os.chmod(locked, 0o700)
+        lines = out.splitlines()
+        self.assertEqual(code, 1)
+        for name in ("evidence", "reviews"):
+            self.assertTrue([line for line in lines if line.startswith("over cap: " + os.path.join(self.store, name))], out)
+        self.assertEqual(len([line for line in lines if line.startswith("unmeasured: ") and locked in line]), 1, out)
+
     def test_an_unreadable_hook_walk_leaves_the_snapshot_unchanged(self):
         self.hook("SessionStart")
         self.make("evidence", "node_modules", "a.js")
@@ -274,11 +290,31 @@ class StoreCheckTest(unittest.TestCase):
             self.assertIn(os.path.realpath(second), reasons)
             self.assertIsNone(store_check.decide(payload))
 
-    def test_a_hook_installed_mid_session_snapshots_at_its_first_stop(self):
-        self.make("initiatives", "fleet-a", "analysis", "old", "node_modules", "a.js")
+    def test_a_stop_with_no_record_from_the_start_says_it_has_no_baseline(self):
+        # a hook installed mid-session, or a start that timed out under a version that recorded nothing
+        old = os.path.dirname(self.make("initiatives", "fleet-a", "analysis", "old", "node_modules", "a.js"))
+        reply = self.hook("Stop")
+        self.assertEqual(reply["decision"], "block")
+        self.assertIn("no baseline", reply["reason"])
+        self.assertIn("- {}\n".format(old), reply["reason"])
         self.assertIsNone(self.hook("Stop"))
         self.make("initiatives", "fleet-a", "analysis", "new", "node_modules", "a.js")
-        self.assertEqual(self.hook("Stop")["decision"], "block")
+        reply = self.hook("Stop")
+        self.assertEqual(reply["decision"], "block")
+        self.assertNotIn("no baseline", reply["reason"])
+
+    def test_a_stop_with_no_record_and_a_walk_that_fails_says_so_once(self):
+        self.make("evidence", "node_modules", "a.js")
+        with mock.patch.object(store_check, "HOOK_WALK", -1):
+            reply = self.hook("Stop")
+            self.assertIn("no baseline", reply["reason"])
+            self.assertIn("store_check.py check", reply["reason"])
+            self.assertIsNone(self.hook("Stop"))
+
+    def test_a_stop_with_no_record_and_no_installs_takes_its_baseline_quietly(self):
+        self.assertIsNone(self.hook("Stop"))  # nothing is under the store, so nothing can be hidden
+        self.make("evidence", "node_modules", "a.js")
+        self.assertNotIn("no baseline", self.hook("Stop")["reason"])
 
     def test_a_walk_past_its_budget_never_blocks(self):
         self.hook("SessionStart")

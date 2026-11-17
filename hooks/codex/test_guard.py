@@ -364,6 +364,36 @@ class Installer(unittest.TestCase):
                 self.assertEqual(self.read()["hooks"]["Stop"], json.loads(theirs)["hooks"]["Stop"])
                 self.assertEqual(self.run_install("--check")[0], 0)
 
+    def test_a_hooks_link_pointed_elsewhere_while_installing_stops_the_install(self):
+        theirs = json.dumps({"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "echo theirs"}]}]}})
+        first, second = os.path.join(self.home, "a.json"), os.path.join(self.home, "b.json")
+        real_merge = install.merge_hook
+
+        def retarget(config, codex_dir=None):  # runs after the installer has read hooks.json
+            if os.path.lexists(self.hooks):
+                os.unlink(self.hooks)
+            os.symlink(second, self.hooks)
+            return real_merge(config, codex_dir)
+
+        # a link moved to another file; a link moved to a file with the same bytes; a dangling link that appears
+        for before, there in ((json.dumps({"hooks": {}}), theirs), (theirs, theirs), (None, None)):
+            with self.subTest(before=before, there=there):
+                shutil.rmtree(self.home)
+                os.makedirs(self.home)
+                if before is not None:
+                    with open(first, "w", encoding="utf-8") as handle:
+                        handle.write(before)
+                    os.symlink(first, self.hooks)
+                if there is not None:
+                    with open(second, "w", encoding="utf-8") as handle:
+                        handle.write(there)
+                with unittest.mock.patch.object(install, "merge_hook", side_effect=retarget):
+                    with self.assertRaises(SystemExit):
+                        self.run_install()
+                self.assertEqual(os.readlink(self.hooks), second)
+                for path, content in ((first, before), (second, there)):
+                    self.assertEqual(install.read_bytes(path), None if content is None else content.encode())
+
     def test_a_hooks_file_it_cannot_read_is_left_alone(self):
         for content in ("{not json", "[]", '{"hooks": []}', '{"hooks": {"PreToolUse": {}}}'):
             with self.subTest(content):
