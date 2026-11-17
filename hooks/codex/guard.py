@@ -59,7 +59,7 @@ def decide(raw, guard=GUARD, python=PYTHON, timeout=TIMEOUT, no_repo_dir=HERE):
     try:
         decision = json.loads(output)["hookSpecificOutput"]
         reason = decision["permissionDecisionReason"]
-        if decision["permissionDecision"] == "deny" and isinstance(reason, str):
+        if decision["permissionDecision"] == "deny" and isinstance(reason, str) and reason.strip():
             return reason.replace("~/.claude/hooks/guard_git.py", guard)
     except (ValueError, KeyError, TypeError):
         pass
@@ -69,11 +69,11 @@ def decide(raw, guard=GUARD, python=PYTHON, timeout=TIMEOUT, no_repo_dir=HERE):
 def main():
     """Print Codex's deny decision unless the guard passed the command."""
     reason = decide(sys.stdin.read())
-    if reason:
+    if reason is not None:  # only None is a pass; an empty reason is still a denial
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": "deny",
-            "permissionDecisionReason": "{}: {}".format(MARK, reason),
+            "permissionDecisionReason": "{}: {}".format(MARK, reason or "denied; " + HAND_BACK),
         }}))
 
 

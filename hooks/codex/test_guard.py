@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CLAUDE = os.path.join(os.path.dirname(HERE), "claude-code")
@@ -68,11 +69,24 @@ class Stubs(unittest.TestCase):
             "an empty object": "print('{}')\n",
             "an allow": "print('{\"hookSpecificOutput\": {\"permissionDecision\": \"allow\"}}')\n",
             "a deny with no reason": "print('{\"hookSpecificOutput\": {\"permissionDecision\": \"deny\"}}')\n",
+            "a deny with an empty reason": "print('{\"hookSpecificOutput\": {\"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"\"}}')\n",
+            "a deny with a blank reason": "print('{\"hookSpecificOutput\": {\"permissionDecision\": \"deny\", \"permissionDecisionReason\": \" \\\\n\"}}')\n",
             "plain text": "print('ok')\n",
         }
         for name, body in cases.items():
             with self.subTest(name):
                 self.assertIn("hand it back", guard.decide(payload("x"), guard=self.stub(body)))
+
+    def test_only_none_is_a_pass_when_the_decision_is_printed(self):
+        for reason in ("", "x"):
+            with self.subTest(reason), unittest.mock.patch.object(guard, "decide", return_value=reason), \
+                    unittest.mock.patch.object(sys, "stdin", io.StringIO("{}")):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    guard.main()
+                decision = json.loads(out.getvalue())["hookSpecificOutput"]
+                self.assertEqual(decision["permissionDecision"], "deny")
+                self.assertTrue(decision["permissionDecisionReason"].startswith("awa-guard-codex: " + (reason or "denied")))
 
     def test_a_missing_guard_and_a_missing_interpreter_deny(self):
         self.assertIn("the guard exited", guard.decide(payload("x"), guard=os.path.join(self.dir, "absent.py")))
@@ -259,18 +273,37 @@ class Installer(unittest.TestCase):
     def test_other_hooks_are_kept_and_a_stale_copy_is_replaced(self):
         other = {"type": "command", "command": "echo other"}
         stale = {"type": "command", "command": "python3 /old/hooks/awa-guard/guard.py", "timeout": 1}
+        naming = {"type": "command", "command": "/usr/bin/python3 /opt/audit_hook.py --watch hooks/awa-guard/guard.py"}
+        quoting = {"type": "command", "command": "echo \"$HOME/.codex/hooks/awa-guard/guard.py\" changed"}
         with open(self.hooks, "w", encoding="utf-8") as handle:
             json.dump({"description": "mine", "hooks": {
                 "Stop": [{"hooks": [other]}],
-                "PreToolUse": [{"matcher": "Bash", "hooks": [other, stale]}, {"matcher": "apply_patch", "hooks": [stale]}],
+                "PreToolUse": [{"matcher": "Bash", "hooks": [other, naming, stale, quoting]}, {"matcher": "apply_patch", "hooks": [stale]}],
             }}, handle)
         self.assertEqual(self.run_install()[0], 0)
         config = self.read()
         self.assertEqual(config["description"], "mine")
         self.assertEqual(config["hooks"]["Stop"], [{"hooks": [other]}])
         group, = config["hooks"]["PreToolUse"]
-        self.assertEqual(group["hooks"], [other, install.hook_entry(self.home)])
+        self.assertEqual(group["hooks"], [other, naming, quoting, install.hook_entry(self.home)])
         self.assertEqual(len([name for name in os.listdir(self.home) if name.startswith("hooks.json.bak-")]), 1)
+
+    def test_only_a_command_that_runs_the_guard_is_ours(self):
+        for command, expected in [
+            (install.hook_entry()["command"], True),
+            (install.hook_entry(self.home)["command"], True),
+            ("python3 -X dev /old/hooks/awa-guard/guard.py", True),
+            ("/x/hooks/awa-guard/guard.py", True),
+            ("/usr/bin/python3 /opt/audit_hook.py --watch hooks/awa-guard/guard.py", False),
+            ("/usr/bin/python3 -c 'print(1)' /x/hooks/awa-guard/guard.py", False),
+            ("cat /x/hooks/awa-guard/guard.py", False),
+            ("/usr/bin/python3 /x/hooks/other/guard.py", False),
+            ("/usr/bin/python3 'unbalanced", False),
+        ]:
+            with self.subTest(command):
+                self.assertIs(install.ours({"command": command}), expected)
+        for hook in (None, {}, {"command": 7}, "x"):
+            self.assertIs(install.ours(hook), False)
 
     def test_a_changed_byte_is_drift(self):
         self.run_install()
