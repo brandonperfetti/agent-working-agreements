@@ -7,10 +7,11 @@ session, which run the same binary against the same `~/.codex`. The guard owns t
 force-pushes, release-branch pushes, RULE ZERO, and PR merges into a protected base other than
 the delegated route's one form. This file only carries the command and reads the verdict.
 
-Codex runs a command when its hook exits nonzero, times out or prints something Codex cannot
-read (measured on 0.169.0). So `guard.py` turns every outcome but a clean pass into a denial: a
-guard that denies, exits nonzero, hangs past 10 s, is missing, or prints an unreadable verdict,
-and hook input with no command it can read. A denial's reason begins `awa-guard-codex:`.
+Codex runs a command when its hook exits 1, times out or prints something Codex cannot read
+(measured on 0.169.0); only a denial, or exit 2 with a reason on stderr, blocks. So `guard.py`
+turns every outcome but a clean pass into a denial: a guard that denies, exits nonzero, hangs
+past 10 s, is missing, or prints an unreadable verdict, and hook input with no command it can
+read. A denial's reason begins `awa-guard-codex:`.
 
 ## The canary
 

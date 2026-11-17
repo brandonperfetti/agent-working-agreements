@@ -15,8 +15,8 @@ being retrofitted onto the other.
   `guard_git.py` and denies on anything but a clean pass; its tests join the gate. The binding
   names the Codex CLI and T3-hosted Codex, with a canary before each merge, because Codex runs a
   command whose hook cannot start or is untrusted. The relay now reads `openclawgateway_exec` as
-  the shell tool. No MCP or API merge is a route: none can set the author email. Why: Codex agents
-  handed every `develop` merge to Brandon. He decided.
+  the shell tool. No MCP or API merge is a route: GitHub's MCP tool and REST cannot set the author
+  email. Why: Codex agents handed every `develop` merge to Brandon. He decided.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/272).
 
 - **2026-11-17 — The OpenClaw canary runs before each delegated merge, and a Codex-harness lane
