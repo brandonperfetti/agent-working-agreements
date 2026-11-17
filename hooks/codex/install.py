@@ -74,10 +74,22 @@ def well_formed(config):
 def merge_hook(config, codex_dir=None):
     """Return a copy of hooks.json's content with the guard registered exactly once."""
     merged = copy.deepcopy(config)
-    groups = merged.setdefault("hooks", {}).setdefault(EVENT, [])
-    for group in groups:  # drop every copy of ours, wherever it sits, then add it back once
-        group["hooks"] = [hook for hook in group.get("hooks", []) if not ours(hook)]
-    groups[:] = [group for group in groups if group.get("hooks")]
+    events = merged.setdefault("hooks", {})
+    for name in list(events):  # drop every copy of ours, under any event, then add it back once
+        kept = []
+        for group in events[name]:
+            hooks = group.get("hooks", [])
+            if not any(ours(hook) for hook in hooks):
+                kept.append(group)  # nothing of ours: left exactly as it was
+                continue
+            group["hooks"] = [hook for hook in hooks if not ours(hook)]
+            if group["hooks"]:
+                kept.append(group)
+        if kept or name == EVENT:
+            events[name] = kept
+        else:
+            del events[name]
+    groups = events.setdefault(EVENT, [])
     group = next((g for g in groups if g.get("matcher") == MATCHER), None)
     if group is None:
         groups.append({"matcher": MATCHER, "hooks": [hook_entry(codex_dir)]})

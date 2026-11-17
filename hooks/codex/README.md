@@ -55,6 +55,8 @@ CLI session in its default sandbox refuses the network: run it with full access,
   it is the stronger option if this proves too weak.
 - Only shell commands are checked. A merge through an MCP tool, such as GitHub's
   `merge_pull_request` or a Kody `execute`, is not seen here, and is no route: see below.
+- Another Codex hook that rewrites a command (`updatedInput`) is applied after this one has read
+  the original, so the rewritten command is not checked.
 - Input typed into a command that is already running (`write_stdin`) is not checked again.
 - The ChatGPT desktop app's Codex was not measured.
 

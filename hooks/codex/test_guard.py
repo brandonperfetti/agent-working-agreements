@@ -278,12 +278,16 @@ class Installer(unittest.TestCase):
         with open(self.hooks, "w", encoding="utf-8") as handle:
             json.dump({"description": "mine", "hooks": {
                 "Stop": [{"hooks": [other]}],
+                "PostToolUse": [{"matcher": "Bash", "hooks": [stale]}, {"matcher": "Bash", "hooks": []}],
+                "SessionStart": [{"hooks": [stale]}],
                 "PreToolUse": [{"matcher": "Bash", "hooks": [other, naming, stale, quoting]}, {"matcher": "apply_patch", "hooks": [stale]}],
             }}, handle)
         self.assertEqual(self.run_install()[0], 0)
         config = self.read()
         self.assertEqual(config["description"], "mine")
         self.assertEqual(config["hooks"]["Stop"], [{"hooks": [other]}])
+        self.assertEqual(config["hooks"]["PostToolUse"], [{"matcher": "Bash", "hooks": []}])  # not ours to tidy
+        self.assertNotIn("SessionStart", config["hooks"])
         group, = config["hooks"]["PreToolUse"]
         self.assertEqual(group["hooks"], [other, naming, quoting, install.hook_entry(self.home)])
         self.assertEqual(len([name for name in os.listdir(self.home) if name.startswith("hooks.json.bak-")]), 1)
