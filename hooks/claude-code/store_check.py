@@ -10,19 +10,23 @@ As a CLI, for a person or a scheduled pulse on any client:
 
 It exits 1 and lists every `node_modules` root under the store and every top-level tree over the
 cap. A top-level tree is a folder directly under `_agent/`, or under `_agent/initiatives/` (one
-initiative). Sizes are disk usage, as `du` counts them. A walk that outruns its budget or cannot
-read a tree fails as unmeasured. With no --store it uses the agent root found by walking upward
-from the working directory.
+initiative). Sizes are disk usage, as `du` counts them. A walk that outruns its budget fails as
+unmeasured. A path it cannot read is listed as unmeasured too, beside everything else it found.
+With no --store it uses the agent root found by walking upward from the working directory.
 
 As a Claude Code hook pair (no arguments, the hook's JSON on stdin): at SessionStart it records the
-store's `node_modules` roots once per session; at Stop it blocks once when a root has appeared
-since, naming it and the fix. Roots that were already there never block, so a store still being
-cleaned does not hold every session. Sizes are the CLI's alone: measuring them is too slow for
-every turn.
+store's `node_modules` roots once per session; at Stop it blocks when a root has appeared since,
+naming it and the fix. It names ten roots at a stop and the rest at the stops after. Roots that
+were already there never block, so a store still being cleaned does not hold every session. When
+the walk at SessionStart fails there is no baseline: the first Stop says so once and lists the
+roots it sees, which are the baseline from then on. Sizes are the CLI's alone: measuring them is
+too slow for every turn.
 
-A `node_modules` inside a `*.app` bundle is exempt: a shipped app copied in as evidence, not an
-install. The walk does not enter a bundle, and never follows a symlink; a symlink named
-`node_modules` is not an install here. A hard-linked file counts once, as `du` counts it.
+A `node_modules` under a folder whose name ends in `.app` is exempt: a shipped app copied in as
+evidence, not an install. The folder name is the whole test, so an app's contents copied without
+their `.app` folder are not exempt. The walk does not enter such a folder, and never follows a
+symlink; a symlink named `node_modules` is not an install here. A hard-linked file counts once, as
+`du` counts it.
 """
 import argparse
 import json
@@ -37,6 +41,12 @@ MAX_LISTED = 10
 HOOK_WALK = 20.0  # seconds the hook spends walking the store; a hook entry's timeout is 30
 STATE_DIR = os.path.join(tempfile.gettempdir(), "claude-store-check")
 RULE = "procedures/agent-workspace-layout.md, \"Clones\", in agent-working-agreements"
+
+NO_BASELINE = "The _agent/ store could not be walked when this session started, so this check has no baseline."
+FIX = ("Move each tree this session made, with the app or consumer that holds it, to your client scratch"
+       " directory (the scratchpad your session names), and keep only its receipts, logs and hashes in the"
+       " store. A brief that says \"move, don't delete\" still means out of _agent/. Leave a tree another"
+       " session made, and say so in one line. The rule: " + RULE + ".")
 
 
 class OutOfTime(Exception):
@@ -61,11 +71,13 @@ def find_store(start):
         path = parent
 
 
-def install_roots(store, deadline=None):
+def install_roots(store, deadline=None, unreadable=None):
     """Every `node_modules` directory under store, outermost only, outside `*.app` bundles;
-    OutOfTime past the deadline."""
+    OutOfTime past the deadline. A directory that cannot be read raises, or with an `unreadable`
+    list its error is added there and the walk goes on."""
     roots = []
-    for top, dirs, _ in os.walk(store, onerror=raise_walk_error):
+    on_error = raise_walk_error if unreadable is None else unreadable.append
+    for top, dirs, _ in os.walk(store, onerror=on_error):
         if deadline is not None and time.monotonic() > deadline:
             raise OutOfTime(store)
         keep = []
@@ -120,14 +132,24 @@ def disk_usage(path, deadline):
 
 def check(store, cap_bytes, budget):
     """The problems found, one line each; empty when the store is clean."""
-    problems = ["node_modules: {}".format(root) for root in install_roots(store)]
+    unreadable = []
+    problems = ["node_modules: {}".format(root) for root in install_roots(store, unreadable=unreadable)]
+    problems.extend("unmeasured: {}".format(error) for error in unreadable)
     deadline = time.monotonic() + budget
-    for tree in top_trees(store):
+    try:
+        trees = top_trees(store)
+    except OSError as error:
+        problems.append("unmeasured: {}".format(error))
+        trees = []
+    for tree in trees:
         try:
             size = disk_usage(tree, deadline)
         except OutOfTime:
             problems.append("unmeasured: {} (the size walk ran out of its {:g} s budget)".format(tree, budget))
             break
+        except OSError as error:  # one tree's read error keeps the findings before and after it
+            problems.append("unmeasured: {} ({})".format(tree, error))
+            continue
         if size > cap_bytes:
             problems.append("over cap: {} ({:.1f} GB > {:g} GB)".format(tree, size / 1e9, cap_bytes / 1e9))
     return problems
@@ -145,10 +167,7 @@ def cli(argv):
     if not store or not os.path.isdir(store):
         print("store_check: no _agent/ store found", file=sys.stderr)
         return 2
-    try:
-        problems = check(os.path.abspath(store), args.cap_gb * 1e9, args.budget)
-    except OSError as error:
-        problems = ["unmeasured: {}".format(error)]
+    problems = check(os.path.abspath(store), args.cap_gb * 1e9, args.budget)
     for line in problems:
         print(line)
     if problems:
@@ -158,7 +177,8 @@ def cli(argv):
 
 
 def load_state(path):
-    """The session's state ({store: {"seen": [...], "reported": [...]}}), or {} when unreadable."""
+    """The session's state ({store: {"seen": [...], "reported": [...]}}, with "baseline": false
+    while a store has none), or {} when unreadable."""
     try:
         with open(path, encoding="utf-8") as handle:
             state = json.load(handle)
@@ -205,33 +225,57 @@ def check_session_store(payload, store, state, state_path, deadline):
     snapshot = state.get(store)
     if snapshot is not None and payload.get("hook_event_name") == "SessionStart":
         return None  # the first snapshot holds: a resume or compaction keeps it
+    stop = payload.get("hook_event_name") == "Stop"
+    no_baseline = snapshot is not None and snapshot.get("baseline") is False
     try:
         current = install_roots(store, deadline)
     except (OutOfTime, OSError):
-        return None  # an incomplete walk cannot replace the baseline; the CLI reports the gap
+        # An incomplete walk cannot be the baseline, or replace one; the CLI reports the gap.
+        if snapshot is None and not stop:
+            state[store] = {"seen": [], "reported": [], "baseline": False}
+            save_state(state_path, state)
+        elif no_baseline and stop and not snapshot.get("told"):
+            snapshot["told"] = True
+            save_state(state_path, state)
+            return block(NO_BASELINE + " The walk did not finish at this stop either, so run `store_check.py check`"
+                         " for the node_modules roots under it. " + FIX)
+        return None
     if snapshot is None:
         state[store] = {"seen": current, "reported": []}
         save_state(state_path, state)
         return None
+    if no_baseline:
+        told = snapshot.get("told")
+        state[store] = {"seen": current, "reported": []}  # what this stop lists is the baseline from here on
+        save_state(state_path, state)
+        if current:
+            return block(NO_BASELINE + " These node_modules roots are under it now, and this check cannot tell"
+                         " which of them this session made:\n" + listing(current, " (`store_check.py check` lists them all)")
+                         + "\n" + FIX)
+        return None if told else block(NO_BASELINE + " It sees no node_modules under the store now, so there is"
+                                       " nothing to move.")
     reported = set(snapshot.get("reported", []))
     seen = set(snapshot.get("seen", []))
     fresh = [root for root in current if root not in seen and root not in reported]
     if not fresh:
         return None
-    snapshot["reported"] = sorted(reported | set(fresh))
+    # Only the roots this reply names are marked, so the next stop names the next ten (#287).
+    snapshot["reported"] = sorted(reported | set(fresh[:MAX_LISTED]))
     save_state(state_path, state)
-    lines = ["- {}".format(root) for root in fresh[:MAX_LISTED]]
-    if len(fresh) > MAX_LISTED:
-        lines.append("- and {} more".format(len(fresh) - MAX_LISTED))
-    return {
-        "decision": "block",
-        "reason": "A package install appeared under the _agent/ store since this session started:\n"
-        + "\n".join(lines)
-        + "\nIf this session made it, move each tree, with the app or consumer that holds it, to your client"
-        " scratch directory (the scratchpad your session names), and keep only its receipts, logs and hashes"
-        " in the store. A brief that says \"move, don't delete\" still means out of _agent/. If another"
-        " session made it, leave it and say so in one line. The rule: " + RULE + ".",
-    }
+    return block("A package install appeared under the _agent/ store since this session started:\n"
+                 + listing(fresh, ", named at the next stop") + "\n" + FIX)
+
+
+def listing(roots, rest):
+    """The first MAX_LISTED roots, one per line, then how many more and where they are named."""
+    lines = ["- {}".format(root) for root in roots[:MAX_LISTED]]
+    if len(roots) > MAX_LISTED:
+        lines.append("- and {} more{}".format(len(roots) - MAX_LISTED, rest))
+    return "\n".join(lines)
+
+
+def block(reason):
+    return {"decision": "block", "reason": reason}
 
 
 def main(argv):

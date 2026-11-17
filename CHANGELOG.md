@@ -18,6 +18,14 @@ being retrofitted onto the other.
   so after two releases `master` was three merge commits ahead of `develop`. Brandon decided,
   2026-11-17. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/292).
 
+- **2026-11-17 — `store_check.py` names every new root and says when it had no baseline (#287).**
+  The Stop hook marks only the ten roots it names, so the next stop names the next ten. When the
+  walk at session start fails, the first stop says it had no baseline and lists what it sees. The
+  CLI lists a path it cannot read as unmeasured and keeps its other findings. The `*.app`
+  exemption is unchanged and now stated exactly: the folder name is the test. Why: roots past the
+  tenth were never named, and two failures passed in silence. Root decided on Brandon's brief.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/287).
+
 - **2026-11-17 — Releases of this repository are tagged, and the orchestrator tags them.** After
   Brandon merges a release PR into `master`, the orchestrator pushes an annotated `vYYYY.MM.DD` tag
   on that merge commit, without asking again. `AGENTS.md` carries the name, the message, the
