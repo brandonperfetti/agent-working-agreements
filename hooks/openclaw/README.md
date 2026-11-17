@@ -21,14 +21,27 @@ the session's default directory, so a call without one is checked outside any re
 command that needs the checkout, such as a push, is then refused. Give `exec` an absolute
 `workdir`, or `cd` to an absolute path in the command.
 
-A plugin that is not loaded blocks nothing. So before every delegated merge, the delivery owner
-runs the canary `gh pr merge --help` alone, through the tool the merge will use. Only a refusal
-whose reason carries `awa-guard-git:` counts; any other outcome sends the merge to Brandon.
+A plugin that is not loaded blocks nothing. So immediately before every delegated merge, the
+delivery owner runs the canary `gh pr merge --help` alone, through the tool the merge will use.
+Only a refusal whose reason carries `awa-guard-git:` counts. Printed help text is a failure; that,
+or a missing or ambiguous refusal, stops the merge and sends it to Brandon. A refusal is evidence
+for that one merge only: it never carries across a handoff, a change of tool, or a runtime or
+config change.
 
 The merge route is an OpenClaw-runtime turn's Code Mode `exec`, or a claude-cli turn's
 `mcp__openclaw__exec`, qualified on OpenClaw 2026.11.1. In a Codex-harness turn the relay applies,
-but Codex's sandbox refuses `gh`, its approval reviewer refused the escalation, and its
-`gateway_exec` was not measured: every tool there is guarded, not a merge route.
+but Codex's sandbox refuses `gh` and its approval reviewer refused the escalation.
+`gateway_exec` is checked by the relay implementation but has not been measured live. It is not a
+qualified delegated merge route. So no tool of a Codex-harness turn is the merge tool; those tools
+still do the lane's ordinary git and gh work, where the harness allows it.
+
+A delivery owner whose work ran in a Codex-harness turn may make the merge step from a qualified
+turn: one of the two above, through its named tool. That turn runs its own canary through that
+tool, immediately before the merge. It re-reads the PR and confirms the head equals the accepted
+head and the base is `develop`. It meets every condition of the route
+([Base merges](../../procedures/review-findings.md#base-merges)), among them routine accepted
+work, the one form and no open `route-suspended` issue. Where no qualified turn is available, its
+canary fails or a condition of the route cannot be met, the merge goes to Brandon.
 
 ## Install
 
