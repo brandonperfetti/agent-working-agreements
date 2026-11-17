@@ -893,11 +893,13 @@ class AuthorTest(unittest.TestCase):
         # call creates is unreadable; once it exists, an annotated tag on a pushed commit passes.
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
         git(self.mine, "push", "-q", "origin", "feature")
-        chained = 'git tag -a v2026.11.17 -m "In force: x" && git push origin v2026.11.17'
+        written = "git push --no-follow-tags origin refs/tags/v2026.11.17:refs/tags/v2026.11.17"
+        chained = 'git tag -a v2026.11.17 -m "In force: x" && ' + written
         self.assertIn("could not be read", guard_git.check_command(chained, self.mine) or "")
+        self.assertIn("could not be read", guard_git.check_command(written, self.mine) or "")
         self.assertIsNone(guard_git.check_command('git tag -a v2026.11.17 -m "In force: x"', self.mine))
         git(self.mine, "tag", "-a", "v2026.11.17", "-m", "In force: x")
-        for command in ("git push origin v2026.11.17", "git push origin tag v2026.11.17"):
+        for command in (written, "git push origin v2026.11.17", "git push origin tag v2026.11.17"):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.mine))
 
