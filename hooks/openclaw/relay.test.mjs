@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const LOG_FILE = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl");
 process.env.AWA_GUARD_GIT_LOG = LOG_FILE;
 writeFileSync(LOG_FILE, "", { mode: 0o600 });
-const { commandOf, decide, runGuard, sessionInput, verdict, PLUGIN_ID, SHELL_TOOLS } = await import("./relay.mjs");
+const { commandOf, decide, runGuard, sessionInput, toolOf, verdict, PLUGIN_ID, SHELL_TOOLS } = await import("./relay.mjs");
 const { checkFiles, checkInspection, install, isUnset, patchFor, readList, SOURCES } = await import("./install.mjs");
 const { default: plugin, record } = await import("./awa-guard-git.mjs");
 const PASS = (route) => ({ block: false, reasonCode: "allowed", route });
@@ -147,6 +147,48 @@ test("known shell tools retain the complete command, cwd and guard verdict", asy
       assert.deepEqual(decision, verdict(result));
     }
   }
+});
+
+test("a Codex-harness turn's namespaced gateway tools are the shell and session tools they name", async () => {
+  const route = "gh pr merge 4 --repo a/b --merge --match-head-commit " + "a".repeat(40) + " --author-email brandon@brandonperfetti.com";
+  for (const tool of ["openclawgateway_exec", "openclaw__gateway_exec", "openclawexec"]) {
+    assert.equal(toolOf(tool), tool.replace(/^openclaw(__)?/, ""));
+    // The route form and the canary reach the guard, whose verdict stands: neither is refused
+    // as a merge through a non-shell tool.
+    for (const [command, result] of [[route, { code: 0, stdout: "" }], ["gh pr merge --help", DENY("this is a PR merge")]]) {
+      const seen = [];
+      const decision = await decide(tool, { command, workdir: "/fixture" }, async (input, cwd) => {
+        seen.push([input, cwd]);
+        return result;
+      });
+      assert.deepEqual(seen, [[command, "/fixture"]], tool);
+      assert.deepEqual(decision, verdict(result), tool);
+    }
+    const missing = await decide(tool, { query: "GitHub merge" }, async () => assert.fail("no command to check"));
+    assert.equal(missing.reasonCode, "shell-command-missing", tool);
+    const env = await decide(tool, { command: "gh pr view 1", env: { GH_REPO: "x/y" } }, async () => assert.fail("env is refused first"));
+    assert.equal(env.reasonCode, "exec-env", tool);
+  }
+  for (const tool of ["openclawgateway_process", "openclaw__gateway_process", "openclawprocess"]) {
+    const typed = await decide(tool, { action: "write", data: "gh pr merge 4 --squash\n" }, async () => assert.fail("session input is not a command"));
+    assert.equal(typed.reasonCode, "session-input", tool);
+    assert.deepEqual(await decide(tool, { action: "poll" }, async () => assert.fail("nothing to check")), PASS("session"), tool);
+  }
+  // Only a known shell or session tool loses the prefix: any other name is still a non-shell tool.
+  for (const tool of ["openclawmerge_pull_request", "openclawgateway_exec_v2", "xopenclawgateway_exec", "gateway_execopenclaw"]) {
+    assert.equal(toolOf(tool), tool);
+    const decision = await decide(tool, { command: route }, async () => assert.fail("a non-shell merge never reaches the guard"));
+    assert.equal(decision.reasonCode, "non-shell-merge", tool);
+  }
+  assert.equal(toolOf(undefined), undefined);
+});
+
+test("the log files a namespaced gateway call as the shell or session tool it is", async () => {
+  writeFileSync(LOG_FILE, "");
+  await record("openclawgateway_exec", { block: false, route: "guard", reasonCode: "allowed" });
+  await record("openclawgateway_process", { block: true, route: "session", reasonCode: "session-input" });
+  const lines = readFileSync(LOG_FILE, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+  assert.deepEqual(lines.map((line) => line.tool), ["shell", "session"]);
 });
 
 test("decide blocks shell-session input that names git or gh, and passes other input", async () => {
