@@ -25,6 +25,14 @@ being retrofitted onto the other.
   Why: every OpenClaw `develop` merge had gone to Brandon. He approved the install and fixture.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/272).
 
+- **2026-11-15 — Worktree cleanup refuses flagged index entries and names its quiescence owner
+  (#279).** `managed-worktrees.md`'s manual cleanup now runs `git ls-files -v -z` after each clean
+  check and keeps a worktree with an `assume-unchanged` or `skip-worktree` entry. It is lossless
+  only while nothing writes to the worktree; the delivery owner guarantees that, and the audit
+  records it. `runbook.sh` requires `--quiesced-by`. Why: such an edit, or a late write, could be
+  deleted unreported. Brandon chose options A and B.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/279).
+
 - **2026-11-14 — Friction that meets the bar becomes an issue; the board's automation is named
   (#167).** At delivery close, an item that is durable or recurring, owned by one repository,
   reproducible and actionable becomes a labelled `friction` issue there, from a new issue form; one
