@@ -4,8 +4,11 @@
 Copies guard.py and ../claude-code/guard_git.py into ~/.codex/hooks/awa-guard/ and adds one
 PreToolUse hook, matcher Bash, to ~/.codex/hooks.json when no entry with exactly that command
 is there. It never removes or rewrites an entry, its own older ones included: --check reports
-an entry that differs, and it is edited by hand. It never edits config.toml and cannot trust the hook: Codex skips a hook until its
-user trusts it in the CLI's /hooks screen, and the proof it is live is the canary.
+an entry that differs, and it is edited by hand. It reads hooks.json again just before it replaces
+it, and stops when the file has changed since the first read; a write that lands after that
+read and before the rename is not seen. It never edits config.toml and
+cannot trust the hook: Codex skips a hook until its user trusts it in the CLI's /hooks screen, and
+the proof it is live is the canary.
 
     /usr/bin/python3 install.py            # install or update
     /usr/bin/python3 install.py --dry-run  # say what would change, write nothing
@@ -79,13 +82,26 @@ def merge_hook(config, codex_dir=None):
     return merged
 
 
-def write_atomic(path, data, mode=0o644):
-    """Write `data` to `path` through a temporary file, so a reader never sees half a file."""
+def read_bytes(path):
+    """The file's bytes, or None when there is no file."""
+    try:
+        with open(path, "rb") as handle:
+            return handle.read()
+    except FileNotFoundError:
+        return None
+
+
+def write_atomic(path, data, mode=0o644, unchanged=None):
+    """Write `data` to `path` through a temporary file, so a reader never sees half a file. Given
+    `unchanged`, it is called as the last step before the rename, and a false answer raises
+    RuntimeError with nothing written."""
     fd, temp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".install-")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(data)
         os.chmod(temp, mode)
+        if unchanged is not None and not unchanged():
+            raise RuntimeError(path)
         os.replace(temp, path)
     except BaseException:
         os.unlink(temp)
@@ -111,10 +127,13 @@ def main(argv=None):
             copies.append((source, target))
 
     config = {}
-    if os.path.exists(hooks_path):
+    # Where hooks.json leads (itself, or a link's target) and its bytes: both are read again just
+    # before the write, so a file or link another writer changed in between is left to them.
+    real_path = os.path.realpath(hooks_path)
+    read = read_bytes(real_path)
+    if read is not None:
         try:
-            with open(hooks_path, encoding="utf-8") as handle:
-                config = json.load(handle)
+            config = json.loads(read.decode("utf-8"))
         except ValueError as error:
             sys.exit("{} is not valid JSON ({}); nothing written.".format(hooks_path, error))
     if not well_formed(config):
@@ -148,12 +167,16 @@ def main(argv=None):
             write_atomic(target, handle.read())
     if merged != config:
         mode = 0o644
-        if os.path.exists(hooks_path):
+        if read is not None and os.path.exists(hooks_path):
             mode = os.stat(hooks_path).st_mode & 0o777
             backup = "{}.bak-{}".format(hooks_path, time.strftime("%Y%m%d-%H%M%S"))
             shutil.copy2(hooks_path, backup)
             print("backup {}".format(backup))
-        write_atomic(os.path.realpath(hooks_path), json.dumps(merged, indent=2, ensure_ascii=False) + "\n", mode)
+        try:
+            write_atomic(real_path, json.dumps(merged, indent=2, ensure_ascii=False) + "\n", mode,
+                         lambda: os.path.realpath(hooks_path) == real_path and read_bytes(real_path) == read)
+        except RuntimeError:
+            sys.exit("{} changed while installing; nothing written to it. Run the installer again.".format(hooks_path))
     print("Installed. Codex skips the hook until you trust it: run /hooks in the Codex CLI, then")
     print("check that `gh pr merge --help` is refused with `awa-guard-codex:` in a new session.")
     return 0

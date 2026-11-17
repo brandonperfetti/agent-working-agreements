@@ -33,7 +33,10 @@ From a checkout of the commit to install:
 
 The files go to `~/.codex/hooks/awa-guard/`. The installer adds one entry to
 `~/.codex/hooks.json`, backed up beside itself first, when no entry with exactly that command
-is there. It never removes or rewrites an entry, and it never edits `config.toml`. If a later
+is there. It reads the file again just before replacing it; if another writer changed it in
+between, it stops with that file untouched, and you run it again. The check is best effort: a
+write that lands after that read and before the rename is not seen. It never removes or rewrites
+an entry, and it never edits `config.toml`. If a later
 version writes a different entry, remove the old one by hand: `--check` reports an entry with
 the guard's command and other settings, and a missing one.
 

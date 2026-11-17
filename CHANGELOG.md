@@ -10,6 +10,39 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — The agent back-merge of #293 is withdrawn; a workflow carries `master` home.**
+  `.github/workflows/backmerge.yml`, copied from `claude-skills`, merges `master` into `develop`
+  on each push to `master`, or opens a PR; that PR is Brandon's. No agent merges into `develop`
+  for it, so ritual step 8 names the workflow again for every repository. The tag is pushed by
+  full refspec, published once, and named by Brandon's local date. Why: three focused reviews in
+  a row rejected the step-by-step as an agent route. Brandon decided, 2026-11-17.
+  [Release PR](https://github.com/brandonperfetti/agent-working-agreements/pull/294).
+
+- **2026-11-17 — After each release of this repository, the orchestrator merges `master` back
+  into `develop` (#292).** Once the tag is pushed, it makes a merge commit of `master` on `develop`,
+  confirms the merge changes no file, and pushes it; a merge that would change a file goes to
+  Brandon. `AGENTS.md` carries the step; ritual step 8 points there and is unchanged for
+  repositories whose workflow does the back-merge. Why: this repository has no release workflow,
+  so after two releases `master` was three merge commits ahead of `develop`. Brandon decided,
+  2026-11-17. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/292).
+
+- **2026-11-17 — `store_check.py` names every new root and says when it had no baseline (#287).**
+  The Stop hook marks only the ten roots it names, so the next stop names the next ten. When the
+  walk at session start fails, the first stop says it had no baseline and lists what it sees. The
+  CLI lists a path it cannot read as unmeasured and keeps its other findings. The `*.app`
+  exemption is unchanged and now stated exactly: the folder name is the test. Why: roots past the
+  tenth were never named, and two failures passed in silence. Root decided on Brandon's brief.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/287).
+
+- **2026-11-17 — Releases of this repository are tagged, and the orchestrator tags them.** After
+  Brandon merges a release PR into `master`, the orchestrator pushes an annotated `vYYYY.MM.DD` tag
+  on that merge commit, without asking again. `AGENTS.md` carries the name, the message, the
+  two-call push and the rollback steps; ritual step 7 points there and is unchanged for every other
+  repository. The guard is unchanged; a test pins what it does with a tag push. Why: rules take
+  effect at release, so a tag names "in force since" and gives a rollback its target. Brandon
+  decided, 2026-11-17.
+  [First tag](https://github.com/brandonperfetti/agent-working-agreements/releases/tag/v2026.11.17).
+
 - **2026-11-17 — The develop route is qualified for Codex and for a Codex-harness turn's
   `gateway_exec` (#272).** A new `hooks/codex` hook hands each Codex shell command to the unchanged
   `guard_git.py` and denies on anything but a clean pass; its tests join the gate. The binding
