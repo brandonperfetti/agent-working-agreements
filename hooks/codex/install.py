@@ -15,7 +15,6 @@ import copy
 import filecmp
 import json
 import os
-import re
 import shlex
 import shutil
 import sys
@@ -42,20 +41,16 @@ def hook_entry(codex_dir=None):
 
 
 def ours(hook):
-    """True when a hooks.json entry executes this installer's guard.py: the script python runs,
-    or the command itself. A command that only names that path in its arguments is someone else's."""
+    """True only for an entry in the exact form hook_entry writes: `/usr/bin/python3 -I <path>`,
+    the path ending in this installer's folder and script. Any other command that names the path,
+    however it runs, is not proven ours and is kept."""
     command = hook.get("command", "") if isinstance(hook, dict) else ""
     try:
         argv = shlex.split(command) if isinstance(command, str) else []
     except ValueError:
         return False
-    if argv and re.fullmatch(r"python[0-9.]*", os.path.basename(argv[0])):
-        argv = argv[1:]
-        while argv and argv[0].startswith("-"):
-            if argv[0] in ("-c", "-m"):
-                return False
-            argv = argv[2:] if argv[0] in ("-W", "-X") else argv[1:]
-    return bool(argv) and argv[0].replace(os.sep, "/").endswith("/{}/{}".format(FOLDER.replace(os.sep, "/"), SCRIPT))
+    return (len(argv) == 3 and argv[:2] == ["/usr/bin/python3", "-I"]
+            and argv[2].endswith("/{}/{}".format(FOLDER.replace(os.sep, "/"), SCRIPT)))
 
 
 def well_formed(config):

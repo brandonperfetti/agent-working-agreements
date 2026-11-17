@@ -272,7 +272,7 @@ class Installer(unittest.TestCase):
 
     def test_other_hooks_are_kept_and_a_stale_copy_is_replaced(self):
         other = {"type": "command", "command": "echo other"}
-        stale = {"type": "command", "command": "python3 /old/hooks/awa-guard/guard.py", "timeout": 1}
+        stale = {"type": "command", "command": "/usr/bin/python3 -I /old/hooks/awa-guard/guard.py", "timeout": 1}
         naming = {"type": "command", "command": "/usr/bin/python3 /opt/audit_hook.py --watch hooks/awa-guard/guard.py"}
         quoting = {"type": "command", "command": "echo \"$HOME/.codex/hooks/awa-guard/guard.py\" changed"}
         with open(self.hooks, "w", encoding="utf-8") as handle:
@@ -296,13 +296,21 @@ class Installer(unittest.TestCase):
         for command, expected in [
             (install.hook_entry()["command"], True),
             (install.hook_entry(self.home)["command"], True),
-            ("python3 -X dev /old/hooks/awa-guard/guard.py", True),
-            ("/x/hooks/awa-guard/guard.py", True),
+            ("/usr/bin/python3 -I '/a b/hooks/awa-guard/guard.py'", True),
             ("/usr/bin/python3 /opt/audit_hook.py --watch hooks/awa-guard/guard.py", False),
+            ("/usr/bin/python3 -I /opt/audit_hook.py /x/hooks/awa-guard/guard.py", False),
+            ("/usr/bin/python3 -I '-cprint(1)' /x/hooks/awa-guard/guard.py", False),
             ("/usr/bin/python3 -c 'print(1)' /x/hooks/awa-guard/guard.py", False),
+            ("/usr/bin/python3 -Ic 'print(1)' /x/hooks/awa-guard/guard.py", False),
+            ("/usr/bin/python3 -m pdb /x/hooks/awa-guard/guard.py", False),
+            ("/usr/bin/python3 -I /x/hooks/awa-guard/guard.py --extra", False),
+            ("python3 -I /x/hooks/awa-guard/guard.py", False),
+            ("/usr/bin/python3 -X dev /x/hooks/awa-guard/guard.py", False),
+            ("/x/hooks/awa-guard/guard.py", False),
             ("cat /x/hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 /x/hooks/other/guard.py", False),
-            ("/usr/bin/python3 'unbalanced", False),
+            ("/usr/bin/python3 -I /x/hooks/other/guard.py", False),
+            ("/usr/bin/python3 -I /x/hooks/awa-guard/guard.py; echo done", False),
+            ("/usr/bin/python3 -I 'unbalanced", False),
         ]:
             with self.subTest(command):
                 self.assertIs(install.ours({"command": command}), expected)
