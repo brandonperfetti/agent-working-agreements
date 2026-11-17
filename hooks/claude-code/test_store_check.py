@@ -311,8 +311,10 @@ class StoreCheckTest(unittest.TestCase):
             self.assertIn("store_check.py check", reply["reason"])
             self.assertIsNone(self.hook("Stop"))
 
-    def test_a_stop_with_no_record_and_no_installs_takes_its_baseline_quietly(self):
-        self.assertIsNone(self.hook("Stop"))  # nothing is under the store, so nothing can be hidden
+    def test_a_stop_with_no_record_and_no_installs_still_says_it_has_no_baseline(self):
+        reply = self.hook("Stop")
+        self.assertIn("no baseline", reply["reason"])
+        self.assertIn("no node_modules", reply["reason"])
         self.make("evidence", "node_modules", "a.js")
         self.assertNotIn("no baseline", self.hook("Stop")["reason"])
 

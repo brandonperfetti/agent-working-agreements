@@ -224,8 +224,7 @@ def check_session_store(payload, store, state, state_path, deadline):
         return None  # the first snapshot holds: a resume or compaction keeps it
     # A stop with no record has no baseline either: the start walk failed under a version that
     # recorded nothing, the hook was installed mid-session, or the session came to this store later.
-    absent = snapshot is None
-    if absent:
+    if snapshot is None:
         snapshot = {"seen": [], "reported": [], "baseline": False}
     no_baseline = snapshot.get("baseline") is False
     try:
@@ -249,8 +248,7 @@ def check_session_store(payload, store, state, state_path, deadline):
             return block(NO_BASELINE + " These node_modules roots are under it now, and this check cannot tell"
                          " which of them this session made:\n" + listing(current, " (`store_check.py check` lists them all)")
                          + "\n" + FIX)
-        # An empty store hides nothing. It is still said once after a start walk that failed.
-        return None if absent or snapshot.get("told") else block(
+        return None if snapshot.get("told") else block(
             NO_BASELINE + " It sees no node_modules under the store now, so there is nothing to move.")
     reported = set(snapshot.get("reported", []))
     seen = set(snapshot.get("seen", []))

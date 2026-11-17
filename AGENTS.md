@@ -59,12 +59,12 @@ in force since, and it is the version a rollback returns to.
   guard reads a push before the command runs; a tag made in the same call does not exist yet, so
   that push is refused as unreadable.
 - **Then carry `master` home to `develop`** (ritual step 8; no workflow does it here). Once the
-  tag is pushed, the orchestrator merges `origin/master` into `develop` with a merge commit
-  (`git merge --no-ff origin/master`, under RULE ZERO) and pushes it to `develop`, without asking
-  again (Brandon, 2026-11-17). Before the push it confirms that the merge changes no file:
-  `git diff origin/develop HEAD` prints nothing. If the merge conflicts or would change a file,
-  stop and ask Brandon: something reached `master` that `develop` does not have. This is the one
-  push to `develop` the rule covers.
+  tag is pushed, the orchestrator fetches, then merges `origin/master` into a `develop` that is
+  at `origin/develop`, with a merge commit (`git merge --no-ff origin/master`, under RULE ZERO),
+  and pushes it to `develop`, without asking again (Brandon, 2026-11-17). Before the push it
+  confirms that the merge changes no file: `git diff origin/develop HEAD` prints nothing. If the
+  merge conflicts or would change a file, stop and ask Brandon: something reached `master` that
+  `develop` does not have. This is the one push to `develop` the rule covers.
 - **That is the whole release:** no GitHub Release page, no version file, no package.
 
 **Rollback** is Brandon's decision. In `~/dev/sansfaux/agent-working-agreements`, check the tag

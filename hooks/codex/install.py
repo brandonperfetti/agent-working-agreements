@@ -5,7 +5,8 @@ Copies guard.py and ../claude-code/guard_git.py into ~/.codex/hooks/awa-guard/ a
 PreToolUse hook, matcher Bash, to ~/.codex/hooks.json when no entry with exactly that command
 is there. It never removes or rewrites an entry, its own older ones included: --check reports
 an entry that differs, and it is edited by hand. It reads hooks.json again just before it replaces
-it, and stops when the file has changed since the first read. It never edits config.toml and
+it, and stops when the file has changed since the first read; a write that lands after that
+read and before the rename is not seen. It never edits config.toml and
 cannot trust the hook: Codex skips a hook until its user trusts it in the CLI's /hooks screen, and
 the proof it is live is the canary.
 
