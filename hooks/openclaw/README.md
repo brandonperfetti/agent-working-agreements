@@ -28,17 +28,19 @@ or a missing or ambiguous refusal, stops the merge and sends it to Brandon. A re
 for that one merge only: it never carries across a handoff, a change of tool, or a runtime or
 config change.
 
-The merge route is an OpenClaw-runtime turn's Code Mode `exec`, or a claude-cli turn's
-`mcp__openclaw__exec`, qualified on OpenClaw 2026.11.1. In a Codex-harness turn the relay applies,
-but Codex's sandbox refuses `gh` and its approval reviewer refused the escalation.
-`gateway_exec` is checked by the relay implementation but has not been measured live. It is not a
-qualified delegated merge route. So no tool of a Codex-harness turn is the merge tool; those tools
-still do the lane's ordinary git and gh work, where the harness allows it.
+The merge route is an OpenClaw-runtime turn's Code Mode `exec`, a claude-cli turn's
+`mcp__openclaw__exec`, or a Codex-harness turn's `gateway_exec`; the first two were qualified on
+OpenClaw 2026.11.1 on 2026-11-16, `gateway_exec` on 2026-11-17. `gateway_exec` runs on the
+Gateway host, outside Codex's sandbox, so `gh` reaches GitHub there with no sandbox or approval
+change. Codex reports that tool to the hook as `openclawgateway_exec` and the bridge then calls
+it as `gateway_exec`; the relay reads both as the shell tool, so each call is checked twice. A
+Codex-harness turn's native shell is never the merge tool: Codex's sandbox refuses `gh` there
+and its approval reviewer refused the escalation. It still does the lane's ordinary git work.
 
-A delivery owner whose work ran in a Codex-harness turn may make the merge step from a qualified
-turn: one of the two above, through its named tool. That turn runs its own canary through that
-tool, immediately before the merge. It re-reads the PR and confirms the head equals the accepted
-head and the base is `develop`. It meets every condition of the route
+A delivery owner whose Codex-harness turn has no `gateway_exec` may make the merge step from a
+qualified turn: one of the three above, through its named tool. That turn runs its own canary
+through that tool, immediately before the merge. It re-reads the PR and confirms the head equals
+the accepted head and the base is `develop`. It meets every condition of the route
 ([Base merges](../../procedures/review-findings.md#base-merges)), among them routine accepted
 work, the one form and no open `route-suspended` issue. Only when no qualified turn is available
 does the merge go to Brandon.
@@ -95,6 +97,8 @@ An unset or empty `plugins.allow` is unrestricted, and the printed patch leaves 
 - An ACP child (`sessions_spawn` with `runtime: "acp"`) is an outside harness whose tool calls
   never reach this hook; only its brief is checked, and a later `sessions_send` to it is not. Its
   merges are its own client's, never this route's.
+- A merge through GitHub's MCP tool, the REST API or a Kody `execute` is refused on purpose, and
+  stays so: [why the shell form is the only route](../codex/README.md#why-the-shell-form-is-the-only-route).
 
 ## Tests
 

@@ -30,6 +30,18 @@ export const TEXT_TOOLS = new Set([
 ]);
 // Tools that send input to a running shell session: OpenClaw's, and the Codex harness's twin.
 export const SESSION_TOOLS = new Set(["process", "gateway_process"]);
+// A Codex-harness turn reports an OpenClaw dynamic tool to the hook with its namespace attached
+// (`openclawgateway_exec`, measured on OpenClaw 2026.11.1; the model sees `openclaw__gateway_exec`),
+// and the bridge then calls it by its own name. Both spellings are the same shell or session tool.
+const NAMESPACES = ["openclaw__", "openclaw"];
+export function toolOf(name) {
+  if (typeof name !== "string") return name;
+  for (const prefix of NAMESPACES) {
+    const rest = name.slice(prefix.length);
+    if (name.startsWith(prefix) && (SHELL_TOOLS.has(rest) || SESSION_TOOLS.has(rest))) return rest;
+  }
+  return name;
+}
 const SHELL_BINARIES = new Set(["bash", "sh", "zsh"]);
 const MERGE = /merge/i;
 const GITHUB = /(^|[^A-Za-z0-9_-])gh([^A-Za-z0-9_-]|$)|github|pulls?\b|pull_?request/i;
@@ -147,7 +159,8 @@ export function verdict(result) {
 /** Decide one tool call. `runGuard(command, cwd)` resolves to { code, stdout, error }. A Code Mode
  * cell (`kind` code_mode_exec, or JavaScript input) is not a shell command: each tool it calls
  * re-enters OpenClaw and this hook as its own call, and is decided there. */
-export async function decide(toolName, params, runGuard, { kind, inputKind } = {}) {
+export async function decide(calledAs, params, runGuard, { kind, inputKind } = {}) {
+  const toolName = toolOf(calledAs);
   if (kind === "code_mode_exec" || inputKind === "javascript") return allow("code-mode");
   const args = params && typeof params === "object" && !Array.isArray(params) ? params : {};
   const command = commandOf(args);

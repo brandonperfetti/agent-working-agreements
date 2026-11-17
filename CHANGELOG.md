@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — The develop route is qualified for Codex and for a Codex-harness turn's
+  `gateway_exec` (#272).** A new `hooks/codex` hook hands each Codex shell command to the unchanged
+  `guard_git.py` and denies on anything but a clean pass; its tests join the gate. The binding
+  names the Codex CLI and T3-hosted Codex, with a canary before each merge, because Codex runs a
+  command whose hook cannot start or is untrusted. The relay now reads `openclawgateway_exec` as
+  the shell tool. No MCP or API merge is a route: none can set the author email. Why: Codex agents
+  handed every `develop` merge to Brandon. He decided.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/272).
+
 - **2026-11-17 — The OpenClaw canary runs before each delegated merge, and a Codex-harness lane
   hands its merge to a qualified turn.** The binding said "in that session". Now: refused with
   `awa-guard-git:` right before each merge; help text or an unclear refusal goes to Brandon; a
