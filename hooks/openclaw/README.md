@@ -40,8 +40,8 @@ turn: one of the two above, through its named tool. That turn runs its own canar
 tool, immediately before the merge. It re-reads the PR and confirms the head equals the accepted
 head and the base is `develop`. It meets every condition of the route
 ([Base merges](../../procedures/review-findings.md#base-merges)), among them routine accepted
-work, the one form and no open `route-suspended` issue. Only when no qualified turn is available
-does the merge go to Brandon.
+work, the one form and no open `route-suspended` issue. Where no qualified turn is available, or
+its canary or any condition of the route fails, the merge goes to Brandon.
 
 ## Install
 
