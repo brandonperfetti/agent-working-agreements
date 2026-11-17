@@ -270,52 +270,64 @@ class Installer(unittest.TestCase):
     def test_the_default_home_is_named_through_HOME(self):
         self.assertEqual(install.hook_entry()["command"], '/usr/bin/python3 -I "$HOME/.codex/hooks/awa-guard/guard.py"')
 
-    def test_other_hooks_are_kept_and_a_stale_copy_is_replaced(self):
-        other = {"type": "command", "command": "echo other"}
-        stale = {"type": "command", "command": "/usr/bin/python3 -I /old/hooks/awa-guard/guard.py", "timeout": 1}
-        naming = {"type": "command", "command": "/usr/bin/python3 /opt/audit_hook.py --watch hooks/awa-guard/guard.py"}
-        quoting = {"type": "command", "command": "echo \"$HOME/.codex/hooks/awa-guard/guard.py\" changed"}
+    def test_install_only_adds_and_every_other_entry_is_left_as_it_was(self):
+        ours = install.hook_entry(self.home)["command"]
+        script = ours.split()[-1]
+        others = [{"type": "command", "command": command} for command in (
+            "echo other",
+            "/usr/bin/python3 -I /old/hooks/awa-guard/guard.py",  # an older copy: never removed
+            "/usr/bin/python3 /opt/audit_hook.py --watch hooks/awa-guard/guard.py",
+            "/usr/bin/python3 -I '-cprint(1)' " + script,
+            "/usr/bin/python3 -I /opt/audit.py<" + script,
+            "/usr/bin/python3 -I /opt/audit.py;#" + script,
+            ours + " ",  # one byte off is another command
+            'echo "$HOME/.codex/hooks/awa-guard/guard.py" changed',
+        )]
+        before = {"description": "mine", "hooks": {
+            "Stop": [{"hooks": others[:1]}, {"hooks": []}],
+            "PostToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": ours}]}],
+            "PreToolUse": [{"matcher": "apply_patch", "hooks": others[1:2]}, {"matcher": "Bash", "hooks": list(others)},
+                           {"matcher": "Bash", "hooks": others[:1]}],
+        }}
         with open(self.hooks, "w", encoding="utf-8") as handle:
-            json.dump({"description": "mine", "hooks": {
-                "Stop": [{"hooks": [other]}],
-                "PostToolUse": [{"matcher": "Bash", "hooks": [stale]}, {"matcher": "Bash", "hooks": []}],
-                "SessionStart": [{"hooks": [stale]}],
-                "PreToolUse": [{"matcher": "Bash", "hooks": [other, naming, stale, quoting]}, {"matcher": "apply_patch", "hooks": [stale]}],
-            }}, handle)
+            json.dump(before, handle)
         self.assertEqual(self.run_install()[0], 0)
-        config = self.read()
-        self.assertEqual(config["description"], "mine")
-        self.assertEqual(config["hooks"]["Stop"], [{"hooks": [other]}])
-        self.assertEqual(config["hooks"]["PostToolUse"], [{"matcher": "Bash", "hooks": []}])  # not ours to tidy
-        self.assertNotIn("SessionStart", config["hooks"])
-        group, = config["hooks"]["PreToolUse"]
-        self.assertEqual(group["hooks"], [other, naming, quoting, install.hook_entry(self.home)])
+        after = self.read()
+        expected = json.loads(json.dumps(before))
+        expected["hooks"]["PreToolUse"][1]["hooks"].append(install.hook_entry(self.home))  # the one addition
+        self.assertEqual(after, expected)
         self.assertEqual(len([name for name in os.listdir(self.home) if name.startswith("hooks.json.bak-")]), 1)
+        self.assertEqual(self.run_install("--check")[0], 0)
+        self.assertEqual(self.run_install(), (0, "Already installed.\n"))
+        self.assertEqual(self.read(), expected)
 
-    def test_only_a_command_that_runs_the_guard_is_ours(self):
-        for command, expected in [
-            (install.hook_entry()["command"], True),
-            (install.hook_entry(self.home)["command"], True),
-            ("/usr/bin/python3 -I '/a b/hooks/awa-guard/guard.py'", True),
-            ("/usr/bin/python3 /opt/audit_hook.py --watch hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 -I /opt/audit_hook.py /x/hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 -I '-cprint(1)' /x/hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 -c 'print(1)' /x/hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 -Ic 'print(1)' /x/hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 -m pdb /x/hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 -I /x/hooks/awa-guard/guard.py --extra", False),
-            ("python3 -I /x/hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 -X dev /x/hooks/awa-guard/guard.py", False),
-            ("/x/hooks/awa-guard/guard.py", False),
-            ("cat /x/hooks/awa-guard/guard.py", False),
-            ("/usr/bin/python3 -I /x/hooks/other/guard.py", False),
-            ("/usr/bin/python3 -I /x/hooks/awa-guard/guard.py; echo done", False),
-            ("/usr/bin/python3 -I 'unbalanced", False),
-        ]:
-            with self.subTest(command):
-                self.assertIs(install.ours({"command": command}), expected)
-        for hook in (None, {}, {"command": 7}, "x"):
-            self.assertIs(install.ours(hook), False)
+    def test_an_entry_with_our_command_and_other_settings_is_reported_not_rewritten(self):
+        ours = install.hook_entry(self.home)
+        for hooks in ([dict(ours, timeout=1)], [ours, ours], [dict(ours, statusMessage="x")]):
+            with self.subTest(hooks=hooks):
+                self.run_install()
+                content = json.dumps({"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": hooks}]}})
+                with open(self.hooks, "w", encoding="utf-8") as handle:
+                    handle.write(content)
+                code, out = self.run_install("--check")
+                self.assertEqual(code, 1)
+                self.assertIn("edit it by hand", out)
+                code, out = self.run_install()
+                self.assertEqual(code, 0)
+                self.assertIn("edit it by hand", out)
+                self.assertNotIn("Already installed", out)
+                with open(self.hooks, encoding="utf-8") as handle:
+                    self.assertEqual(handle.read(), content)
+
+    def test_our_command_under_another_matcher_or_event_does_not_count(self):
+        ours = install.hook_entry(self.home)
+        with open(self.hooks, "w", encoding="utf-8") as handle:
+            json.dump({"hooks": {"PreToolUse": [{"matcher": "apply_patch", "hooks": [ours]}], "Stop": [{"hooks": [ours]}]}}, handle)
+        self.assertEqual(self.run_install("--check")[0], 1)
+        self.assertEqual(self.run_install()[0], 0)
+        groups = self.read()["hooks"]["PreToolUse"]
+        self.assertEqual(groups, [{"matcher": "apply_patch", "hooks": [ours]}, {"matcher": "Bash", "hooks": [ours]}])
+        self.assertEqual(self.read()["hooks"]["Stop"], [{"hooks": [ours]}])
 
     def test_a_changed_byte_is_drift(self):
         self.run_install()

@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """Install the Codex guard hook: guard.py and guard_git.py, and one entry in hooks.json.
 
-Copies guard.py and ../claude-code/guard_git.py into ~/.codex/hooks/awa-guard/ and registers
-one PreToolUse hook, matcher Bash, in ~/.codex/hooks.json, leaving every other hook there as
-it was. It never edits config.toml and cannot trust the hook: Codex skips a hook until its
+Copies guard.py and ../claude-code/guard_git.py into ~/.codex/hooks/awa-guard/ and adds one
+PreToolUse hook, matcher Bash, to ~/.codex/hooks.json when no entry with exactly that command
+is there. It never removes or rewrites an entry, its own older ones included: --check reports
+an entry that differs, and it is edited by hand. It never edits config.toml and cannot trust the hook: Codex skips a hook until its
 user trusts it in the CLI's /hooks screen, and the proof it is live is the canary.
 
     /usr/bin/python3 install.py            # install or update
@@ -40,19 +41,6 @@ def hook_entry(codex_dir=None):
     return {"type": "command", "command": command, "timeout": HOOK_TIMEOUT}
 
 
-def ours(hook):
-    """True only for an entry in the exact form hook_entry writes: `/usr/bin/python3 -I <path>`,
-    the path ending in this installer's folder and script. Any other command that names the path,
-    however it runs, is not proven ours and is kept."""
-    command = hook.get("command", "") if isinstance(hook, dict) else ""
-    try:
-        argv = shlex.split(command) if isinstance(command, str) else []
-    except ValueError:
-        return False
-    return (len(argv) == 3 and argv[:2] == ["/usr/bin/python3", "-I"]
-            and argv[2].endswith("/{}/{}".format(FOLDER.replace(os.sep, "/"), SCRIPT)))
-
-
 def well_formed(config):
     """True when hooks.json has the shape merge_hook walks: events of groups of hooks."""
     if not isinstance(config, dict) or not isinstance(config.get("hooks", {}), dict):
@@ -66,30 +54,28 @@ def well_formed(config):
     return True
 
 
+def registered(config, entry):
+    """The guard's entries already under PreToolUse, matcher Bash: those whose command is exactly
+    the string this installer writes. Nothing is parsed, so no other command is ever taken for it."""
+    return [hook
+            for group in config.get("hooks", {}).get(EVENT, []) if group.get("matcher") == MATCHER
+            for hook in group.get("hooks", [])
+            if isinstance(hook, dict) and hook.get("command") == entry["command"]]
+
+
 def merge_hook(config, codex_dir=None):
-    """Return a copy of hooks.json's content with the guard registered exactly once."""
+    """Return hooks.json's content with the guard's entry added, or `config` itself when an entry
+    with exactly that command is already there. Add-only: no entry is ever removed or rewritten."""
+    entry = hook_entry(codex_dir)
+    if registered(config, entry):
+        return config
     merged = copy.deepcopy(config)
-    events = merged.setdefault("hooks", {})
-    for name in list(events):  # drop every copy of ours, under any event, then add it back once
-        kept = []
-        for group in events[name]:
-            hooks = group.get("hooks", [])
-            if not any(ours(hook) for hook in hooks):
-                kept.append(group)  # nothing of ours: left exactly as it was
-                continue
-            group["hooks"] = [hook for hook in hooks if not ours(hook)]
-            if group["hooks"]:
-                kept.append(group)
-        if kept or name == EVENT:
-            events[name] = kept
-        else:
-            del events[name]
-    groups = events.setdefault(EVENT, [])
+    groups = merged.setdefault("hooks", {}).setdefault(EVENT, [])
     group = next((g for g in groups if g.get("matcher") == MATCHER), None)
     if group is None:
-        groups.append({"matcher": MATCHER, "hooks": [hook_entry(codex_dir)]})
+        groups.append({"matcher": MATCHER, "hooks": [entry]})
     else:
-        group["hooks"].append(hook_entry(codex_dir))
+        group.setdefault("hooks", []).append(entry)
     return merged
 
 
@@ -134,17 +120,25 @@ def main(argv=None):
     if not well_formed(config):
         sys.exit("{} has no hooks block of the expected shape; nothing written.".format(hooks_path))
     default = os.path.realpath(os.path.expanduser("~/.codex")) == os.path.realpath(args.codex_dir)
-    merged = merge_hook(config, None if default else args.codex_dir)
+    home = None if default else args.codex_dir
+    merged = merge_hook(config, home)
+    # An entry with our command but other settings (a timeout from another version, a second
+    # copy) is reported and left for its owner: this installer adds, and changes nothing.
+    found = registered(config, hook_entry(home))
+    altered = bool(found) and found != [hook_entry(home)]
 
     for source, target in copies:
         print("{} {} -> {}".format("differs:" if args.check else "copy", source, target))
     if merged != config:
         print("{} hooks block of {}".format("differs:" if args.check else "update", hooks_path))
+    if altered:
+        print("differs: the guard's entry in {} is not the one this version writes; edit it by hand to {}".format(
+            hooks_path, json.dumps(hook_entry(home))))
     changed = bool(copies) or merged != config
     if args.check:
-        return 1 if changed else 0
+        return 1 if changed or altered else 0
     if args.dry_run or not changed:
-        if not changed:
+        if not changed and not altered:
             print("Already installed.")
         return 0
 

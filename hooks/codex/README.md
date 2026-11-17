@@ -30,9 +30,11 @@ From a checkout of the commit to install:
 /usr/bin/python3 hooks/codex/install.py --check    # exit 1 if the installed copy differs
 ```
 
-The files go to `~/.codex/hooks/awa-guard/`, and one entry goes into `~/.codex/hooks.json`,
-which is backed up beside itself first. Every other hook there stays as it was. The installer
-never edits `config.toml`.
+The files go to `~/.codex/hooks/awa-guard/`. The installer adds one entry to
+`~/.codex/hooks.json`, backed up beside itself first, when no entry with exactly that command
+is there. It never removes or rewrites an entry, and it never edits `config.toml`. If a later
+version writes a different entry, remove the old one by hand: `--check` reports an entry with
+the guard's command and other settings, and a missing one.
 
 **Codex skips the hook until its user trusts it.** After the first install, Brandon opens the
 Codex CLI, runs `/hooks` and trusts the entry. Trust is tied to the entry's text, so an update
