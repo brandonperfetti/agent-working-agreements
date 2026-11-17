@@ -37,13 +37,15 @@ jobs:
           git fetch origin master develop
 
           open_pr() {
-            # Idempotent: skip if a back-merge PR is already open. Otherwise create it and
-            # let real gh failures (API/permission) fail the job — do not swallow errors.
+            # Idempotent: skip if a back-merge PR is already open. Only this repository's own
+            # `master` counts: `--head` matches a branch name, so a fork's `master` is
+            # filtered out. A lookup that fails falls through to the create, and a failed
+            # create fails the job — do not swallow errors.
             # Creating a PR with GITHUB_TOKEN needs the repository setting "Allow GitHub
-            # Actions to create and approve pull requests"; without it this step fails
+            # Actions to create and approve pull requests"; without it the create fails
             # and the red run is the signal.
             if gh pr list --base develop --head master --state open \
-              --json number --jq 'length > 0' | grep -qx true; then
+              --json isCrossRepository --jq 'any(.[]; .isCrossRepository | not)' | grep -qx true; then
               echo "back-merge PR already open"
               return
             fi

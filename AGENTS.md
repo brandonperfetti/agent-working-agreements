@@ -60,14 +60,15 @@ in force since, and it is the version a rollback returns to.
   pushing it.
 - **Create the tag in one call and push it in the next,** alone:
   `git push --no-follow-tags origin refs/tags/<tag>:refs/tags/<tag>`. The full refspec and
-  `--no-follow-tags` send that one tag whatever `push.followTags` says. The guard reads a push
-  before the command runs; a tag made in the same call does not exist yet, so that push is refused
-  as unreadable.
+  `--no-follow-tags` send that one tag whatever `push.followTags` says. Before it,
+  `git remote get-url --push --all origin` prints one URL, the one `git remote get-url origin`
+  prints: this repository's. The guard reads a push before the command runs; a tag made in the
+  same call does not exist yet, so that push is refused as unreadable.
 - **The back-merge is the workflow's** (ritual step 8). On the push to `master`,
   [`backmerge.yml`](.github/workflows/backmerge.yml) merges `master` into `develop` and pushes
-  it, or opens a PR when the merge conflicts or the push is refused. After the tag, the
-  orchestrator reads that run. A PR it opened, or a failed run, is Brandon's; an agent makes no
-  back-merge.
+  it, or tries to open a PR when the merge conflicts or the push is refused; the run fails where
+  the repository's settings keep Actions from opening one. After the tag, the orchestrator reads
+  that run. A PR it opened, or a failed run, is Brandon's; an agent makes no back-merge.
 - **That is the whole release:** no GitHub Release page, no version file, no package.
 
 **Rollback** is Brandon's decision. In `~/dev/sansfaux/agent-working-agreements`, check the tag
