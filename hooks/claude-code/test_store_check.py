@@ -71,6 +71,10 @@ class StoreCheckTest(unittest.TestCase):
         self.make("evidence", "rollback", "T3 Code.app", "Contents", "Resources", "node_modules", "a.js")
         self.assertEqual(store_check.install_roots(self.store), [])
 
+    def test_app_contents_copied_without_the_app_folder_are_not_exempt(self):
+        path = self.make("evidence", "rollback", "previous-app-contents", "Resources", "node_modules", "a.js")
+        self.assertEqual(store_check.install_roots(self.store), [os.path.dirname(path)])
+
     def test_a_symlinked_node_modules_is_not_followed(self):
         outside = os.path.join(self.root, "scratch", "node_modules")
         os.makedirs(os.path.join(outside, "pkg"))
@@ -159,6 +163,55 @@ class StoreCheckTest(unittest.TestCase):
         self.assertIn("unmeasured: ", out.getvalue())
         self.assertIn(path, out.getvalue())
 
+    def test_cli_keeps_its_other_findings_when_a_size_read_fails(self):
+        install = os.path.dirname(self.make("initiatives", "fleet-a", "analysis", "node_modules", "a.js"))
+        path = self.make("evidence", "receipt.json", size=100)
+        self.make("reviews", "big.bin", size=200_000)  # walked after the tree that fails
+        original = os.lstat
+
+        def fail_on_receipt(name, *args, **kwargs):
+            if name == path:
+                raise FileNotFoundError(2, "No such file or directory", path)
+            return original(name, *args, **kwargs)
+
+        out = io.StringIO()
+        with mock.patch.object(os, "lstat", side_effect=fail_on_receipt), mock.patch("sys.stdout", out), mock.patch("sys.stderr", io.StringIO()):
+            self.assertEqual(store_check.cli(["check", "--store", self.store, "--cap-gb", "0.0001"]), 1)
+        lines = out.getvalue().splitlines()
+        self.assertIn("node_modules: " + install, lines)
+        self.assertTrue([line for line in lines if line.startswith("unmeasured: " + os.path.join(self.store, "evidence"))], lines)
+        self.assertTrue([line for line in lines if line.startswith("over cap: " + os.path.join(self.store, "reviews"))], lines)
+
+    @unittest.skipIf(os.geteuid() == 0, "root can read a mode-000 directory")
+    def test_cli_lists_an_install_beside_a_folder_it_cannot_read(self):
+        install = os.path.dirname(self.make("initiatives", "fleet-a", "analysis", "node_modules", "a.js"))
+        locked = os.path.join(self.store, "evidence", "locked")
+        os.makedirs(locked)
+        os.chmod(locked, 0)
+        try:
+            code, out = self.cli()
+        finally:
+            os.chmod(locked, 0o700)
+        self.assertEqual(code, 1)
+        self.assertIn("node_modules: " + install, out.splitlines())
+        self.assertTrue([line for line in out.splitlines() if line.startswith("unmeasured: ") and locked in line], out)
+
+    @unittest.skipIf(os.geteuid() == 0, "root can read a mode-000 directory")
+    def test_cli_measures_the_other_trees_when_initiatives_cannot_be_listed(self):
+        self.make("evidence", "big.bin", size=200_000)
+        self.make("reviews", "big.bin", size=200_000)
+        locked = os.path.join(self.store, "initiatives")
+        os.chmod(locked, 0)
+        try:
+            code, out = self.cli("--cap-gb", "0.0001")
+        finally:
+            os.chmod(locked, 0o700)
+        lines = out.splitlines()
+        self.assertEqual(code, 1)
+        for name in ("evidence", "reviews"):
+            self.assertTrue([line for line in lines if line.startswith("over cap: " + os.path.join(self.store, name))], out)
+        self.assertEqual(len([line for line in lines if line.startswith("unmeasured: ") and locked in line]), 1, out)
+
     def test_an_unreadable_hook_walk_leaves_the_snapshot_unchanged(self):
         self.hook("SessionStart")
         self.make("evidence", "node_modules", "a.js")
@@ -183,6 +236,21 @@ class StoreCheckTest(unittest.TestCase):
         self.assertIn("receipts, logs and hashes", reply["reason"])
         self.assertIn("agent-workspace-layout.md", reply["reason"])
         self.assertIsNone(self.hook("Stop"), "reported once")
+
+    def test_roots_past_the_tenth_are_named_at_the_next_stop(self):
+        self.hook("SessionStart")
+        roots = [os.path.dirname(self.make("evidence", "run-{:02d}".format(n), "node_modules", "a.js")) for n in range(11)]
+        first = self.hook("Stop")
+        self.assertEqual(first["decision"], "block")
+        for root in roots[:10]:
+            self.assertIn("- {}\n".format(root), first["reason"])
+        self.assertNotIn(roots[10], first["reason"])
+        self.assertIn("and 1 more", first["reason"])
+        second = self.hook("Stop")
+        self.assertEqual(second["decision"], "block")
+        self.assertIn("- {}\n".format(roots[10]), second["reason"])
+        self.assertNotIn(roots[0], second["reason"])
+        self.assertIsNone(self.hook("Stop"))
 
     def test_trees_already_there_at_session_start_never_block(self):
         self.make("initiatives", "fleet-a", "analysis", "old", "node_modules", "a.js")
@@ -222,11 +290,33 @@ class StoreCheckTest(unittest.TestCase):
             self.assertIn(os.path.realpath(second), reasons)
             self.assertIsNone(store_check.decide(payload))
 
-    def test_a_hook_installed_mid_session_snapshots_at_its_first_stop(self):
-        self.make("initiatives", "fleet-a", "analysis", "old", "node_modules", "a.js")
+    def test_a_stop_with_no_record_from_the_start_says_it_has_no_baseline(self):
+        # a hook installed mid-session, or a start that timed out under a version that recorded nothing
+        old = os.path.dirname(self.make("initiatives", "fleet-a", "analysis", "old", "node_modules", "a.js"))
+        reply = self.hook("Stop")
+        self.assertEqual(reply["decision"], "block")
+        self.assertIn("no baseline", reply["reason"])
+        self.assertIn("- {}\n".format(old), reply["reason"])
         self.assertIsNone(self.hook("Stop"))
         self.make("initiatives", "fleet-a", "analysis", "new", "node_modules", "a.js")
-        self.assertEqual(self.hook("Stop")["decision"], "block")
+        reply = self.hook("Stop")
+        self.assertEqual(reply["decision"], "block")
+        self.assertNotIn("no baseline", reply["reason"])
+
+    def test_a_stop_with_no_record_and_a_walk_that_fails_says_so_once(self):
+        self.make("evidence", "node_modules", "a.js")
+        with mock.patch.object(store_check, "HOOK_WALK", -1):
+            reply = self.hook("Stop")
+            self.assertIn("no baseline", reply["reason"])
+            self.assertIn("store_check.py check", reply["reason"])
+            self.assertIsNone(self.hook("Stop"))
+
+    def test_a_stop_with_no_record_and_no_installs_still_says_it_has_no_baseline(self):
+        reply = self.hook("Stop")
+        self.assertIn("no baseline", reply["reason"])
+        self.assertIn("no node_modules", reply["reason"])
+        self.make("evidence", "node_modules", "a.js")
+        self.assertNotIn("no baseline", self.hook("Stop")["reason"])
 
     def test_a_walk_past_its_budget_never_blocks(self):
         self.hook("SessionStart")
@@ -234,6 +324,56 @@ class StoreCheckTest(unittest.TestCase):
         with mock.patch.object(store_check, "HOOK_WALK", -1):
             self.assertIsNone(self.hook("Stop"))
         self.assertEqual(self.hook("Stop")["decision"], "block", "the snapshot still holds")
+
+    def test_a_start_walk_that_fails_leaves_no_baseline_and_the_stop_says_so(self):
+        failures = {"out of time": mock.patch.object(store_check, "HOOK_WALK", -1),
+                    "unreadable": mock.patch.object(store_check, "install_roots", side_effect=PermissionError(13, "Permission denied", self.store))}
+        old = os.path.dirname(self.make("initiatives", "fleet-a", "analysis", "old", "node_modules", "a.js"))
+        for session, failure in failures.items():
+            with self.subTest(session):
+                with failure:
+                    self.assertIsNone(self.hook("SessionStart", session))
+                    self.assertIsNone(self.hook("SessionStart", session), "a resume keeps the no-baseline record")
+                reply = self.hook("Stop", session)
+                self.assertEqual(reply["decision"], "block")
+                self.assertIn("no baseline", reply["reason"])
+                self.assertIn("- {}\n".format(old), reply["reason"])
+                self.assertIsNone(self.hook("Stop", session), "what it listed is the baseline from here on")
+                new = os.path.dirname(self.make("evidence", session.replace(" ", "-"), "node_modules", "a.js"))
+                reply = self.hook("Stop", session)
+                self.assertIn("- {}\n".format(new), reply["reason"])
+                self.assertNotIn("no baseline", reply["reason"])
+
+    def test_no_baseline_lists_ten_roots_and_points_at_the_cli_for_the_rest(self):
+        for n in range(12):
+            self.make("evidence", "run-{:02d}".format(n), "node_modules", "a.js")
+        with mock.patch.object(store_check, "HOOK_WALK", -1):
+            self.hook("SessionStart")
+        reply = self.hook("Stop")
+        self.assertEqual(reply["reason"].count("node_modules\n"), 10)
+        self.assertIn("and 2 more", reply["reason"])
+        self.assertIn("store_check.py check", reply["reason"])
+        self.assertIsNone(self.hook("Stop"), "roots that may predate the session do not hold every stop")
+
+    def test_no_baseline_and_a_stop_walk_that_fails_too_is_said_once(self):
+        self.make("evidence", "node_modules", "a.js")
+        with mock.patch.object(store_check, "HOOK_WALK", -1):
+            self.hook("SessionStart")
+            reply = self.hook("Stop")
+            self.assertEqual(reply["decision"], "block")
+            self.assertIn("no baseline", reply["reason"])
+            self.assertIn("store_check.py check", reply["reason"])
+            self.assertIsNone(self.hook("Stop"))
+        self.assertIn(os.path.join("evidence", "node_modules"), self.hook("Stop")["reason"], "a later walk still lists what it sees")
+
+    def test_no_baseline_and_a_store_with_no_installs_is_said_once(self):
+        with mock.patch.object(store_check, "HOOK_WALK", -1):
+            self.hook("SessionStart")
+        reply = self.hook("Stop")
+        self.assertEqual(reply["decision"], "block")
+        self.assertIn("no baseline", reply["reason"])
+        self.assertIn("no node_modules", reply["reason"])
+        self.assertIsNone(self.hook("Stop"))
 
     def test_a_broken_payload_never_traps_the_agent(self):
         with mock.patch("sys.stdin", io.StringIO("not json")), mock.patch("sys.stderr", io.StringIO()):

@@ -3,7 +3,7 @@
 
 guard_git.py owns the rules. This file only carries the command to it and reads the verdict,
 because Codex runs the command when a hook crashes, times out or prints something it cannot read.
-So every outcome but a clean pass (exit 0, nothing on stdout) is turned into a denial here.
+So every outcome but a clean pass (exit 0, no non-whitespace stdout) is turned into a denial here.
 Codex still runs the command when this file cannot start, is killed at Codex's own timeout, or
 the hook is untrusted or disabled: the canary before each merge is the check for that.
 """
