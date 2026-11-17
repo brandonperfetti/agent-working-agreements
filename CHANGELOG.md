@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — The OpenClaw canary runs before each delegated merge, not once a session.** The
+  `delegated merge route` binding and `clients/openclaw.md` said the canary is refused "in that
+  session"; `hooks/openclaw/README.md` said "before every delegated merge". Both now say right
+  before each merge, through the same tool. Why: a plugin can drop out mid-session, so an earlier
+  refusal proves nothing about a later merge. Release #286's review found the mismatch; Brandon
+  decided. [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/286).
+
 - **2026-11-16 — No package install or `node_modules` under `_agent/`, and a check for it
   (#283).** "Clones" now covers installs, `node_modules` and build output: that scratch goes in the
   client scratch directory, and the store keeps receipts, logs and hashes. A brief's scratch

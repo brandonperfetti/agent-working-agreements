@@ -40,7 +40,7 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
 | Orchestrator | **Camina** (`main`), chief of staff, assigns the accountable lead; every staff member may orchestrate work in their domain |
 | Delivery owner | **Judy** (`coder`), or the assigned delivery specialist |
 | Independent reviewer | **Amos** (`reviewer`), or the assigned reviewer; where no reviewer can be seated, A4's bot-plus-merge rule applies and the PR body says so |
-| Merge | **Brandon**, by hand, into `master` or `main`, and into `develop` except a merge the profile's delegated route covers: that one is the delivery owner's, in an OpenClaw-runtime or claude-cli turn, once `gh pr merge --help` run alone through the merge's own tool in that session is refused with `awa-guard-git:` ([`../hooks/openclaw/`](../hooks/openclaw/README.md)); a Codex-harness turn's merge, `gateway_exec` included, stays Brandon's |
+| Merge | **Brandon**, by hand, into `master` or `main`, and into `develop` except a merge the profile's delegated route covers: that one is the delivery owner's, in an OpenClaw-runtime or claude-cli turn, once `gh pr merge --help`, run alone through the merge's own tool right before that merge, is refused with `awa-guard-git:` ([`../hooks/openclaw/`](../hooks/openclaw/README.md)); a Codex-harness turn's merge, `gateway_exec` included, stays Brandon's |
 
 The roster and route mechanics live in `~/.openclaw/workspace/docs/team-operating-model.md`.
 Brandon may instruct any staff member directly; staff reconcile relevant operational context with
