@@ -18,6 +18,13 @@ being retrofitted onto the other.
   5 GB. The Stop hook blocks once on roots new since session start; size is CLI-only. A store grew
   to 196 GB; Brandon decided. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/283).
 
+- **2026-11-16 — The develop route is qualified for OpenClaw's exec path (#272).** A new
+  `hooks/openclaw` plugin hands every OpenClaw tool call to the unchanged `guard_git.py` and fails
+  closed. Its tests join the gate. The binding names OpenClaw-runtime Code Mode and claude-cli's
+  MCP exec bridge, with a per-session canary; a Codex-harness turn is guarded, not a merge route.
+  Why: every OpenClaw `develop` merge had gone to Brandon. He approved the install and fixture.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/272).
+
 - **2026-11-14 — Friction that meets the bar becomes an issue; the board's automation is named
   (#167).** At delivery close, an item that is durable or recurring, owned by one repository,
   reproducible and actionable becomes a labelled `friction` issue there, from a new issue form; one
