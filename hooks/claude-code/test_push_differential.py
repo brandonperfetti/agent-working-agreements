@@ -172,6 +172,22 @@ ROWS = [
     ("a branch that is a symbolic ref to master", "git symbolic-ref refs/heads/sneaky refs/heads/master", "git push origin sneaky", DENY),
     ("a tag that is a symbolic ref to master", "git symbolic-ref refs/tags/tsneak refs/heads/master", "git push origin tag tsneak", DENY),
     ("a branch that is a symbolic ref to a feature branch", "git symbolic-ref refs/heads/same refs/heads/feature/x", "git push origin same", ALLOW),
+    # Aliases: a word alias is read through its expansion, a shell alias is refused
+    ("an alias for a whole push", "git config alias.p 'push origin HEAD:master'", "git p", DENY),
+    ("an alias for push, the refspec on the command", "git config alias.p push", "git p origin HEAD:master", DENY),
+    ("an alias in the global config", "git config --global alias.p 'push origin HEAD:master'", "git p", DENY),
+    ("an alias of an alias", "git config alias.a b; git config alias.b 'push origin HEAD:master'", "git a", DENY),
+    ("an alias that forces", "git config alias.p 'push --force'; " + DIVERGE, "git p origin feature/x", DENY),
+    ("an alias set with -c", "", "git -c alias.p=push p origin HEAD:master", DENY),
+    ("an alias set in the environment", "", "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.p GIT_CONFIG_VALUE_0='push origin HEAD:master' git p", DENY),
+    ("an alias under a moved HOME", "", "HOME=../althome git p", DENY),
+    ("an alias for commit, skipping the hook", "git config alias.ci 'commit -q'", "git ci --allow-empty -m bypass --no-verify", DENY),
+    ("a shell alias", "git config alias.pf '!git push origin HEAD:master'", "git pf", DENY),
+    ("a shell alias with a setting on the command", "git config alias.p '!git push'", "git -c remote.origin.push=HEAD:master p", DENY),
+    ("a shell alias made a mirror by -c", "git config alias.p '!git push'; " + DIVERGE, "git -c remote.origin.mirror=true p", DENY),
+    ("a shell alias for commit, the hooks path moved by -c", "git config alias.ci '!git commit'", "git -c core.hooksPath=/nonexistent-hooks ci -q --allow-empty -m bypass", DENY),
+    ("an alias for an ordinary push", "git config alias.pu 'push -u origin'", "git pu feature/x", ALLOW),
+    ("an alias for commit, the hook in play", "git config alias.ci 'commit -q'", "git ci --allow-empty -m bypass", ALLOW),
     # (rows for the next rule go above this line)
 ]
 

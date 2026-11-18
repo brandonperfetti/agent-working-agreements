@@ -5,7 +5,7 @@ Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
 ritual and merge boundary, save one exact command form into develop, the
 delegated route (check_route_form; a form check, not eligibility); commits and merges that skip the commit-msg hook or
-carry a configuration override (read from the command's words as the lexer
+carry a configuration override, a git alias being read through its expansion (read from the command's words as the lexer
 splits them, so a shape that hides a flag from them skips the hook: the push-time
 scan and the read before presentation are the controls for that shape); and, best effort, pushes whose commits new to
 the destination remote's tracking refs carry another author, a banned attribution
@@ -19,8 +19,8 @@ goes may come before it in the same call (note_prelude); the rest is refused,
 not interpreted. Merges
 between feature, wave, lane and hotfix branches pass. It parses the command rather than grepping it,
 so a commit message that mentions `git push --force` passes. It stops honest
-mistakes, not a determined bypass: git aliases, refspecs in shell variables and
-commands inside a quoted "$(...)" are not resolved.
+mistakes, not a determined bypass: a script or another tool that pushes is not
+read (the README's limits).
 """
 import json
 import os
@@ -70,6 +70,16 @@ GIT_ATTACHED_OPTS = GIT_VALUE_OPTS | {"--exec-path", "--list-cmds"}
 # read stale. These cannot. Anything else is refused, not interpreted: the push runs in its own call.
 PRELUDE_GIT = {"add", "commit", "status"}
 BARE_SOURCES = 20  # refspecs without a destination that one push may name
+# Git ignores an alias named like one of its own commands, so these are never looked up; any other
+# subcommand may be an alias for a push, a commit or a merge and is read through its expansion.
+GIT_COMMANDS = frozenset(
+    "add am apply bisect blame branch cat-file check-ignore checkout cherry cherry-pick clean clone commit "
+    "config describe diff diff-tree fetch for-each-ref format-patch gc grep hash-object help init log ls-files "
+    "ls-remote ls-tree merge merge-base mv name-rev notes pull push range-diff rebase reflog remote reset "
+    "restore rev-list rev-parse revert rm shortlog show show-ref stash status submodule switch symbolic-ref "
+    "tag update-index update-ref var version worktree".split()
+)
+ALIAS_DEPTH = 10  # aliases of aliases the guard follows before it calls the chain a loop
 # Variables that move git's configuration files, as GIT_CONFIG_* does.
 CONFIG_HOME_VARS = {"HOME", "XDG_CONFIG_HOME"}
 COMMIT_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
@@ -457,10 +467,22 @@ def check_push(args, directory, selectors=(), env=None, state=None):
     return check_push_authors(refspecs, directory, "--tags" in options, selectors, env, remote)
 
 
-def check_git(tokens, directory, env, state=None):
-    """Route a `git` command: global options first, then push, commit and merge. `state` is what
-    the same call ran before it (note_prelude)."""
-    index, configured, selectors, keys = 1, False, [], []
+def git_aliases(directory, selectors, settings, env, state):
+    """Every alias git would find for this command, by lowercased name, read with the command's
+    own settings and environment. One read per call: a long batch of git commands costs one."""
+    cache = state.setdefault("aliases", {}) if state is not None else {}
+    key = (directory, tuple(selectors), tuple(settings), tuple(sorted(env.items())))
+    if key not in cache:
+        text = git_lines(directory, list(selectors) + list(settings) + ["config", "--null", "--get-regexp", r"^alias\."], environment(env), raw=True)
+        entries = [entry.partition("\n") for entry in (text or "").split("\0") if entry]
+        cache[key] = {name[len("alias."):].lower(): body for name, _, body in entries}
+    return cache[key]
+
+
+def check_git(tokens, directory, env, state=None, depth=0):
+    """Route a `git` command: global options first, an alias through its expansion, then push,
+    commit and merge. `state` is what the same call ran before it (note_prelude)."""
+    index, configured, selectors, keys, settings, start = 1, False, [], [], [], directory
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] in GIT_ENDING_FLAGS:
             return None
@@ -472,10 +494,26 @@ def check_git(tokens, directory, env, state=None):
             configured = True  # a setting for this command alone: push.default, remote.*.push, …
             setting = tokens[index + 1] if tokens[index] in ("-c", "--config-env") and index + 1 < len(tokens) else tokens[index].partition("=")[2]
             keys.append(setting.partition("=")[0].lower())
+            settings += tokens[index : index + (2 if tokens[index] in GIT_VALUE_OPTS else 1)]
         elif tokens[index].partition("=")[0] in ("--git-dir", "--work-tree"):
             name, has_value, value = tokens[index].partition("=")
             selectors += [name, value] if has_value else tokens[index : index + 2]
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
+    if index < len(tokens) and tokens[index] not in GIT_COMMANDS:
+        body = git_aliases(directory, selectors, settings, env, state).get(tokens[index].lower())
+        # An alias named like a command this git has is never used; that list is read only then.
+        if body is not None and tokens[index] not in (git_lines(directory, ["--list-cmds=main,others"], environment(env)) or ()):
+            if body.startswith("!"):
+                # A shell alias is a command line of its own, run with settings git hands on to it.
+                # Reading it would mean interpreting it, so it is refused.
+                return "a git shell alias ({}), which the guard does not read".format(tokens[index])
+            try:
+                words = shlex.split(body)
+            except ValueError:
+                words = None
+            if words is None or depth >= ALIAS_DEPTH:
+                return "a git alias the guard cannot follow ({})".format(tokens[index])
+            return check_git(tokens[:index] + words + tokens[index + 1 :], start, env, state, depth + 1)
     moved = sorted(CONFIG_HOME_VARS & set(env))
     if index < len(tokens) and tokens[index] == "push":
         if configured or any(k.startswith("GIT_CONFIG") for k in env):
@@ -812,6 +850,8 @@ def main():
             advice = 'Run the command again without that option, or with its value attached by =.'
         elif 'a push naming more than' in reason:
             advice = 'Push fewer branches in one call.'
+        elif 'alias' in reason:
+            advice = 'Write the git command out in full, without the alias.'
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:

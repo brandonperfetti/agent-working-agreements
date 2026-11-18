@@ -160,6 +160,7 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("git -c alias.lg='!git log' lg", "shell alias (lg)", "Write the git command out in full"),
     ("git push origin " + " ".join(["wave-1"] * 21), "more than 20 branches", "Push fewer branches"),
     ("git --no-such-option push origin feature", "does not know (--no-such-option)", "without that option"),
     ("HOME=/tmp/elsewhere git push origin feature", "HOME set on the command", "without setting that variable"),
@@ -312,6 +313,49 @@ class GuardTest(unittest.TestCase):
         self.assertIn("more than 20 branches", guard_git.check_command(many, self.on_feature) or "")
         self.assertIsNone(guard_git.check_command("git push origin " + " ".join("wave-1" for _ in range(20)), self.on_feature))
         self.assertIsNone(guard_git.check_command("git push origin " + " ".join("wave-1:wave-1" for _ in range(40)), self.on_feature))
+
+    def test_an_alias_is_read_through_its_expansion(self):
+        """Brandon's own config has `alias.ci = commit -v`: `git ci --no-verify` must not skip the hook."""
+        repo = make_repo(self.tmp.name, "aliased", "feature")
+        for name, body in (("ci", "commit -v"), ("p", "push"), ("pf", "!git push --force origin feature"), ("loop", "loop"),
+                           ("mg", "merge --no-verify"), ("st", "status"), ("odd", "push 'origin"), ("lg", "!git log --oneline"),
+                           ("gc", "push --force origin feature"), ("one", "two"), ("two", "three"), ("three", "log --oneline")):
+            git(repo, "config", "alias." + name, body)
+        for command, reason in (
+            ("git ci --no-verify -m x", "skips the commit-msg hook"),
+            ("git p origin master", "release branch"),
+            ("git P origin master", "release branch"),
+            ("git p --force origin feature", "force-push"),
+            ("git mg topic", "skips the commit-msg hook"),
+            ("git loop", "cannot follow"),
+            ("git odd", "cannot follow"),
+            ("git pf", "shell alias (pf)"),
+            ("git lg", "shell alias (lg)"),
+            ("git -c core.hooksPath=/nonexistent pf", "shell alias (pf)"),
+            ("git -c alias.x=push x origin master", "configuration setting"),
+        ):
+            with self.subTest(command=command):
+                self.assertIn(reason, guard_git.check_command(command, repo) or "")
+        # `gc` is git's own command, so the alias of that name is never used.
+        for command in ("git ci -m x", "git st", "git p origin feature", "git nosuchcommand", "git log", "git gc", "git one -1",
+                        "\n".join(["git st"] * 30)):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, repo))
+
+    def test_a_batch_of_git_reads_costs_one_alias_read(self):
+        """A thousand reads of a subcommand outside the guard's list must not cost a thousand
+        lookups: the hook has ten seconds."""
+        calls = []
+        real = guard_git.git_lines
+
+        def counting(*args, **kwargs):
+            calls.append(args)
+            return real(*args, **kwargs)
+
+        with mock.patch.object(guard_git, "git_lines", counting):
+            batch = "\n".join("git check-ref-format --branch feature/sample-{:04d}".format(n) for n in range(1000))
+            self.assertIsNone(guard_git.check_command(batch, self.on_feature))
+        self.assertEqual(len(calls), 1)
 
     def test_hook_output_is_a_deny(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")
