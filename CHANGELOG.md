@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — The commit-msg hook reads "generated with" as words (#280).** The footer
+  pattern had no word boundary, so "generated without a token" was refused as a promotional
+  footer. It now ends at one; a real footer is refused as before. The guard's copy of the pattern
+  is in its released text and is unchanged, so its push-time scan still refuses the phrase until
+  that text next changes. Why: one rejected commit on bp-portfolio. Brandon approved the lane,
+  2026-11-17. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/280).
+
 - **2026-11-17 — The git guard refuses five more call shapes (#298).** Each passed the released
   guard and did harm on a fixture: a `cd` put in the background by a single `&`, an option given
   as the value of `-o` beside `--no-dry-run` (two shapes), a named branch under

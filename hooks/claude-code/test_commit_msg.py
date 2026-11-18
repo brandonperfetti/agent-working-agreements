@@ -55,6 +55,9 @@ DECLARATION_CASES = (
     ("fix: x\n\n> " + DECLARED, "an Agent: line reads exactly"),  # a prefix is still that line's start
     ("fix: x\n\n" + DECLARED + "\n" + TRAILER, "no Co-Authored-By"),
     ("fix: x\n\n" + DECLARED + "\nGenerated with Claude Code", "no Co-Authored-By"),
+    ("fix: x\n\n\U0001f916 Generated with [Claude Code](https://claude.com/claude-code)", "no Co-Authored-By"),
+    ("fix: x\n\nGenerated with: aider", "no Co-Authored-By"),
+    ("fix: x\n\nThis commit was generated with\na tool", "no Co-Authored-By"),  # the phrase ends its line
     ("fix: x\n\nPosted by an agent on Brandon Perfetti's behalf.", "no Co-Authored-By"),
     ("fix: x\n\nhttps://claude.ai/code/session_01AbC", "no Co-Authored-By"),
     ("fix: x\n\nSee https://chatgpt.com/share/abc for the chat", "no Co-Authored-By"),
@@ -63,6 +66,15 @@ DECLARATION_CASES = (
     ("fix: x\n\n" + DECLARED + "\nAgent (Claude Code): opus", "one Agent: line per commit, not 2"),
     ("fix: x\n\n_Agent_: Claude Code \u00b7 claude-opus-5-5 \u00b7 medium", "an Agent: line reads exactly"),
     ("fix: x\n\nagent behaviour: unchanged", None),  # prose that starts with the word is not a declaration
+)
+
+# "generated with" inside a longer word is prose, not a footer (#280). The commit-msg hook passes
+# these. The guard's copy sits in its released text, which changes only with its pin
+# (test_guard_git.InvariantTest), so its push-time scan still refuses them until that moves.
+LONGER_WORD_CASES = (
+    "docs: note\n\nThe migration was generated without a token.",
+    "fix: x\n\nIDs are generated within the worker, not by the client.",
+    "fix: x\n\nGENERATED WITHOUT a seed",
 )
 
 
@@ -84,8 +96,20 @@ class AttributionCheckTest(unittest.TestCase):
         hook = load_commit_msg()
         for name in ("BANNED", "DECLARATION", "AGENT_LINE"):  # CLIENT, MODEL and EFFORT build AGENT_LINE
             with self.subTest(pattern=name):
-                self.assertEqual(getattr(hook, name).pattern, getattr(guard_git, name).pattern)
+                expected = getattr(guard_git, name).pattern
+                if name == "BANNED":  # the one difference: the hook's footer phrase ends at a word boundary (#280)
+                    self.assertEqual(expected.count("|generated with"), 1)
+                    expected = expected.replace("|generated with", r"|generated with\b")
+                self.assertEqual(getattr(hook, name).pattern, expected)
                 self.assertEqual(getattr(hook, name).flags, getattr(guard_git, name).flags)
+
+    def test_the_footer_phrase_inside_a_longer_word_is_prose(self):
+        hook = load_commit_msg().attribution_problem
+        for message in LONGER_WORD_CASES:
+            with self.subTest(message=message):
+                self.assertIsNone(hook(message))
+                # The known limit, held so that it is seen when the guard's pin moves.
+                self.assertIsNotNone(guard_git.attribution_problem(message))
 
 
 class CommitMsgTest(unittest.TestCase):
@@ -136,6 +160,7 @@ class CommitMsgTest(unittest.TestCase):
             ("--trailer key=value", "-m", "fix: x", "--trailer", "Co-Authored-By=A <a@b>"),
             ("session line", "-m", "fix: x\n\nClaude-Session: abc"),
             ("generated with", "-m", "fix: x\n\nGenerated with Claude Code"),
+            ("generated with, ending its line", "-m", "fix: x\n\nThis was generated with\na tool"),
             ("agent label", "-m", "fix: x\n\nPosted by an agent on Brandon Perfetti's behalf."),
             ("list item", "-m", "fix: x\n\n- Posted by an agent on Brandon Perfetti's behalf."),
             ("list trailer", "-m", "fix: x\n\n* " + TRAILER),
@@ -274,7 +299,8 @@ class CommitMsgTest(unittest.TestCase):
 
     def test_clean_messages_pass(self):
         for args in (("-m", "fix: costs $5 and `backticks`"), ("-m", "docs: never add a Co-Authored-By line"), ("-m", "fix: display comments posted by an agent"),
-                     ("-m", "fix: x", "--trailer", "Reviewed-by: B <b@c>")):  # "generated with…" anywhere is a match, by design
+                     ("-m", "docs: note\n\nThe migration was generated without a token."),  # a longer word is prose (#280)
+                     ("-m", "fix: x", "--trailer", "Reviewed-by: B <b@c>")):  # "generated with" as words is a match anywhere, by design
             with self.subTest(args=args):
                 result = self.commit(*args)
                 self.assertEqual(result.returncode, 0, result.stderr)
