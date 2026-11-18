@@ -99,8 +99,8 @@ by interpreting (#236).
   <new>`, then push; a comment line, or a comment after the push on its line; `cd` by a path with
   `..` or through a symlink; a `git` command behind a global option (`git --no-pager status`);
   an earlier command with a redirect (`git status > out.txt`; `2>&1` is fine); a git alias after
-  any command the guard does not read (`npm test && git st`); anything in `( )` or `$( )` earlier
-  in the call.
+  any command the guard does not read (`npm test && git st`); anything in `( )` or `$( )`, or a
+  pipe (`|`), earlier in the call. A pipe after the push is fine.
 - **A `#` on a line that continues onto the next (`\` at its end) is refused** in a git or gh
   call: the shell ends a comment at the newline, and the guard does not work out which `#` is one.
 - **A push or commit with its output redirected to a file is refused,** and so is a `git merge`:
@@ -108,15 +108,18 @@ by interpreting (#236).
   (`| tee out.txt`) and input (`<`, a heredoc) are fine. A git or gh call with `&>` is refused
   outright: write `2>&1`.
 - **Configuration moved by the environment is refused:** `GIT_CONFIG_*`, `HOME` and
-  `XDG_CONFIG_HOME` on a push, commit or merge.
+  `XDG_CONFIG_HOME` on a push, commit or merge. A `GIT_…=value` on a line of its own refuses the
+  push, commit or merge after it: whether it is exported is not known. Put it on the command.
 - **A git alias is read through its expansion,** found with the command's own `-c` settings. A
-  shell alias (`!…`) is refused whatever it runs: write the command out. A `git-<command>`
+  shell alias (`!…`) is refused whatever it runs, and so is an alias holding a backslash: write
+  the command out. A `git-<command>`
   program is read as `git <command>`; `git send-pack` and `git http-push` are refused.
 - **Global options are read or the command is refused.** `--version` and `--help` pass: git runs
   version or help, whatever follows. An option the guard does not know is refused.
 - **A bare push is resolved from the configuration git pushes by:** the current branch under
   `push.default` `simple` or `current`, `branch.<name>.merge` under `upstream`, else refused. A
-  tracking ref's name is not used. A source that is a symbolic ref goes where
+  tracking ref's name is not used. With no remote named and no `origin`, it is refused. A
+  source that is a symbolic ref goes where
   the ref points. Any `--no-dry-run` ends the dry-run exemption, on a commit too. A push naming
   more than 20 branches without a destination is refused.
 

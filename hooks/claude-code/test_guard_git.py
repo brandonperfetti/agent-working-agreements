@@ -165,6 +165,7 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("GIT_DIR=/tmp/elsewhere/.git; git push origin feature", "configuration setting", "Name the remote and the branch"),
     ("git push origin feature &> out.txt", "with &>", "Write 2>&1 in its place"),
     ("git push origin feature > out.txt", "output redirected to a file", "without the redirect"),
     ("# note \\\ng\\\nit push origin feature", "continues onto the next", "Put the command on one line"),
@@ -425,6 +426,30 @@ class GuardTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
         self.assertIsNotNone(guard_git.check_command("cd {} && git push origin HEAD".format(other), self.on_feature))
+
+    def test_the_pr_round_findings(self):
+        bare = make_repo(self.tmp.name, "no-origin", "feature")
+        git(bare, "remote", "add", "backup", os.path.join(self.tmp.name, "backup.git"))
+        self.assertIn("no origin", guard_git.check_command("git push", bare) or "")
+        git(bare, "config", "alias.zp", '"pu\\sh" origin master')
+        git(bare, "config", "alias.p", "push")
+        self.assertIn("cannot follow (zp)", guard_git.check_command("git zp", bare) or "")
+        with mock.patch.object(guard_git, "git_lines", return_value=None):  # every read fails
+            self.assertIn("could not be read", guard_git.check_command("git p origin master", bare) or "")
+        for command, reason in (
+            ("bash -c 'git commit -m x' > out.txt", "output redirected to a file"),
+            ("eval git push origin feature > out.txt", "output redirected to a file"),
+            ("GIT_DIR=/tmp/elsewhere/.git; git push origin feature", "configuration setting"),
+            ("GIT_WORK_TREE=/tmp/elsewhere\ngit commit -m x", "configuration setting"),
+            ("cd . | cat; git push origin feature", "after another command"),
+            ("git status | cat; git push origin feature", "after another command"),
+        ):
+            with self.subTest(command=command):
+                self.assertIn(reason, guard_git.check_command(command, self.on_feature) or "")
+        for command in ("git push origin feature 2>&1 | tail -3", "NOTE=1; git push origin feature", "bash -c 'git log' > out.txt",
+                        "bash -c 'git status' > out.txt; git commit -m x", "git log | head -3", "true || git push origin feature --dry-run"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
 
     def test_hook_output_is_a_deny(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")

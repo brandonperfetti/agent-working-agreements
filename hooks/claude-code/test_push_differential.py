@@ -225,6 +225,13 @@ ROWS = [
     ("simple mode on master with a tracking ref of another name", "git checkout -q master; git config remote.origin.fetch '+refs/heads/master:refs/remotes/origin/trunk'; git fetch -q origin", "git push", DENY),
     ("a push with &> onto the configuration", "git config --global push.default matching; git config --global remote.origin.url ../remote.git; git config push.default current", "git push &> .git/config", DENY),
     ("a push, then a subshell", "", "git push origin feature/x && (echo done)", ALLOW),
+    # From CodeRabbit's review of the PR
+    ("no origin, and the only remote is a mirror", "git remote remove other; git remote rename origin backup; git config --unset branch.feature/x.remote; git config --unset branch.feature/x.merge; git config push.default current; git config remote.backup.mirror true", "git push", DENY),
+    ("an alias whose quoted name holds a backslash", "git config alias.zp '\"pu\\sh\" origin HEAD:master'", "git zp", DENY),
+    ("a commit inside a shell redirected onto the configuration", "git config --global --unset core.hooksPath; git config core.hooksPath ../hooks", "bash -c 'git commit -q --allow-empty -m bypass' > .git/config", DENY),
+    ("GIT_DIR assigned but not exported", "", "cd {root}/work2 && GIT_DIR={root}/work/.git; git push origin HEAD", DENY),
+    ("a cd in a pipeline stage", "", "cd {root}/work2 && cd {root}/work | git status --short; git push origin HEAD", DENY),
+    ("a push piped to tail, after a commit", "", "git commit -q --allow-empty -m 'feat: f4' && git push 2>&1 | tail -3", ALLOW),
     # (rows for the next rule go above this line)
 ]
 
@@ -306,7 +313,7 @@ def harm(root, env, before, after):
         elif new != old and run("git -C {} merge-base --is-ancestor {} {}".format(remote, old, new), root, env, check=False).returncode:
             done.append("rewound " + name)
     done += ["created " + name for name in sorted(set(after) - set(before)) if name.split(":", 1)[1] in ("refs/heads/master", "refs/heads/main")]
-    for clone in ("work", "work2"):
+    for clone in ("work", "work2", "remote.git", "other.git"):
         # check=False: a row that redirects onto .git/config leaves a clone git cannot read.
         if "bypass" in run("git -C {} log --all --format=%s".format(clone), root, env, check=False).stdout:
             done.append("committed past the hook in " + clone)

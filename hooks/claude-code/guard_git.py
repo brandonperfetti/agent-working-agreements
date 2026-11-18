@@ -147,10 +147,10 @@ def segments(command):
         if token and set(token) <= set(SEPARATORS):
             result.append(current)
             current = []
-            if "(" in token or ")" in token:
-                # A subshell or substitution: a `cd` or assignment inside it does not carry out.
-                # Its scope is not worked out; the marker is a command the guard does not read,
-                # so a push later in the call is refused (note_prelude).
+            if "(" in token or ")" in token or ("|" in token and token != "||"):
+                # A subshell, substitution or pipeline stage: a `cd` or assignment inside it does
+                # not carry out. Its scope is not worked out; the marker is a command the guard
+                # does not read, so a push later in the call is refused (note_prelude).
                 result.append(["("])
         else:
             current.append(token)
@@ -437,6 +437,11 @@ def check_push(args, directory, selectors=(), env=None, state=None):
             if value and value[0].strip():
                 remote = value[0].strip()
                 break
+        if remote is None:
+            urls = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.(url|pushurl)$"], environment_) or []
+            if urls and not any(line.lower().startswith("remote.origin.") for line in urls):
+                # Git then pushes to the only remote there is, or fails. Which is not worked out.
+                return "a push that names no remote, in a repository with no origin"
         remote = remote or "origin"
         if re.search(r"[:/@]", remote):
             return "a push to a remote named by URL or --repo; name the remote"
@@ -485,10 +490,21 @@ def git_aliases(directory, selectors, settings, env, state):
     cache = state.setdefault("aliases", {}) if state is not None else {}
     key = (directory, tuple(selectors), tuple(settings), tuple(sorted(env.items())))
     if key not in cache:
-        text = git_lines(directory, list(selectors) + list(settings) + ["config", "--null", "--get-regexp", r"^alias\."], environment(env), raw=True)
-        entries = [entry.partition("\n") for entry in (text or "").split("\0") if entry]
-        cache[key] = {name[len("alias."):].lower(): body for name, _, body in entries}
+        # `--list` exits 0 with no alias set, so None here is a read that failed, not an empty answer.
+        text = git_lines(directory, list(selectors) + list(settings) + ["config", "--null", "--list"], environment(env), raw=True)
+        entries = [entry.partition("\n") for entry in (text or "").split("\0") if entry.lower().startswith("alias.")]
+        cache[key] = None if text is None else {name[len("alias."):].lower(): body for name, _, body in entries}
     return cache[key]
+
+
+def git_own_commands(env, state):
+    """The commands this git has of its own, which no alias replaces. One read per call, made
+    outside any repository: configuration does not change the list."""
+    if state is None:
+        state = {}
+    if "own" not in state:
+        state["own"] = set(git_lines(os.sep, ["--list-cmds=main,others"], environment(env)) or ())
+    return state["own"]
 
 
 def check_git(tokens, directory, env, state=None, depth=0):
@@ -516,20 +532,22 @@ def check_git(tokens, directory, env, state=None, depth=0):
     if index < len(tokens) and tokens[index] not in GIT_COMMANDS and state and state["unread"]:
         # The call may have changed its aliases since the guard read them: only a command this
         # git has of its own is read after another command.
-        if "own" not in state:  # one read per call; configuration does not change this list
-            state["own"] = set(git_lines(directory, ["--list-cmds=main,others"], environment(env)) or ())
-        if tokens[index] not in state["own"]:
+        if tokens[index] not in git_own_commands(env, state):
             return "a git alias or unknown git command ({}) following another command in the same call, which can change what it runs".format(tokens[index])
     if index < len(tokens) and tokens[index] not in GIT_COMMANDS:
-        body = git_aliases(directory, selectors, settings, env, state).get(tokens[index].lower())
+        aliases = git_aliases(directory, selectors, settings, env, state)
+        if aliases is None and tokens[index] not in git_own_commands(env, state):
+            return "a git alias or unknown git command ({}) whose configuration could not be read".format(tokens[index])
+        body = (aliases or {}).get(tokens[index].lower())
         # An alias named like a command this git has is never used; that list is read only then.
-        if body is not None and tokens[index] not in (git_lines(directory, ["--list-cmds=main,others"], environment(env)) or ()):
+        if body is not None and tokens[index] not in git_own_commands(env, state):
             if body.startswith("!"):
                 # A shell alias is a command line of its own, run with settings git hands on to it.
                 # Reading it would mean interpreting it, so it is refused.
                 return "a git shell alias ({}), which the guard does not read".format(tokens[index])
             try:
-                words = shlex.split(body)
+                # Git drops a backslash inside double quotes (`"pu\sh"` is push); shlex keeps it.
+                words = None if "\\" in body else shlex.split(body)
             except ValueError:
                 words = None
             if words is None or depth >= ALIAS_DEPTH:
@@ -780,6 +798,7 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
     ran before this command, for a push that follows (note_prelude)."""
     exported = dict(inherited or {})
     state = state if state is not None else {"unread": False}
+    enclosing = bool(nested and state.get("redirected"))  # `bash -c '…' > file`: the file is open for all of it
     # The shell ends a comment at its newline, backslash or not; joining continued lines below
     # would fold the next line into it. Whether a `#` here is a comment is not worked out.
     if "&>" in command and GIT_WORD.search(command):
@@ -809,7 +828,7 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
         # A redirect of output writes a file, the repository's configuration among them. Which
         # file is not worked out: the push, commit or merge it is on, and a push later in the
         # call, are refused. `2>&1` was dropped above; reading input (`<`, a heredoc) writes nothing.
-        redirected = any(re.match(r"\d*>", token) for token in tokens)
+        redirected = enclosing or any(re.match(r"\d*>", token) for token in tokens)
         state["redirected"] = redirected
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
@@ -820,9 +839,14 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
         if wrapped_with_options(prefix, command_tokens):
             return "a git or gh command behind wrapper options the guard does not parse"
         if not tokens:
-            # `NAME=value` alone sets a shell variable, and changes the environment when the name
-            # is already exported (HOME is): what follows is read with it.
-            exported.update(env)
+            # `NAME=value` alone sets a shell variable. It reaches git only when the name is
+            # already exported, which is not known here. So it never redirects the guard's own
+            # reads; a name git or `cd` would act on only adds a refusal for what follows.
+            for name in (token.split("=", 1)[0] for token in prefix if ASSIGNMENT.match(token)):
+                if name in CONFIG_HOME_VARS or name == "CDPATH":
+                    exported[name] = env[name]
+                elif name.startswith("GIT_"):
+                    exported["GIT_CONFIG_UNKNOWN_" + name] = env[name]  # read as a setting on the command: refused
             state["unread"] = state["unread"] or redirected
             continue
         head = os.path.basename(tokens[0])
@@ -893,6 +917,10 @@ def main():
             advice = 'Push fewer branches in one call.'
         elif "with &>" in reason:
             advice = "Write 2>&1 in its place, with a pipe if the output is wanted (2>&1 | tee out.txt)."
+        elif "no origin" in reason:
+            advice = "Name the remote and the branch on the command: git push <remote> <branch>."
+        elif "configuration could not be read" in reason:
+            advice = "Write the git command out in full and retry once; if it keeps failing, check the directory the command runs in."
         elif "output redirected to a file" in reason:
             advice = "Run it without the redirect; 2>&1 and a pipe (| tee out.txt) are fine."
         elif "continues onto the next" in reason:
