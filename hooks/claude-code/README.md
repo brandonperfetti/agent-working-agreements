@@ -170,6 +170,23 @@ call the released guard refuses is refused.
   options, which reach the remote's own hooks;
 - a `push.default` it fails to read, which it takes for unset.
 
+**A refusal that is not a broken setup.** "A segment begins with an option" is the released
+guard's own rule, on any command, `find` and read-only git included: a quoted or escaped word
+made only of `;`, `&`, `|`, `(` or `)` reads as a separator, and the call is refused when an
+option comes straight after it (`find . \( -name a -o -name b \) -print`,
+`find … -exec … \; -print`, `git grep -n -e '(' -- src`, `git log -S '(' --oneline`). Pick a
+form that passes, after reading what it changes:
+
+- put that word last: `git log --oneline -S '('`. In `find`, `-print -exec … \;` prints each
+  match whether or not the command succeeds, where `-exec … \; -print` prints only on success;
+- give a regular expression another character: `git grep -n '[(]' -- src`. `git log -S` takes a
+  literal string, so there the word goes last instead;
+- end a `find -exec` with `{} +` only where one run over many matches will do. That test is
+  always true, so a `-print` after it also prints the matches whose command failed, and `find`
+  exits non-zero when the command fails;
+- write a `find` test without the `\( … \)` group, with the action on each side:
+  `find . -name a -print -o -name b -print`.
+
 **A command-line parser will not be complete.** Each review of these rules has found a further
 call shape that passes, and more exist. A new one is added below the marker as a refusal with a
 differential row; it is never closed by teaching the guard to interpret more shell or more git.

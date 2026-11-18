@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-18 — The guard's README names a refusal that is not a broken setup (#302).** "A
+  segment begins with an option" refuses ordinary read-only calls: a quoted or escaped word made
+  only of `;`, `&`, `|`, `(` or `)` reads as a separator, and an option straight after it is
+  refused. The README now names the shapes and the forms that pass. The guard is unchanged, so
+  its refusal still says to hand the call back and names no rewrite; that stays open on the
+  issue. Why: Camina reported the refusal as a fault, 2026-11-18, and the rule is in the released
+  text. Brandon chose to document it rather than loosen it, 2026-11-18.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/302).
+
 - **2026-11-18 — The develop route covers every repository under `brandonperfetti/` (#300).**
   The binding named two repositories; it now names the account, with no exclusion, and says only
   Brandon merges into `master` or `main`. The fixture qualifications carry where the server
