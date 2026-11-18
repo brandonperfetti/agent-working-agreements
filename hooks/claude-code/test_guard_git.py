@@ -12,6 +12,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import guard_git  # noqa: E402
 
 BLOCKED_ANYWHERE = [
+    # A redirect of output on a push, commit or merge: the shell writes the file before git starts.
+    "git commit -m fix > -m",
+    "git commit > log -m fix",
+    'git commit -m "fix: >note" > log.txt',
+    'git commit -m fix > ">log"',
+    "git push origin feature > out.txt",
+    "git push origin feature 2> err.txt",
+    "git push origin feature >> out.txt",
+    "git merge topic >/dev/null",
     "git push --force",
     "git push -f origin feature",
     "git push -fu origin feature",
@@ -118,10 +127,6 @@ ALLOWED_ANYWHERE = [
     "git merge --no-ff -m 'merge topic' topic",
     "git merge -n topic",
     "git merge -qsort topic",
-    "git commit -m fix > -m",
-    "git commit > log -m fix",
-    'git commit -m "fix: >note" > log.txt',
-    'git commit -m fix > ">log"',
     "git commit -m fix 2>&1 | tail -1",
     "git commit -m fix & >log echo -n ok",
     'git commit -m "fix: display comments posted by an agent"',
@@ -160,6 +165,8 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("git push origin feature > out.txt", "output redirected to a file", "without the redirect"),
+    ("# note \\\ng\\\nit push origin feature", "continues onto the next", "Put the command on one line"),
     ("# note \\\ngit push origin feature", "continues onto the next", "Put the command on one line"),
     ("echo hi; git nosuchalias", "alias or unknown git command", "run it as its own call"),
     ("git send-pack origin HEAD:refs/heads/feature", "plumbing", "Use git push"),
@@ -393,6 +400,12 @@ class GuardTest(unittest.TestCase):
                 self.assertIn(reason, guard_git.check_command(command, self.on_feature) or "")
         for command in ("echo hi \\\n  there", "git log \\\n  --oneline", "git status 2>&1 && git push origin feature", "echo hi; git log; git diff",
                         "git commit --dry-run -m x", "git nosuchalias", "git status && git nosuchalias"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
+
+    def test_a_redirect_that_writes_nothing_passes(self):
+        for command in ("git push origin feature 2>&1 | tee out.txt", "git push origin feature < /dev/null", "git push origin feature 2>&1",
+                        "git commit -F - <<'EOF'\nfix: x\nEOF", "git status < /dev/null && git push origin feature", "git log > out.txt", "git status > out.txt"):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
 

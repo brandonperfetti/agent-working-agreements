@@ -211,6 +211,14 @@ ROWS = [
     ("an alias for push created earlier in the call", "", "git config alias.zz 'push origin HEAD:master' && git zz", DENY),
     ("a negated dry run on a commit", "", "git commit --dry-run --no-dry-run --no-verify -q --allow-empty -m bypass", DENY),
     ("status with stderr folded, then push", "", "git status --short 2>&1 && git push", ALLOW),
+    # From the re-review: a redirect on the command itself, and a continued word
+    ("a push redirected onto the configuration", "git config --global push.default matching; git config --global remote.origin.url ../remote.git; git config push.default current", "git push > .git/config", DENY),
+    ("a commit redirected onto the configuration that names the hooks", "git config --global --unset core.hooksPath; git config core.hooksPath ../hooks", "git commit -q --allow-empty -m bypass > .git/config", DENY),
+    ("a continued comment, then git split across lines, a push", ON_MASTER, "# note \\\ng\\\nit push origin HEAD", DENY),
+    ("a continued comment, then git split across lines, a commit", "", "# note \\\ngi\\\nt commit -q --allow-empty -m bypass --no-verify", DENY),
+    ("a push piped to tee", "", "git push 2>&1 | tee ../out.txt", ALLOW),
+    ("a push reading from /dev/null", "", "git push < /dev/null", ALLOW),
+    ("a commit from a heredoc, then push", "", "git commit -q --allow-empty -F - <<'EOF'\nfeat: f3\nEOF\ngit push", ALLOW),
     # (rows for the next rule go above this line)
 ]
 

@@ -102,6 +102,9 @@ by interpreting (#236).
   any command the guard does not read (`npm test && git st`).
 - **A `#` on a line that continues onto the next (`\` at its end) is refused** in a git or gh
   call: the shell ends a comment at the newline, and the guard does not work out which `#` is one.
+- **A push or commit with its output redirected to a file is refused,** and so is a `git merge`:
+  the shell writes the file before git starts, and it may be one git reads. `2>&1`, a pipe
+  (`| tee out.txt`) and input (`<`, a heredoc) are fine.
 - **Configuration moved by the environment is refused:** `GIT_CONFIG_*`, `HOME` and
   `XDG_CONFIG_HOME` on a push, commit or merge.
 - **A git alias is read through its expansion,** found with the command's own `-c` settings. A

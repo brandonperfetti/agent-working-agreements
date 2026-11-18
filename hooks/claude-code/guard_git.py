@@ -526,12 +526,17 @@ def check_git(tokens, directory, env, state=None, depth=0):
             if words is None or depth >= ALIAS_DEPTH:
                 return "a git alias the guard cannot follow ({})".format(tokens[index])
             return check_git(tokens[:index] + words + tokens[index + 1 :], start, env, state, depth + 1)
+    # The shell opens a redirect's file before git starts: `git push > .git/config` empties the
+    # configuration the guard has just read. Given after any more specific reason.
+    redirected = "a {} with its output redirected to a file, which the shell writes before git reads its configuration".format(tokens[index]) if index < len(tokens) and state and state.get("redirected") else None
     moved = sorted(CONFIG_HOME_VARS & set(env))
     if index < len(tokens) and tokens[index] == "push":
         if configured or any(k.startswith("GIT_CONFIG") for k in env):
             return "a push with a configuration setting on the command, which can redirect it"
         if moved:
             return "a push with {} set on the command, which moves git's configuration".format(moved[0])
+        if redirected:
+            return redirected
         return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")}, state)
     if index < len(tokens) and tokens[index] in ("commit", "merge"):
         if moved:  # the commit-msg hook is found through the configuration under HOME
@@ -545,8 +550,8 @@ def check_git(tokens, directory, env, state=None, depth=0):
         # following `--no-verify` to be read as the message.
         args = tokens[index + 1 :]
         if tokens[index] == "merge":
-            return check_commit(args, MERGE_VALUE_OPTS, MERGE_SHORTS)
-        return check_commit(args)
+            return check_commit(args, MERGE_VALUE_OPTS, MERGE_SHORTS) or redirected
+        return check_commit(args) or redirected
     return None
 
 
@@ -768,7 +773,7 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
     state = state if state is not None else {"unread": False}
     # The shell ends a comment at its newline, backslash or not; joining continued lines below
     # would fold the next line into it. Whether a `#` here is a comment is not worked out.
-    if CONTINUED_HASH.search(command) and GIT_WORD.search(command):
+    if CONTINUED_HASH.search(command) and GIT_WORD.search(command.replace("\\\n", "")):  # the word itself may be continued
         return "a git or gh call with a # on a line that continues onto the next, which the guard cannot read"
     # A descriptor duplication (`2>&1`) would split at its `&` and hide the words after it from the
     # command they belong to, so it is dropped before splitting: `gh … 2>&1 -R x/y` stays one argv.
@@ -789,12 +794,11 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
             env.update([words.pop(0).split("=", 1)])
         return check_gh(words, directory, env, sole=sole)
     for tokens in parts:
-        if len(strip_redirects(tokens)) != len(tokens):
-            # A redirect writes a file, the repository's configuration among them. Which file is
-            # not worked out: a push later in the call is refused. `2>&1` was dropped above.
-            redirected = True
-        else:
-            redirected = False
+        # A redirect of output writes a file, the repository's configuration among them. Which
+        # file is not worked out: the push, commit or merge it is on, and a push later in the
+        # call, are refused. `2>&1` was dropped above; reading input (`<`, a heredoc) writes nothing.
+        redirected = any(re.match(r"\d*>", token) for token in tokens)
+        state["redirected"] = redirected
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
@@ -875,6 +879,8 @@ def main():
             advice = 'Run the command again without that option, or with its value attached by =.'
         elif 'a push naming more than' in reason:
             advice = 'Push fewer branches in one call.'
+        elif "output redirected to a file" in reason:
+            advice = "Run it without the redirect; 2>&1 and a pipe (| tee out.txt) are fine."
         elif "continues onto the next" in reason:
             advice = "Put the command on one line, or drop the #."
         elif "alias or unknown git command" in reason:
