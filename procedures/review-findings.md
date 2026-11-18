@@ -123,27 +123,37 @@ otherwise, a dormant or missing route included, the owner merges. Merging this p
 skill, a guard or a passing source scenario activates nothing: a route is activated by a reviewed
 change to the binding after its qualification on a disposable fixture (positive and refusal cases
 on the server and on each client named), never by an otherwise unauthorized real merge. Later
-real merges are observations, not qualification.
+real merges are observations, not qualification. What qualifies is a client and the one form, so
+widening the binding's repositories needs no new fixture where the server answers the form as the
+fixture's did; a base that answers it another way (a merge queue, say) stays the owner's until
+that is qualified.
 
 **Eligible work** — routine work in the binding's scope, confirmed by the independent reviewer at
 the exact head; the producer's own label never suffices. Already-approved scope; whole-branch
 Standards and Spec acceptance at head `H` against an actual spec (a missing spec is an evidence
 gap, never a pass); no open escalation trigger; every effect of the merge known and inside the
-repository's recorded effects — workflows on the base, hosting (deploy matchers, build hooks),
-environments, webhooks and integrations; a surface that could not be read is recorded as
-uninspected, never as no effect, and "no workflow" is never "no effect". An unknown effect is
-investigation before the merge. **Never delegated:** a release; a change to authority, review or
-merge controls (an agreement, a review or merge skill, a guard hook, branch protection, the CI
-gate), which stays the owner's merge with its focused reviewer; work integrated under A4's
-no-reviewer exception. File count and Markdown-only status are no evidence.
+repository's recorded effects (its agent docs, else the reviewer's record of this merge) —
+workflows on the base, hosting (deploy matchers, build hooks), environments, webhooks and
+integrations, and closing keywords where the base is the default branch; a surface that could not
+be read is recorded as uninspected, never as no effect, and "no workflow" is never "no effect". An
+unknown effect is investigation before the merge. **Never delegated:** a release; a change to
+authority, review or merge controls (an agreement, a review or merge skill, a guard hook, branch
+protection, the CI gate), which stays the owner's merge with its focused reviewer; work integrated
+under A4's no-reviewer exception. File count and Markdown-only status are no evidence.
 
 **Before the merge.** The expected checks are named by context and source from the repository's gate
 and its PR-triggered workflows; on `H` each is present, completed, the latest run, and a success —
 skipped or neutral only where that workflow's own conditions explain it. An absent check fails; a
 repository with no expected PR check records its disposition (the full gate on the merge result,
-seen by the reviewer). Commits in the base-to-`H` range pass the author and attribution read. The
-repository has no open issue labelled `route-suspended`; a check that cannot be read counts as
-suspended, and a suspension opened after that read does not stop a merge already under way. If the
+seen by the reviewer; where its docs name no gate, the checks the reviewer names, run on that
+merge result). Any other check on `H`, an app's scan included, holds a delegated merge while it
+fails. When the independent reviewer verifies the failure is a false positive, it is cleared where
+the check is configured, by the owner or by a reviewed change the owner merges; while it is red,
+whether to merge is the owner's decision alone. The base's rules are read and name no merge
+queue; a read that fails or shows one sends the merge to the owner. Commits in the base-to-`H`
+range pass the author and attribution read. The repository has no open issue labelled
+`route-suspended`; a check that cannot be read counts as suspended, and a suspension opened after
+that read does not stop a merge already under way. If the
 base has moved since acceptance, the delivery owner gathers what the movement changes — behaviour,
 workflows, effects, the verification basis, not only paths — and the independent reviewer carries
 the acceptance forward or renews it (*Acceptance and staleness*); the producer never issues it. A
@@ -173,5 +183,6 @@ material base interaction is corrected by a normal reviewed PR into the integrat
 and effects are read, not bound by the server. A base can move between the last read and the
 merge, and the merged result can run its effects before anyone looks. A post-merge gate detects
 some faults; it bounds no other consequence and reverses no deployment or data effect. The owner
-accepted this for the binding's scope (Brandon, 2026-11-12, #264); a repository whose effects
-need more uses a stronger pre-merge control, and the release branch is never delegated.
+accepted this for the binding's scope (Brandon, 2026-11-12, #264; widened 2026-11-18, #300); a
+repository whose effects need more uses a stronger pre-merge control, and the release branch is
+never delegated.

@@ -19,6 +19,16 @@ being retrofitted onto the other.
   text. Brandon chose to document it rather than loosen it, 2026-11-18.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/302).
 
+- **2026-11-18 — The develop route covers every repository under `brandonperfetti/` (#300).**
+  The binding named two repositories; it now names the account, with no exclusion, and says only
+  Brandon merges into `master` or `main`. The fixture qualifications carry where the server
+  answers the form as the fixture's did; a queued base stays Brandon's. The guard has no
+  repository allowlist. A repository whose own instructions keep its `develop` merges his stays
+  his. *Base merges* adds: any failing check holds a delegated merge, and a false positive is
+  cleared where the check is configured; effects are recorded in agent docs or the reviewer's
+  record. Why: accepted PRs in 15 repositories waited on him in one day. Brandon decided.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/300).
+
 - **2026-11-17 — The commit-msg hook reads "generated with" as words (#280).** The footer
   pattern had no word boundary, so "generated without a token" was refused as a promotional
   footer. It now ends at one; a real footer is refused as before. The guard's copy of the pattern
