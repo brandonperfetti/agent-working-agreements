@@ -59,6 +59,8 @@ GIT_VALUE_OPTS = {"-C", "-c", "--config-env", "--git-dir", "--namespace", "--wor
 # runs, so a command that can change where a push goes, or which checkout it runs in, makes that
 # read stale. These cannot. Anything else is refused, not interpreted: the push runs in its own call.
 PRELUDE_GIT = {"add", "commit", "status"}
+# Variables that move git's configuration files, as GIT_CONFIG_* does.
+CONFIG_HOME_VARS = {"HOME", "XDG_CONFIG_HOME"}
 COMMIT_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
                      "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
                      "--pathspec-from-file"}
@@ -445,11 +447,16 @@ def check_git(tokens, directory, env, state=None):
             name, has_value, value = tokens[index].partition("=")
             selectors += [name, value] if has_value else tokens[index : index + 2]
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
+    moved = sorted(CONFIG_HOME_VARS & set(env))
     if index < len(tokens) and tokens[index] == "push":
         if configured or any(k.startswith("GIT_CONFIG") for k in env):
             return "a push with a configuration setting on the command, which can redirect it"
+        if moved:
+            return "a push with {} set on the command, which moves git's configuration".format(moved[0])
         return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")}, state)
     if index < len(tokens) and tokens[index] in ("commit", "merge"):
+        if moved:  # the commit-msg hook is found through the configuration under HOME
+            return "a commit with {} set on the command, which moves git's configuration".format(moved[0])
         # A setting that can switch the hook off or rewrite the message denies; identity and other
         # benign keys pass (`-c user.name=…`). GIT_CONFIG_* in the environment is not read: denied.
         if any(k.startswith(HOOK_KEYS) or k in HOOK_KEYS for k in keys) or any(k.startswith("GIT_CONFIG") for k in env):
@@ -770,6 +777,8 @@ def main():
             advice = "Run the push as its own call. Before it, a call may hold only NAME=value, cd to an existing directory (no .., ~, $ or symlink), git add, git commit and git status."
         elif "target branch could not be resolved" in reason:
             advice = "Name the remote and the branch on the command: git push <remote> <branch>."
+        elif "moves git's configuration" in reason:
+            advice = 'Run the command again without setting that variable.'
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:

@@ -146,6 +146,14 @@ ROWS = [
     # The commit-msg hook
     ("--no-verify", "", "git commit -q --allow-empty -m bypass --no-verify", DENY),
     ("-c core.hooksPath", "", "git -c core.hooksPath=/nonexistent-hooks commit -q --allow-empty -m bypass", DENY),
+    # HOME and XDG_CONFIG_HOME move git's configuration
+    ("HOME moved", "", "HOME=../althome git push", DENY),
+    ("HOME moved through env", "", "env HOME=../althome git push", DENY),
+    ("HOME exported", "", "export HOME=../althome; git push", DENY),
+    ("HOME assigned on its own line", "", "HOME=../althome\ngit push", DENY),
+    ("XDG_CONFIG_HOME moved", "mkdir -p ../xdg/git && cp ../matching.cfg ../xdg/git/config", "XDG_CONFIG_HOME=../xdg git push", DENY),
+    ("HOME moved on a commit, away from the hook", "", "HOME=../althome git commit -q --allow-empty -m bypass", DENY),
+    ("HOME moved on a commit inside a shell", "", "bash -c 'HOME=../althome; git commit -q --allow-empty -m bypass'", DENY),
     # (rows for the next rule go above this line)
 ]
 

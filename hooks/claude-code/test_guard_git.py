@@ -160,6 +160,9 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("HOME=/tmp/elsewhere git push origin feature", "HOME set on the command", "without setting that variable"),
+    ("XDG_CONFIG_HOME=/tmp/elsewhere git commit -m x", "XDG_CONFIG_HOME set on the command", "without setting that variable"),
+    ("HOME=/tmp/elsewhere; git merge topic", "HOME set on the command", "without setting that variable"),
 ]
 
 
