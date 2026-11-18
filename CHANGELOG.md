@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-18 — The develop route covers every repository under `brandonperfetti/` (#300).**
+  The binding named two repositories; it now names the account, with no exclusion, and says only
+  Brandon merges into `master` or `main`. The fixture qualifications carry: they are of a client
+  and the one form, and the guard reads no repository. A repository whose own instructions keep
+  its `develop` merges Brandon's stays his until they change. *Base merges* adds: a failing check
+  outside the gate holds the merge, and a false positive is cleared at its source. Why: routine,
+  accepted PRs in 15 repositories waited on him in one day. Brandon decided, 2026-11-18.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/300).
+
 - **2026-11-17 — The git guard reads a push only in the state it will run in (#236).** The
   issue's three cases were already refused; 27 other shapes passed on fixtures and moved `master`
   or forced a push: a `checkout` or `config` earlier in the same call, `HOME` moved,
