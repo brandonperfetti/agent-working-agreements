@@ -516,10 +516,27 @@ class GuardTest(unittest.TestCase):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
         self.assertIsNotNone(guard_git.check_command("cd {} && git push origin HEAD".format(other), self.on_feature))
 
+    def test_the_stand_in_findings(self):
+        for command, reason in (
+            ("git add `git checkout master` && git push origin feature", "after another command"),
+            ("git status `true`; git push origin feature", "after another command"),
+            ("echo 'unclosed; git status && git push origin feature", "unbalanced quotes"),
+        ):
+            with self.subTest(command=command):
+                self.assertRefused(reason, command, self.on_feature)
+        for command in ("echo `date`", "git log `git rev-parse HEAD`", "echo it's fine", "git push origin feature && echo `date`"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
+
     def test_the_pr_round_findings(self):
         bare = make_repo(self.tmp.name, "no-origin", "feature")
         git(bare, "remote", "add", "backup", os.path.join(self.tmp.name, "backup.git"))
         self.assertRefused("no origin", "git push", bare)
+        for name in ("Origin", "origin.backup"):  # other remotes, whatever their names resemble
+            other = make_repo(self.tmp.name, "no-origin-" + name, "feature")
+            git(other, "remote", "add", name, os.path.join(self.tmp.name, "backup.git"))
+            with self.subTest(remote=name):
+                self.assertRefused("no origin", "git push", other)
         git(bare, "config", "alias.zp", '"pu\\sh" origin master')
         git(bare, "config", "alias.p", "push")
         self.assertRefused("cannot follow (zp)", "git zp", bare)

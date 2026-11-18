@@ -827,6 +827,7 @@ EXTRA_ADVICE = (
     ("with &>", "Write 2>&1 in its place, with a pipe if the output is wanted (2>&1 | tee out.txt)."),
     ("output redirected to a file", "Run it without the redirect; 2>&1 and a pipe (| tee out.txt) are fine."),
     ("continues onto the next", "Put the command on one line, or drop the #."),
+    ("unbalanced quotes", "Close the quote, or put the text in a file and pass the file."),
     ("git's plumbing", "Use git push <remote> <branch> instead."),
     ("configuration could not be read", "Write the git command out in full and retry once; if it keeps failing, check the directory the command runs in."),
     ("alias or unknown git command", "Write the git command out in full, or run it as its own call."),
@@ -847,7 +848,7 @@ def extra_segments(command):
         lexer.commenters = ""
         tokens = list(lexer)
     except ValueError:
-        return [["("]]  # unbalanced quotes: nothing here is read, and a push in the call is the released guard's alone
+        return None  # unbalanced quotes: the call cannot be split into commands
     result, current = [], []
     for token in tokens:
         if token and set(token) <= set(SEPARATORS):
@@ -954,7 +955,8 @@ def extra_push(args, directory, selectors, env, state):
                 break
         if remote is None:
             urls = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.(url|pushurl)$"], reads) or []
-            if urls and not any(line.lower().startswith("remote.origin.") for line in urls):
+            # The remote's name is compared exactly: `Origin` and `origin.backup` are other remotes.
+            if urls and not any(line.split(" ", 1)[0] in ("remote.origin.url", "remote.origin.pushurl") for line in urls):
                 return "a push that names no remote, in a repository with no origin"  # git picks the only remote, or fails
         elif re.search(r"[:/@]", remote):
             return "a push to a remote named by URL or --repo; name the remote"
@@ -1079,7 +1081,14 @@ def extra_command(command, directory, inherited=None, nested=False, state=None):
         return "a git or gh call with a # on a line that continues onto the next, which the guard cannot read"
     if merge_bearing(command):
         return None  # one plain gh command, read whole by the released guard
-    for tokens in extra_segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command.replace("\\\n", ""))):
+    parts = extra_segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command.replace("\\\n", "")))
+    if parts is None:
+        # The released reader falls back to plain words here; the rules below cannot tell what
+        # comes before what, so a call that names git or gh is refused.
+        return "a git or gh call with unbalanced quotes, which the guard cannot split into commands" if EXTRA_GIT_WORD.search(command) else None
+    for tokens in parts:
+        if any("`" in token for token in tokens):
+            state["unread"] = True  # a backtick substitution runs a command the rules below do not read
         # A redirect of output writes a file, the repository's configuration among them. Which
         # file is not worked out. `2>&1` was dropped above; reading input writes nothing.
         redirected = enclosing or any(re.match(r"\d*>", token) for token in tokens)

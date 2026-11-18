@@ -111,6 +111,8 @@ on purpose, in its own reviewed change.
   an earlier command with a redirect (`git status > out.txt`; `2>&1` is fine); a git alias after
   any command the guard does not read (`npm test && git st`); anything in `( )` or `$( )`, or a
   pipe (`|`), earlier in the call. A pipe after the push is fine.
+- **A call the guard cannot split is refused:** a git or gh call with unbalanced quotes. A
+  backtick substitution earlier in a call refuses the push after it, as `$( )` does.
 - **A `#` on a line that continues onto the next (`\` at its end) is refused** in a git or gh
   call: the shell ends a comment at the newline, and the guard does not work out which `#` is one.
 - **A push or commit with its output redirected to a file is refused,** and so is a `git merge`:

@@ -228,6 +228,8 @@ ROWS = [
     ("a push, then a subshell", "", "git push origin feature/x && (echo done)", ALLOW),
     # From CodeRabbit's review of the PR
     ("no origin, and the only remote is a mirror", "git remote remove other; git remote rename origin backup; git config --unset branch.feature/x.remote; git config --unset branch.feature/x.merge; git config push.default current; git config remote.backup.mirror true", "git push", DENY),
+    ("no origin, and the only remote is a mirror named Origin", "git remote remove other; git remote rename origin Origin; git config --unset branch.feature/x.remote; git config --unset branch.feature/x.merge; git config push.default current; git config remote.Origin.mirror true", "git push", DENY),
+    ("a checkout inside backticks in an allowed command, then push", "", "git status `git checkout -q master` && git push origin HEAD", DENY),
     ("an alias whose quoted name holds a backslash", "git config alias.zp '\"pu\\sh\" origin HEAD:master'", "git zp", DENY),
     ("a commit inside a shell redirected onto the configuration", "git config --global --unset core.hooksPath; git config core.hooksPath ../hooks", "bash -c 'git commit -q --allow-empty -m bypass' > .git/config", DENY),
     ("GIT_DIR assigned but not exported", "", "cd {root}/work2 && GIT_DIR={root}/work/.git; git push origin HEAD", DENY),
