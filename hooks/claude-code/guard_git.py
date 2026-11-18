@@ -54,7 +54,17 @@ ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
 SEPARATORS = ";&|()\n"
-GIT_VALUE_OPTS = {"-C", "-c", "--config-env", "--git-dir", "--namespace", "--work-tree"}
+GIT_VALUE_OPTS = {"-C", "-c", "--attr-source", "--config-env", "--git-dir", "--namespace", "--shallow-file", "--work-tree"}
+# Git's other global options. `--version` and `--help` (and `-v`, `-h`) end the options: git runs
+# version or help, whatever follows. The rest are flags, or take their value attached with `=`.
+# An option the guard does not know may take the next word as its value and hide the subcommand,
+# so the command is refused.
+GIT_ENDING_FLAGS = {"-v", "--version", "-h", "--help"}
+GIT_FLAGS = {"-p", "--paginate", "-P", "--no-pager", "--no-replace-objects", "--no-lazy-fetch",
+             "--no-optional-locks", "--no-advice", "--bare", "--literal-pathspecs", "--no-literal-pathspecs",
+             "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs", "--exec-path", "--html-path",
+             "--man-path", "--info-path"}
+GIT_ATTACHED_OPTS = GIT_VALUE_OPTS | {"--exec-path", "--list-cmds"}
 # What may come before a push in the same call. The guard reads the repository before the call
 # runs, so a command that can change where a push goes, or which checkout it runs in, makes that
 # read stale. These cannot. Anything else is refused, not interpreted: the push runs in its own call.
@@ -439,6 +449,10 @@ def check_git(tokens, directory, env, state=None):
     the same call ran before it (note_prelude)."""
     index, configured, selectors, keys = 1, False, [], []
     while index < len(tokens) and tokens[index].startswith("-"):
+        if tokens[index] in GIT_ENDING_FLAGS:
+            return None
+        if not (tokens[index] in GIT_FLAGS | GIT_VALUE_OPTS or ("=" in tokens[index] and tokens[index].partition("=")[0] in GIT_ATTACHED_OPTS)):
+            return "a git command with a global option the guard does not know ({})".format(tokens[index])
         if tokens[index] == "-C" and index + 1 < len(tokens):
             directory = os.path.join(directory, os.path.expanduser(tokens[index + 1]))
         elif tokens[index] == "-c" or tokens[index].partition("=")[0] == "--config-env":
@@ -781,6 +795,8 @@ def main():
             advice = "Name the remote and the branch on the command: git push <remote> <branch>."
         elif "moves git's configuration" in reason:
             advice = 'Run the command again without setting that variable.'
+        elif 'global option the guard does not know' in reason:
+            advice = 'Run the command again without that option, or with its value attached by =.'
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:

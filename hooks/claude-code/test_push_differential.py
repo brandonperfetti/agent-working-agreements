@@ -160,6 +160,12 @@ ROWS = [
     ("--no-dry, abbreviated", "", "git push -n --no-dry origin HEAD:master", DENY),
     ("--no-dry-run before a force-push", DIVERGE, "git push --dry-run --no-dry-run --force origin feature/x", DENY),
     ("a dry run named last is still read as a push", "", "git push --no-dry-run --dry-run origin HEAD:master", DENY),
+    # Global options: read, or refused
+    ("--attr-source with its value apart", "", "git --attr-source HEAD push origin HEAD:master", DENY),
+    ("--attr-source before a force-push", DIVERGE, "git --attr-source HEAD push --force origin feature/x", DENY),
+    ("--attr-source before a commit that skips the hook", "", "git --attr-source HEAD commit -q --allow-empty -m bypass --no-verify", DENY),
+    ("a global option git does not have", "", "git --no-such-option push origin HEAD:master", DENY),
+    ("--attr-source before an ordinary push", "", "git --attr-source HEAD push origin feature/x", ALLOW),
     # (rows for the next rule go above this line)
 ]
 

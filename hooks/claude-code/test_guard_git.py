@@ -160,6 +160,7 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("git --no-such-option push origin feature", "does not know (--no-such-option)", "without that option"),
     ("HOME=/tmp/elsewhere git push origin feature", "HOME set on the command", "without setting that variable"),
     ("XDG_CONFIG_HOME=/tmp/elsewhere git commit -m x", "XDG_CONFIG_HOME set on the command", "without setting that variable"),
     ("HOME=/tmp/elsewhere; git merge topic", "HOME set on the command", "without setting that variable"),
@@ -290,6 +291,20 @@ class GuardTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIsNotNone(guard_git.check_command(command, self.on_feature))
         self.assertIsNone(guard_git.check_command("git push -n --no-dry-run origin feature", self.on_feature))
+
+    def test_git_global_options_are_read_or_refused(self):
+        for command in ("git --attr-source HEAD push origin master", "git --attr-source=HEAD push origin master", "git --shallow-file x push --force origin feature",
+                        "git --no-pager -P --no-optional-locks push origin master", "git --exec-path=/x push origin master",
+                        "git --attr-source HEAD commit --no-verify -m x"):
+            with self.subTest(command=command):
+                self.assertRegex(guard_git.check_command(command, self.on_feature) or "", "release branch|force-push|commit-msg hook")
+        for command in ("git --no-such-option push origin feature", "git --super-prefix x push origin feature", "git --no-such-option status"):
+            with self.subTest(command=command):
+                self.assertIn("does not know", guard_git.check_command(command, self.on_feature) or "")
+        for command in ("git --no-pager log", "git -p --no-replace-objects status", "git --version", "git --attr-source HEAD push origin feature",
+                        "git --version --build-options", "git -v --build-options", "git --help --all", "git -h -a"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
 
     def test_hook_output_is_a_deny(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")
