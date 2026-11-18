@@ -191,6 +191,11 @@ ROWS = [
     # Push by another name
     ("the git-push program from git's exec path", "", "$(git --exec-path)/git-push origin HEAD:master", DENY),
     ("send-pack", "", "git send-pack ../remote.git HEAD:refs/heads/master", DENY),
+    # `--version` and `--help` end git's options: what follows is not run as a command
+    ("--version before the words of a release push", "", "git --version push origin HEAD:master", ALLOW),
+    ("-v before the words of a force-push", DIVERGE, "git -v push --force origin feature/x", ALLOW),
+    ("--help before the words of a release push", "", "git --help push origin HEAD:master </dev/null >/dev/null 2>&1", ALLOW),
+    ("-h before the words of a commit that skips the hook", "", "git -h commit -q --allow-empty -m bypass --no-verify", ALLOW),
     # (rows for the next rule go above this line)
 ]
 

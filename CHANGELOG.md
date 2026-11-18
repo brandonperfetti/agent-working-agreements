@@ -10,6 +10,16 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — The git guard reads a push only in the state it will run in (#236).** The
+  issue's three cases were already refused; 27 other shapes passed on fixtures and moved `master`
+  or forced a push: a `checkout` or `config` earlier in the same call, `HOME` moved,
+  `--no-dry-run`, an unparsed global option, a git alias, `git send-pack`. A push now follows only
+  `cd`, `git add`, `commit` and `status`; the rest needs its own call. Each new refusal says what
+  to do next, and a differential test runs every shape against git itself. Why: one guard decides
+  for three clients, and a first attempt that interpreted the shell leaked in three reviews.
+  Brandon decided, 2026-11-17.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/236).
+
 - **2026-11-17 — The agent back-merge of #293 is withdrawn; a workflow carries `master` home.**
   `.github/workflows/backmerge.yml`, copied from `claude-skills`, merges `master` into `develop`
   on each push to `master`, or opens a PR; that PR is Brandon's. No agent merges into `develop`
