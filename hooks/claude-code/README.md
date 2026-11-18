@@ -170,6 +170,13 @@ call the released guard refuses is refused.
   options, which reach the remote's own hooks;
 - a `push.default` it fails to read, which it takes for unset.
 
+**A refusal that is not a broken setup.** "A segment begins with an option" is the released
+guard's own rule, on any command, `find` and read-only git included: a quoted or escaped word
+made only of `;`, `&`, `|`, `(` or `)` reads as a separator, and an option after it is refused
+(`find . \( -name a -o -name b \) -print`, `find … -exec … \; -print`, `git grep -n '(' -- src`).
+Put that word last on the command (`-print -exec … \;`), give it another character (`'[(]'`,
+`-exec … {} +`), or write a `find` test without the `\( … \)` group.
+
 **A command-line parser will not be complete.** Each review of these rules has found a further
 call shape that passes, and more exist. A new one is added below the marker as a refusal with a
 differential row; it is never closed by teaching the guard to interpret more shell or more git.
