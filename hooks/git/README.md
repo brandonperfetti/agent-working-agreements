@@ -9,6 +9,11 @@ needed. Each stops honest mistakes, not a determined bypass.
 | `commit-msg` | After the message is final, before the commit object is written | Denies a commit whose message file carries a `Co-Authored-By`, `*-Session` or "generated with" line, a session or chat link or the retired "Posted by an agent" label, more than one `Agent:` line, or one not in the shape `Agent: <client> · <model id> · <effort>` (only an `(OpenClaw)` client may omit the effort; either field may be followed by `(requested)`; a missing declaration passes); the staged diff `commit -v` appends is read too, since the hook cannot tell whether git will keep it. It also denies an author email other than `brandon@brandonperfetti.com` (RULE ZERO), printing the fix; then runs the repository's own `commit-msg` hook if it has one |
 | `chain-repo-hook` | Installed under every other hook name git knows | Runs the repository's own hook of that name, so a global `core.hooksPath` hides no repository check |
 
+"generated with" is matched as words: "generated without a token" is prose and passes (#280).
+The push-time guard (`hooks/claude-code/guard_git.py`) carries the older pattern in its released
+text, so until that text is next changed, a push of a commit holding such a phrase is still
+refused there: reword the message.
+
 ## Install or update
 
 The Claude Code installer carries this folder too:

@@ -130,7 +130,6 @@ ALLOWED_ANYWHERE = [
     "git merge -n topic",
     "git merge -qsort topic",
     "git commit -m fix 2>&1 | tail -1",
-    "git commit -m fix & >log echo -n ok",
     'git commit -m "fix: display comments posted by an agent"',
     'git -c user.name="Brandon Perfetti" commit -m "fix: x"',
     'git -c core.quotepath=off commit -m "fix: x"',
@@ -180,6 +179,16 @@ SHAPE_REFUSALS = [
     ("HOME=/tmp/elsewhere git push origin feature", "HOME set on the command", "without setting that variable"),
     ("XDG_CONFIG_HOME=/tmp/elsewhere git commit -m x", "XDG_CONFIG_HOME set on the command", "without setting that variable"),
     ("HOME=/tmp/elsewhere; git merge topic", "HOME set on the command", "without setting that variable"),
+    # #298
+    ("git status & git push origin feature", "in the background (&)", "join the commands with &&"),
+    ("git push origin feature & git status", "in the background (&)", "join the commands with &&"),
+    ("git commit -m fix & >log echo -n ok", "in the background (&)", "join the commands with &&"),
+    ("git status &\ngit merge topic", "in the background (&)", "join the commands with &&"),
+    ("bash -c 'git status & git push origin feature'", "in the background (&)", "join the commands with &&"),
+    ("git status & bash -c 'git push origin feature'", "in the background (&)", "join the commands with &&"),
+    ("git push -n --no-dry-run origin feature", "both a dry-run flag and --no-dry-run", "one of the two"),
+    ("git push -n --no-dry-run -o --dry-run origin feature", "both a dry-run flag and --no-dry-run", "one of the two"),
+    ("git push --dry-run --no-dry origin -o -n feature", "both a dry-run flag and --no-dry-run", "one of the two"),
 ]
 
 
@@ -393,7 +402,62 @@ class GuardTest(unittest.TestCase):
                         "git push -n --no-dry-run --force origin feature", "git push --no-dry-run -n origin master"):
             with self.subTest(command=command):
                 self.assertIsNotNone(guard_git.check_command(command, self.on_feature))
-        self.assertIsNone(guard_git.check_command("git push -n --no-dry-run origin feature", self.on_feature))
+        # With both flags the push is refused whatever it names: which one git obeys is not worked out (#298).
+        self.assertRefused("both a dry-run flag", "git push -n --no-dry-run origin feature", self.on_feature)
+        for command in ("git push -n origin master", "git push --dry-run -o --no-dry-run origin master", "git push --no-dry-run origin feature",
+                        "git status & git push --dry-run origin master", "git status && git commit -m 'fix: this & that'",
+                        # A quoted & is data, not the operator: these stay ordinary calls.
+                        "git add -- '&' && git commit -m 'fix: track a literal symbol filename'", "printf '%s\n' '&' && git commit --allow-empty -m 'fix: ordinary'",
+                        "git commit --message='this & that'", "git add -- '&' && git commit -m 'fix: x' && git push origin feature",
+                        "git add -- '&' && git commit --message='fix: track & file'", 'git add -- "a & b" \\& && git commit -m "fix: R&D \\" & more"'):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
+
+    def test_a_push_git_sends_elsewhere_than_the_command_says_names_the_next_step(self):
+        """#298, shapes 4 and 5: the destination under push.default=upstream, and the remote of a
+        bare push, are git's to choose from configuration; the refusal says what to name."""
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+
+        def said(command, repo):
+            payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": repo}
+            out = subprocess.run(["/usr/bin/python3", "-I", script], input=json.dumps(payload), capture_output=True, text=True, check=True).stdout
+            return json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"] if out else None
+
+        upstream = make_repo(tmp.name, "upstream", "feature")
+        git(upstream, "config", "push.default", "upstream")
+        for command in ("git push origin feature", "git push origin wave-1 feature:feature", "git push -u origin refs/heads/feature"):
+            with self.subTest(command=command):
+                text = said(command, upstream)
+                self.assertIn("without its destination under push.default=upstream", text)
+                self.assertIn("Name the destination: git push <remote> <src>:<dst>.", text)
+                self.assertNotIn("hand it back", text)
+        git(upstream, "config", "push.default", "tracking")  # the same mode by its older name
+        self.assertRefused("without its destination", "git push origin feature", upstream)
+        for command in ("git push origin feature:feature", "git push origin HEAD", "git push origin HEAD:develop", "git push --dry-run origin feature"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, upstream))
+        git(upstream, "config", "push.default", "simple")
+        self.assertIsNone(guard_git.check_command("git push origin feature", upstream))
+
+        elsewhere = make_repo(tmp.name, "elsewhere", "feature")
+        git(elsewhere, "config", "push.default", "current")
+        git(elsewhere, "config", "branch.feature.remote", "other")
+        for command in ("git push", "git push --tags", "git push -v"):
+            with self.subTest(command=command):
+                text = said(command, elsewhere)
+                self.assertIn("goes to other, a remote the author scan does not read", text)
+                self.assertIn("git push <remote> <branch>", text)
+                self.assertNotIn("hand it back", text)
+        self.assertIsNone(guard_git.check_command("git push other feature", elsewhere))  # the remote named: the scan reads it
+        self.assertIsNone(guard_git.check_command("git push --dry-run", elsewhere))
+        git(elsewhere, "update-ref", "refs/remotes/other/feature", "HEAD")
+        git(elsewhere, "config", "remote.other.url", "/nonexistent-remote")
+        git(elsewhere, "config", "remote.other.fetch", "+refs/heads/*:refs/remotes/other/*")
+        self.assertIsNone(guard_git.check_command("git push", elsewhere))  # @{push} names other: the scan read it
+        git(elsewhere, "config", "branch.feature.pushRemote", "third")  # read by the released scan itself
+        self.assertIsNone(guard_git.check_command("git push", elsewhere))
 
     def test_git_global_options_are_read_or_refused(self):
         for command in ("git --attr-source HEAD push origin master", "git --attr-source=HEAD push origin master", "git --shallow-file x push --force origin feature",

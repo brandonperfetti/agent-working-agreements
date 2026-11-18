@@ -10,6 +10,41 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-18 — The guard's README names a refusal that is not a broken setup (#302).** "A
+  segment begins with an option" refuses ordinary read-only calls: a quoted or escaped word made
+  only of `;`, `&`, `|`, `(` or `)` reads as a separator, and an option straight after it is
+  refused. The README now names the shapes and the forms that pass. The guard is unchanged, so
+  its refusal still says to hand the call back and names no rewrite; that stays open on the
+  issue. Why: Camina reported the refusal as a fault, 2026-11-18, and the rule is in the released
+  text. Brandon chose to document it rather than loosen it, 2026-11-18.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/302).
+
+- **2026-11-18 — The develop route covers every repository under `brandonperfetti/` (#300).**
+  The binding named two repositories; it now names the account, with no exclusion, and says only
+  Brandon merges into `master` or `main`. The fixture qualifications carry where the server
+  answers the form as the fixture's did; a queued base stays Brandon's. The guard has no
+  repository allowlist. A repository whose own instructions keep its `develop` merges his stays
+  his. *Base merges* adds: any failing check holds a delegated merge, and a false positive is
+  cleared where the check is configured; effects are recorded in agent docs or the reviewer's
+  record. Why: accepted PRs in 15 repositories waited on him in one day. Brandon decided.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/300).
+
+- **2026-11-17 — The commit-msg hook reads "generated with" as words (#280).** The footer
+  pattern had no word boundary, so "generated without a token" was refused as a promotional
+  footer. It now ends at one; a real footer is refused as before. The guard's copy of the pattern
+  is in its released text and is unchanged, so its push-time scan still refuses the phrase until
+  that text next changes. Why: one rejected commit on bp-portfolio. Brandon approved the lane,
+  2026-11-17. [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/280).
+
+- **2026-11-17 — The git guard refuses five more call shapes (#298).** Each passed the released
+  guard and did harm on a fixture: a `cd` put in the background by a single `&`, an option given
+  as the value of `-o` beside `--no-dry-run` (two shapes), a named branch under
+  `push.default=upstream`, and a bare push to a `branch.<name>.remote` the author scan did not
+  read. Each is now refused below the marker, with its next step and a differential row; the
+  released text is unchanged. Why: the release review of #236 found them, and Brandon took them
+  as the next change, 2026-11-17.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/298).
+
 - **2026-11-17 — The git guard reads a push only in the state it will run in (#236).** The
   issue's three cases were already refused; 27 other shapes passed on fixtures and moved `master`
   or forced a push: a `checkout` or `config` earlier in the same call, `HOME` moved,
