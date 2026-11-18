@@ -147,6 +147,11 @@ def segments(command):
         if token and set(token) <= set(SEPARATORS):
             result.append(current)
             current = []
+            if "(" in token or ")" in token:
+                # A subshell or substitution: a `cd` or assignment inside it does not carry out.
+                # Its scope is not worked out; the marker is a command the guard does not read,
+                # so a push later in the call is refused (note_prelude).
+                result.append(["("])
         else:
             current.append(token)
     result.append(current)
@@ -452,14 +457,18 @@ def check_push(args, directory, selectors=(), env=None, state=None):
         return "a push naming more than {} branches".format(BARE_SOURCES)
     targets = [destination(r, directory, selectors, env) for r in refspecs]
     if not refspecs and not tags_only:
-        # A bare push lands where `@{push}` says (push.default simple/current/upstream, pushRemote).
-        # Where that cannot be read, simple and current send the current branch to its own name or
-        # git refuses; any other mode (upstream without a tracking ref) is refused as unresolved.
-        pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment_)
-        if pushed and "/" in pushed[0]:
-            targets = [pushed[0].strip().partition("/")[2]]
+        # A bare push sends the current branch to its own name under simple and current (or git
+        # refuses it), and to branch.<name>.merge under upstream. `@{push}` is not used: it names
+        # the local tracking ref, which a fetch refspec may call something else than the branch
+        # the push updates. Any other mode is refused as unresolved.
+        branch = current_branch(directory, selectors, env)
+        if default in ("simple", "current"):
+            targets = [branch]
+        elif default in ("upstream", "tracking") and branch:
+            merge = git_lines(directory, list(selectors) + ["config", "--get", "branch.{}.merge".format(branch)], environment_)
+            targets = [re.sub(r"^refs/heads/", "", merge[0].strip()) if merge else ""]
         else:
-            targets = [current_branch(directory, selectors, env) if default in ("simple", "current") else ""]
+            targets = [""]
     if "" in targets:
         return "a push whose target branch could not be resolved"
     for target in targets:
@@ -773,6 +782,9 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
     state = state if state is not None else {"unread": False}
     # The shell ends a comment at its newline, backslash or not; joining continued lines below
     # would fold the next line into it. Whether a `#` here is a comment is not worked out.
+    if "&>" in command and GIT_WORD.search(command):
+        # The lexer splits `&>` at its `&`, so the redirect would be read as another command's.
+        return "a git or gh call with &>, which the guard cannot read"
     if CONTINUED_HASH.search(command) and GIT_WORD.search(command.replace("\\\n", "")):  # the word itself may be continued
         return "a git or gh call with a # on a line that continues onto the next, which the guard cannot read"
     # A descriptor duplication (`2>&1`) would split at its `&` and hide the words after it from the
@@ -879,6 +891,8 @@ def main():
             advice = 'Run the command again without that option, or with its value attached by =.'
         elif 'a push naming more than' in reason:
             advice = 'Push fewer branches in one call.'
+        elif "with &>" in reason:
+            advice = "Write 2>&1 in its place, with a pipe if the output is wanted (2>&1 | tee out.txt)."
         elif "output redirected to a file" in reason:
             advice = "Run it without the redirect; 2>&1 and a pipe (| tee out.txt) are fine."
         elif "continues onto the next" in reason:

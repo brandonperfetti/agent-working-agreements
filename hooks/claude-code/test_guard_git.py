@@ -165,6 +165,7 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("git push origin feature &> out.txt", "with &>", "Write 2>&1 in its place"),
     ("git push origin feature > out.txt", "output redirected to a file", "without the redirect"),
     ("# note \\\ng\\\nit push origin feature", "continues onto the next", "Put the command on one line"),
     ("# note \\\ngit push origin feature", "continues onto the next", "Put the command on one line"),
@@ -408,6 +409,22 @@ class GuardTest(unittest.TestCase):
                         "git commit -F - <<'EOF'\nfix: x\nEOF", "git status < /dev/null && git push origin feature", "git log > out.txt", "git status > out.txt"):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
+
+    def test_the_preflight_findings(self):
+        here, other = os.path.realpath(self.on_feature), os.path.realpath(self.on_master)
+        for command, reason in (
+            ("(cd {}); git push origin HEAD".format(here), "after another command"),
+            ("(cd {})\ngit push origin HEAD".format(here), "after another command"),
+            ("X=$(pwd); git push origin feature", "after another command"),
+            ("git push origin feature &> out.txt", "with &>"),
+            ("git commit -m x &>> out.txt", "with &>"),
+        ):
+            with self.subTest(command=command):
+                self.assertIn(reason, guard_git.check_command(command, self.on_master if "cd" in command else self.on_feature) or "")
+        for command in ("git push origin feature && (echo done)", "(git log)", "echo a &> out.txt", "git push origin feature >&2 2>&1"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
+        self.assertIsNotNone(guard_git.check_command("cd {} && git push origin HEAD".format(other), self.on_feature))
 
     def test_hook_output_is_a_deny(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")

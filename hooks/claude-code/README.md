@@ -99,12 +99,14 @@ by interpreting (#236).
   <new>`, then push; a comment line, or a comment after the push on its line; `cd` by a path with
   `..` or through a symlink; a `git` command behind a global option (`git --no-pager status`);
   an earlier command with a redirect (`git status > out.txt`; `2>&1` is fine); a git alias after
-  any command the guard does not read (`npm test && git st`).
+  any command the guard does not read (`npm test && git st`); anything in `( )` or `$( )` earlier
+  in the call.
 - **A `#` on a line that continues onto the next (`\` at its end) is refused** in a git or gh
   call: the shell ends a comment at the newline, and the guard does not work out which `#` is one.
 - **A push or commit with its output redirected to a file is refused,** and so is a `git merge`:
   the shell writes the file before git starts, and it may be one git reads. `2>&1`, a pipe
-  (`| tee out.txt`) and input (`<`, a heredoc) are fine.
+  (`| tee out.txt`) and input (`<`, a heredoc) are fine. A git or gh call with `&>` is refused
+  outright: write `2>&1`.
 - **Configuration moved by the environment is refused:** `GIT_CONFIG_*`, `HOME` and
   `XDG_CONFIG_HOME` on a push, commit or merge.
 - **A git alias is read through its expansion,** found with the command's own `-c` settings. A
@@ -112,8 +114,9 @@ by interpreting (#236).
   program is read as `git <command>`; `git send-pack` and `git http-push` are refused.
 - **Global options are read or the command is refused.** `--version` and `--help` pass: git runs
   version or help, whatever follows. An option the guard does not know is refused.
-- **A bare push is resolved as git resolves it:** `@{push}`, else the current branch under
-  `push.default` `simple` or `current`, else refused. A source that is a symbolic ref goes where
+- **A bare push is resolved from the configuration git pushes by:** the current branch under
+  `push.default` `simple` or `current`, `branch.<name>.merge` under `upstream`, else refused. A
+  tracking ref's name is not used. A source that is a symbolic ref goes where
   the ref points. Any `--no-dry-run` ends the dry-run exemption, on a commit too. A push naming
   more than 20 branches without a destination is refused.
 

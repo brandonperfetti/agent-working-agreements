@@ -219,6 +219,12 @@ ROWS = [
     ("a push piped to tee", "", "git push 2>&1 | tee ../out.txt", ALLOW),
     ("a push reading from /dev/null", "", "git push < /dev/null", ALLOW),
     ("a commit from a heredoc, then push", "", "git commit -q --allow-empty -F - <<'EOF'\nfeat: f3\nEOF\ngit push", ALLOW),
+    # From the CodeRabbit preflight
+    ("a cd inside a subshell, then a push from where the shell stayed", "", "cd {root}/work2 && (cd {root}/work); git push origin HEAD", DENY),
+    ("upstream mode with a tracking ref of another name", "git config remote.origin.fetch '+refs/heads/master:refs/remotes/origin/trunk'; git fetch -q origin; git config push.default upstream; git config branch.feature/x.merge refs/heads/master", "git push", DENY),
+    ("simple mode on master with a tracking ref of another name", "git checkout -q master; git config remote.origin.fetch '+refs/heads/master:refs/remotes/origin/trunk'; git fetch -q origin", "git push", DENY),
+    ("a push with &> onto the configuration", "git config --global push.default matching; git config --global remote.origin.url ../remote.git; git config push.default current", "git push &> .git/config", DENY),
+    ("a push, then a subshell", "", "git push origin feature/x && (echo done)", ALLOW),
     # (rows for the next rule go above this line)
 ]
 
@@ -301,7 +307,8 @@ def harm(root, env, before, after):
             done.append("rewound " + name)
     done += ["created " + name for name in sorted(set(after) - set(before)) if name.split(":", 1)[1] in ("refs/heads/master", "refs/heads/main")]
     for clone in ("work", "work2"):
-        if "bypass" in run("git -C {} log --all --format=%s".format(clone), root, env).stdout:
+        # check=False: a row that redirects onto .git/config leaves a clone git cannot read.
+        if "bypass" in run("git -C {} log --all --format=%s".format(clone), root, env, check=False).stdout:
             done.append("committed past the hook in " + clone)
     return done
 
