@@ -188,6 +188,9 @@ ROWS = [
     ("a shell alias for commit, the hooks path moved by -c", "git config alias.ci '!git commit'", "git -c core.hooksPath=/nonexistent-hooks ci -q --allow-empty -m bypass", DENY),
     ("an alias for an ordinary push", "git config alias.pu 'push -u origin'", "git pu feature/x", ALLOW),
     ("an alias for commit, the hook in play", "git config alias.ci 'commit -q'", "git ci --allow-empty -m bypass", ALLOW),
+    # Push by another name
+    ("the git-push program from git's exec path", "", "$(git --exec-path)/git-push origin HEAD:master", DENY),
+    ("send-pack", "", "git send-pack ../remote.git HEAD:refs/heads/master", DENY),
     # (rows for the next rule go above this line)
 ]
 

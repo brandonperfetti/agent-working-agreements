@@ -160,6 +160,7 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("git send-pack origin HEAD:refs/heads/feature", "plumbing", "Use git push"),
     ("git -c alias.lg='!git log' lg", "shell alias (lg)", "Write the git command out in full"),
     ("git push origin " + " ".join(["wave-1"] * 21), "more than 20 branches", "Push fewer branches"),
     ("git --no-such-option push origin feature", "does not know (--no-such-option)", "without that option"),
@@ -356,6 +357,21 @@ class GuardTest(unittest.TestCase):
             batch = "\n".join("git check-ref-format --branch feature/sample-{:04d}".format(n) for n in range(1000))
             self.assertIsNone(guard_git.check_command(batch, self.on_feature))
         self.assertEqual(len(calls), 1)
+
+    def test_a_push_by_another_name_is_read_or_refused(self):
+        for command, reason in (
+            ("/usr/libexec/git-core/git-push origin master", "release branch"),
+            ("git-push --force origin feature", "force-push"),
+            ("/usr/libexec/git-core/git-commit --no-verify -m x", "skips the commit-msg hook"),
+            ("git send-pack origin HEAD:refs/heads/feature", "plumbing (send-pack)"),
+            ("git-send-pack origin HEAD:refs/heads/feature", "plumbing (send-pack)"),
+            ("git http-push https://example.invalid/r.git feature", "plumbing (http-push)"),
+        ):
+            with self.subTest(command=command):
+                self.assertIn(reason, guard_git.check_command(command, self.on_feature) or "")
+        for command in ("git-push origin feature", "git-lfs status", "git-credential-osxkeychain get"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
 
     def test_hook_output_is_a_deny(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")

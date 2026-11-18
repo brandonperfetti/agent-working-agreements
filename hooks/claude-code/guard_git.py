@@ -79,6 +79,7 @@ GIT_COMMANDS = frozenset(
     "restore rev-list rev-parse revert rm shortlog show show-ref stash status submodule switch symbolic-ref "
     "tag update-index update-ref var version worktree".split()
 )
+PLUMBING_PUSHES = {"send-pack", "http-push"}  # what `git push` runs underneath; neither takes its rules
 ALIAS_DEPTH = 10  # aliases of aliases the guard follows before it calls the chain a loop
 # Variables that move git's configuration files, as GIT_CONFIG_* does.
 CONFIG_HOME_VARS = {"HOME", "XDG_CONFIG_HOME"}
@@ -499,6 +500,8 @@ def check_git(tokens, directory, env, state=None, depth=0):
             name, has_value, value = tokens[index].partition("=")
             selectors += [name, value] if has_value else tokens[index : index + 2]
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
+    if index < len(tokens) and tokens[index] in PLUMBING_PUSHES:
+        return "a push through git's plumbing ({}), which the guard does not read".format(tokens[index])
     if index < len(tokens) and tokens[index] not in GIT_COMMANDS:
         body = git_aliases(directory, selectors, settings, env, state).get(tokens[index].lower())
         # An alias named like a command this git has is never used; that list is read only then.
@@ -811,8 +814,9 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
                 if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", token):
                     reason = check_command(tokens[index + 1], directory, env, nested=True, state=state)
                     break
-        elif head == "git":
-            reason = check_git(tokens, directory, env, state)
+        elif head == "git" or head.startswith("git-"):
+            # `git-push`, as git's exec path holds it, is `git push` by another name.
+            reason = check_git(tokens if head == "git" else ["git", head[len("git-"):]] + tokens[1:], directory, env, state)
         elif head == "gh":
             reason = check_gh(tokens, directory, env, sole=sole)
         if reason:
@@ -852,6 +856,8 @@ def main():
             advice = 'Push fewer branches in one call.'
         elif 'alias' in reason:
             advice = 'Write the git command out in full, without the alias.'
+        elif "git's plumbing" in reason:
+            advice = 'Use git push <remote> <branch> instead.'
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:
