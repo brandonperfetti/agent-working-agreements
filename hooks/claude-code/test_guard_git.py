@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 """Table tests for guard_git.py. Run: /usr/bin/python3 hooks/claude-code/test_guard_git.py"""
+import ast
+import hashlib
 import json
 import os
 import subprocess
@@ -204,6 +206,93 @@ def commit_as(path, email):
     git(path, "-c", "user.email=" + email, "commit", "-q", "--allow-empty", "-m", "test")
 
 
+RELEASED_SHA256 = "5e57b35f2f967081d4719dbed2f16db1c2217c48a4f434508e22c5243180ee8d"  # guard_git.py at v2026.11.17.2
+MARKER = "# ==== additional refusals (#236): everything above this line is the guard as released ====\n"
+RELEASED_TAIL = 'if __name__ == "__main__":\n    main()\n'
+
+
+def assert_refused(case, mark, command, directory):
+    """The guard refuses the call; where the released guard alone would admit it, for this reason."""
+    reason = guard_git.check_command(command, directory)
+    case.assertIsNotNone(reason, command)
+    if guard_git.released_check(command, directory) is None:
+        case.assertIn(mark, reason)
+
+
+unittest.TestCase.assertRefused = assert_refused
+
+
+class InvariantTest(unittest.TestCase):
+    """The guard is the released guard plus refusals: it never admits what the released one refuses."""
+
+    @classmethod
+    def setUpClass(cls):
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py"), encoding="utf-8") as handle:
+            cls.source = handle.read()
+
+    def test_the_released_text_is_unchanged(self):
+        """Everything above the marker, with the two lines that closed the released file, is that
+        file byte for byte. An edit to the released logic fails here."""
+        self.assertEqual(self.source.count(MARKER), 1)
+        released, _, added = self.source.partition(MARKER)
+        self.assertEqual(hashlib.sha256((released + RELEASED_TAIL).encode("utf-8")).hexdigest(), RELEASED_SHA256)
+        self.assertTrue(added.endswith(RELEASED_TAIL))
+
+    def test_nothing_added_rebinds_a_released_name(self):
+        """The released functions look their helpers up by name when they run, so a name bound
+        again below the marker would change them. Only check_command and main are wrapped."""
+        released, _, _ = self.source.partition(MARKER)
+        first_added = released.count("\n") + 1
+
+        def bound(node):
+            if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+                return {node.name}
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                return {(alias.asname or alias.name).split(".")[0] for alias in node.names}
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, (ast.AnnAssign, ast.AugAssign)) else []
+            return {name.id for target in targets for name in ast.walk(target) if isinstance(name, ast.Name)}
+
+        before, after = set(), set()
+        for node in ast.parse(self.source).body:
+            (after if node.lineno > first_added else before).update(bound(node))
+        self.assertEqual(before & after, {"check_command", "main"})
+        # And nothing below the marker reaches into the module to rebind by another route, but in main.
+        _, _, added = self.source.partition(MARKER)
+        self.assertNotIn("globals()", added)
+        self.assertEqual(added.count("module.check_command"), 2)  # main: set for the released printer, then restored
+
+    def test_what_the_released_guard_refuses_is_refused(self):
+        """Over every command in this file's tables: a refusal by the released guard is a refusal.
+        The differential test holds the same over its rows, on real fixtures."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        repos = [make_repo(tmp.name, "inv-" + branch, branch) for branch in ("master", "feature")]
+        with mock.patch.object(guard_git, "gh_read", return_value="develop"):
+            for command in BLOCKED_ANYWHERE + ALLOWED_ANYWHERE + [row[0] for row in SHAPE_REFUSALS]:
+                for repo in repos:
+                    if guard_git.released_check(command, repo) is not None:
+                        with self.subTest(command=command):
+                            self.assertIsNotNone(guard_git.check_command(command, repo))
+
+    def test_a_released_refusal_keeps_the_released_wording(self):
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        repo = make_repo(tmp.name, "wording", "feature")
+
+        def said(command):
+            payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": repo}
+            out = subprocess.run(["/usr/bin/python3", "-I", script], input=json.dumps(payload), capture_output=True, text=True, check=True).stdout
+            return json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"]
+
+        self.assertEqual(said("git push --force origin feature"), "Blocked by ~/.claude/hooks/guard_git.py: this is a force-push. The working agreements keep that with Brandon; hand it back rather than routing around this.")
+        self.assertIn("RULE ZERO is checked by the commit-msg hook", said("git commit --no-verify -m x"))
+        # A refusal reached only by reading the command as git will: still the released wording.
+        git(repo, "config", "alias.p", "push")
+        self.assertEqual(said("git p --force origin feature"), said("git push --force origin feature"))
+        self.assertEqual(said("git --attr-source HEAD push origin master"), said("git push origin master"))
+
+
 class GuardTest(unittest.TestCase):
     def setUp(self):
         # Every PR merge here reads as one into develop; MergeBaseTest varies the base.
@@ -268,7 +357,7 @@ class GuardTest(unittest.TestCase):
                        "bash -c 'git status'", "eval git status", "x=${x:- #}", "true"):
             with self.subTest(before=before):
                 for joiner in (" && ", "; ", "\n"):
-                    self.assertIn("after another command", guard_git.check_command(before + joiner + "git push origin feature", self.on_feature) or "")
+                    self.assertRefused("after another command", before + joiner + "git push origin feature", self.on_feature)
         # A dry run and whatever follows the push are not limited.
         self.assertIsNone(guard_git.check_command("make release && git push --dry-run origin master", self.on_feature))
         self.assertIsNone(guard_git.check_command("git push origin feature && git checkout master", self.on_feature))
@@ -283,9 +372,9 @@ class GuardTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIsNotNone(guard_git.check_command(command, self.on_master))
         with mock.patch.dict(os.environ, {"CDPATH": self.tmp.name}):
-            self.assertIn("after another command", guard_git.check_command("cd on-master && git push origin feature", self.on_feature) or "")
-        self.assertIn("after another command", guard_git.check_command("CDPATH=/x; cd . && git push origin feature", self.on_feature) or "")
-        self.assertIn("after another command", guard_git.check_command("export CDPATH=/x; cd . && git push origin feature", self.on_feature) or "")
+            self.assertRefused("after another command", "cd on-master && git push origin feature", self.on_feature)
+        self.assertRefused("after another command", "CDPATH=/x; cd . && git push origin feature", self.on_feature)
+        self.assertRefused("after another command", "export CDPATH=/x; cd . && git push origin feature", self.on_feature)
 
     def test_a_shape_the_agent_can_fix_says_what_to_do_next(self):
         """A refusal of a call's shape names the next step and never says to hand it back."""
@@ -349,7 +438,7 @@ class GuardTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn(reason, guard_git.check_command(command, repo) or "")
         # After a command the guard does not read, the alias may no longer be what it was.
-        self.assertIn("alias or unknown git command (st)", guard_git.check_command("git st\ngit st", repo) or "")
+        self.assertRefused("alias or unknown git command (st)", "git st\ngit st", repo)
         # `gc` is git's own command, so the alias of that name is never used.
         for command in ("git ci -m x", "git st", "git p origin feature", "git nosuchcommand", "git log", "git gc", "git one -1",
                         "git status && git st"):
@@ -399,7 +488,7 @@ class GuardTest(unittest.TestCase):
             ("git commit --dry-run --no-dry-run --no-verify -m x", "skips the commit-msg hook"),
         ):
             with self.subTest(command=command):
-                self.assertIn(reason, guard_git.check_command(command, self.on_feature) or "")
+                self.assertRefused(reason, command, self.on_feature)
         for command in ("echo hi \\\n  there", "git log \\\n  --oneline", "git status 2>&1 && git push origin feature", "echo hi; git log; git diff",
                         "git commit --dry-run -m x", "git nosuchalias", "git status && git nosuchalias"):
             with self.subTest(command=command):
@@ -430,12 +519,12 @@ class GuardTest(unittest.TestCase):
     def test_the_pr_round_findings(self):
         bare = make_repo(self.tmp.name, "no-origin", "feature")
         git(bare, "remote", "add", "backup", os.path.join(self.tmp.name, "backup.git"))
-        self.assertIn("no origin", guard_git.check_command("git push", bare) or "")
+        self.assertRefused("no origin", "git push", bare)
         git(bare, "config", "alias.zp", '"pu\\sh" origin master')
         git(bare, "config", "alias.p", "push")
-        self.assertIn("cannot follow (zp)", guard_git.check_command("git zp", bare) or "")
+        self.assertRefused("cannot follow (zp)", "git zp", bare)
         with mock.patch.object(guard_git, "git_lines", return_value=None):  # every read fails
-            self.assertIn("could not be read", guard_git.check_command("git p origin master", bare) or "")
+            self.assertRefused("could not be read", "git p origin master", bare)
         for command, reason in (
             ("bash -c 'git commit -m x' > out.txt", "output redirected to a file"),
             ("eval git push origin feature > out.txt", "output redirected to a file"),
@@ -1018,7 +1107,7 @@ class AuthorTest(unittest.TestCase):
         # Each redirect given with -c: denied, whatever it names.
         for setting in ("push.default=upstream", "remote.origin.push=HEAD:master", "push.default=matching"):
             with self.subTest(setting=setting):
-                self.assertIn("configuration setting", guard_git.check_command("git -c {} push".format(setting), self.mine) or "")
+                self.assertRefused("configuration setting", "git -c {} push".format(setting), self.mine)
         # The same three, set in the repository's config instead.
         git(self.mine, "config", "push.default", "upstream")
         self.assertIn("release branch (master)", guard_git.check_command("git push", self.mine) or "")
@@ -1081,7 +1170,7 @@ class AuthorTest(unittest.TestCase):
 
     def test_a_failed_push_scan_denies(self):
         with mock.patch.object(guard_git, "git_lines", return_value=None):
-            self.assertIn("could not be read", guard_git.check_command("git push origin feature", self.mine) or "")
+            self.assertRefused("could not be read", "git push origin feature", self.mine)
 
     def test_push_reads_the_authors_of_unpushed_commits(self):
         commit_as(self.mine, guard_git.AUTHOR_EMAIL)
@@ -1119,8 +1208,8 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "push", "-q", "origin", "feature")
         written = "git push --no-follow-tags origin refs/tags/v2026.11.17:refs/tags/v2026.11.17"
         chained = 'git tag -a v2026.11.17 -m "In force: x" && ' + written
-        self.assertIn("after another command", guard_git.check_command(chained, self.mine) or "")
-        self.assertIn("could not be read", guard_git.check_command(written, self.mine) or "")
+        self.assertIn("could not be read", guard_git.check_command(chained, self.mine) or "")
+        self.assertRefused("could not be read", written, self.mine)
         self.assertIsNone(guard_git.check_command('git tag -a v2026.11.17 -m "In force: x"', self.mine))
         git(self.mine, "tag", "-a", "v2026.11.17", "-m", "In force: x")
         for command in (written, "git push origin v2026.11.17", "git push origin tag v2026.11.17"):

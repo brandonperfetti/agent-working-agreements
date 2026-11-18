@@ -5,7 +5,7 @@ Denies force-pushes, pushes to a release branch and PR merges into develop,
 main or master (or whose base it cannot read), per the Sans Faux profile's Git
 ritual and merge boundary, save one exact command form into develop, the
 delegated route (check_route_form; a form check, not eligibility); commits and merges that skip the commit-msg hook or
-carry a configuration override, a git alias being read through its expansion (read from the command's words as the lexer
+carry a configuration override (read from the command's words as the lexer
 splits them, so a shape that hides a flag from them skips the hook: the push-time
 scan and the read before presentation are the controls for that shape); and, best effort, pushes whose commits new to
 the destination remote's tracking refs carry another author, a banned attribution
@@ -13,14 +13,11 @@ line, or an agent declaration that is malformed or not the commit's only one
 (RULE ZERO; stale tracking refs are the documented limit, and the read before a
 delivery is presented is the complete check). The author and message
 of a commit being made are the commit-msg hook's to read (hooks/git), where git
-holds them final; this guard reads only what git has already written. A push
-is read in the state it will run in: only commands that cannot change where it
-goes may come before it in the same call (note_prelude); the rest is refused,
-not interpreted. Merges
+holds them final; this guard reads only what git has already written. Merges
 between feature, wave, lane and hotfix branches pass. It parses the command rather than grepping it,
 so a commit message that mentions `git push --force` passes. It stops honest
-mistakes, not a determined bypass: a script or another tool that pushes is not
-read (the README's limits).
+mistakes, not a determined bypass: git aliases, refspecs in shell variables and
+commands inside a quoted "$(...)" are not resolved.
 """
 import json
 import os
@@ -54,37 +51,7 @@ ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
 WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
 SEPARATORS = ";&|()\n"
-GIT_VALUE_OPTS = {"-C", "-c", "--attr-source", "--config-env", "--git-dir", "--namespace", "--shallow-file", "--work-tree"}
-# Git's other global options. `--version` and `--help` (and `-v`, `-h`) end the options: git runs
-# version or help, whatever follows. The rest are flags, or take their value attached with `=`.
-# An option the guard does not know may take the next word as its value and hide the subcommand,
-# so the command is refused.
-GIT_ENDING_FLAGS = {"-v", "--version", "-h", "--help"}
-GIT_FLAGS = {"-p", "--paginate", "-P", "--no-pager", "--no-replace-objects", "--no-lazy-fetch",
-             "--no-optional-locks", "--no-advice", "--bare", "--literal-pathspecs", "--no-literal-pathspecs",
-             "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs", "--exec-path", "--html-path",
-             "--man-path", "--info-path"}
-GIT_ATTACHED_OPTS = GIT_VALUE_OPTS | {"--exec-path", "--list-cmds"}
-# What may come before a push in the same call. The guard reads the repository before the call
-# runs, so a command that can change where a push goes, or which checkout it runs in, makes that
-# read stale. These cannot. Anything else is refused, not interpreted: the push runs in its own call.
-PRELUDE_GIT = {"add", "commit", "status"}
-CONTINUED_HASH = re.compile(r"#[^\n]*\\\n")
-GIT_WORD = re.compile(r"(?:^|[^A-Za-z0-9_])(?:git|gh)(?:[^A-Za-z0-9_]|$)")
-BARE_SOURCES = 20  # refspecs without a destination that one push may name
-# Git ignores an alias named like one of its own commands, so these are never looked up; any other
-# subcommand may be an alias for a push, a commit or a merge and is read through its expansion.
-GIT_COMMANDS = frozenset(
-    "add am apply bisect blame branch cat-file check-ignore checkout cherry cherry-pick clean clone commit "
-    "config describe diff diff-tree fetch for-each-ref format-patch gc grep hash-object help init log ls-files "
-    "ls-remote ls-tree merge merge-base mv name-rev notes pull push range-diff rebase reflog remote reset "
-    "restore rev-list rev-parse revert rm shortlog show show-ref stash status submodule switch symbolic-ref "
-    "tag update-index update-ref var version worktree".split()
-)
-PLUMBING_PUSHES = {"send-pack", "http-push"}  # what `git push` runs underneath; neither takes its rules
-ALIAS_DEPTH = 10  # aliases of aliases the guard follows before it calls the chain a loop
-# Variables that move git's configuration files, as GIT_CONFIG_* does.
-CONFIG_HOME_VARS = {"HOME", "XDG_CONFIG_HOME"}
+GIT_VALUE_OPTS = {"-C", "-c", "--config-env", "--git-dir", "--namespace", "--work-tree"}
 COMMIT_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
                      "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
                      "--pathspec-from-file"}
@@ -147,11 +114,6 @@ def segments(command):
         if token and set(token) <= set(SEPARATORS):
             result.append(current)
             current = []
-            if "(" in token or ")" in token or ("|" in token and token != "||"):
-                # A subshell, substitution or pipeline stage: a `cd` or assignment inside it does
-                # not carry out. Its scope is not worked out; the marker is a command the guard
-                # does not read, so a push later in the call is refused (note_prelude).
-                result.append(["("])
         else:
             current.append(token)
     result.append(current)
@@ -294,8 +256,8 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
                 skip = arg if bool(letter) and letter.group() in value_letters and letter.end() == len(arg) - 1 else None
     if skip:
         return "a commit whose option values cannot be read: a value is missing or looks like an option"
-    if "--dry-run" in flags and not any(flag.startswith("--no-d") for flag in flags):
-        return None  # a flag, not `-m --dry-run`; any `--no-dry-run` makes it a real commit
+    if "--dry-run" in flags:
+        return None  # a flag, not `-m --dry-run`
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
     # first value-taking letter skip the hook (`-anm msg` does; `-mn` is the message "n").
     def skips(flag):
@@ -374,22 +336,16 @@ def canonical_push(name):
 
 
 def destination(refspec, directory, selectors=(), env=None):
-    """The branch a refspec updates on the remote, `HEAD`/`@` resolved to the current branch and a
-    source that is a symbolic ref to the branch it names, which is where git sends it."""
-    source, colon, target = refspec.lstrip("+").partition(":")
+    """The branch a refspec updates on the remote, `HEAD`/`@` resolved to the current branch."""
+    source, _, target = refspec.lstrip("+").partition(":")
     branch = target or source
     if branch in ("HEAD", "@"):
         return current_branch(directory, selectors, env)
-    if not colon and not branch.startswith("-"):
-        full = git_lines(directory, list(selectors) + ["rev-parse", "--symbolic-full-name", branch], environment(env))
-        if full and full[0].startswith("refs/heads/"):
-            return full[0][len("refs/heads/"):]
     return re.sub(r"^(refs/)?heads/", "", branch)
 
 
-def check_push(args, directory, selectors=(), env=None, state=None):
-    """The rule a `git push` breaks, or None: force, release branch, redirecting configuration, then the scan.
-    `state` is what the same call ran before this push (note_prelude)."""
+def check_push(args, directory, selectors=(), env=None):
+    """The rule a `git push` breaks, or None: force, release branch, redirecting configuration, then the scan."""
     positional, options, skip = [], [], False
     for index, arg in enumerate(args):
         if skip:
@@ -408,10 +364,8 @@ def check_push(args, directory, selectors=(), env=None, state=None):
         else:
             positional.append(arg)
 
-    # A dry run writes nothing, and the pickup guard's hook probe is one. Git takes the last of
-    # `--dry-run` and `--no-dry-run`; the guard does not work out which is last: any negation
-    # (a prefix from `--no-d`) ends the exemption and the push is read as a real one.
-    if ("--dry-run" in options or "-n" in options) and not any(opt.startswith("--no-d") for opt in options):
+    # A dry run writes nothing, and the pickup guard's hook probe is one.
+    if "--dry-run" in options or "-n" in options:
         return None
     # In a short cluster, `-o` takes the rest as its value (`-ofleet`), so only letters before it count.
     short_force = any(re.fullmatch(r"-[a-zA-Z]*f[a-zA-Z]*", opt.split("o", 1)[0] if opt.startswith("-") and not opt.startswith("--") else opt) for opt in options)
@@ -420,8 +374,6 @@ def check_push(args, directory, selectors=(), env=None, state=None):
         return "a force-push"
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
-    if state and state["unread"]:
-        return "a push after another command in the same call, which can change what the push sends"
     tags_only = ("--tags" in options or "--follow-tags" in options) and not refspecs and "--tags" in options
     environment_ = environment(env)
     # The destination remote, by name: a URL or `--repo` has no tracking refs to scan against.
@@ -429,20 +381,16 @@ def check_push(args, directory, selectors=(), env=None, state=None):
     if "--repo" in options or (remote and re.search(r"[:/@]", remote)):
         return "a push to a remote named by URL or --repo; name the remote"
     if remote is None:
-        # As git chooses it: branch.<name>.pushRemote, remote.pushDefault, branch.<name>.remote, else origin.
+        # branch.<name>.pushRemote, then remote.pushDefault, then the remote `@{push}` names, else origin.
         branch = current_branch(directory, selectors, env)
-        keys = ["remote.pushDefault"] if not branch else ["branch.{}.pushRemote".format(branch), "remote.pushDefault", "branch.{}.remote".format(branch)]
-        for key in keys:
-            value = git_lines(directory, list(selectors) + ["config", "--get", key], environment_)
+        for key in (["config", "--get", "branch.{}.pushRemote".format(branch)] if branch else [None], ["config", "--get", "remote.pushDefault"]):
+            value = git_lines(directory, list(selectors) + key, environment_) if key[0] else None
             if value and value[0].strip():
                 remote = value[0].strip()
                 break
         if remote is None:
-            urls = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.(url|pushurl)$"], environment_) or []
-            if urls and not any(line.lower().startswith("remote.origin.") for line in urls):
-                # Git then pushes to the only remote there is, or fails. Which is not worked out.
-                return "a push that names no remote, in a repository with no origin"
-        remote = remote or "origin"
+            pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment_)
+            remote = pushed[0].strip().partition("/")[0] if pushed and "/" in pushed[0] else "origin"
         if re.search(r"[:/@]", remote):
             return "a push to a remote named by URL or --repo; name the remote"
     mirror = git_lines(directory, list(selectors) + ["config", "--bool", "--get", "remote.{}.mirror".format(remote)], environment_)
@@ -451,29 +399,17 @@ def check_push(args, directory, selectors=(), env=None, state=None):
     # `remote.<name>.push` maps a bare source (`feature`) or a bare push to other branches, and
     # `push.default=matching` sends every matching branch: the scan below would read the wrong
     # commits, so those are denied unless each refspec names its destination.
-    default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], environment_)
-    default = default[0].strip() if default else "simple"
     if not tags_only and (not refspecs or any(":" not in r for r in refspecs)):
         mapped = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.push$"], environment_)
-        if mapped or (not refspecs and default == "matching"):
+        default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], environment_)
+        if mapped or (not refspecs and default and default[0].strip() == "matching"):
             return "a push whose targets are chosen by remote.<name>.push or push.default, not the command"
-    # Each source without a destination costs one read of the repository; the hook has ten seconds.
-    if sum(":" not in r for r in refspecs) > BARE_SOURCES:
-        return "a push naming more than {} branches".format(BARE_SOURCES)
     targets = [destination(r, directory, selectors, env) for r in refspecs]
     if not refspecs and not tags_only:
-        # A bare push sends the current branch to its own name under simple and current (or git
-        # refuses it), and to branch.<name>.merge under upstream. `@{push}` is not used: it names
-        # the local tracking ref, which a fetch refspec may call something else than the branch
-        # the push updates. Any other mode is refused as unresolved.
-        branch = current_branch(directory, selectors, env)
-        if default in ("simple", "current"):
-            targets = [branch]
-        elif default in ("upstream", "tracking") and branch:
-            merge = git_lines(directory, list(selectors) + ["config", "--get", "branch.{}.merge".format(branch)], environment_)
-            targets = [re.sub(r"^refs/heads/", "", merge[0].strip()) if merge else ""]
-        else:
-            targets = [""]
+        # A bare push lands where `@{push}` says (push.default simple/current/upstream, pushRemote);
+        # without an upstream git sends the current branch or refuses.
+        pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment_)
+        targets = [pushed[0].strip().partition("/")[2]] if pushed and "/" in pushed[0] else [current_branch(directory, selectors, env)]
     if "" in targets:
         return "a push whose target branch could not be resolved"
     for target in targets:
@@ -484,90 +420,25 @@ def check_push(args, directory, selectors=(), env=None, state=None):
     return check_push_authors(refspecs, directory, "--tags" in options, selectors, env, remote)
 
 
-def git_aliases(directory, selectors, settings, env, state):
-    """Every alias git would find for this command, by lowercased name, read with the command's
-    own settings and environment. One read per call: a long batch of git commands costs one."""
-    cache = state.setdefault("aliases", {}) if state is not None else {}
-    key = (directory, tuple(selectors), tuple(settings), tuple(sorted(env.items())))
-    if key not in cache:
-        # `--list` exits 0 with no alias set, so None here is a read that failed, not an empty answer.
-        text = git_lines(directory, list(selectors) + list(settings) + ["config", "--null", "--list"], environment(env), raw=True)
-        entries = [entry.partition("\n") for entry in (text or "").split("\0") if entry.lower().startswith("alias.")]
-        cache[key] = None if text is None else {name[len("alias."):].lower(): body for name, _, body in entries}
-    return cache[key]
-
-
-def git_own_commands(env, state):
-    """The commands this git has of its own, which no alias replaces. One read per call, made
-    outside any repository: configuration does not change the list."""
-    if state is None:
-        state = {}
-    if "own" not in state:
-        state["own"] = set(git_lines(os.sep, ["--list-cmds=main,others"], environment(env)) or ())
-    return state["own"]
-
-
-def check_git(tokens, directory, env, state=None, depth=0):
-    """Route a `git` command: global options first, an alias through its expansion, then push,
-    commit and merge. `state` is what the same call ran before it (note_prelude)."""
-    index, configured, selectors, keys, settings, start = 1, False, [], [], [], directory
+def check_git(tokens, directory, env):
+    """Route a `git` command: global options first, then push, commit and merge."""
+    index, configured, selectors, keys = 1, False, [], []
     while index < len(tokens) and tokens[index].startswith("-"):
-        if tokens[index] in GIT_ENDING_FLAGS:
-            return None
-        if not (tokens[index] in GIT_FLAGS | GIT_VALUE_OPTS or ("=" in tokens[index] and tokens[index].partition("=")[0] in GIT_ATTACHED_OPTS)):
-            return "a git command with a global option the guard does not know ({})".format(tokens[index])
         if tokens[index] == "-C" and index + 1 < len(tokens):
             directory = os.path.join(directory, os.path.expanduser(tokens[index + 1]))
         elif tokens[index] == "-c" or tokens[index].partition("=")[0] == "--config-env":
             configured = True  # a setting for this command alone: push.default, remote.*.push, …
             setting = tokens[index + 1] if tokens[index] in ("-c", "--config-env") and index + 1 < len(tokens) else tokens[index].partition("=")[2]
             keys.append(setting.partition("=")[0].lower())
-            settings += tokens[index : index + (2 if tokens[index] in GIT_VALUE_OPTS else 1)]
         elif tokens[index].partition("=")[0] in ("--git-dir", "--work-tree"):
             name, has_value, value = tokens[index].partition("=")
             selectors += [name, value] if has_value else tokens[index : index + 2]
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
-    if index < len(tokens) and tokens[index] in PLUMBING_PUSHES:
-        return "a push through git's plumbing ({}), which the guard does not read".format(tokens[index])
-    if index < len(tokens) and tokens[index] not in GIT_COMMANDS and state and state["unread"]:
-        # The call may have changed its aliases since the guard read them: only a command this
-        # git has of its own is read after another command.
-        if tokens[index] not in git_own_commands(env, state):
-            return "a git alias or unknown git command ({}) following another command in the same call, which can change what it runs".format(tokens[index])
-    if index < len(tokens) and tokens[index] not in GIT_COMMANDS:
-        aliases = git_aliases(directory, selectors, settings, env, state)
-        if aliases is None and tokens[index] not in git_own_commands(env, state):
-            return "a git alias or unknown git command ({}) whose configuration could not be read".format(tokens[index])
-        body = (aliases or {}).get(tokens[index].lower())
-        # An alias named like a command this git has is never used; that list is read only then.
-        if body is not None and tokens[index] not in git_own_commands(env, state):
-            if body.startswith("!"):
-                # A shell alias is a command line of its own, run with settings git hands on to it.
-                # Reading it would mean interpreting it, so it is refused.
-                return "a git shell alias ({}), which the guard does not read".format(tokens[index])
-            try:
-                # Git drops a backslash inside double quotes (`"pu\sh"` is push); shlex keeps it.
-                words = None if "\\" in body else shlex.split(body)
-            except ValueError:
-                words = None
-            if words is None or depth >= ALIAS_DEPTH:
-                return "a git alias the guard cannot follow ({})".format(tokens[index])
-            return check_git(tokens[:index] + words + tokens[index + 1 :], start, env, state, depth + 1)
-    # The shell opens a redirect's file before git starts: `git push > .git/config` empties the
-    # configuration the guard has just read. Given after any more specific reason.
-    redirected = "a {} with its output redirected to a file, which the shell writes before git reads its configuration".format(tokens[index]) if index < len(tokens) and state and state.get("redirected") else None
-    moved = sorted(CONFIG_HOME_VARS & set(env))
     if index < len(tokens) and tokens[index] == "push":
         if configured or any(k.startswith("GIT_CONFIG") for k in env):
             return "a push with a configuration setting on the command, which can redirect it"
-        if moved:
-            return "a push with {} set on the command, which moves git's configuration".format(moved[0])
-        if redirected:
-            return redirected
-        return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")}, state)
+        return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")})
     if index < len(tokens) and tokens[index] in ("commit", "merge"):
-        if moved:  # the commit-msg hook is found through the configuration under HOME
-            return "a commit with {} set on the command, which moves git's configuration".format(moved[0])
         # A setting that can switch the hook off or rewrite the message denies; identity and other
         # benign keys pass (`-c user.name=…`). GIT_CONFIG_* in the environment is not read: denied.
         if any(k.startswith(HOOK_KEYS) or k in HOOK_KEYS for k in keys) or any(k.startswith("GIT_CONFIG") for k in env):
@@ -577,8 +448,8 @@ def check_git(tokens, directory, env, state=None, depth=0):
         # following `--no-verify` to be read as the message.
         args = tokens[index + 1 :]
         if tokens[index] == "merge":
-            return check_commit(args, MERGE_VALUE_OPTS, MERGE_SHORTS) or redirected
-        return check_commit(args) or redirected
+            return check_commit(args, MERGE_VALUE_OPTS, MERGE_SHORTS)
+        return check_commit(args)
     return None
 
 
@@ -765,47 +636,10 @@ def check_gh(tokens, directory, env, sole=False):
     return None
 
 
-def plain_cd(directory, words, env):
-    """The directory a literal `cd <dir>` enters, or None when the guard would have to interpret
-    the path to know: an option, `~`, an expansion or a glob, a `..`, a symbolic link in it, a
-    CDPATH search, or a path that is not a directory (the shell then stays where it was)."""
-    if len(words) != 1 or "CDPATH" in env or "CDPATH" in os.environ:
-        return None
-    word = words[0]
-    if word.startswith(("-", "~")) or re.search(r"[$`*?\[\]{}\\]", word) or ".." in word.split("/"):
-        return None
-    target = os.path.join(directory, word)
-    if not os.path.isdir(target) or os.path.realpath(target) != os.path.normpath(os.path.join(os.path.realpath(directory), word)):
-        return None
-    return target
-
-
-def note_prelude(tokens, state):
-    """Mark the call unread for a later push unless this command is one that cannot change where
-    a push goes: `export NAME=value`, or a plain `git add`, `git commit` or `git status`. A `cd`
-    is judged where the directory is tracked (check_command)."""
-    head, words = os.path.basename(tokens[0]), tokens[1:]
-    if head == "cd" or (head == "export" and all(ASSIGNMENT.match(word) for word in words)):
-        return
-    if head == "git" and words and words[0] in PRELUDE_GIT:
-        return
-    state["unread"] = True
-
-
-def check_command(command, directory, inherited=None, nested=False, state=None):
+def check_command(command, directory, inherited=None, nested=False):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment;
-    `nested` marks a command read from inside `eval` or a shell's `-c`; `state` is what the call
-    ran before this command, for a push that follows (note_prelude)."""
+    `nested` marks a command read from inside `eval` or a shell's `-c`."""
     exported = dict(inherited or {})
-    state = state if state is not None else {"unread": False}
-    enclosing = bool(nested and state.get("redirected"))  # `bash -c '…' > file`: the file is open for all of it
-    # The shell ends a comment at its newline, backslash or not; joining continued lines below
-    # would fold the next line into it. Whether a `#` here is a comment is not worked out.
-    if "&>" in command and GIT_WORD.search(command):
-        # The lexer splits `&>` at its `&`, so the redirect would be read as another command's.
-        return "a git or gh call with &>, which the guard cannot read"
-    if CONTINUED_HASH.search(command) and GIT_WORD.search(command.replace("\\\n", "")):  # the word itself may be continued
-        return "a git or gh call with a # on a line that continues onto the next, which the guard cannot read"
     # A descriptor duplication (`2>&1`) would split at its `&` and hide the words after it from the
     # command they belong to, so it is dropped before splitting: `gh … 2>&1 -R x/y` stays one argv.
     # The shell also joins a backslash-newline before reading words.
@@ -825,11 +659,6 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
             env.update([words.pop(0).split("=", 1)])
         return check_gh(words, directory, env, sole=sole)
     for tokens in parts:
-        # A redirect of output writes a file, the repository's configuration among them. Which
-        # file is not worked out: the push, commit or merge it is on, and a push later in the
-        # call, are refused. `2>&1` was dropped above; reading input (`<`, a heredoc) writes nothing.
-        redirected = enclosing or any(re.match(r"\d*>", token) for token in tokens)
-        state["redirected"] = redirected
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
@@ -839,15 +668,6 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
         if wrapped_with_options(prefix, command_tokens):
             return "a git or gh command behind wrapper options the guard does not parse"
         if not tokens:
-            # `NAME=value` alone sets a shell variable. It reaches git only when the name is
-            # already exported, which is not known here. So it never redirects the guard's own
-            # reads; a name git or `cd` would act on only adds a refusal for what follows.
-            for name in (token.split("=", 1)[0] for token in prefix if ASSIGNMENT.match(token)):
-                if name in CONFIG_HOME_VARS or name == "CDPATH":
-                    exported[name] = env[name]
-                elif name.startswith("GIT_"):
-                    exported["GIT_CONFIG_UNKNOWN_" + name] = env[name]  # read as a setting on the command: refused
-            state["unread"] = state["unread"] or redirected
             continue
         head = os.path.basename(tokens[0])
         reason = None
@@ -859,30 +679,21 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
             return "a git or gh command whose arguments arrive through xargs and are not visible here"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
-        elif head == "cd":
-            entered = plain_cd(directory, tokens[1:], env)  # `CDPATH=x cd dir` counts too
-            if entered:
-                directory = entered
-            else:
-                state["unread"] = True  # where a later push would run is not known
-                if len(tokens) == 2:  # as before, for the reads of what follows
-                    directory = os.path.join(directory, os.path.expanduser(tokens[1]))
+        elif head == "cd" and len(tokens) == 2:
+            directory = os.path.join(directory, os.path.expanduser(tokens[1]))
         elif head == "eval":
-            reason = check_command(" ".join(tokens[1:]), directory, env, nested=True, state=state)
+            reason = check_command(" ".join(tokens[1:]), directory, env, nested=True)
         elif head in SHELLS:
             for index, token in enumerate(tokens[:-1]):
                 if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", token):
-                    reason = check_command(tokens[index + 1], directory, env, nested=True, state=state)
+                    reason = check_command(tokens[index + 1], directory, env, nested=True)
                     break
-        elif head == "git" or head.startswith("git-"):
-            # `git-push`, as git's exec path holds it, is `git push` by another name.
-            reason = check_git(tokens if head == "git" else ["git", head[len("git-"):]] + tokens[1:], directory, env, state)
+        elif head == "git":
+            reason = check_git(tokens, directory, env)
         elif head == "gh":
             reason = check_gh(tokens, directory, env, sole=sole)
         if reason:
             return reason
-        note_prelude(tokens, state)
-        state["unread"] = state["unread"] or redirected
     return None
 
 
@@ -904,33 +715,6 @@ def main():
             advice = "Give each -m, -F, --author or --trailer a value that begins with a word, not with -, <, > or a digit followed by < or > (2>, 2<), so the guard can read the command."
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
-        # A shape the agent can fix says what to do next; only what is Brandon's says hand it back.
-        elif "after another command" in reason:
-            advice = "Run the push as its own call. Before it, a call may hold only NAME=value, cd to an existing directory (no .., ~, $ or symlink), git add, git commit and git status."
-        elif "target branch could not be resolved" in reason:
-            advice = "Name the remote and the branch on the command: git push <remote> <branch>."
-        elif "moves git's configuration" in reason:
-            advice = 'Run the command again without setting that variable.'
-        elif 'global option the guard does not know' in reason:
-            advice = 'Run the command again without that option, or with its value attached by =.'
-        elif 'a push naming more than' in reason:
-            advice = 'Push fewer branches in one call.'
-        elif "with &>" in reason:
-            advice = "Write 2>&1 in its place, with a pipe if the output is wanted (2>&1 | tee out.txt)."
-        elif "no origin" in reason:
-            advice = "Name the remote and the branch on the command: git push <remote> <branch>."
-        elif "configuration could not be read" in reason:
-            advice = "Write the git command out in full and retry once; if it keeps failing, check the directory the command runs in."
-        elif "output redirected to a file" in reason:
-            advice = "Run it without the redirect; 2>&1 and a pipe (| tee out.txt) are fine."
-        elif "continues onto the next" in reason:
-            advice = "Put the command on one line, or drop the #."
-        elif "alias or unknown git command" in reason:
-            advice = "Write the git command out in full, or run it as its own call."
-        elif "alias" in reason:
-            advice = "Write the git command out in full, without the alias."
-        elif "git's plumbing" in reason:
-            advice = 'Use git push <remote> <branch> instead.'
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:
@@ -977,6 +761,403 @@ def main():
                 }
             )
         )
+
+
+# ==== additional refusals (#236): everything above this line is the guard as released ====
+#
+# The text above is guard_git.py as released at v2026.11.17.2, byte for byte but for its last two
+# lines (`if __name__ == "__main__": main()`), which now close this file. Nothing below edits it
+# or rebinds a name it uses, except `check_command` and `main`, which are wrapped:
+#
+#     refuse = released_check(call) or extra_refusal(call)
+#
+# So this guard never admits a call the released guard refuses, however wrong the code below is.
+# A call is admitted only when the released check admits the call as written, AND the released
+# check admits the same command as git will read it (an alias expanded, a global option the
+# released reader did not know dropped), AND no rule below refuses. A rewrite that fails refuses.
+# The rewritten form is only ever an extra question; it never replaces the original.
+#
+# The rules below refuse; none interprets the shell in order to admit a push. The guard reads the
+# repository before the call runs, so where it would have to work out what an earlier command,
+# a redirect, a subshell or an assignment does, it refuses and names the next step.
+# test_guard_git.py holds the three properties: the released text's hash, no rebinding, and
+# released-refuses-implies-refuses over every table.
+import io
+
+released_check = check_command
+released_main = main
+
+# What may come before a push in the same call: these cannot change where it goes.
+EXTRA_PRELUDE_GIT = {"add", "commit", "status"}
+# Variables that move git's configuration files, as GIT_CONFIG_* does.
+EXTRA_CONFIG_HOME_VARS = {"HOME", "XDG_CONFIG_HOME"}
+EXTRA_BARE_SOURCES = 20  # refspecs without a destination that one push may name: each costs a read
+EXTRA_ALIAS_DEPTH = 10  # aliases of aliases followed before the chain is called a loop
+EXTRA_PLUMBING = {"send-pack", "http-push"}  # what `git push` runs underneath; neither takes its rules
+EXTRA_CONTINUED_HASH = re.compile(r"#[^\n]*\\\n")
+EXTRA_GIT_WORD = re.compile(r"(?:^|[^A-Za-z0-9_])(?:git|gh)(?:[^A-Za-z0-9_]|$)")
+# Git's global options. `--version` and `--help` end them: nothing is added to the released
+# verdict for such a call. The rest are flags, or take a value; one not listed here may take the
+# next word as its value and hide the subcommand, so the command is refused.
+EXTRA_ENDING_FLAGS = {"-v", "--version", "-h", "--help"}
+EXTRA_FLAGS = {"-p", "--paginate", "-P", "--no-pager", "--no-replace-objects", "--no-lazy-fetch",
+               "--no-optional-locks", "--no-advice", "--bare", "--literal-pathspecs", "--no-literal-pathspecs",
+               "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs", "--exec-path", "--html-path",
+               "--man-path", "--info-path"}
+EXTRA_VALUE_OPTS = GIT_VALUE_OPTS | {"--attr-source", "--shallow-file"}
+EXTRA_ATTACHED_OPTS = EXTRA_VALUE_OPTS | {"--exec-path", "--list-cmds"}
+# Git ignores an alias named like one of its own commands, so these are never looked up; any other
+# subcommand may be an alias for a push, a commit or a merge.
+EXTRA_GIT_COMMANDS = frozenset(
+    "add am apply bisect blame branch cat-file check-ignore checkout cherry cherry-pick clean clone commit "
+    "config describe diff diff-tree fetch for-each-ref format-patch gc grep hash-object help init log ls-files "
+    "ls-remote ls-tree merge merge-base mv name-rev notes pull push range-diff rebase reflog remote reset "
+    "restore rev-list rev-parse revert rm shortlog show show-ref stash status submodule switch symbolic-ref "
+    "tag update-index update-ref var version worktree".split()
+)
+# The next step for each refusal made below. A refusal that is Brandon's to lift (a release
+# branch, a force-push) is not here: it takes the released guard's own closing sentence.
+EXTRA_ADVICE = (
+    ("after another command", "Run the push as its own call. Before it, a call may hold only NAME=value, cd to an existing directory (no .., ~, $ or symlink), git add, git commit and git status."),
+    ("moves git's configuration", "Run the command again without setting that variable."),
+    ("global option the guard does not know", "Run the command again without that option, or with its value attached by =."),
+    ("target branch could not be resolved", "Name the remote and the branch on the command: git push <remote> <branch>."),
+    ("no origin", "Name the remote and the branch on the command: git push <remote> <branch>."),
+    ("naming more than", "Push fewer branches in one call."),
+    ("with &>", "Write 2>&1 in its place, with a pipe if the output is wanted (2>&1 | tee out.txt)."),
+    ("output redirected to a file", "Run it without the redirect; 2>&1 and a pipe (| tee out.txt) are fine."),
+    ("continues onto the next", "Put the command on one line, or drop the #."),
+    ("git's plumbing", "Use git push <remote> <branch> instead."),
+    ("configuration could not be read", "Write the git command out in full and retry once; if it keeps failing, check the directory the command runs in."),
+    ("alias or unknown git command", "Write the git command out in full, or run it as its own call."),
+    ("alias", "Write the git command out in full, without the alias."),
+)
+
+
+def extra_segments(command):
+    """The released `segments`, with one addition: a `(`, `)` or `|` leaves a marker segment. A
+    subshell, substitution or pipeline stage does not carry a `cd` or an assignment out of it; its
+    scope is not worked out. The marker is a command the rules below do not read, so a push later
+    in the call is refused."""
+    command = HEREDOC.sub(drop_heredoc, command)
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=SEPARATORS)
+        lexer.whitespace = " \t\r"
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        tokens = list(lexer)
+    except ValueError:
+        return [["("]]  # unbalanced quotes: nothing here is read, and a push in the call is the released guard's alone
+    result, current = [], []
+    for token in tokens:
+        if token and set(token) <= set(SEPARATORS):
+            result.append(current)
+            current = []
+            if "(" in token or ")" in token or ("|" in token and token != "||"):
+                result.append(["("])
+        else:
+            current.append(token)
+    result.append(current)
+    return result
+
+
+def extra_plain_cd(directory, words, env):
+    """The directory a literal `cd <dir>` enters, or None when the path would have to be
+    interpreted to know: an option, `~`, an expansion or a glob, a `..`, a symbolic link in it, a
+    CDPATH search, or a path that is not a directory (the shell then stays where it was)."""
+    if len(words) != 1 or "CDPATH" in env or "CDPATH" in os.environ:
+        return None
+    word = words[0]
+    if word.startswith(("-", "~")) or re.search(r"[$`*?\[\]{}\\]", word) or ".." in word.split("/"):
+        return None
+    target = os.path.join(directory, word)
+    if not os.path.isdir(target) or os.path.realpath(target) != os.path.normpath(os.path.join(os.path.realpath(directory), word)):
+        return None
+    return target
+
+
+def extra_note_prelude(tokens, state):
+    """Mark the call unread for a later push unless this command cannot change where a push goes:
+    `export NAME=value`, or a plain `git add`, `git commit` or `git status`. A `cd` is judged
+    where the directory is tracked (extra_command)."""
+    head, words = os.path.basename(tokens[0]), tokens[1:]
+    if head == "cd" or (head == "export" and all(ASSIGNMENT.match(word) for word in words)):
+        return
+    if head == "git" and words and words[0] in EXTRA_PRELUDE_GIT:
+        return
+    state["unread"] = True
+
+
+def extra_aliases(directory, selectors, settings, env, state):
+    """Every alias git would find for this command, by lowercased name, read with the command's
+    own settings and environment; None when the read fails. One read per call."""
+    cache = state.setdefault("aliases", {})
+    key = (directory, tuple(selectors), tuple(settings), tuple(sorted(env.items())))
+    if key not in cache:
+        # `--list` exits 0 with no alias set, so None here is a failed read, not an empty answer.
+        text = git_lines(directory, list(selectors) + list(settings) + ["config", "--null", "--list"], environment(env), raw=True)
+        entries = [entry.partition("\n") for entry in (text or "").split("\0") if entry.lower().startswith("alias.")]
+        cache[key] = None if text is None else {name[len("alias."):].lower(): body for name, _, body in entries}
+    return cache[key]
+
+
+def extra_own_commands(env, state):
+    """The commands this git has of its own, which no alias replaces. One read per call, made
+    outside any repository: configuration does not change the list."""
+    if "own" not in state:
+        state["own"] = set(git_lines(os.sep, ["--list-cmds=main,others"], environment(env)) or ())
+    return state["own"]
+
+
+def extra_push(args, directory, selectors, env, state):
+    """What the rules below refuse in a `git push` the released guard has admitted, or None."""
+    positional, options, skip = [], [], False
+    for index, arg in enumerate(args):  # the released reader's own walk of the arguments
+        if skip:
+            skip = False
+        elif arg == "--":
+            positional.extend(args[index + 1 :])
+            break
+        elif arg.startswith("-"):
+            name, has_value, _ = arg.partition("=")
+            name = canonical_push(name)
+            options.append(name)
+            letters = arg[1:] if not arg.startswith("--") else ""
+            skip = (name in PUSH_VALUE_OPTS and not has_value) or (letters.isalpha() and "o" in letters and letters.index("o") == len(letters) - 1)
+        else:
+            positional.append(arg)
+    if "--dry-run" in options or "-n" in options:
+        if not any(opt.startswith("--no-d") for opt in options):
+            return None  # a dry run writes nothing
+        # Git takes the last of `--dry-run` and `--no-dry-run`. Which is last is not worked out:
+        # with any negation the push is read as a real one, by the released check first.
+        real = [arg for arg in args if arg != "-n" and canonical_push(arg.partition("=")[0]) != "--dry-run"]
+        reason = check_push(real, directory, selectors, env)
+        if reason:
+            return reason
+    if state["unread"]:
+        return "a push after another command in the same call, which can change what the push sends"
+    if state.get("redirected"):
+        return "a push with its output redirected to a file, which the shell writes before git reads its configuration"
+    refspecs = positional[1:]
+    tags_only = ("--tags" in options or "--follow-tags" in options) and not refspecs and "--tags" in options
+    reads = environment(env)
+    branch = current_branch(directory, selectors, env)
+    if not positional and "--repo" not in options:
+        # The remote as git chooses it: branch.<name>.pushRemote, remote.pushDefault,
+        # branch.<name>.remote, else origin. The released reader stops short of the third.
+        remote = None
+        for key in (["branch.{}.pushRemote".format(branch), "remote.pushDefault", "branch.{}.remote".format(branch)] if branch else ["remote.pushDefault"]):
+            value = git_lines(directory, list(selectors) + ["config", "--get", key], reads)
+            if value and value[0].strip():
+                remote = value[0].strip()
+                break
+        if remote is None:
+            urls = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.(url|pushurl)$"], reads) or []
+            if urls and not any(line.lower().startswith("remote.origin.") for line in urls):
+                return "a push that names no remote, in a repository with no origin"  # git picks the only remote, or fails
+        elif re.search(r"[:/@]", remote):
+            return "a push to a remote named by URL or --repo; name the remote"
+        else:
+            mirror = git_lines(directory, list(selectors) + ["config", "--bool", "--get", "remote.{}.mirror".format(remote)], reads)
+            if mirror and mirror[0].strip() == "true":
+                return "a push to a mirror remote, which rewrites and deletes every ref"
+    bare = [r.lstrip("+") for r in refspecs if ":" not in r and r.lstrip("+") not in ("HEAD", "@") and not r.lstrip("+").startswith("-")]
+    if len(bare) > EXTRA_BARE_SOURCES:
+        return "a push naming more than {} branches".format(EXTRA_BARE_SOURCES)
+    for source in bare:
+        # A source that is a symbolic ref is pushed to the branch it names.
+        full = git_lines(directory, list(selectors) + ["rev-parse", "--symbolic-full-name", source], reads)
+        if full and full[0].startswith("refs/heads/") and full[0][len("refs/heads/"):] in RELEASE_BRANCHES:
+            return "a push to a release branch ({})".format(full[0][len("refs/heads/"):])
+    if not refspecs and not tags_only:
+        # A bare push sends the current branch to its own name under simple and current, and to
+        # branch.<name>.merge under upstream. The released reader takes the name of the tracking
+        # ref, which a fetch refspec may call something else than the branch the push updates.
+        default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], reads)
+        default = default[0].strip() if default else "simple"
+        if default in ("simple", "current"):
+            target = branch
+        elif default in ("upstream", "tracking") and branch:
+            merge = git_lines(directory, list(selectors) + ["config", "--get", "branch.{}.merge".format(branch)], reads)
+            target = re.sub(r"^refs/heads/", "", merge[0].strip()) if merge else ""
+        else:
+            target = ""
+        if not target:
+            return "a push whose target branch could not be resolved"
+        if target in RELEASE_BRANCHES:
+            return "a push to a release branch ({})".format(target)
+    return None
+
+
+def extra_git(tokens, directory, env, state, depth=0):
+    """What the rules below refuse in one `git` command the released guard has admitted, or None."""
+    index, selectors, settings, start = 1, [], [], directory
+    released_options = []  # the global options the released reader understands, in order
+    while index < len(tokens) and tokens[index].startswith("-"):
+        token = tokens[index]
+        if token in EXTRA_ENDING_FLAGS:
+            return None  # git runs version or help: nothing to add to the released verdict
+        name = token.partition("=")[0]
+        if not (token in EXTRA_FLAGS | EXTRA_VALUE_OPTS or ("=" in token and name in EXTRA_ATTACHED_OPTS)):
+            return "a git command with a global option the guard does not know ({})".format(token)
+        chunk = tokens[index : index + (2 if token in EXTRA_VALUE_OPTS else 1)]
+        if token == "-C" and len(chunk) == 2:
+            directory = os.path.join(directory, os.path.expanduser(chunk[1]))
+        elif token == "-c" or name == "--config-env":
+            settings += chunk
+        elif name in ("--git-dir", "--work-tree"):
+            selectors += [name, token.partition("=")[2]] if "=" in token else chunk
+        if token in GIT_VALUE_OPTS or ("=" in token and name in GIT_VALUE_OPTS):
+            released_options += chunk
+        index += len(chunk)
+    if index >= len(tokens):
+        return None
+    sub, rest = tokens[index], tokens[index + 1 :]
+    if sub in EXTRA_PLUMBING:
+        return "a push through git's plumbing ({}), which the guard does not read".format(sub)
+    if sub not in EXTRA_GIT_COMMANDS:
+        own = extra_own_commands(env, state)
+        if state["unread"] and sub not in own:
+            # The call may have changed its aliases since they were read.
+            return "a git alias or unknown git command ({}) following another command in the same call, which can change what it runs".format(sub)
+        aliases = extra_aliases(directory, selectors, settings, env, state)
+        if aliases is None and sub not in own:
+            return "a git alias or unknown git command ({}) whose configuration could not be read".format(sub)
+        body = (aliases or {}).get(sub.lower())
+        if body is not None and sub not in own:  # git never uses an alias named like a command it has
+            if body.startswith("!"):
+                # A shell alias is a command line of its own, run with settings git hands on to it.
+                return "a git shell alias ({}), which the guard does not read".format(sub)
+            try:
+                # Git drops a backslash inside double quotes (`"pu\sh"` is push); the lexer keeps it.
+                words = None if "\\" in body else shlex.split(body)
+            except ValueError:
+                words = None
+            if not words or depth >= EXTRA_ALIAS_DEPTH:
+                return "a git alias the guard cannot follow ({})".format(sub)
+            return extra_git(tokens[:index] + words + rest, start, env, state, depth + 1)
+    if sub not in ("push", "commit", "merge"):
+        return None
+    # The released guard's verdict on the command as git will read it: the alias expanded, the
+    # options it did not know dropped. An extra question only; its answer can add a refusal.
+    reason = check_git(["git"] + released_options + [sub] + rest, start, env)
+    if reason:
+        return reason
+    moved = sorted(EXTRA_CONFIG_HOME_VARS & set(env))
+    if moved:  # the commit-msg hook, too, is found through the configuration under HOME
+        return "a {} with {} set on the command, which moves git's configuration".format("push" if sub == "push" else "commit", moved[0])
+    if sub == "push":
+        return extra_push(rest, directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")}, state)
+    flags = [arg for arg in rest[: rest.index("--") if "--" in rest else len(rest)]]
+    if "--dry-run" in flags:
+        if not any(flag.startswith("--no-d") for flag in flags):
+            return None  # a dry run commits nothing
+        # Negated: read again as the real commit it may be, by the released check.
+        real = [arg for arg in rest if arg != "--dry-run"]
+        reason = check_commit(real, MERGE_VALUE_OPTS, MERGE_SHORTS) if sub == "merge" else check_commit(real)
+        if reason:
+            return reason
+    if state.get("redirected"):
+        return "a {} with its output redirected to a file, which the shell writes before git reads its configuration".format(sub)
+    return None
+
+
+def extra_command(command, directory, inherited=None, nested=False, state=None):
+    """What the rules below refuse in a call the released guard has admitted, or None. `state`
+    carries, through nested shells too, whether a push would follow a command these rules do not
+    read, and whether the command being read has its output redirected."""
+    exported = dict(inherited or {})
+    state = state if state is not None else {"unread": False}
+    enclosing = bool(nested and state.get("redirected"))  # `bash -c '…' > file`: the file is open for all of it
+    if "&>" in command and EXTRA_GIT_WORD.search(command):
+        # The lexer splits `&>` at its `&`, so the redirect would be read as another command's.
+        return "a git or gh call with &>, which the guard cannot read"
+    # The shell ends a comment at its newline, backslash or not; joining continued lines would
+    # fold the next line into it. Whether a `#` here is a comment is not worked out.
+    if EXTRA_CONTINUED_HASH.search(command) and EXTRA_GIT_WORD.search(command.replace("\\\n", "")):
+        return "a git or gh call with a # on a line that continues onto the next, which the guard cannot read"
+    if merge_bearing(command):
+        return None  # one plain gh command, read whole by the released guard
+    for tokens in extra_segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command.replace("\\\n", ""))):
+        # A redirect of output writes a file, the repository's configuration among them. Which
+        # file is not worked out. `2>&1` was dropped above; reading input writes nothing.
+        redirected = enclosing or any(re.match(r"\d*>", token) for token in tokens)
+        state["redirected"] = redirected
+        tokens = strip_redirects(tokens)
+        command_tokens = strip_prefix(tokens)
+        prefix = tokens[: len(tokens) - len(command_tokens)]
+        env = dict(exported)
+        env.update(token.split("=", 1) for token in prefix if ASSIGNMENT.match(token))
+        tokens = command_tokens
+        if not tokens:
+            # `NAME=value` alone sets a shell variable. It reaches git only when the name is
+            # already exported, which is not known here. So it never changes what is read; a
+            # name git or `cd` would act on only adds a refusal for what follows.
+            for name in (token.split("=", 1)[0] for token in prefix if ASSIGNMENT.match(token)):
+                if name in EXTRA_CONFIG_HOME_VARS or name == "CDPATH":
+                    exported[name] = env[name]
+                elif name.startswith("GIT_"):
+                    exported["GIT_CONFIG_UNKNOWN_" + name] = env[name]  # read as a setting on the command
+            state["unread"] = state["unread"] or redirected
+            continue
+        head = os.path.basename(tokens[0])
+        reason = None
+        if head == "export":
+            exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
+        elif head == "cd":
+            entered = extra_plain_cd(directory, tokens[1:], env)
+            if entered:
+                directory = entered
+            else:
+                state["unread"] = True  # where a later push would run is not known
+                if len(tokens) == 2:  # as the released reader does, for the reads of what follows
+                    directory = os.path.join(directory, os.path.expanduser(tokens[1]))
+        elif head == "eval":
+            reason = extra_command(" ".join(tokens[1:]), directory, env, True, state)
+        elif head in SHELLS:
+            for index, token in enumerate(tokens[:-1]):
+                if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", token):
+                    reason = extra_command(tokens[index + 1], directory, env, True, state)
+                    break
+        elif head == "git" or head.startswith("git-"):
+            # `git-push`, as git's exec path holds it, is `git push` by another name.
+            reason = extra_git(tokens if head == "git" else ["git", head[len("git-"):]] + tokens[1:], directory, env, state)
+        if reason:
+            return reason
+        extra_note_prelude(tokens, state)
+        state["unread"] = state["unread"] or redirected
+    return None
+
+
+def check_command(command, directory, inherited=None, nested=False):
+    """The first rule the command breaks, or None: the released guard's verdict on the call as
+    written, and only where it admits the call, the additional refusals."""
+    return released_check(command, directory, inherited, nested) or extra_command(command, directory, inherited, nested)
+
+
+def main():
+    """Print a deny decision when a rule breaks. A refusal of a shape the agent can fix names the
+    next step; every other refusal is printed by the released guard, in its own words."""
+    payload = json.load(sys.stdin)
+    reason = check_command(payload.get("tool_input", {}).get("command", ""), payload.get("cwd") or os.getcwd())
+    if not reason:
+        return
+    for mark, advice in EXTRA_ADVICE:
+        if mark in reason:
+            print(json.dumps({"hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": "Blocked by ~/.claude/hooks/guard_git.py: this is {}. {}".format(reason, advice),
+            }}))
+            return
+    # Any other reason is one the released guard words: it prints it, with its own advice.
+    module, stdin, combined = sys.modules[__name__], sys.stdin, check_command
+    module.check_command, sys.stdin = (lambda *args, **kwargs: reason), io.StringIO(json.dumps(payload))
+    try:
+        released_main()
+    finally:
+        module.check_command, sys.stdin = combined, stdin
 
 
 if __name__ == "__main__":

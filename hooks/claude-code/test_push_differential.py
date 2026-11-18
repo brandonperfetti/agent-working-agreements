@@ -8,11 +8,11 @@ ref, rewinds one, or makes a commit the commit-msg hook would have refused. So t
 is checked against git itself, not against a second copy of the model. Nothing here reaches a
 network or the host's git configuration.
 
+It also holds, row by row, that a call the released guard refuses is refused (guard_git.py keeps
+the released guard's text unchanged and only adds refusals to it).
+
 Run: /usr/bin/python3 hooks/claude-code/test_push_differential.py
-With AWA_GUARD_BASE=<an earlier guard_git.py> it also holds that nothing that guard refused is
-admitted now unless running it does no harm.
 """
-import importlib.util
 import os
 import shutil
 import subprocess
@@ -191,11 +191,12 @@ ROWS = [
     # Push by another name
     ("the git-push program from git's exec path", "", "$(git --exec-path)/git-push origin HEAD:master", DENY),
     ("send-pack", "", "git send-pack ../remote.git HEAD:refs/heads/master", DENY),
-    # `--version` and `--help` end git's options: what follows is not run as a command
-    ("--version before the words of a release push", "", "git --version push origin HEAD:master", ALLOW),
-    ("-v before the words of a force-push", DIVERGE, "git -v push --force origin feature/x", ALLOW),
-    ("--help before the words of a release push", "", "git --help push origin HEAD:master </dev/null >/dev/null 2>&1", ALLOW),
-    ("-h before the words of a commit that skips the hook", "", "git -h commit -q --allow-empty -m bypass --no-verify", ALLOW),
+    # `--version` and `--help`: harmless when run, and refused as the released guard refuses them
+    ("--version before the words of a release push", "", "git --version push origin HEAD:master", DENY),
+    ("-v before the words of a force-push", DIVERGE, "git -v push --force origin feature/x", DENY),
+    ("--help before the words of a release push", "", "git --help push origin HEAD:master </dev/null >/dev/null 2>&1", DENY),
+    ("-h before the words of a commit that skips the hook", "", "git -h commit -q --allow-empty -m bypass --no-verify", DENY),
+    ("--version with its own option", "", "git --version --build-options", ALLOW),
     # From the review of the narrowed branch
     ("a comment that continues onto a push", ON_MASTER, "# note \\\ngit push origin HEAD", DENY),
     ("a continued comment after status", ON_MASTER, "git status; # note \\\ngit push origin HEAD", DENY),
@@ -322,6 +323,7 @@ def harm(root, env, before, after):
 
 class PushDifferentialTest(unittest.TestCase):
     rows = ROWS
+    released = {}  # the released guard's verdict for each call, as outcome() last saw it
 
     @classmethod
     def setUpClass(cls):
@@ -335,9 +337,9 @@ class PushDifferentialTest(unittest.TestCase):
     def tearDownClass(cls):
         cls.tmp.cleanup()
 
-    def outcome(self, index, setup, command, earlier=None):
-        """The guard's reason for the call (None when it passes) and the harm running it did; with
-        `earlier`, another version of the guard, its reason for the same call comes first."""
+    def outcome(self, index, setup, command):
+        """The guard's reason for the call (None when it passes) and the harm running it did. The
+        released guard's own verdict on the call is kept in `released`."""
         root = os.path.join(self.base, "row-{}".format(index))
         shutil.copytree(self.template, root, symlinks=True)
         try:
@@ -349,10 +351,10 @@ class PushDifferentialTest(unittest.TestCase):
             before = refs(root, env)
             with mock.patch.dict(os.environ, env, clear=True):
                 reason = guard_git.check_command(command, work)
-                was = earlier.check_command(command, work) if earlier else None
+                self.released[command] = guard_git.released_check(command, work)
             run(command, work, env, check=False)
             done = harm(root, env, before, refs(root, env))
-            return (was, reason, done) if earlier else (reason, done)
+            return reason, done
         finally:
             shutil.rmtree(root, ignore_errors=True)
 
@@ -366,25 +368,10 @@ class PushDifferentialTest(unittest.TestCase):
                     self.assertIsNotNone(reason, "passed the guard; running it: {}".format(", ".join(done) or "no harm on this fixture"))
                 if reason is None:
                     self.assertEqual(done, [], "the guard allowed a call that did harm")
-
-    def test_nothing_an_earlier_guard_refused_is_admitted_with_harm(self):
-        """With AWA_GUARD_BASE naming an earlier guard_git.py (`git show <commit>:hooks/claude-code/
-        guard_git.py`, saved to a file), a row that guard refused and this one admits must do no
-        harm when run: the guard is loosened only where a row proves the shape harmless."""
-        path = os.environ.get("AWA_GUARD_BASE")
-        if not path:
-            self.skipTest("set AWA_GUARD_BASE to an earlier guard_git.py to compare against it")
-        spec = importlib.util.spec_from_file_location("guard_git_base", path)
-        earlier = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(earlier)
-        loosened = []
-        for index, (name, setup, command, _verdict) in enumerate(self.rows):
-            was, reason, done = self.outcome("base-{}".format(index), setup, command, earlier)
-            if was is not None and reason is None:
-                loosened.append(name)
-                with self.subTest(name=name, command=command):
-                    self.assertEqual(done, [], "refused before, admitted now, and it did harm")
-        print("\nrefused by the earlier guard and admitted now (each harmless when run): {}".format("; ".join(loosened) or "none"), file=sys.stderr)
+                # The invariant: what the released guard refuses is refused. True by construction
+                # (guard_git.check_command), and held here over every row.
+                if self.released.get(command.replace("{root}", os.path.join(self.base, "row-{}".format(index)))) is not None:
+                    self.assertIsNotNone(reason, "the released guard refuses this and the guard admits it")
 
     def test_the_fixture_can_show_harm(self):
         """The instrument's positive control: each kind of harm registers when it happens."""

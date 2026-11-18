@@ -14,10 +14,10 @@ being retrofitted onto the other.
   issue's three cases were already refused; 27 other shapes passed on fixtures and moved `master`
   or forced a push: a `checkout` or `config` earlier in the same call, `HOME` moved,
   `--no-dry-run`, an unparsed global option, a git alias, `git send-pack`. A push now follows only
-  `cd`, `git add`, `commit` and `status`; the rest needs its own call. Each new refusal says what
-  to do next, and a differential test runs every shape against git itself. Why: one guard decides
-  for three clients, and a first attempt that interpreted the shell leaked in three reviews.
-  Brandon decided, 2026-11-17.
+  `cd`, `git add`, `commit` and `status`; the rest needs its own call. The released guard's text
+  is kept unchanged and the new rules only add refusals, pinned by tests. Each new refusal says
+  what to do next. Why: one guard decides for three clients, and attempts that changed how it
+  reads leaked in review. Brandon decided, 2026-11-17.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/236).
 
 - **2026-11-17 — The agent back-merge of #293 is withdrawn; a workflow carries `master` home.**

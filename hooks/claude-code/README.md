@@ -90,6 +90,16 @@ The guard reads the repository before the call runs, then decides where a push w
 would have to interpret the shell to know, it refuses and names the next step; it admits nothing
 by interpreting (#236).
 
+**The guard is the released guard plus refusals.** `guard_git.py` keeps the text released at
+`v2026.11.17.2` unchanged, down to a marker line. Everything below the marker can only refuse:
+a call passes when the released check admits it as written, admits it again as git will read it
+(an alias expanded, an option the released reader did not know dropped), and no rule below
+refuses. So the guard never admits a call the released guard refuses, whatever the added code
+does. `test_guard_git.py` pins this three ways: the released text's sha256; that nothing below the
+marker rebinds a name the released code uses, but `check_command` and `main`; and that every
+command the released guard refuses is refused. A later change to the released logic moves the pin
+on purpose, in its own reviewed change.
+
 - **Before a push, a call may hold only** `NAME=value`, a plain `git add`, `git commit` or
   `git status`, and a literal `cd <dir>`: an existing directory, with no option, `..`, `~`, `$`,
   glob, symbolic link or `CDPATH`. Anything else is refused with "run the push as its own call".
@@ -114,8 +124,8 @@ by interpreting (#236).
   shell alias (`!…`) is refused whatever it runs, and so is an alias holding a backslash: write
   the command out. A `git-<command>`
   program is read as `git <command>`; `git send-pack` and `git http-push` are refused.
-- **Global options are read or the command is refused.** `--version` and `--help` pass: git runs
-  version or help, whatever follows. An option the guard does not know is refused.
+- **Global options are read or the command is refused.** An option the guard does not know is
+  refused. A call with `--version` or `--help` gets no added rule; the released verdict stands.
 - **A bare push is resolved from the configuration git pushes by:** the current branch under
   `push.default` `simple` or `current`, `branch.<name>.merge` under `upstream`, else refused. A
   tracking ref's name is not used. With no remote named and no `origin`, it is refused. A
@@ -125,8 +135,8 @@ by interpreting (#236).
 
 `test_push_differential.py` holds these against git itself. It runs each call for real on bare
 repositories on disk and fails if a call the guard allows moves `master` or `main`, deletes or
-rewinds a ref, or commits past a refusing commit-msg hook. Run with `AWA_GUARD_BASE=<an earlier
-guard_git.py>`, it also fails if a call that guard refused is admitted now and does harm.
+rewinds a ref, or commits past a refusing commit-msg hook. It also holds, row by row, that a
+call the released guard refuses is refused.
 
 **Limits.** The guard stops honest mistakes, not a determined bypass. It does not read:
 
