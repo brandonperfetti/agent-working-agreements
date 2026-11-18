@@ -69,6 +69,8 @@ GIT_ATTACHED_OPTS = GIT_VALUE_OPTS | {"--exec-path", "--list-cmds"}
 # runs, so a command that can change where a push goes, or which checkout it runs in, makes that
 # read stale. These cannot. Anything else is refused, not interpreted: the push runs in its own call.
 PRELUDE_GIT = {"add", "commit", "status"}
+CONTINUED_HASH = re.compile(r"#[^\n]*\\\n")
+GIT_WORD = re.compile(r"(?:^|[^A-Za-z0-9_])(?:git|gh)(?:[^A-Za-z0-9_]|$)")
 BARE_SOURCES = 20  # refspecs without a destination that one push may name
 # Git ignores an alias named like one of its own commands, so these are never looked up; any other
 # subcommand may be an alias for a push, a commit or a merge and is read through its expansion.
@@ -287,8 +289,8 @@ def check_commit(args, value_opts=None, shorts=COMMIT_SHORTS):
                 skip = arg if bool(letter) and letter.group() in value_letters and letter.end() == len(arg) - 1 else None
     if skip:
         return "a commit whose option values cannot be read: a value is missing or looks like an option"
-    if "--dry-run" in flags:
-        return None  # a flag, not `-m --dry-run`
+    if "--dry-run" in flags and not any(flag.startswith("--no-d") for flag in flags):
+        return None  # a flag, not `-m --dry-run`; any `--no-dry-run` makes it a real commit
     # `--no-verify` (any unique prefix from `--no-v`), `-n` and a cluster holding `n` before its
     # first value-taking letter skip the hook (`-anm msg` does; `-mn` is the message "n").
     def skips(flag):
@@ -502,6 +504,13 @@ def check_git(tokens, directory, env, state=None, depth=0):
         index += 2 if tokens[index] in GIT_VALUE_OPTS else 1
     if index < len(tokens) and tokens[index] in PLUMBING_PUSHES:
         return "a push through git's plumbing ({}), which the guard does not read".format(tokens[index])
+    if index < len(tokens) and tokens[index] not in GIT_COMMANDS and state and state["unread"]:
+        # The call may have changed its aliases since the guard read them: only a command this
+        # git has of its own is read after another command.
+        if "own" not in state:  # one read per call; configuration does not change this list
+            state["own"] = set(git_lines(directory, ["--list-cmds=main,others"], environment(env)) or ())
+        if tokens[index] not in state["own"]:
+            return "a git alias or unknown git command ({}) following another command in the same call, which can change what it runs".format(tokens[index])
     if index < len(tokens) and tokens[index] not in GIT_COMMANDS:
         body = git_aliases(directory, selectors, settings, env, state).get(tokens[index].lower())
         # An alias named like a command this git has is never used; that list is read only then.
@@ -757,6 +766,10 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
     ran before this command, for a push that follows (note_prelude)."""
     exported = dict(inherited or {})
     state = state if state is not None else {"unread": False}
+    # The shell ends a comment at its newline, backslash or not; joining continued lines below
+    # would fold the next line into it. Whether a `#` here is a comment is not worked out.
+    if CONTINUED_HASH.search(command) and GIT_WORD.search(command):
+        return "a git or gh call with a # on a line that continues onto the next, which the guard cannot read"
     # A descriptor duplication (`2>&1`) would split at its `&` and hide the words after it from the
     # command they belong to, so it is dropped before splitting: `gh … 2>&1 -R x/y` stays one argv.
     # The shell also joins a backslash-newline before reading words.
@@ -776,6 +789,12 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
             env.update([words.pop(0).split("=", 1)])
         return check_gh(words, directory, env, sole=sole)
     for tokens in parts:
+        if len(strip_redirects(tokens)) != len(tokens):
+            # A redirect writes a file, the repository's configuration among them. Which file is
+            # not worked out: a push later in the call is refused. `2>&1` was dropped above.
+            redirected = True
+        else:
+            redirected = False
         tokens = strip_redirects(tokens)
         command_tokens = strip_prefix(tokens)
         prefix = tokens[: len(tokens) - len(command_tokens)]
@@ -788,6 +807,7 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
             # `NAME=value` alone sets a shell variable, and changes the environment when the name
             # is already exported (HOME is): what follows is read with it.
             exported.update(env)
+            state["unread"] = state["unread"] or redirected
             continue
         head = os.path.basename(tokens[0])
         reason = None
@@ -800,7 +820,7 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
         elif head == "cd":
-            entered = plain_cd(directory, tokens[1:], exported)
+            entered = plain_cd(directory, tokens[1:], env)  # `CDPATH=x cd dir` counts too
             if entered:
                 directory = entered
             else:
@@ -822,6 +842,7 @@ def check_command(command, directory, inherited=None, nested=False, state=None):
         if reason:
             return reason
         note_prelude(tokens, state)
+        state["unread"] = state["unread"] or redirected
     return None
 
 
@@ -854,8 +875,12 @@ def main():
             advice = 'Run the command again without that option, or with its value attached by =.'
         elif 'a push naming more than' in reason:
             advice = 'Push fewer branches in one call.'
-        elif 'alias' in reason:
-            advice = 'Write the git command out in full, without the alias.'
+        elif "continues onto the next" in reason:
+            advice = "Put the command on one line, or drop the #."
+        elif "alias or unknown git command" in reason:
+            advice = "Write the git command out in full, or run it as its own call."
+        elif "alias" in reason:
+            advice = "Write the git command out in full, without the alias."
         elif "git's plumbing" in reason:
             advice = 'Use git push <remote> <branch> instead.'
         elif "option-like revision" in reason:

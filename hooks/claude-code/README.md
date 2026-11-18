@@ -97,7 +97,11 @@ by interpreting (#236).
 - **So these need the push in its own call:** tests or any script, then push; `git fetch`,
   `git pull`, `git merge` or `git tag`, then push; `git checkout -b <new>` or `git switch -c
   <new>`, then push; a comment line, or a comment after the push on its line; `cd` by a path with
-  `..` or through a symlink; a `git` command behind a global option (`git --no-pager status`).
+  `..` or through a symlink; a `git` command behind a global option (`git --no-pager status`);
+  an earlier command with a redirect (`git status > out.txt`; `2>&1` is fine); a git alias after
+  any command the guard does not read (`npm test && git st`).
+- **A `#` on a line that continues onto the next (`\` at its end) is refused** in a git or gh
+  call: the shell ends a comment at the newline, and the guard does not work out which `#` is one.
 - **Configuration moved by the environment is refused:** `GIT_CONFIG_*`, `HOME` and
   `XDG_CONFIG_HOME` on a push, commit or merge.
 - **A git alias is read through its expansion,** found with the command's own `-c` settings. A
@@ -107,8 +111,8 @@ by interpreting (#236).
   version or help, whatever follows. An option the guard does not know is refused.
 - **A bare push is resolved as git resolves it:** `@{push}`, else the current branch under
   `push.default` `simple` or `current`, else refused. A source that is a symbolic ref goes where
-  the ref points. Any `--no-dry-run` ends the dry-run exemption. A push naming more than 20
-  branches without a destination is refused.
+  the ref points. Any `--no-dry-run` ends the dry-run exemption, on a commit too. A push naming
+  more than 20 branches without a destination is refused.
 
 `test_push_differential.py` holds these against git itself. It runs each call for real on bare
 repositories on disk and fails if a call the guard allows moves `master` or `main`, deletes or
@@ -119,6 +123,9 @@ guard_git.py>`, it also fails if a call that guard refused is admitted now and d
 
 - a script, Makefile, shell function or another tool that pushes (`./release.sh`, a `gh api` write
   to `git/refs`);
+- programs that git itself runs during an allowed command: hooks, filters and `core.fsmonitor`.
+  A repository whose own hooks move `HEAD` or change push configuration can send
+  `git commit … && git push` somewhere the guard did not see;
 - state another process changes between the guard's read and the push;
 - `pushurl` and `insteadOf`, which send a correctly named branch to another repository;
 - pushes that `--recurse-submodules=on-demand` makes inside submodules;

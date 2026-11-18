@@ -196,6 +196,21 @@ ROWS = [
     ("-v before the words of a force-push", DIVERGE, "git -v push --force origin feature/x", ALLOW),
     ("--help before the words of a release push", "", "git --help push origin HEAD:master </dev/null >/dev/null 2>&1", ALLOW),
     ("-h before the words of a commit that skips the hook", "", "git -h commit -q --allow-empty -m bypass --no-verify", ALLOW),
+    # From the review of the narrowed branch
+    ("a comment that continues onto a push", ON_MASTER, "# note \\\ngit push origin HEAD", DENY),
+    ("a continued comment after status", ON_MASTER, "git status; # note \\\ngit push origin HEAD", DENY),
+    ("a continued comment inside eval", "", "eval '# note \\\ngit push origin HEAD:master'", DENY),
+    ("a continued comment inside bash -c", "", "bash -c '# note \\\ngit push origin HEAD:master'", DENY),
+    ("a continued comment before a force-push", DIVERGE, "# note \\\ngit push --force origin feature/x", DENY),
+    ("a continued comment before a deletion", "", "# note \\\ngit push origin :main", DENY),
+    ("a continued comment before a commit that skips the hook", "", "# note \\\ngit commit -q --allow-empty -m bypass --no-verify", DENY),
+    ("CDPATH on the cd itself", "git worktree add -q work2 -b feature/nested", "CDPATH={root} cd work2 && git push origin HEAD", DENY),
+    ("a predecessor redirected onto the configuration", "git config --global push.default matching; git config --global remote.origin.url ../remote.git; git config push.default current", "git status --porcelain > .git/config; git push", DENY),
+    ("an alias changed earlier in the call", "git config alias.ci commit", "git check-ref-format --branch feature/x\ngit config alias.ci 'commit --no-verify'\ngit ci -q --allow-empty -m bypass", DENY),
+    ("an alias created earlier in the call", "", "git config alias.zz 'commit --no-verify' && git zz -q --allow-empty -m bypass", DENY),
+    ("an alias for push created earlier in the call", "", "git config alias.zz 'push origin HEAD:master' && git zz", DENY),
+    ("a negated dry run on a commit", "", "git commit --dry-run --no-dry-run --no-verify -q --allow-empty -m bypass", DENY),
+    ("status with stderr folded, then push", "", "git status --short 2>&1 && git push", ALLOW),
     # (rows for the next rule go above this line)
 ]
 

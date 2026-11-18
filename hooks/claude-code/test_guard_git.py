@@ -160,6 +160,8 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("# note \\\ngit push origin feature", "continues onto the next", "Put the command on one line"),
+    ("echo hi; git nosuchalias", "alias or unknown git command", "run it as its own call"),
     ("git send-pack origin HEAD:refs/heads/feature", "plumbing", "Use git push"),
     ("git -c alias.lg='!git log' lg", "shell alias (lg)", "Write the git command out in full"),
     ("git push origin " + " ".join(["wave-1"] * 21), "more than 20 branches", "Push fewer branches"),
@@ -337,9 +339,11 @@ class GuardTest(unittest.TestCase):
         ):
             with self.subTest(command=command):
                 self.assertIn(reason, guard_git.check_command(command, repo) or "")
+        # After a command the guard does not read, the alias may no longer be what it was.
+        self.assertIn("alias or unknown git command (st)", guard_git.check_command("git st\ngit st", repo) or "")
         # `gc` is git's own command, so the alias of that name is never used.
         for command in ("git ci -m x", "git st", "git p origin feature", "git nosuchcommand", "git log", "git gc", "git one -1",
-                        "\n".join(["git st"] * 30)):
+                        "git status && git st"):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, repo))
 
@@ -356,7 +360,7 @@ class GuardTest(unittest.TestCase):
         with mock.patch.object(guard_git, "git_lines", counting):
             batch = "\n".join("git check-ref-format --branch feature/sample-{:04d}".format(n) for n in range(1000))
             self.assertIsNone(guard_git.check_command(batch, self.on_feature))
-        self.assertEqual(len(calls), 1)
+        self.assertLessEqual(len(calls), 2)  # the aliases, and this git's own commands
 
     def test_a_push_by_another_name_is_read_or_refused(self):
         for command, reason in (
@@ -370,6 +374,25 @@ class GuardTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn(reason, guard_git.check_command(command, self.on_feature) or "")
         for command in ("git-push origin feature", "git-lfs status", "git-credential-osxkeychain get"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
+
+    def test_the_review_of_the_narrowed_rules(self):
+        for command, reason in (
+            ("# note \\\ngit push origin feature", "continues onto the next"),
+            ('git commit -m "fix #12" \\\n  --no-verify', "continues onto the next"),
+            ("CDPATH=/tmp cd . && git push origin feature", "after another command"),
+            ("git status > out.txt; git push origin feature", "after another command"),
+            ("git add -A 2> err.txt && git push origin feature", "after another command"),
+            ("X=1 > out.txt; git push origin feature", "after another command"),
+            ("echo hi; git nosuchalias", "alias or unknown git command (nosuchalias)"),
+            ("git config alias.zz push; git zz origin feature", "alias or unknown git command (zz)"),
+            ("git commit --dry-run --no-dry-run --no-verify -m x", "skips the commit-msg hook"),
+        ):
+            with self.subTest(command=command):
+                self.assertIn(reason, guard_git.check_command(command, self.on_feature) or "")
+        for command in ("echo hi \\\n  there", "git log \\\n  --oneline", "git status 2>&1 && git push origin feature", "echo hi; git log; git diff",
+                        "git commit --dry-run -m x", "git nosuchalias", "git status && git nosuchalias"):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
 
