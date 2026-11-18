@@ -160,6 +160,7 @@ ALLOWED_ANYWHERE = [
 SHAPE_REFUSALS = [
     ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
     ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+    ("git push origin " + " ".join(["wave-1"] * 21), "more than 20 branches", "Push fewer branches"),
     ("git --no-such-option push origin feature", "does not know (--no-such-option)", "without that option"),
     ("HOME=/tmp/elsewhere git push origin feature", "HOME set on the command", "without setting that variable"),
     ("XDG_CONFIG_HOME=/tmp/elsewhere git commit -m x", "XDG_CONFIG_HOME set on the command", "without setting that variable"),
@@ -305,6 +306,12 @@ class GuardTest(unittest.TestCase):
                         "git --version --build-options", "git -v --build-options", "git --help --all", "git -h -a"):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
+
+    def test_a_push_of_many_branches_is_refused_before_it_is_read(self):
+        many = "git push origin " + " ".join("wave-1" for _ in range(21))
+        self.assertIn("more than 20 branches", guard_git.check_command(many, self.on_feature) or "")
+        self.assertIsNone(guard_git.check_command("git push origin " + " ".join("wave-1" for _ in range(20)), self.on_feature))
+        self.assertIsNone(guard_git.check_command("git push origin " + " ".join("wave-1:wave-1" for _ in range(40)), self.on_feature))
 
     def test_hook_output_is_a_deny(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")

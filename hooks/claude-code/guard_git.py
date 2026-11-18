@@ -69,6 +69,7 @@ GIT_ATTACHED_OPTS = GIT_VALUE_OPTS | {"--exec-path", "--list-cmds"}
 # runs, so a command that can change where a push goes, or which checkout it runs in, makes that
 # read stale. These cannot. Anything else is refused, not interpreted: the push runs in its own call.
 PRELUDE_GIT = {"add", "commit", "status"}
+BARE_SOURCES = 20  # refspecs without a destination that one push may name
 # Variables that move git's configuration files, as GIT_CONFIG_* does.
 CONFIG_HOME_VARS = {"HOME", "XDG_CONFIG_HOME"}
 COMMIT_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
@@ -355,11 +356,16 @@ def canonical_push(name):
 
 
 def destination(refspec, directory, selectors=(), env=None):
-    """The branch a refspec updates on the remote, `HEAD`/`@` resolved to the current branch."""
-    source, _, target = refspec.lstrip("+").partition(":")
+    """The branch a refspec updates on the remote, `HEAD`/`@` resolved to the current branch and a
+    source that is a symbolic ref to the branch it names, which is where git sends it."""
+    source, colon, target = refspec.lstrip("+").partition(":")
     branch = target or source
     if branch in ("HEAD", "@"):
         return current_branch(directory, selectors, env)
+    if not colon and not branch.startswith("-"):
+        full = git_lines(directory, list(selectors) + ["rev-parse", "--symbolic-full-name", branch], environment(env))
+        if full and full[0].startswith("refs/heads/"):
+            return full[0][len("refs/heads/"):]
     return re.sub(r"^(refs/)?heads/", "", branch)
 
 
@@ -405,16 +411,15 @@ def check_push(args, directory, selectors=(), env=None, state=None):
     if "--repo" in options or (remote and re.search(r"[:/@]", remote)):
         return "a push to a remote named by URL or --repo; name the remote"
     if remote is None:
-        # branch.<name>.pushRemote, then remote.pushDefault, then the remote `@{push}` names, else origin.
+        # As git chooses it: branch.<name>.pushRemote, remote.pushDefault, branch.<name>.remote, else origin.
         branch = current_branch(directory, selectors, env)
-        for key in (["config", "--get", "branch.{}.pushRemote".format(branch)] if branch else [None], ["config", "--get", "remote.pushDefault"]):
-            value = git_lines(directory, list(selectors) + key, environment_) if key[0] else None
+        keys = ["remote.pushDefault"] if not branch else ["branch.{}.pushRemote".format(branch), "remote.pushDefault", "branch.{}.remote".format(branch)]
+        for key in keys:
+            value = git_lines(directory, list(selectors) + ["config", "--get", key], environment_)
             if value and value[0].strip():
                 remote = value[0].strip()
                 break
-        if remote is None:
-            pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment_)
-            remote = pushed[0].strip().partition("/")[0] if pushed and "/" in pushed[0] else "origin"
+        remote = remote or "origin"
         if re.search(r"[:/@]", remote):
             return "a push to a remote named by URL or --repo; name the remote"
     mirror = git_lines(directory, list(selectors) + ["config", "--bool", "--get", "remote.{}.mirror".format(remote)], environment_)
@@ -423,17 +428,25 @@ def check_push(args, directory, selectors=(), env=None, state=None):
     # `remote.<name>.push` maps a bare source (`feature`) or a bare push to other branches, and
     # `push.default=matching` sends every matching branch: the scan below would read the wrong
     # commits, so those are denied unless each refspec names its destination.
+    default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], environment_)
+    default = default[0].strip() if default else "simple"
     if not tags_only and (not refspecs or any(":" not in r for r in refspecs)):
         mapped = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.push$"], environment_)
-        default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], environment_)
-        if mapped or (not refspecs and default and default[0].strip() == "matching"):
+        if mapped or (not refspecs and default == "matching"):
             return "a push whose targets are chosen by remote.<name>.push or push.default, not the command"
+    # Each source without a destination costs one read of the repository; the hook has ten seconds.
+    if sum(":" not in r for r in refspecs) > BARE_SOURCES:
+        return "a push naming more than {} branches".format(BARE_SOURCES)
     targets = [destination(r, directory, selectors, env) for r in refspecs]
     if not refspecs and not tags_only:
-        # A bare push lands where `@{push}` says (push.default simple/current/upstream, pushRemote);
-        # without an upstream git sends the current branch or refuses.
+        # A bare push lands where `@{push}` says (push.default simple/current/upstream, pushRemote).
+        # Where that cannot be read, simple and current send the current branch to its own name or
+        # git refuses; any other mode (upstream without a tracking ref) is refused as unresolved.
         pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], environment_)
-        targets = [pushed[0].strip().partition("/")[2]] if pushed and "/" in pushed[0] else [current_branch(directory, selectors, env)]
+        if pushed and "/" in pushed[0]:
+            targets = [pushed[0].strip().partition("/")[2]]
+        else:
+            targets = [current_branch(directory, selectors, env) if default in ("simple", "current") else ""]
     if "" in targets:
         return "a push whose target branch could not be resolved"
     for target in targets:
@@ -797,6 +810,8 @@ def main():
             advice = 'Run the command again without setting that variable.'
         elif 'global option the guard does not know' in reason:
             advice = 'Run the command again without that option, or with its value attached by =.'
+        elif 'a push naming more than' in reason:
+            advice = 'Push fewer branches in one call.'
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:

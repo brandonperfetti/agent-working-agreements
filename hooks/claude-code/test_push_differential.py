@@ -166,6 +166,12 @@ ROWS = [
     ("--attr-source before a commit that skips the hook", "", "git --attr-source HEAD commit -q --allow-empty -m bypass --no-verify", DENY),
     ("a global option git does not have", "", "git --no-such-option push origin HEAD:master", DENY),
     ("--attr-source before an ordinary push", "", "git --attr-source HEAD push origin feature/x", ALLOW),
+    # Resolution: as git resolves it, or refused
+    ("upstream with no tracking ref for master", "git config push.default upstream; git config remote.origin.fetch '+refs/heads/develop:refs/remotes/origin/develop'; git config branch.feature/x.merge refs/heads/master", "git push", DENY),
+    ("branch.<name>.remote names a mirror", "git config remote.other.mirror true; git config branch.feature/x.remote other; git config branch.feature/x.merge refs/heads/nope", "git push", DENY),
+    ("a branch that is a symbolic ref to master", "git symbolic-ref refs/heads/sneaky refs/heads/master", "git push origin sneaky", DENY),
+    ("a tag that is a symbolic ref to master", "git symbolic-ref refs/tags/tsneak refs/heads/master", "git push origin tag tsneak", DENY),
+    ("a branch that is a symbolic ref to a feature branch", "git symbolic-ref refs/heads/same refs/heads/feature/x", "git push origin same", ALLOW),
     # (rows for the next rule go above this line)
 ]
 
