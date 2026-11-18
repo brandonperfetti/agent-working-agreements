@@ -408,7 +408,8 @@ class GuardTest(unittest.TestCase):
                         "git status & git push --dry-run origin master", "git status && git commit -m 'fix: this & that'",
                         # A quoted & is data, not the operator: these stay ordinary calls.
                         "git add -- '&' && git commit -m 'fix: track a literal symbol filename'", "printf '%s\n' '&' && git commit --allow-empty -m 'fix: ordinary'",
-                        "git commit --message='this & that'", "git add -- '&' && git commit -m 'fix: x' && git push origin feature"):
+                        "git commit --message='this & that'", "git add -- '&' && git commit -m 'fix: x' && git push origin feature",
+                        "git add -- '&' && git commit --message='fix: track & file'", 'git add -- "a & b" \\& && git commit -m "fix: R&D \\" & more"'):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
 

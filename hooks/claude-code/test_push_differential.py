@@ -344,16 +344,17 @@ def refs(root, env):
 
 
 def foreign(root, env):
-    """The bare remotes that hold a commit by another author."""
-    return {remote for remote in ("remote.git", "other.git")
-            if OTHER_EMAIL in run("git -C {} log --all --format=%ae".format(remote), root, env).stdout}
+    """Each commit by another author that a bare remote holds, as `<remote> <commit>`."""
+    return {remote + " " + line.split()[1] for remote in ("remote.git", "other.git")
+            for line in run("git -C {} log --all --format='%ae %H'".format(remote), root, env).stdout.splitlines()
+            if line.split()[0] == OTHER_EMAIL}
 
 
 def harm(root, env, before, after, held=frozenset()):
     """What the call did that no allowed call may do: move a release branch, delete or rewind a
     ref, make a commit the commit-msg hook refuses, or send another author's commit to a remote
-    that did not hold one (`held`: the remotes that did)."""
-    done = ["sent another author's commit to " + remote for remote in sorted(foreign(root, env) - held)]
+    (`held`: those the remotes held before the call)."""
+    done = ["sent another author's commit to " + remote for remote in sorted({entry.split()[0] for entry in foreign(root, env) - held})]
     for name, old in sorted(before.items()):
         new = after.get(name)
         remote, ref = name.split(":", 1)
@@ -431,6 +432,7 @@ class PushDifferentialTest(unittest.TestCase):
             ("", "git push origin :develop", "deleted remote.git:refs/heads/develop"),
             ("", "git commit -q --allow-empty -m bypass --no-verify", "committed past the hook in work"),
             (FOREIGN, "git push origin feature/x", "sent another author's commit to remote.git"),
+            (FOREIGN + "; git push -q origin feature/x; " + FOREIGN, "git push origin feature/x", "sent another author's commit to remote.git"),  # a second one, beside one already there
         )):
             with self.subTest(command=command):
                 _reason, done = self.outcome("control-{}".format(index), setup, command)

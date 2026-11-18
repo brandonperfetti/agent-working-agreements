@@ -867,26 +867,23 @@ def extra_segments(command):
 
 
 def extra_background(command):
-    """True when the call holds a `&` that is not half of `&&`: the command before it runs in the
-    background, apart from the rest of the call (#298). The released lexer drops quotes, so a
-    quoted `'&'` reads as the operator there; a second pass that keeps quotes must find one too.
-    What the `&` backgrounds is not worked out."""
-    def lone(posix):
-        lexer = shlex.shlex(HEREDOC.sub(drop_heredoc, command), posix=posix, punctuation_chars=SEPARATORS)
-        lexer.whitespace = " \t\r"
-        lexer.whitespace_split = True
-        lexer.commenters = ""
-        return any(token and set(token) <= set(SEPARATORS) and "&" in token.replace("&&", "") for token in lexer)
-
-    try:
-        if not lone(True):
-            return False
-    except ValueError:
-        return False  # unbalanced quotes: extra_command refuses the call by its own rule
-    try:
-        return lone(False)
-    except ValueError:
-        return True  # the second pass cannot read it: the first pass's answer stands
+    """True when the call holds a `&` that is not half of `&&`, outside quotes: the command
+    before it runs in the background, apart from the rest of the call (#298). One pass over the
+    text, tracking only `'…'`, `"…"` and a backslash; a `&` inside quotes is data. What the `&`
+    backgrounds is not worked out."""
+    text, quote, index = HEREDOC.sub(drop_heredoc, command), "", 0
+    while index < len(text):
+        char = text[index]
+        if char == "\\" and quote != "'":
+            index += 1  # the next character is escaped
+        elif quote:
+            quote = "" if char == quote else quote
+        elif char in "'\"":
+            quote = char
+        elif char == "&" and text[index - 1 : index] != "&" and text[index + 1 : index + 2] != "&":
+            return True
+        index += 1
+    return False
 
 
 def extra_plain_cd(directory, words, env):
