@@ -146,12 +146,14 @@ and its PR-triggered workflows; on `H` each is present, completed, the latest ru
 skipped or neutral only where that workflow's own conditions explain it. An absent check fails; a
 repository with no expected PR check records its disposition (the full gate on the merge result,
 seen by the reviewer; where its docs name no gate, the checks the reviewer names, run on that
-merge result). Any other check on `H`, an app's scan included, holds the merge while it fails.
-When the independent reviewer verifies the failure is a false positive, it is cleared where the
-check is configured, by the owner or by a reviewed change the owner merges; while it is red the
-merge is the owner's. Commits in the base-to-`H` range pass the author and attribution read. The
-repository has no open issue labelled `route-suspended`; a check that cannot be read counts as
-suspended, and a suspension opened after that read does not stop a merge already under way. If the
+merge result). Any other check on `H`, an app's scan included, holds a delegated merge while it
+fails. When the independent reviewer verifies the failure is a false positive, it is cleared where
+the check is configured, by the owner or by a reviewed change the owner merges; while it is red,
+whether to merge is the owner's decision alone. The base's rules are read and name no merge
+queue; a read that fails or shows one sends the merge to the owner. Commits in the base-to-`H`
+range pass the author and attribution read. The repository has no open issue labelled
+`route-suspended`; a check that cannot be read counts as suspended, and a suspension opened after
+that read does not stop a merge already under way. If the
 base has moved since acceptance, the delivery owner gathers what the movement changes — behaviour,
 workflows, effects, the verification basis, not only paths — and the independent reviewer carries
 the acceptance forward or renews it (*Acceptance and staleness*); the producer never issues it. A

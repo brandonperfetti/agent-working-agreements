@@ -12,12 +12,12 @@ being retrofitted onto the other.
 
 - **2026-11-18 — The develop route covers every repository under `brandonperfetti/` (#300).**
   The binding named two repositories; it now names the account, with no exclusion, and says only
-  Brandon merges into `master` or `main`. The fixture qualifications carry: they are of a client
-  and the one form, and the guard reads no repository. A repository whose own instructions keep
-  its `develop` merges Brandon's stays his until they change. *Base merges* adds: any failing check
-  holds the merge, and a false positive is cleared where the check is configured; effects are
-  recorded in agent docs or the reviewer's record, closing keywords included. Why: accepted PRs
-  in 15 repositories waited on him in one day. Brandon decided, 2026-11-18.
+  Brandon merges into `master` or `main`. The fixture qualifications carry where the server
+  answers the form as the fixture's did; a queued base stays Brandon's. The guard has no
+  repository allowlist. A repository whose own instructions keep its `develop` merges his stays
+  his. *Base merges* adds: any failing check holds a delegated merge, and a false positive is
+  cleared where the check is configured; effects are recorded in agent docs or the reviewer's
+  record. Why: accepted PRs in 15 repositories waited on him in one day. Brandon decided.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/300).
 
 - **2026-11-17 — The commit-msg hook reads "generated with" as words (#280).** The footer

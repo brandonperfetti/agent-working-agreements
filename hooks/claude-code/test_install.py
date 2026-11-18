@@ -313,6 +313,7 @@ class CompactHookTest(unittest.TestCase):
         self.assertNotIn("claude-skills", context)
         self.assertIn("never a change to authority, review or merge controls", context)
         self.assertIn("its own instructions keep the merge Brandon's", context)
+        self.assertIn("read before each merge; an unreadable read counts as suspended", context)
         self.assertIn("route-suspended", context)
         self.assertIn("procedures/review-findings.md", context)
 
