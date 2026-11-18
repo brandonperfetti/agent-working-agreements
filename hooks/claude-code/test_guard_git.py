@@ -284,6 +284,13 @@ class GuardTest(unittest.TestCase):
                 self.assertIn(step, text)
                 self.assertNotIn("hand it back", text)
 
+    def test_a_negated_dry_run_is_read_as_a_real_push(self):
+        for command in ("git push --dry-run --no-dry-run origin master", "git push -n --no-dry origin master",
+                        "git push -n --no-dry-run --force origin feature", "git push --no-dry-run -n origin master"):
+            with self.subTest(command=command):
+                self.assertIsNotNone(guard_git.check_command(command, self.on_feature))
+        self.assertIsNone(guard_git.check_command("git push -n --no-dry-run origin feature", self.on_feature))
+
     def test_hook_output_is_a_deny(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")
 

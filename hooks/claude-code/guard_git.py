@@ -374,8 +374,10 @@ def check_push(args, directory, selectors=(), env=None, state=None):
         else:
             positional.append(arg)
 
-    # A dry run writes nothing, and the pickup guard's hook probe is one.
-    if "--dry-run" in options or "-n" in options:
+    # A dry run writes nothing, and the pickup guard's hook probe is one. Git takes the last of
+    # `--dry-run` and `--no-dry-run`; the guard does not work out which is last: any negation
+    # (a prefix from `--no-d`) ends the exemption and the push is read as a real one.
+    if ("--dry-run" in options or "-n" in options) and not any(opt.startswith("--no-d") for opt in options):
         return None
     # In a short cluster, `-o` takes the rest as its value (`-ofleet`), so only letters before it count.
     short_force = any(re.fullmatch(r"-[a-zA-Z]*f[a-zA-Z]*", opt.split("o", 1)[0] if opt.startswith("-") and not opt.startswith("--") else opt) for opt in options)

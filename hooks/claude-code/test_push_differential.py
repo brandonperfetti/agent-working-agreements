@@ -154,6 +154,12 @@ ROWS = [
     ("XDG_CONFIG_HOME moved", "mkdir -p ../xdg/git && cp ../matching.cfg ../xdg/git/config", "XDG_CONFIG_HOME=../xdg git push", DENY),
     ("HOME moved on a commit, away from the hook", "", "HOME=../althome git commit -q --allow-empty -m bypass", DENY),
     ("HOME moved on a commit inside a shell", "", "bash -c 'HOME=../althome; git commit -q --allow-empty -m bypass'", DENY),
+    # A negated dry run is a real push
+    ("--dry-run, then --no-dry-run", "", "git push --dry-run --no-dry-run origin HEAD:master", DENY),
+    ("-n, then --no-dry-run", "", "git push -n --no-dry-run origin HEAD:master", DENY),
+    ("--no-dry, abbreviated", "", "git push -n --no-dry origin HEAD:master", DENY),
+    ("--no-dry-run before a force-push", DIVERGE, "git push --dry-run --no-dry-run --force origin feature/x", DENY),
+    ("a dry run named last is still read as a push", "", "git push --no-dry-run --dry-run origin HEAD:master", DENY),
     # (rows for the next rule go above this line)
 ]
 
