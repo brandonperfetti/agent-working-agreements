@@ -156,6 +156,13 @@ ALLOWED_ANYWHERE = [
 ]
 
 
+# (command, part of the reason, the next step the refusal names)
+SHAPE_REFUSALS = [
+    ("echo pushing && git push origin feature", "after another command", "Run the push as its own call"),
+    ("git -C /nonexistent-checkout push", "could not be resolved", "git push <remote> <branch>"),
+]
+
+
 def make_repo(root, name, branch, email=guard_git.AUTHOR_EMAIL):
     path = os.path.join(root, name)
     subprocess.run(["git", "init", "-q", "-b", branch, path], check=True)
@@ -226,6 +233,53 @@ class GuardTest(unittest.TestCase):
     def test_pickup_probe_survives_on_a_base_branch(self):
         command = "git push --dry-run origin HEAD"
         self.assertIsNone(guard_git.check_command(command, self.on_master))
+
+    def test_what_may_come_before_a_push(self):
+        """#236: the guard reads the repository before the call runs, so only commands that cannot
+        change where a push goes may precede it. Everything else is refused, never interpreted."""
+        here = os.path.realpath(self.on_feature)
+        for before in ("git add -A", "git commit -m x", "git status --short", "FOO=1", "export FOO=1", "cd .", "cd " + here, "cd .git"):
+            with self.subTest(before=before):
+                self.assertIsNone(guard_git.check_command(before + " && git push origin feature", self.on_feature))
+        for before in ("git checkout master", "git switch develop", "git config push.default matching", "git branch -u origin/master",
+                       "git fetch", "git fetch --set-upstream origin master", "git pull", "git merge topic", "git remote set-url origin elsewhere",
+                       "git symbolic-ref HEAD refs/heads/master", "git checkout -b topic", "git switch -c topic", "git tag v1",
+                       "git --no-optional-locks status", "git -C . commit -m x", "git push origin wave-1",
+                       "pushd ../on-master", "cd ../on-master", "cd -- .", "cd -P .", "cd -", "cd", "cd ~", "cd $HOME", "cd on-*",
+                       "cd /nonexistent-dir", "cd ./missing/..", "cd . .", "export -n FOO", "# a note", "echo pushing", "make release", "./script.sh",
+                       "bash -c 'git status'", "eval git status", "x=${x:- #}", "true"):
+            with self.subTest(before=before):
+                for joiner in (" && ", "; ", "\n"):
+                    self.assertIn("after another command", guard_git.check_command(before + joiner + "git push origin feature", self.on_feature) or "")
+        # A dry run and whatever follows the push are not limited.
+        self.assertIsNone(guard_git.check_command("make release && git push --dry-run origin master", self.on_feature))
+        self.assertIsNone(guard_git.check_command("git push origin feature && git checkout master", self.on_feature))
+        # What is Brandon's is still named first.
+        self.assertEqual(guard_git.check_command("make release && git push --force origin feature", self.on_feature), "a force-push")
+
+    def test_a_cd_the_guard_would_have_to_interpret_is_not_followed(self):
+        link = os.path.join(self.tmp.name, "link-to-feature")
+        os.symlink(self.on_feature, link)
+        for command in ("cd {} && git push origin HEAD".format(link), "cd ../link-to-feature && git push origin HEAD",
+                        "cd ../on-feature/missing/..; git push origin HEAD", "cd ../on-feature/missing/.. || git push origin HEAD"):
+            with self.subTest(command=command):
+                self.assertIsNotNone(guard_git.check_command(command, self.on_master))
+        with mock.patch.dict(os.environ, {"CDPATH": self.tmp.name}):
+            self.assertIn("after another command", guard_git.check_command("cd on-master && git push origin feature", self.on_feature) or "")
+        self.assertIn("after another command", guard_git.check_command("CDPATH=/x; cd . && git push origin feature", self.on_feature) or "")
+        self.assertIn("after another command", guard_git.check_command("export CDPATH=/x; cd . && git push origin feature", self.on_feature) or "")
+
+    def test_a_shape_the_agent_can_fix_says_what_to_do_next(self):
+        """A refusal of a call's shape names the next step and never says to hand it back."""
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")
+        for command, reason, step in SHAPE_REFUSALS:
+            with self.subTest(command=command):
+                payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": self.on_feature}
+                out = subprocess.run(["/usr/bin/python3", "-I", script], input=json.dumps(payload), capture_output=True, text=True, check=True).stdout
+                text = json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"]
+                self.assertIn(reason, text)
+                self.assertIn(step, text)
+                self.assertNotIn("hand it back", text)
 
     def test_hook_output_is_a_deny(self):
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard_git.py")
@@ -895,7 +949,7 @@ class AuthorTest(unittest.TestCase):
         git(self.mine, "push", "-q", "origin", "feature")
         written = "git push --no-follow-tags origin refs/tags/v2026.11.17:refs/tags/v2026.11.17"
         chained = 'git tag -a v2026.11.17 -m "In force: x" && ' + written
-        self.assertIn("could not be read", guard_git.check_command(chained, self.mine) or "")
+        self.assertIn("after another command", guard_git.check_command(chained, self.mine) or "")
         self.assertIn("could not be read", guard_git.check_command(written, self.mine) or "")
         self.assertIsNone(guard_git.check_command('git tag -a v2026.11.17 -m "In force: x"', self.mine))
         git(self.mine, "tag", "-a", "v2026.11.17", "-m", "In force: x")

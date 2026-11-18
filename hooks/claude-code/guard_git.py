@@ -13,7 +13,10 @@ line, or an agent declaration that is malformed or not the commit's only one
 (RULE ZERO; stale tracking refs are the documented limit, and the read before a
 delivery is presented is the complete check). The author and message
 of a commit being made are the commit-msg hook's to read (hooks/git), where git
-holds them final; this guard reads only what git has already written. Merges
+holds them final; this guard reads only what git has already written. A push
+is read in the state it will run in: only commands that cannot change where it
+goes may come before it in the same call (note_prelude); the rest is refused,
+not interpreted. Merges
 between feature, wave, lane and hotfix branches pass. It parses the command rather than grepping it,
 so a commit message that mentions `git push --force` passes. It stops honest
 mistakes, not a determined bypass: git aliases, refspecs in shell variables and
@@ -52,6 +55,10 @@ WRAPPERS = {"command", "env", "exec", "nohup", "sudo", "time", "xargs"}
 SHELLS = {"bash", "sh", "zsh"}
 SEPARATORS = ";&|()\n"
 GIT_VALUE_OPTS = {"-C", "-c", "--config-env", "--git-dir", "--namespace", "--work-tree"}
+# What may come before a push in the same call. The guard reads the repository before the call
+# runs, so a command that can change where a push goes, or which checkout it runs in, makes that
+# read stale. These cannot. Anything else is refused, not interpreted: the push runs in its own call.
+PRELUDE_GIT = {"add", "commit", "status"}
 COMMIT_VALUE_OPTS = {"-m", "--message", "-F", "--file", "-C", "--reuse-message", "-c", "--reedit-message",
                      "--fixup", "--squash", "--author", "--date", "--cleanup", "--trailer", "-t", "--template",
                      "--pathspec-from-file"}
@@ -344,8 +351,9 @@ def destination(refspec, directory, selectors=(), env=None):
     return re.sub(r"^(refs/)?heads/", "", branch)
 
 
-def check_push(args, directory, selectors=(), env=None):
-    """The rule a `git push` breaks, or None: force, release branch, redirecting configuration, then the scan."""
+def check_push(args, directory, selectors=(), env=None, state=None):
+    """The rule a `git push` breaks, or None: force, release branch, redirecting configuration, then the scan.
+    `state` is what the same call ran before this push (note_prelude)."""
     positional, options, skip = [], [], False
     for index, arg in enumerate(args):
         if skip:
@@ -374,6 +382,8 @@ def check_push(args, directory, selectors=(), env=None):
         return "a force-push"
     if "--all" in options or "--branches" in options or ":" in refspecs:  # `:` pushes every matching branch
         return "a push of every branch, release branches included"
+    if state and state["unread"]:
+        return "a push after another command in the same call, which can change what the push sends"
     tags_only = ("--tags" in options or "--follow-tags" in options) and not refspecs and "--tags" in options
     environment_ = environment(env)
     # The destination remote, by name: a URL or `--repo` has no tracking refs to scan against.
@@ -420,8 +430,9 @@ def check_push(args, directory, selectors=(), env=None):
     return check_push_authors(refspecs, directory, "--tags" in options, selectors, env, remote)
 
 
-def check_git(tokens, directory, env):
-    """Route a `git` command: global options first, then push, commit and merge."""
+def check_git(tokens, directory, env, state=None):
+    """Route a `git` command: global options first, then push, commit and merge. `state` is what
+    the same call ran before it (note_prelude)."""
     index, configured, selectors, keys = 1, False, [], []
     while index < len(tokens) and tokens[index].startswith("-"):
         if tokens[index] == "-C" and index + 1 < len(tokens):
@@ -437,7 +448,7 @@ def check_git(tokens, directory, env):
     if index < len(tokens) and tokens[index] == "push":
         if configured or any(k.startswith("GIT_CONFIG") for k in env):
             return "a push with a configuration setting on the command, which can redirect it"
-        return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")})
+        return check_push(tokens[index + 1 :], directory, selectors, {k: v for k, v in env.items() if k in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR")}, state)
     if index < len(tokens) and tokens[index] in ("commit", "merge"):
         # A setting that can switch the hook off or rewrite the message denies; identity and other
         # benign keys pass (`-c user.name=…`). GIT_CONFIG_* in the environment is not read: denied.
@@ -636,10 +647,39 @@ def check_gh(tokens, directory, env, sole=False):
     return None
 
 
-def check_command(command, directory, inherited=None, nested=False):
+def plain_cd(directory, words, env):
+    """The directory a literal `cd <dir>` enters, or None when the guard would have to interpret
+    the path to know: an option, `~`, an expansion or a glob, a `..`, a symbolic link in it, a
+    CDPATH search, or a path that is not a directory (the shell then stays where it was)."""
+    if len(words) != 1 or "CDPATH" in env or "CDPATH" in os.environ:
+        return None
+    word = words[0]
+    if word.startswith(("-", "~")) or re.search(r"[$`*?\[\]{}\\]", word) or ".." in word.split("/"):
+        return None
+    target = os.path.join(directory, word)
+    if not os.path.isdir(target) or os.path.realpath(target) != os.path.normpath(os.path.join(os.path.realpath(directory), word)):
+        return None
+    return target
+
+
+def note_prelude(tokens, state):
+    """Mark the call unread for a later push unless this command is one that cannot change where
+    a push goes: `export NAME=value`, or a plain `git add`, `git commit` or `git status`. A `cd`
+    is judged where the directory is tracked (check_command)."""
+    head, words = os.path.basename(tokens[0]), tokens[1:]
+    if head == "cd" or (head == "export" and all(ASSIGNMENT.match(word) for word in words)):
+        return
+    if head == "git" and words and words[0] in PRELUDE_GIT:
+        return
+    state["unread"] = True
+
+
+def check_command(command, directory, inherited=None, nested=False, state=None):
     """The first rule the command breaks, or None. `inherited` is a calling shell's environment;
-    `nested` marks a command read from inside `eval` or a shell's `-c`."""
+    `nested` marks a command read from inside `eval` or a shell's `-c`; `state` is what the call
+    ran before this command, for a push that follows (note_prelude)."""
     exported = dict(inherited or {})
+    state = state if state is not None else {"unread": False}
     # A descriptor duplication (`2>&1`) would split at its `&` and hide the words after it from the
     # command they belong to, so it is dropped before splitting: `gh … 2>&1 -R x/y` stays one argv.
     # The shell also joins a backslash-newline before reading words.
@@ -668,6 +708,9 @@ def check_command(command, directory, inherited=None, nested=False):
         if wrapped_with_options(prefix, command_tokens):
             return "a git or gh command behind wrapper options the guard does not parse"
         if not tokens:
+            # `NAME=value` alone sets a shell variable, and changes the environment when the name
+            # is already exported (HOME is): what follows is read with it.
+            exported.update(env)
             continue
         head = os.path.basename(tokens[0])
         reason = None
@@ -679,21 +722,28 @@ def check_command(command, directory, inherited=None, nested=False):
             return "a git or gh command whose arguments arrive through xargs and are not visible here"
         if head == "export":
             exported.update(token.split("=", 1) for token in tokens[1:] if ASSIGNMENT.match(token))
-        elif head == "cd" and len(tokens) == 2:
-            directory = os.path.join(directory, os.path.expanduser(tokens[1]))
+        elif head == "cd":
+            entered = plain_cd(directory, tokens[1:], exported)
+            if entered:
+                directory = entered
+            else:
+                state["unread"] = True  # where a later push would run is not known
+                if len(tokens) == 2:  # as before, for the reads of what follows
+                    directory = os.path.join(directory, os.path.expanduser(tokens[1]))
         elif head == "eval":
-            reason = check_command(" ".join(tokens[1:]), directory, env, nested=True)
+            reason = check_command(" ".join(tokens[1:]), directory, env, nested=True, state=state)
         elif head in SHELLS:
             for index, token in enumerate(tokens[:-1]):
                 if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", token):
-                    reason = check_command(tokens[index + 1], directory, env, nested=True)
+                    reason = check_command(tokens[index + 1], directory, env, nested=True, state=state)
                     break
         elif head == "git":
-            reason = check_git(tokens, directory, env)
+            reason = check_git(tokens, directory, env, state)
         elif head == "gh":
             reason = check_gh(tokens, directory, env, sole=sole)
         if reason:
             return reason
+        note_prelude(tokens, state)
     return None
 
 
@@ -715,6 +765,11 @@ def main():
             advice = "Give each -m, -F, --author or --trailer a value that begins with a word, not with -, <, > or a digit followed by < or > (2>, 2<), so the guard can read the command."
         elif "commit-msg hook" in reason:
             advice = "RULE ZERO is checked by the commit-msg hook; commit or merge without --no-verify and without -c."
+        # A shape the agent can fix says what to do next; only what is Brandon's says hand it back.
+        elif "after another command" in reason:
+            advice = "Run the push as its own call. Before it, a call may hold only NAME=value, cd to an existing directory (no .., ~, $ or symlink), git add, git commit and git status."
+        elif "target branch could not be resolved" in reason:
+            advice = "Name the remote and the branch on the command: git push <remote> <branch>."
         elif "option-like revision" in reason:
             advice = "Name the branch to push plainly; a revision that starts with a dash is not read."
         elif "chosen by" in reason or "configuration setting on the command" in reason or "mirror remote" in reason or "named by URL" in reason:
