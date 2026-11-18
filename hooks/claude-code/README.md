@@ -103,7 +103,7 @@ on purpose, in its own reviewed change.
 - **Before a push, a call may hold only** `NAME=value`, a plain `git add`, `git commit` or
   `git status`, and a literal `cd <dir>`: an existing directory, with no option, `..`, `~`, `$`,
   glob, symbolic link or `CDPATH`. Anything else is refused with "run the push as its own call".
-  A dry run, and whatever follows the push, are not limited.
+  A dry run, and whatever follows the push, are not limited, but for a `&` (below).
 - **So these need the push in its own call:** tests or any script, then push; `git fetch`,
   `git pull`, `git merge` or `git tag`, then push; `git checkout -b <new>` or `git switch -c
   <new>`, then push; a comment line, or a comment after the push on its line; `cd` by a path with
@@ -111,6 +111,9 @@ on purpose, in its own reviewed change.
   an earlier command with a redirect (`git status > out.txt`; `2>&1` is fine); a git alias after
   any command the guard does not read (`npm test && git st`); anything in `( )` or `$( )`, or a
   pipe (`|`), earlier in the call. A pipe after the push is fine.
+- **A push, commit or merge in a call that holds a single `&` is refused,** wherever the `&`
+  sits: the command before it runs in the background, so a `cd` there never moves the shell
+  (`cd <dir> & git push`). Join the commands with `&&`, or run the push as its own call (#298).
 - **A call the guard cannot split is refused:** a git or gh call with unbalanced quotes. A
   backtick substitution earlier in a call refuses the push after it, as `$( )` does.
 - **A `#` on a line that continues onto the next (`\` at its end) is refused** in a git or gh
@@ -132,8 +135,17 @@ on purpose, in its own reviewed change.
   `push.default` `simple` or `current`, `branch.<name>.merge` under `upstream`, else refused. A
   tracking ref's name is not used. With no remote named and no `origin`, it is refused. A
   source that is a symbolic ref goes where
-  the ref points. Any `--no-dry-run` ends the dry-run exemption, on a commit too. A push naming
-  more than 20 branches without a destination is refused.
+  the ref points. A push naming more than 20 branches without a destination is refused.
+- **A push with both a dry-run flag and `--no-dry-run` is refused,** whatever it names: an option
+  given as the value of `-o` (`-o -n`) is not a flag, and the guard does not work out which of
+  the two git obeys. Run the dry run or the push. On a commit, `--no-dry-run` ends the dry-run
+  exemption (#298).
+- **Under `push.default=upstream`, a branch pushed without its destination is refused**
+  (`git push origin feature`, `-u` included): git sends it to `branch.<name>.merge`, which may
+  name another branch. `HEAD` and `<src>:<dst>` pass: `git push <remote> <src>:<dst>` (#298).
+- **A push that names no remote is refused when it goes to a `branch.<name>.remote` the author
+  scan does not read:** the scan reads the remote `@{push}` names, else `origin`. This refuses
+  the first bare push of a branch to such a remote; name the remote and the branch (#298).
 
 `test_push_differential.py` holds these against git itself. It runs each call for real on bare
 repositories on disk and fails if a call the guard allows moves `master` or `main`, deletes or
@@ -151,4 +163,11 @@ call the released guard refuses is refused.
 - `pushurl` and `insteadOf`, which send a correctly named branch to another repository;
 - pushes that `--recurse-submodules=on-demand` makes inside submodules;
 - a release branch not named `master` or `main`, and commits hidden by stale tracking refs in the
-  author scan (the read before presentation is the complete check).
+  author scan (the read before presentation is the complete check);
+- a background `&` beside commands other than a push, commit or merge, and the values of push
+  options, which reach the remote's own hooks;
+- a `push.default` it fails to read, which it takes for unset.
+
+**A command-line parser will not be complete.** Each review of these rules has found a further
+call shape that passes, and more exist. A new one is added below the marker as a refusal with a
+differential row; it is never closed by teaching the guard to interpret more shell or more git.

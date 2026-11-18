@@ -794,6 +794,7 @@ EXTRA_CONFIG_HOME_VARS = {"HOME", "XDG_CONFIG_HOME"}
 EXTRA_BARE_SOURCES = 20  # refspecs without a destination that one push may name: each costs a read
 EXTRA_ALIAS_DEPTH = 10  # aliases of aliases followed before the chain is called a loop
 EXTRA_PLUMBING = {"send-pack", "http-push"}  # what `git push` runs underneath; neither takes its rules
+EXTRA_BACKGROUND = ["&"]  # the segment extra_segments leaves for a `&` that backgrounds a command
 EXTRA_CONTINUED_HASH = re.compile(r"#[^\n]*\\\n")
 EXTRA_GIT_WORD = re.compile(r"(?:^|[^A-Za-z0-9_])(?:git|gh)(?:[^A-Za-z0-9_]|$)")
 # Git's global options. `--version` and `--help` end them: nothing is added to the released
@@ -818,6 +819,10 @@ EXTRA_GIT_COMMANDS = frozenset(
 # The next step for each refusal made below. A refusal that is Brandon's to lift (a release
 # branch, a force-push) is not here: it takes the released guard's own closing sentence.
 EXTRA_ADVICE = (
+    ("in the background (&)", "Run it as its own call, or join the commands with && in place of &."),
+    ("both a dry-run flag and --no-dry-run", "Run it with one of the two: the dry run, or the push itself."),
+    ("without its destination", "Name the destination: git push <remote> <src>:<dst>."),
+    ("the author scan does not read", "Name the remote and the branch on the command: git push <remote> <branch>."),
     ("after another command", "Run the push as its own call. Before it, a call may hold only NAME=value, cd to an existing directory (no .., ~, $ or symlink), git add, git commit and git status."),
     ("moves git's configuration", "Run the command again without setting that variable."),
     ("global option the guard does not know", "Run the command again without that option, or with its value attached by =."),
@@ -839,7 +844,8 @@ def extra_segments(command):
     """The released `segments`, with one addition: a `(`, `)` or `|` leaves a marker segment. A
     subshell, substitution or pipeline stage does not carry a `cd` or an assignment out of it; its
     scope is not worked out. The marker is a command the rules below do not read, so a push later
-    in the call is refused."""
+    in the call is refused. A `&` that is not half of `&&` leaves the marker `&`: the command
+    before it runs in the background, apart from the rest of the call (#298)."""
     command = HEREDOC.sub(drop_heredoc, command)
     try:
         lexer = shlex.shlex(command, posix=True, punctuation_chars=SEPARATORS)
@@ -856,6 +862,8 @@ def extra_segments(command):
             current = []
             if "(" in token or ")" in token or ("|" in token and token != "||"):
                 result.append(["("])
+            if "&" in token.replace("&&", ""):
+                result.append(EXTRA_BACKGROUND)
         else:
             current.append(token)
     result.append(current)
@@ -936,6 +944,11 @@ def extra_push(args, directory, selectors, env, state):
         reason = check_push(real, directory, selectors, env)
         if reason:
             return reason
+        # An option given as the value of `-o` (`-o -n`, `-o --dry-run`) is not a flag of the
+        # push, and `real` above drops it as one. Whose value it is is not worked out (#298).
+        return "a push with both a dry-run flag and --no-dry-run, which the guard does not put in order"
+    if state.get("background"):
+        return "a push in a call that runs a command in the background (&), apart from the push"
     if state["unread"]:
         return "a push after another command in the same call, which can change what the push sends"
     if state.get("redirected"):
@@ -947,11 +960,11 @@ def extra_push(args, directory, selectors, env, state):
     if not positional and "--repo" not in options:
         # The remote as git chooses it: branch.<name>.pushRemote, remote.pushDefault,
         # branch.<name>.remote, else origin. The released reader stops short of the third.
-        remote = None
+        remote, by_branch = None, False
         for key in (["branch.{}.pushRemote".format(branch), "remote.pushDefault", "branch.{}.remote".format(branch)] if branch else ["remote.pushDefault"]):
             value = git_lines(directory, list(selectors) + ["config", "--get", key], reads)
             if value and value[0].strip():
-                remote = value[0].strip()
+                remote, by_branch = value[0].strip(), key == "branch.{}.remote".format(branch)
                 break
         if remote is None:
             urls = git_lines(directory, list(selectors) + ["config", "--get-regexp", r"^remote\..*\.(url|pushurl)$"], reads) or []
@@ -964,6 +977,14 @@ def extra_push(args, directory, selectors, env, state):
             mirror = git_lines(directory, list(selectors) + ["config", "--bool", "--get", "remote.{}.mirror".format(remote)], reads)
             if mirror and mirror[0].strip() == "true":
                 return "a push to a mirror remote, which rewrites and deletes every ref"
+            if by_branch:
+                # The released author scan reads the remote `@{push}` names, else origin: these
+                # two lines are its own. Where git's choice is another remote, the commits it
+                # gets were not read (#298).
+                pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], reads)
+                scanned = pushed[0].strip().partition("/")[0] if pushed and "/" in pushed[0] else "origin"
+                if scanned != remote:
+                    return "a push that names no remote and goes to {}, a remote the author scan does not read".format(remote)
     bare = [r.lstrip("+") for r in refspecs if ":" not in r and r.lstrip("+") not in ("HEAD", "@") and not r.lstrip("+").startswith("-")]
     if len(bare) > EXTRA_BARE_SOURCES:
         return "a push naming more than {} branches".format(EXTRA_BARE_SOURCES)
@@ -972,6 +993,12 @@ def extra_push(args, directory, selectors, env, state):
         full = git_lines(directory, list(selectors) + ["rev-parse", "--symbolic-full-name", source], reads)
         if full and full[0].startswith("refs/heads/") and full[0][len("refs/heads/"):] in RELEASE_BRANCHES:
             return "a push to a release branch ({})".format(full[0][len("refs/heads/"):])
+    if bare:
+        # Under upstream, git sends a named branch to branch.<name>.merge, not to its own name.
+        # Which branch a source names, and where its merge points, are not worked out (#298).
+        default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], reads)
+        if default and default[0].strip().lower() in ("upstream", "tracking"):
+            return "a push of a branch without its destination under push.default=upstream, where git takes it from branch.<name>.merge"
     if not refspecs and not tags_only:
         # A bare push sends the current branch to its own name under simple and current, and to
         # branch.<name>.merge under upstream. The released reader takes the name of the tracking
@@ -1060,6 +1087,8 @@ def extra_git(tokens, directory, env, state, depth=0):
         reason = check_commit(real, MERGE_VALUE_OPTS, MERGE_SHORTS) if sub == "merge" else check_commit(real)
         if reason:
             return reason
+    if state.get("background"):
+        return "a {} in a call that runs a command in the background (&), apart from it".format(sub)
     if state.get("redirected"):
         return "a {} with its output redirected to a file, which the shell writes before git reads its configuration".format(sub)
     return None
@@ -1068,7 +1097,8 @@ def extra_git(tokens, directory, env, state, depth=0):
 def extra_command(command, directory, inherited=None, nested=False, state=None):
     """What the rules below refuse in a call the released guard has admitted, or None. `state`
     carries, through nested shells too, whether a push would follow a command these rules do not
-    read, and whether the command being read has its output redirected."""
+    read, whether the command being read has its output redirected, and whether the call runs a
+    command in the background."""
     exported = dict(inherited or {})
     state = state if state is not None else {"unread": False}
     enclosing = bool(nested and state.get("redirected"))  # `bash -c '…' > file`: the file is open for all of it
@@ -1086,6 +1116,8 @@ def extra_command(command, directory, inherited=None, nested=False, state=None):
         # The released reader falls back to plain words here; the rules below cannot tell what
         # comes before what, so a call that names git or gh is refused.
         return "a git or gh call with unbalanced quotes, which the guard cannot split into commands" if EXTRA_GIT_WORD.search(command) else None
+    if EXTRA_BACKGROUND in parts:
+        state["background"] = True  # for the whole call, nested shells included: what runs when is not worked out
     for tokens in parts:
         if any("`" in token for token in tokens):
             state["unread"] = True  # a backtick substitution runs a command the rules below do not read

@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-17 — The git guard refuses five more call shapes (#298).** Each passed the released
+  guard and did harm on a fixture: a `cd` put in the background by a single `&`, an option given
+  as the value of `-o` beside `--no-dry-run` (two shapes), a named branch under
+  `push.default=upstream`, and a bare push to a `branch.<name>.remote` the author scan did not
+  read. Each is now refused below the marker, with its next step and a differential row; the
+  released text is unchanged. Why: the release review of #236 found them, and Brandon took them
+  as the next change, 2026-11-17.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/298).
+
 - **2026-11-17 — The git guard reads a push only in the state it will run in (#236).** The
   issue's three cases were already refused; 27 other shapes passed on fixtures and moved `master`
   or forced a push: a `checkout` or `config` earlier in the same call, `HOME` moved,

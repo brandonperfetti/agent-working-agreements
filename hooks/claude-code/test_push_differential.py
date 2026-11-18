@@ -4,7 +4,8 @@
 Each row is one shell call. The test asks the guard for its verdict, then runs the call for real
 against bare repositories on disk and reads what happened. Two things are held for every row: the
 verdict is the one the row names, and no call the guard allows moves a release branch, deletes a
-ref, rewinds one, or makes a commit the commit-msg hook would have refused. So the guard's model
+ref, rewinds one, makes a commit the commit-msg hook would have refused, or sends another author's
+commit to a remote. So the guard's model
 is checked against git itself, not against a second copy of the model. Nothing here reaches a
 network or the host's git configuration.
 
@@ -28,6 +29,10 @@ ALLOW, DENY = "allow", "deny"
 UP_MASTER = "git branch -q --set-upstream-to=origin/master"
 DIVERGE = "git push -q origin feature/x && git commit -q --amend --allow-empty -m 'feat: f1, rewritten'"
 ON_MASTER = "git checkout -q master"
+PUSH_OPTIONS = "git -C ../remote.git config receive.advertisePushOptions true"
+UPSTREAM_MASTER = "git config push.default upstream; git config branch.feature/x.merge refs/heads/master"
+OTHER_EMAIL = "someone@example.com"
+FOREIGN = "GIT_AUTHOR_EMAIL=" + OTHER_EMAIL + " git commit -q --allow-empty -m 'feat: from another author'"
 
 # (name, setup run in the clone first, the call, the verdict). `{root}` is the fixture's own
 # directory, for a call that names an absolute path.
@@ -235,6 +240,41 @@ ROWS = [
     ("GIT_DIR assigned but not exported", "", "cd {root}/work2 && GIT_DIR={root}/work/.git; git push origin HEAD", DENY),
     ("a cd in a pipeline stage", "", "cd {root}/work2 && cd {root}/work | git status --short; git push origin HEAD", DENY),
     ("a push piped to tail, after a commit", "", "git commit -q --allow-empty -m 'feat: f4' && git push 2>&1 | tail -3", ALLOW),
+    # #298: five shapes found on the release of #236. Each passed the guard and did harm here.
+    # 1. A single `&` runs the command before it in the background: the shell never enters the directory.
+    ("a cd in the background, then a push from where the shell stayed", "git worktree add -q ../wt -b feature/y; " + ON_MASTER, "cd {root}/wt & git push origin HEAD", DENY),
+    ("a cd in the background inside bash -c", "git worktree add -q ../wt -b feature/y; " + ON_MASTER, "bash -c 'cd {root}/wt & git push origin HEAD'", DENY),
+    ("a cd in the background on the line before the push", "git worktree add -q ../wt -b feature/y; " + ON_MASTER, "cd {root}/wt &\ngit push origin HEAD", DENY),
+    ("a cd in the background, then a commit", "", "cd {root}/work2 & git commit -q --allow-empty -m 'feat: f2'", DENY),
+    ("a push in the background, then a checkout", "", "git push origin HEAD & git checkout -q master", DENY),
+    ("a quoted & in a commit message, then push", "", "git commit -q --allow-empty -m 'feat: this & that' && git push", ALLOW),
+    ("a dry run in a call that holds a &", "", "git status --short & git push --dry-run origin HEAD", ALLOW),
+    # 2 and 3. An option given as the value of -o is not a flag of the push.
+    ("-n as the value of -o, after a negated dry run", PUSH_OPTIONS, "git push -n --no-dry-run origin -o -n HEAD:master", DENY),
+    ("--dry-run as the value of -o, before --force", PUSH_OPTIONS + "; " + DIVERGE, "git push -n --no-dry-run -o --dry-run --force origin feature/x", DENY),
+    ("--dry-run as the value of -o, after a negated dry run", PUSH_OPTIONS, "git push -n --no-dry-run origin -o --dry-run HEAD:master", DENY),
+    ("a dry-run flag and --no-dry-run on an ordinary push", "", "git push -n --no-dry-run origin feature/x", DENY),
+    ("a push option with a plain value", PUSH_OPTIONS, "git push -o ci.skip origin feature/x", ALLOW),
+    ("--no-dry-run alone on an ordinary push", "", "git push --no-dry-run origin feature/x", ALLOW),
+    # 4. Under push.default=upstream a named source goes to its upstream's name, not its own.
+    ("upstream mode, a named source that tracks master", UPSTREAM_MASTER, "git push origin feature/x", DENY),
+    ("upstream mode, the source named in full", UPSTREAM_MASTER, "git push origin refs/heads/feature/x", DENY),
+    ("upstream mode, -u and a named source", UPSTREAM_MASTER, "git push -u origin feature/x", DENY),
+    ("upstream mode in the global config, a named source", "git config --global push.default upstream; git config branch.feature/x.merge refs/heads/master", "git push origin feature/x", DENY),
+    ("upstream mode, the destination named", UPSTREAM_MASTER, "git push origin feature/x:feature/x", ALLOW),
+    ("upstream mode, origin HEAD", UPSTREAM_MASTER, "git push origin HEAD", ALLOW),
+    ("upstream mode, origin @", UPSTREAM_MASTER, "git push origin @", ALLOW),
+    # 5. A bare push goes to branch.<name>.remote; the author scan read another remote.
+    ("a bare push to the branch's remote, which the scan did not read", FOREIGN + "; git push -q origin feature/x; git config branch.feature/x.remote other; git config push.default current", "git push", DENY),
+    ("a bare push with --tags to the branch's remote", FOREIGN + "; git tag v2; git push -q origin feature/x v2; git config branch.feature/x.remote other; git config push.default current", "git push --tags", DENY),
+    ("a bare push to the branch's remote, which the scan reads", "git push -q other feature/x; git config branch.feature/x.remote other; git config push.default current; git commit -q --allow-empty -m 'feat: f2'", "git push", ALLOW),
+    ("the branch's remote named on the command", "git config branch.feature/x.remote other; git config push.default current", "git push other feature/x", ALLOW),
+    # The daily controls #298 names, held again beside its rules.
+    ("daily: add, commit, push", "", "git add -A && git commit -q --allow-empty -m 'feat: f2' && git push", ALLOW),
+    ("daily: the release fast-forward of develop", "", "git push origin HEAD:develop", ALLOW),
+    ("daily: -u origin <branch>", "", "git push -u origin feature/x", ALLOW),
+    ("daily: a release tag by full refspec", "", "git push --no-follow-tags origin refs/tags/v1:refs/tags/v1", ALLOW),
+    ("daily: a push after cd to an absolute path", "git worktree add -q ../wt -b feature/y", "cd {root}/wt && git push -u origin feature/y", ALLOW),
     # (rows for the next rule go above this line)
 ]
 
@@ -302,10 +342,17 @@ def refs(root, env):
     return found
 
 
-def harm(root, env, before, after):
+def foreign(root, env):
+    """The bare remotes that hold a commit by another author."""
+    return {remote for remote in ("remote.git", "other.git")
+            if OTHER_EMAIL in run("git -C {} log --all --format=%ae".format(remote), root, env).stdout}
+
+
+def harm(root, env, before, after, held=frozenset()):
     """What the call did that no allowed call may do: move a release branch, delete or rewind a
-    ref, or make a commit the commit-msg hook refuses."""
-    done = []
+    ref, make a commit the commit-msg hook refuses, or send another author's commit to a remote
+    that did not hold one (`held`: the remotes that did)."""
+    done = ["sent another author's commit to " + remote for remote in sorted(foreign(root, env) - held)]
     for name, old in sorted(before.items()):
         new = after.get(name)
         remote, ref = name.split(":", 1)
@@ -350,12 +397,12 @@ class PushDifferentialTest(unittest.TestCase):
             command = command.replace("{root}", root)
             if setup:
                 run(setup.replace("{root}", root), work, env)
-            before = refs(root, env)
+            before, held = refs(root, env), foreign(root, env)
             with mock.patch.dict(os.environ, env, clear=True):
                 reason = guard_git.check_command(command, work)
                 self.released[command] = guard_git.released_check(command, work)
             run(command, work, env, check=False)
-            done = harm(root, env, before, refs(root, env))
+            done = harm(root, env, before, refs(root, env), held)
             return reason, done
         finally:
             shutil.rmtree(root, ignore_errors=True)
@@ -382,6 +429,7 @@ class PushDifferentialTest(unittest.TestCase):
             (DIVERGE, "git push --force origin feature/x", "rewound remote.git:refs/heads/feature/x"),
             ("", "git push origin :develop", "deleted remote.git:refs/heads/develop"),
             ("", "git commit -q --allow-empty -m bypass --no-verify", "committed past the hook in work"),
+            (FOREIGN, "git push origin feature/x", "sent another author's commit to remote.git"),
         )):
             with self.subTest(command=command):
                 _reason, done = self.outcome("control-{}".format(index), setup, command)
