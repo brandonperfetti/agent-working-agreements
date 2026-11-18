@@ -63,7 +63,7 @@ in force since, and it is the version a rollback returns to.
   `--no-follow-tags` send that one tag whatever `push.followTags` says. Before it,
   `git remote get-url --push --all origin` prints one URL, the one `git remote get-url origin`
   prints: this repository's. The guard reads a push before the command runs; a tag made in the
-  same call does not exist yet, so that push is refused as unreadable.
+  same call does not exist yet, so that push is refused.
 - **The back-merge is the workflow's** (ritual step 8). On the push to `master`,
   [`backmerge.yml`](.github/workflows/backmerge.yml) merges `master` into `develop` and pushes
   it, or tries to open a PR when the merge conflicts or the push is refused; the run fails where
