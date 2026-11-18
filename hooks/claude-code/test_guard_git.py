@@ -405,7 +405,10 @@ class GuardTest(unittest.TestCase):
         # With both flags the push is refused whatever it names: which one git obeys is not worked out (#298).
         self.assertRefused("both a dry-run flag", "git push -n --no-dry-run origin feature", self.on_feature)
         for command in ("git push -n origin master", "git push --dry-run -o --no-dry-run origin master", "git push --no-dry-run origin feature",
-                        "git status & git push --dry-run origin master", "git status && git commit -m 'fix: this & that'"):
+                        "git status & git push --dry-run origin master", "git status && git commit -m 'fix: this & that'",
+                        # A quoted & is data, not the operator: these stay ordinary calls.
+                        "git add -- '&' && git commit -m 'fix: track a literal symbol filename'", "printf '%s\n' '&' && git commit --allow-empty -m 'fix: ordinary'",
+                        "git commit --message='this & that'", "git add -- '&' && git commit -m 'fix: x' && git push origin feature"):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
 

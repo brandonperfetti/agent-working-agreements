@@ -103,7 +103,8 @@ on purpose, in its own reviewed change.
 - **Before a push, a call may hold only** `NAME=value`, a plain `git add`, `git commit` or
   `git status`, and a literal `cd <dir>`: an existing directory, with no option, `..`, `~`, `$`,
   glob, symbolic link or `CDPATH`. Anything else is refused with "run the push as its own call".
-  A dry run, and whatever follows the push, are not limited, but for a `&` (below).
+  A dry run is not limited. Whatever follows the push is not limited either, but for a `&`
+  (below).
 - **So these need the push in its own call:** tests or any script, then push; `git fetch`,
   `git pull`, `git merge` or `git tag`, then push; `git checkout -b <new>` or `git switch -c
   <new>`, then push; a comment line, or a comment after the push on its line; `cd` by a path with
@@ -111,9 +112,10 @@ on purpose, in its own reviewed change.
   an earlier command with a redirect (`git status > out.txt`; `2>&1` is fine); a git alias after
   any command the guard does not read (`npm test && git st`); anything in `( )` or `$( )`, or a
   pipe (`|`), earlier in the call. A pipe after the push is fine.
-- **A push, commit or merge in a call that holds a single `&` is refused,** wherever the `&`
-  sits: the command before it runs in the background, so a `cd` there never moves the shell
-  (`cd <dir> & git push`). Join the commands with `&&`, or run the push as its own call (#298).
+- **A push, commit or merge in a call that holds a single `&` is refused,** before or after
+  it: the command before a `&` runs in the background, so a `cd` there never moves the shell
+  (`cd <dir> & git push`). Join the commands with `&&`, or run the push as its own call. A dry
+  run passes, and so does a quoted `&` (`git add -- '&'`, a message) (#298).
 - **A call the guard cannot split is refused:** a git or gh call with unbalanced quotes. A
   backtick substitution earlier in a call refuses the push after it, as `$( )` does.
 - **A `#` on a line that continues onto the next (`\` at its end) is refused** in a git or gh

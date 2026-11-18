@@ -248,6 +248,7 @@ ROWS = [
     ("a cd in the background, then a commit", "", "cd {root}/work2 & git commit -q --allow-empty -m 'feat: f2'", DENY),
     ("a push in the background, then a checkout", "", "git push origin HEAD & git checkout -q master", DENY),
     ("a quoted & in a commit message, then push", "", "git commit -q --allow-empty -m 'feat: this & that' && git push", ALLOW),
+    ("a file named &, added, committed and pushed", "touch '&'", "git add -- '&' && git commit -q -m 'feat: a file named for a symbol' && git push", ALLOW),
     ("a dry run in a call that holds a &", "", "git status --short & git push --dry-run origin HEAD", ALLOW),
     # 2 and 3. An option given as the value of -o is not a flag of the push.
     ("-n as the value of -o, after a negated dry run", PUSH_OPTIONS, "git push -n --no-dry-run origin -o -n HEAD:master", DENY),

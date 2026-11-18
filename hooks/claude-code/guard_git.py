@@ -794,7 +794,6 @@ EXTRA_CONFIG_HOME_VARS = {"HOME", "XDG_CONFIG_HOME"}
 EXTRA_BARE_SOURCES = 20  # refspecs without a destination that one push may name: each costs a read
 EXTRA_ALIAS_DEPTH = 10  # aliases of aliases followed before the chain is called a loop
 EXTRA_PLUMBING = {"send-pack", "http-push"}  # what `git push` runs underneath; neither takes its rules
-EXTRA_BACKGROUND = ["&"]  # the segment extra_segments leaves for a `&` that backgrounds a command
 EXTRA_CONTINUED_HASH = re.compile(r"#[^\n]*\\\n")
 EXTRA_GIT_WORD = re.compile(r"(?:^|[^A-Za-z0-9_])(?:git|gh)(?:[^A-Za-z0-9_]|$)")
 # Git's global options. `--version` and `--help` end them: nothing is added to the released
@@ -844,8 +843,7 @@ def extra_segments(command):
     """The released `segments`, with one addition: a `(`, `)` or `|` leaves a marker segment. A
     subshell, substitution or pipeline stage does not carry a `cd` or an assignment out of it; its
     scope is not worked out. The marker is a command the rules below do not read, so a push later
-    in the call is refused. A `&` that is not half of `&&` leaves the marker `&`: the command
-    before it runs in the background, apart from the rest of the call (#298)."""
+    in the call is refused."""
     command = HEREDOC.sub(drop_heredoc, command)
     try:
         lexer = shlex.shlex(command, posix=True, punctuation_chars=SEPARATORS)
@@ -862,12 +860,33 @@ def extra_segments(command):
             current = []
             if "(" in token or ")" in token or ("|" in token and token != "||"):
                 result.append(["("])
-            if "&" in token.replace("&&", ""):
-                result.append(EXTRA_BACKGROUND)
         else:
             current.append(token)
     result.append(current)
     return result
+
+
+def extra_background(command):
+    """True when the call holds a `&` that is not half of `&&`: the command before it runs in the
+    background, apart from the rest of the call (#298). The released lexer drops quotes, so a
+    quoted `'&'` reads as the operator there; a second pass that keeps quotes must find one too.
+    What the `&` backgrounds is not worked out."""
+    def lone(posix):
+        lexer = shlex.shlex(HEREDOC.sub(drop_heredoc, command), posix=posix, punctuation_chars=SEPARATORS)
+        lexer.whitespace = " \t\r"
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        return any(token and set(token) <= set(SEPARATORS) and "&" in token.replace("&&", "") for token in lexer)
+
+    try:
+        if not lone(True):
+            return False
+    except ValueError:
+        return False  # unbalanced quotes: extra_command refuses the call by its own rule
+    try:
+        return lone(False)
+    except ValueError:
+        return True  # the second pass cannot read it: the first pass's answer stands
 
 
 def extra_plain_cd(directory, words, env):
@@ -1111,12 +1130,13 @@ def extra_command(command, directory, inherited=None, nested=False, state=None):
         return "a git or gh call with a # on a line that continues onto the next, which the guard cannot read"
     if merge_bearing(command):
         return None  # one plain gh command, read whole by the released guard
-    parts = extra_segments(re.sub(r"\d*[<>]&(\d+|-)", " ", command.replace("\\\n", "")))
+    joined = re.sub(r"\d*[<>]&(\d+|-)", " ", command.replace("\\\n", ""))
+    parts = extra_segments(joined)
     if parts is None:
         # The released reader falls back to plain words here; the rules below cannot tell what
         # comes before what, so a call that names git or gh is refused.
         return "a git or gh call with unbalanced quotes, which the guard cannot split into commands" if EXTRA_GIT_WORD.search(command) else None
-    if EXTRA_BACKGROUND in parts:
+    if extra_background(joined):
         state["background"] = True  # for the whole call, nested shells included: what runs when is not worked out
     for tokens in parts:
         if any("`" in token for token in tokens):
