@@ -14,9 +14,10 @@ being retrofitted onto the other.
   The binding named two repositories; it now names the account, with no exclusion, and says only
   Brandon merges into `master` or `main`. The fixture qualifications carry: they are of a client
   and the one form, and the guard reads no repository. A repository whose own instructions keep
-  its `develop` merges Brandon's stays his until they change. *Base merges* adds: a failing check
-  outside the gate holds the merge, and a false positive is cleared at its source. Why: routine,
-  accepted PRs in 15 repositories waited on him in one day. Brandon decided, 2026-11-18.
+  its `develop` merges Brandon's stays his until they change. *Base merges* adds: any failing check
+  holds the merge, and a false positive is cleared where the check is configured; effects are
+  recorded in agent docs or the reviewer's record, closing keywords included. Why: accepted PRs
+  in 15 repositories waited on him in one day. Brandon decided, 2026-11-18.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/300).
 
 - **2026-11-17 — The git guard reads a push only in the state it will run in (#236).** The

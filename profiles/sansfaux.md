@@ -81,8 +81,8 @@ disagree, the rule is wrong.
 5. **Release-cut work lands on `develop` the same way** — the version bump, the CHANGELOG section
    rename and any built artifact, reviewed on that PR. The only per-repo difference is whether a
    repo has a version to bump at all.
-6. **Only Brandon merges into `master` or `main`: the release PR, by hand in the host's UI,** and
-   any `develop` merge no active route covers. The delivery owner merges reviewed lanes.
+6. **Only Brandon merges into `master` or `main`, the release PR by hand in the host's UI.** He
+   also merges any `develop` merge no active route covers. The delivery owner merges reviewed lanes.
 7. **Brandon tags on `master`**, where the repo publishes releases; the tag fires the release
    workflow. In `agent-working-agreements` the orchestrator tags each release ([`AGENTS.md`](../AGENTS.md#release-tags)).
 8. **The back-merge carries `master` home to `develop`** — a direct push by the workflow, why
