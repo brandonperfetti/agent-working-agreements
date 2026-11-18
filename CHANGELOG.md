@@ -12,11 +12,11 @@ being retrofitted onto the other.
 
 - **2026-11-18 — The guard's README names a refusal that is not a broken setup (#302).** "A
   segment begins with an option" refuses ordinary read-only calls: a quoted or escaped word made
-  only of `;`, `&`, `|`, `(` or `)` reads as a separator, and an option after it is refused. The
-  README now names the shapes and the forms that pass. The guard is unchanged, so its refusal
-  still does not say what to do next; that stays open on the issue. Why: Camina reported the
-  refusal as a fault, 2026-11-18, and the rule is in the released text. Brandon chose to document
-  it rather than loosen it, 2026-11-18.
+  only of `;`, `&`, `|`, `(` or `)` reads as a separator, and an option straight after it is
+  refused. The README now names the shapes and the forms that pass. The guard is unchanged, so
+  its refusal still says to hand the call back and names no rewrite; that stays open on the
+  issue. Why: Camina reported the refusal as a fault, 2026-11-18, and the rule is in the released
+  text. Brandon chose to document it rather than loosen it, 2026-11-18.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/302).
 
 - **2026-11-17 — The commit-msg hook reads "generated with" as words (#280).** The footer
