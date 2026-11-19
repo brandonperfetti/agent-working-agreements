@@ -39,10 +39,11 @@ delivery's decisions for work with no initiative, B1 or B2, by mode).
 - **Agent-tool dispatches in one message run concurrently**; the ceiling is unmeasured.
 - **Model and effort (A4):** per [orchestration seats](../procedures/orchestration-seats.md), and
   in T3 [its adapter](../procedures/t3-adapter.md); old role-to-selector maps restrict no task choice.
-- **Long gates (Bash):** set `run_in_background: true` and `timeout: 7200000`; the 30-minute default
-  silently stops a gate and its watcher, and T3 messages or idle do not. Past 2 hours or the
-  session, detach (`nohup perl -MPOSIX -e 'POSIX::setsid();exec @ARGV' bash -c '<gate>; echo $? >
-  exit' &`) and wait on `exit`. Stop only your group, `kill -TERM -<pgid>`, never `pkill -f` (A4).
+- **Long gates (Bash):** `run_in_background: true` and `timeout: 7200000`; the 30-minute default
+  silently stops gate and watcher, and T3 messages or idle do not. Past 2 hours or the session,
+  detach into a fresh `<d>` (`nohup perl -MPOSIX -e 'setsid;exec @ARGV' bash -c '<gate>; echo $? >
+  <d>/exit' &`); wait for `<d>/exit` or the group's end. Stop only your group, `kill -TERM -<pgid>`,
+  never `pkill -f`.
 - **CodeRabbit CLI, for B2's preflight:** `coderabbit-preflight` checks the CLI on every run; a
   recorded install is a record, not a guarantee.
 - **Kody tool names (A7):** the same Kody connector is named differently per client. A permission
@@ -55,7 +56,6 @@ delivery's decisions for work with no initiative, B1 or B2, by mode).
   install), fix the message by hand ([`rule-zero-check.md`](../procedures/rule-zero-check.md)).
 - Rotate at a context-driven clean pause through the supported session route, using A4's packet
   (or `handoff`); verify successor capability, receipt, acceptance and advancement before retirement.
-- Reached from the one-line pointer in `~/.claude/CLAUDE.md`; this opener completes the binding.
 
 ## History
 
