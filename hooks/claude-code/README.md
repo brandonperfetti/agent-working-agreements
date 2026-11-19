@@ -115,7 +115,10 @@ on purpose, in its own reviewed change.
 - **A push, commit or merge in a call that holds a single `&` is refused,** before or after
   it: the command before a `&` runs in the background, so a `cd` there never moves the shell
   (`cd <dir> & git push`). Join the commands with `&&`, or run the push as its own call. A dry
-  run passes, and so does a quoted `&` (`git add -- '&'`, a message) (#298).
+  run passes, and so does a quoted `&` (`git add -- '&'`, a message) (#298). A `&` after a `#`
+  on its line is read the same way, comment or not; drop the comment (#306). A `&` inside a
+  later shell's quoted body (`git commit …; bash -c '… & …'`) is read when that body is
+  reached, so it refuses only what comes from there on (#306).
 - **A call the guard cannot split is refused:** a git or gh call with unbalanced quotes. A
   backtick substitution earlier in a call refuses the push after it, as `$( )` does.
 - **A `#` on a line that continues onto the next (`\` at its end) is refused** in a git or gh
@@ -143,11 +146,12 @@ on purpose, in its own reviewed change.
   the two git obeys. Run the dry run or the push. On a commit, `--no-dry-run` ends the dry-run
   exemption (#298).
 - **Under `push.default=upstream`, a branch pushed without its destination is refused**
-  (`git push origin feature`, `-u` included): git sends it to `branch.<name>.merge`, which may
-  name another branch. `HEAD` and `<src>:<dst>` pass: `git push <remote> <src>:<dst>` (#298).
+  (`git push origin feature`, `-u` included): git may send it to `branch.<name>.merge`, which
+  may name another branch. `HEAD` and `<src>:<dst>` pass: `git push <remote> <src>:<dst>` (#298).
 - **A push that names no remote is refused when it goes to a `branch.<name>.remote` the author
   scan does not read:** the scan reads the remote `@{push}` names, else `origin`. This refuses
-  the first bare push of a branch to such a remote; name the remote and the branch (#298).
+  the first bare push of a branch to such a remote; name the remote and the branch (#298), or
+  for `--tags` the remote: `git push <remote> --tags` (#306).
 
 `test_push_differential.py` holds these against git itself. It runs each call for real on bare
 repositories on disk and fails if a call the guard allows moves `master` or `main`, deletes or

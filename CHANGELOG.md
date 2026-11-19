@@ -19,6 +19,14 @@ being retrofitted onto the other.
   open. Brandon decided, 2026-11-17 and 2026-11-19.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/167).
 
+- **2026-11-19 — Four of the guard's #298 refusals say what is true (#306).** No verdict
+  changes. A `&` after a `#` is still refused, and the refusal now says to drop the comment. A
+  tags-only push to an unscanned branch remote is told `git push <remote> --tags`. Under
+  `upstream`, git *may* take a branch's destination from `branch.<name>.merge`. The README says
+  a `&` in a later `bash -c` body refuses only what comes after it. Why: CodeRabbit found these
+  on release #305. Brandon chose the lane, 2026-11-19.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/306).
+
 - **2026-11-18 — The guard's README names a refusal that is not a broken setup (#302).** "A
   segment begins with an option" refuses ordinary read-only calls: a quoted or escaped word made
   only of `;`, `&`, `|`, `(` or `)` reads as a separator, and an option straight after it is

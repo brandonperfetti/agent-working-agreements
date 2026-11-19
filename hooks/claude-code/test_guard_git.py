@@ -189,6 +189,15 @@ SHAPE_REFUSALS = [
     ("git push -n --no-dry-run origin feature", "both a dry-run flag and --no-dry-run", "one of the two"),
     ("git push -n --no-dry-run -o --dry-run origin feature", "both a dry-run flag and --no-dry-run", "one of the two"),
     ("git push --dry-run --no-dry origin -o -n feature", "both a dry-run flag and --no-dry-run", "one of the two"),
+    # #306: a & after a # is still the operator, but the refusal says to drop the comment.
+    ("git commit -m fix # R&D", "after a # on its line", "drop the comment"),
+    ("git status && git merge topic # R&D", "after a # on its line", "drop the comment"),
+    ("bash -c 'git merge topic # R&D'", "after a # on its line", "drop the comment"),
+    # A & before any # on its line, or on another line, is the background & the earlier rule names.
+    ("git commit -m x # R&D\ngit status & git push origin feature", "in the background (&)", "join the commands with &&"),
+    # The released reader reads a `bash -c` body on its own first, so this body is worded by its
+    # own # and &; the advice names both next steps.
+    ("git status & bash -c 'git commit -m x # R&D'", "after a # on its line", "join the commands with &&"),
 ]
 
 
@@ -412,6 +421,14 @@ class GuardTest(unittest.TestCase):
                         "git add -- '&' && git commit --message='fix: track & file'", 'git add -- "a & b" \\& && git commit -m "fix: R&D \\" & more"'):
             with self.subTest(command=command):
                 self.assertIsNone(guard_git.check_command(command, self.on_feature))
+        # #306: a & in a later shell's quoted body is read when that body is reached. A commit
+        # before it has finished first, and passes, as the README says; one after it is refused.
+        for command in ("git commit -m fix; bash -c 'true & wait'", "git commit -m fix && eval 'true & wait'"):
+            with self.subTest(command=command):
+                self.assertIsNone(guard_git.check_command(command, self.on_feature))
+        for command in ("bash -c 'true & wait'; git commit -m fix", "git commit -m fix; bash -c 'true & wait'; git commit -m again"):
+            with self.subTest(command=command):
+                self.assertRefused("in the background (&)", command, self.on_feature)
 
     def test_a_push_git_sends_elsewhere_than_the_command_says_names_the_next_step(self):
         """#298, shapes 4 and 5: the destination under push.default=upstream, and the remote of a
@@ -431,6 +448,7 @@ class GuardTest(unittest.TestCase):
             with self.subTest(command=command):
                 text = said(command, upstream)
                 self.assertIn("without its destination under push.default=upstream", text)
+                self.assertIn("where git may take it from branch.<name>.merge", text)  # #306: only where one is set
                 self.assertIn("Name the destination: git push <remote> <src>:<dst>.", text)
                 self.assertNotIn("hand it back", text)
         git(upstream, "config", "push.default", "tracking")  # the same mode by its older name
@@ -444,12 +462,18 @@ class GuardTest(unittest.TestCase):
         elsewhere = make_repo(tmp.name, "elsewhere", "feature")
         git(elsewhere, "config", "push.default", "current")
         git(elsewhere, "config", "branch.feature.remote", "other")
-        for command in ("git push", "git push --tags", "git push -v"):
+        for command in ("git push", "git push -v", "git push --follow-tags"):
             with self.subTest(command=command):
                 text = said(command, elsewhere)
                 self.assertIn("goes to other, a remote the author scan does not read", text)
                 self.assertIn("git push <remote> <branch>", text)
                 self.assertNotIn("hand it back", text)
+        # #306: a tags-only push is told to name the remote and keep --tags, not to push a branch.
+        text = said("git push --tags", elsewhere)
+        self.assertIn("a push of --tags that names no remote and goes to other", text)
+        self.assertIn("Name the remote on the command: git push <remote> --tags.", text)
+        self.assertNotIn("<branch>", text)
+        self.assertIsNone(guard_git.check_command("git push other --tags", elsewhere))  # the advice, followed, passes
         self.assertIsNone(guard_git.check_command("git push other feature", elsewhere))  # the remote named: the scan reads it
         self.assertIsNone(guard_git.check_command("git push --dry-run", elsewhere))
         git(elsewhere, "update-ref", "refs/remotes/other/feature", "HEAD")
