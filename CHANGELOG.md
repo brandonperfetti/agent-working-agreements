@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-19 — A recurring friction item gets the whole prevention loop (#167, #166).** The
+  one-line cheapest-check ladder becomes a passage: `recurring-error-analysis`'s threshold and
+  analysis, enforcement points from boundaries and structure down to scripts, judgment kept for
+  review, and a new control proven, costed, owned, with rollback and retirement evidence.
+  Agreements and authority still change only by amendment. #166's three risk dimensions go to
+  the `review-and-recommend` skill in claude-skills. Why: the shipped slice left #167's criteria
+  open. Brandon decided, 2026-11-17 and 2026-11-19.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/167).
+
 - **2026-11-19 — Four of the guard's #298 refusals say what is true (#306).** No verdict
   changes. A `&` after a `#` is still refused, and the refusal now says to drop the comment. A
   tags-only push to an unscanned branch remote is told `git push <remote> --tags`. Under
