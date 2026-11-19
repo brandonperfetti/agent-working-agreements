@@ -16,7 +16,7 @@ being retrofitted onto the other.
   the process groups it started. Why: the 30-minute default ended real gates on 11-16 and 11-19,
   and a cross-lane `pkill -f "playwright test"` killed another lane's `pnpm check` (11-19). The
   suspected T3-send kill did not reproduce. Brandon chose the AWA route, 2026-11-19.
-  [PR](https://github.com/brandonperfetti/agent-working-agreements/pulls?q=head%3Adocs%2Flong-gate-rule).
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/309).
 
 - **2026-11-19 — A recurring friction item gets the whole prevention loop (#167, #166).** The
   one-line cheapest-check ladder becomes a passage: `recurring-error-analysis`'s threshold and
