@@ -13,20 +13,16 @@ is wrong. **Name all three when you acknowledge your reading** — "read the agr
 
 ## Evidence store
 
-On the desktop, this client's store is `~/dev/sansfaux/_agent/`. Use its `evidence/` and
-`analysis/` subdirectories per A2 and A6; the store is working state, not repository content. A
-cloud checkout uses its active workspace's durable `_agent/` store and records that location with
-the capture.
+On the desktop the store is `~/dev/sansfaux/_agent/` (`evidence/`, `analysis/`; A2, A6): working
+state, not repository content; a cloud checkout uses, and records, its workspace's durable `_agent/`.
 
 The native shell supports `rm`, worktrees, `git branch -d` and hook execution; none of the Cowork
-hazards (`cowork.md`) apply. So B0 item 1 passes by construction but for its hook probe. **Still
-check at pickup:** item 1's hook probe (`git push --dry-run origin HEAD` from the checkout you will
-push from), item 2 (the proportionate pickup check — the local shell's locale/env differs from the
-CI runner; the project docs name the exports), item 3 before **every** feature commit, not only the
-first, item 4 (branch protection — query it, never assume it), item 5 (the override in the prompt,
-recorded in MPD §0 for initiative work, or with the delivery's decisions for work with no
-initiative, B1 or B2, by mode). Whether the repo carries any hooks at all is a repo fact, not a
-Claude Code fact.
+hazards (`cowork.md`) apply. **Still check at pickup:** item 1's hook probe (`git push --dry-run
+origin HEAD` from the checkout you will push from), item 2 (the proportionate pickup check — the
+local shell's locale/env differs from the CI runner; the project docs name the exports), item 3
+before **every** feature commit, not only the first, item 4 (branch protection — query it, never
+assume it), item 5 (the override in the prompt, recorded in MPD §0 for initiative work, or with the
+delivery's decisions for work with no initiative, B1 or B2, by mode).
 
 - Lane isolation and retirement follow [worktree lifecycle](../procedures/worktree-lifecycle.md):
   Shell lanes use `manual/`; retain native T3 ownership. Do not use `EnterWorktree` (#101).
@@ -43,6 +39,10 @@ Claude Code fact.
 - **Agent-tool dispatches in one message run concurrently**; the ceiling is unmeasured.
 - **Model and effort (A4):** per [orchestration seats](../procedures/orchestration-seats.md), and
   in T3 [its adapter](../procedures/t3-adapter.md); old role-to-selector maps restrict no task choice.
+- **Long gates (Bash):** set `run_in_background: true` and `timeout: 7200000`; the 30-minute default
+  silently stops a gate and its watcher, and T3 messages or idle do not. Past 2 hours or the
+  session, detach (`nohup perl -MPOSIX -e 'POSIX::setsid();exec @ARGV' bash -c '<gate>; echo $? >
+  exit' &`) and wait on `exit`. Stop only your group, `kill -TERM -<pgid>`, never `pkill -f` (A4).
 - **CodeRabbit CLI, for B2's preflight:** `coderabbit-preflight` checks the CLI on every run; a
   recorded install is a record, not a guarantee.
 - **Kody tool names (A7):** the same Kody connector is named differently per client. A permission
