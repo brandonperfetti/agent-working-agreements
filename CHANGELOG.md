@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-19 — Long gates survive the Bash time limit, and lanes stop only their own
+  processes.** `clients/claude-code.md` starts every gate with `timeout: 7200000`, detaches one
+  that can pass 2 hours, and says T3 messages and idle stop no pending gate; A4 keeps a lane to
+  the process groups it started. Why: the 30-minute default ended real gates on 11-16 and 11-19,
+  and a cross-lane `pkill -f "playwright test"` killed another lane's `pnpm check` (11-19). The
+  suspected T3-send kill did not reproduce. Brandon chose the AWA route, 2026-11-19.
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/309).
+
 - **2026-11-19 — A recurring friction item gets the whole prevention loop (#167, #166).** The
   one-line cheapest-check ladder becomes a passage: `recurring-error-analysis`'s threshold and
   analysis, enforcement points from boundaries and structure down to scripts, judgment kept for
