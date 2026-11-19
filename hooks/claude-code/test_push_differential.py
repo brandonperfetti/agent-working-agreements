@@ -276,6 +276,19 @@ ROWS = [
     ("daily: -u origin <branch>", "", "git push -u origin feature/x", ALLOW),
     ("daily: a release tag by full refspec", "", "git push --no-follow-tags origin refs/tags/v1:refs/tags/v1", ALLOW),
     ("daily: a push after cd to an absolute path", "git worktree add -q ../wt -b feature/y", "cd {root}/wt && git push -u origin feature/y", ALLOW),
+    # #306: four faults in #298's rules, found on release #305. None changes a verdict; each row
+    # holds the verdict, and that the call the guard now names or documents does no harm.
+    # 1. A & after a # is still read as the operator; the refusal says to drop the comment.
+    ("a & in a comment after a commit", "", "git commit -q --allow-empty -m 'feat: f2' # R&D", DENY),
+    ("the same commit, the comment dropped", "", "git commit -q --allow-empty -m 'feat: f2'", ALLOW),
+    # 2. A tags-only push to the branch's remote is told to keep its form: git push <remote> --tags.
+    ("--tags to the branch's remote, not named", "git config branch.feature/x.remote other; git config push.default current", "git push --tags", DENY),
+    ("--tags to the branch's remote, named as the refusal says", "git config branch.feature/x.remote other; git config push.default current", "git push other --tags", ALLOW),
+    # 3. A & in a later shell's quoted body is read from that body on; the commit before it has finished.
+    ("a commit, then a & inside a later bash -c", "", "git commit -q --allow-empty -m 'feat: f2'; bash -c 'true & wait'", ALLOW),
+    ("a & inside an earlier bash -c, then a commit", "", "bash -c 'true & wait'; git commit -q --allow-empty -m 'feat: f2'", DENY),
+    # 4. Under upstream with no branch.<name>.merge: still refused, the wording says "may".
+    ("upstream mode, a named source with no merge configured", "git config push.default upstream; git branch -q --unset-upstream", "git push origin feature/x", DENY),
     # (rows for the next rule go above this line)
 ]
 
