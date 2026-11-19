@@ -42,8 +42,8 @@ delivery's decisions for work with no initiative, B1 or B2, by mode).
 - **Long gates (Bash):** `run_in_background: true` and `timeout: 7200000`; the 30-minute default
   silently stops gate and watcher, and T3 messages or idle do not. One that can pass 2 hours or the
   session starts detached in a fresh `<d>` (`nohup perl -MPOSIX -e 'setsid;exec @ARGV' bash -c
-  '<gate>; echo $? > <d>/exit' &`); wait for `<d>/exit` or the group's end. Stop only your group,
-  `kill -TERM -<pgid>`, never `pkill -f`.
+  '(<gate>); echo $? > <d>/exit' & echo $! > <d>/pgid`, `$!` being its group); wait for `<d>/exit`
+  or the group's end. Stop only your group, `kill -TERM -$(cat <d>/pgid)`, never `pkill -f`.
 - **CodeRabbit CLI, for B2's preflight:** `coderabbit-preflight` checks the CLI on every run; a
   recorded install is a record, not a guarantee.
 - **Kody tool names (A7):** the same Kody connector is named differently per client. A permission
