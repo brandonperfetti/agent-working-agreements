@@ -40,8 +40,8 @@ delivery's decisions for work with no initiative, B1 or B2, by mode).
   in T3 [its adapter](../procedures/t3-adapter.md); old role-to-selector maps restrict no task choice.
 - **Long gates (Bash):** `run_in_background: true` and `timeout: 7200000`; the 30-minute default
   stops gate and watcher silently, T3 messages and idle do not. One that can pass 2 hours or the
-  session runs as a fresh `<d>/gate.sh`, detached (`perl -MPOSIX -e 'setsid;exec @ARGV' bash -c
-  'bash -e <d>/gate.sh; echo $? > <d>/x; mv <d>/x <d>/exit' & echo $! > <d>/pgid`); wait for
+  session runs as `<d>/gate.sh` in a new `<d>`, detached (`perl -MPOSIX -e 'setsid;exec @ARGV' bash
+  -c 'bash -e <d>/gate.sh; echo $? > <d>/x; mv <d>/x <d>/exit' & echo $! > <d>/pgid`); wait for
   `<d>/exit` or the group's end. Before `<d>/exit`, stop only that group: `kill -TERM -$(cat
   <d>/pgid)`, not `pkill -f`.
 - **CodeRabbit CLI, for B2's preflight:** `coderabbit-preflight` checks the CLI on every run; a
