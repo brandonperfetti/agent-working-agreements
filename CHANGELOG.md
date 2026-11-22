@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-22 — An OpenClaw brief names an outcome and a budget (#313).** The *Delegation* line
+  asks for the outcome and why, the real limits, a size or time budget and when to stop and bring
+  options, in place of a bare field list; the file does not grow. Why: the D9 audit found a proof
+  standard with no budget drove the spiral, and a short plain brief finished in one turn. Brandon
+  decided, 2026-11-22.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/313).
+
 - **2026-11-22 — The OpenClaw adapter states principles (#311).** *Models and routes* drops the
   retired wrapper's contract for a task-fit choice through normal sessions and subagents, Anthropic
   included, inside approved account and tool boundaries. The dormant VPS sandbox breaker is deleted;
