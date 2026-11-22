@@ -33,17 +33,17 @@ delivery's decisions for work with no initiative, B1 or B2, by mode).
   dispatching lanes: where item 1 makes the probe per worktree, run it in each lane's, naming
   remote and branch as item 1 does — `git worktree add -b` sets no upstream. A lane never installs
   a hook of its own — the repo's install step is the only source of hooks.
-- **Scratch clones and installs (A6, "Clones"):** they go in the scratchpad directory the
-  session's environment names, never under `_agent/`. Whether every dispatch shares it is
-  unmeasured, so a dispatch names one subdirectory of it per sub-agent.
+- **Scratch clones and installs (A6, "Clones"):** in the session's scratchpad directory, never
+  `_agent/`; a dispatch names one subdirectory per sub-agent, as sharing is unmeasured.
 - **Agent-tool dispatches in one message run concurrently**; the ceiling is unmeasured.
 - **Model and effort (A4):** per [orchestration seats](../procedures/orchestration-seats.md), and
   in T3 [its adapter](../procedures/t3-adapter.md); old role-to-selector maps restrict no task choice.
 - **Long gates (Bash):** `run_in_background: true` and `timeout: 7200000`; the 30-minute default
-  silently stops gate and watcher, and T3 messages or idle do not. One that can pass 2 hours or the
-  session starts detached in a fresh `<d>` (`nohup perl -MPOSIX -e 'setsid;exec @ARGV' bash -c
-  '(<gate>); echo $? > <d>/exit' & echo $! > <d>/pgid`, `$!` being its group); wait for `<d>/exit`
-  or the group's end. Stop only your group, `kill -TERM -$(cat <d>/pgid)`, never `pkill -f`.
+  stops gate and watcher silently, T3 messages and idle do not. One that can pass 2 hours or the
+  session runs as a fresh `<d>/gate.sh`, detached (`perl -MPOSIX -e 'setsid;exec @ARGV' bash -c
+  'bash -e <d>/gate.sh; echo $? > <d>/x; mv <d>/x <d>/exit' & echo $! > <d>/pgid`); wait for
+  `<d>/exit` or the group's end. Before `<d>/exit`, stop only that group: `kill -TERM -$(cat
+  <d>/pgid)`, not `pkill -f`.
 - **CodeRabbit CLI, for B2's preflight:** `coderabbit-preflight` checks the CLI on every run; a
   recorded install is a record, not a guarantee.
 - **Kody tool names (A7):** the same Kody connector is named differently per client. A permission
