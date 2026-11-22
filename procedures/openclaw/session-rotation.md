@@ -59,6 +59,6 @@ candidates, and if none is uniquely yours, stop and report rather than retry or 
 ## Exceptional root replacement
 
 Only when evidence shows the conversation cannot recover in place. Save the A4 packet under the
-initiative's `handoffs/` (or `_agent/handoffs/`), create the replacement as above, and transfer
-ownership once it has accepted and advanced. Archive the predecessor only when no work, worktree or
-decision still lives there.
+initiative's `handoffs/`, or `_agent/handoffs/` for one-off work, create the replacement as
+above, and transfer ownership once it has accepted and advanced. Archive the predecessor only when
+no work, worktree or decision still lives there.
