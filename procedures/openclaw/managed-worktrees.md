@@ -31,7 +31,10 @@ switches and cleanup never target its working tree.
 
 1. `runbook.sh capture-base <repo-root>` fetches `develop` and `master` by name, checks each against
    `ls-remote`, and prints the base OID.
-2. Create with that OID, never the moving name. Without `--base-ref`, OpenClaw can fast-forward the
+2. `runbook.sh check-overlap --agent-store <store> --protected-root <root> <managed-root>` before
+   the create: the managed root (below) may not lie inside or contain either, and one it cannot
+   resolve stops too.
+3. Create with that OID, never the moving name. Without `--base-ref`, OpenClaw can fast-forward the
    protected root's checked-out branch.
 
    ```sh
@@ -39,7 +42,7 @@ switches and cleanup never target its working tree.
      openclaw worktrees create <repo-root> --name <name> --base-ref <base-oid>
    ```
 
-3. `runbook.sh verify-head <path> <base-oid>` before any edit, and
+4. `runbook.sh verify-head <path> <base-oid>` before any edit, and
    `runbook.sh check-overlap --agent-store <store> --protected-root <root> <managed-root> <path>`:
    neither path may lie inside or contain the `_agent/` store or the protected root.
 
