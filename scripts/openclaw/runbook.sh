@@ -3,7 +3,8 @@
 # The decisions of procedures/openclaw/managed-worktrees.md, as commands a test can drive (#191):
 # the named base capture, the created worktree's HEAD check, the path-overlap check, the protected
 # root's release refresh and the post-merge cleanup route. The procedure is the authority; this
-# file proves its stop and retention branches against fixture repositories and a stub `openclaw`.
+# file carries each step's checks, and its test proves their stop and retention branches against
+# fixture repositories and a stub `openclaw`.
 #
 # Each command acts only on the paths, repositories and `openclaw` command named in its arguments.
 # None has a default that reaches a live checkout, state directory, configuration or Gateway: the
