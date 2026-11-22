@@ -9,29 +9,22 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
 
 ## Host and startup
 
-- **Host:** Brandon's Mac mini, native macOS, user `brandonperfetti` (#186). The former VPS and
-  its sandbox are history; their recovery procedure is dormant (below).
-- **Agent root** `~/dev/sansfaux`, set here: A6's upward walk from a role workspace finds its own
-  `_agent/` or none. **Protected instruction-source root** `$AGENT_ROOT/agent-working-agreements/`:
-  clean, on `master`, equal to `origin/master` after the post-release refresh, never a delivery
-  checkout; its Git administration hosts isolated managed delivery worktrees. **Artifact store**
-  `$AGENT_ROOT/_agent/`, the one store for every role and for Claude Code, named by absolute path;
-  kept for the session, never switched or dual-written (A6). Each `~/.openclaw/workspace*/_agent/`
-  and the former workspace checkout are rollback roots gaining only a pointer; never merged,
-  mirrored, symlinked, moved, deleted or otherwise rewritten. A role on a changed pointer holds the
-  store provisionally, runs the create/readback canary on its supported route and reports its exact
-  instruction paths, hashes and store before acceptance. Paths are this host's.
+- **Host:** Brandon's Mac mini, native macOS, user `brandonperfetti` (#186).
+- **Agent root** `~/dev/sansfaux`. **Protected instruction-source root**
+  `$AGENT_ROOT/agent-working-agreements/`: clean, on `master`, equal to `origin/master` after each
+  release's refresh, never a delivery checkout. **Artifact store** `$AGENT_ROOT/_agent/`, the one
+  store for every role and for Claude Code, named by absolute path (A6). Each
+  `~/.openclaw/workspace*/_agent/` and the former workspace checkout are rollback roots: leave them
+  as they are.
 - **If the pointer, the core, the profile or this file is unreachable,** stop the affected work
   with the missing instruction source recorded (B0); do not downgrade to B1.
-- **Default mode: autonomous.** B0's guard is scored per exact checkout and delivery path;
-  conversation scope changes no authority. An unavailable capability is evidence about that
-  operation, not a switch of the delivery or team to B1: the team continues on its supported
-  routes and stops at the first operation with no safe route, naming the capability and its
-  restoration owner (B2 item 5); likewise for a role with no supported route. Use approved fallbacks
-  in the team operating model; Brandon is never the command runner; he merges what no active route covers.
+- **Default mode: autonomous.** B0's guard is scored per checkout and delivery path. An unavailable
+  capability limits that operation, not the delivery or the team: continue on supported routes and
+  stop only where no safe route remains, naming the capability and its restoration owner (B2 item
+  5). Brandon is never the command runner; he merges what no active route covers.
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
-- **Resolve the active workspace and target checkout from live inventory**; do not assume every
-  specialist shares main's working directory.
+- **Resolve the active workspace and target checkout from live inventory**; specialists do not all
+  share main's working directory.
 
 ## Seats and routes
 
@@ -43,62 +36,37 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
 | Merge | **Brandon**, by hand, into `master` or `main`, and into `develop` except a merge the profile's delegated route covers: that one is the delivery owner's, in an OpenClaw-runtime turn's Code Mode `exec`, a claude-cli turn's `mcp__openclaw__exec` or a Codex-harness turn's `gateway_exec`, once `gh pr merge --help`, run alone through the merge's own tool right before that merge, is refused with a reason carrying `awa-guard-git:` ([`../hooks/openclaw/`](../hooks/openclaw/README.md)). Printed help text, or a missing or ambiguous refusal, stops the merge and hands it to Brandon; a refusal never carries across a handoff or a tool, runtime or config change. A Codex-harness turn's native shell is never the merge tool, though it still does the turn's ordinary git work. A delivery owner whose Codex-harness turn has no `gateway_exec` may make the merge step from one of those three turns, through its named tool, which runs its own canary, re-reads the PR to confirm its head is the accepted head and its base is `develop`, and meets every route condition; where none is available, the canary fails or a route condition cannot be met, the merge goes to Brandon |
 
 The roster and route mechanics live in `~/.openclaw/workspace/docs/team-operating-model.md`.
-Brandon may instruct any staff member directly; staff reconcile relevant operational context with
-Camina and affected colleagues without reapproval. Initiative receipts share the store above.
-Camina consolidates daily updates and weekly outcome/priority reviews; urgent material issues go
-through promptly. Marketing may publish within approved strategy, channels and boundaries; website
-code follows the Git ritual. B2 governs financial commitments and other scope boundaries.
-Authorized execution proceeds without per-wave or per-batch approval in B2. Status is informational;
-deliveries still carry independent review, verification and the owner's decision context.
+Brandon may instruct any staff member directly; staff bring Camina and affected colleagues up to
+date without asking again. Camina consolidates daily updates and weekly outcome and priority
+reviews; urgent material issues go through promptly. Marketing may publish within approved
+strategy, channels and boundaries; website code follows the Git ritual. Authorized work proceeds
+without per-wave approval; B2 governs spending and scope.
 
-- **Delegation:** canonical role IDs through the session's supported mechanism (`sessions_spawn`
-  is one, not a requirement). Role, deliverable, mode, fence, model and effort follow.
-- **Continuity (A4):** preserve owners and tool boundaries. Authorized independent topics use
-  [create root](../procedures/openclaw/session-rotation.md#create-a-root-conversation). Keep stable
-  conversations per [continuity](../procedures/openclaw/session-rotation.md): prefer compaction, then
-  verified same-key recovery; 30/40/60% are heuristics. Record identity, context and advancement.
-- **Models and routes:** select task-fit model and effort on qualified subscription routes; respect
-  owner pins and wrapper contracts. Conversation and worker choices are independent.
-  The team operating model above owns local runtime, qualification and fallback mechanics; preserve
-  selected tool/account boundaries, report unavailable selectors and apply B2 to spending.
-- **Restoration owners (B2 stop-list item 5)** (#194): **Ashford** for
-OpenClaw control-plane capability (dispatch allow-lists, tool exposure, routes, configuration, the
-instruction-source pointer and its reachability); **Bull** for host and runtime capability; the
-**delivery owner** for repository and worktree capability, the protected root's post-release refresh
-included. Camina routes the stop and keeps continuity; a stop naming its owner needs no packet.
+- **Delegation:** give one accountable owner, by canonical role ID, the outcome, mode, fence, model
+  and effort, through the session's supported mechanism.
+- **Continuity (A4):** keep the conversation Brandon is using, with its checkpoint on disk; open a
+  new topic or recover one per [continuity](../procedures/openclaw/session-rotation.md).
+- **Models and routes:** choose a task-fit model and effort for each conversation and worker,
+  through normal sessions and subagents, Anthropic models included; use Claude Code when it helps.
+  Respect owner pins and the approved subscription, account and tool boundaries.
+- **Restoration owners (B2 stop-list item 5)** (#194): **Ashford** for OpenClaw control-plane
+  capability (dispatch, tool exposure, routes, configuration, the instruction-source pointer);
+  **Bull** for host and runtime; the **delivery owner** for repository and worktree capability,
+  the protected root's refresh included. Camina routes the stop and keeps continuity.
 
 ## Delivery topology
 
-Autonomous specialists use B2's dedicated-worktree shape; attended lanes use B1's two shapes. For
-this agreement repository, an amendment uses one isolated feature worktree off `develop`, never a
-wave. A delivery worktree is created only through OpenClaw's managed worktree facility, from a
-freshly fetched `develop` OID verified against `ls-remote`, bound explicitly to the Gateway
-service's state directory, config and profile, placed per [lifecycle](../procedures/worktree-lifecycle.md),
-outside `_agent/` and the protected root. Post-merge cleanup follows lifecycle checks; the root is
-fast-forwarded to `origin/master` after each release. Commands, checks and the audit fields:
-[`../procedures/openclaw/managed-worktrees.md`](../procedures/openclaw/managed-worktrees.md),
-read at pickup; any overlap of those paths stops the delivery.
-
-**Pickup audit.** Record the checkout and HEAD, author identity, `core.hooksPath` and hook
-presence, the dry-run probe (or N/A), the full gate result, branch ownership, target protection,
-and the worktree bindings the procedure lists. Reset is unmeasured; require a delivery audit.
+An agreement amendment uses one feature worktree off `develop`, never a wave. Create delivery
+worktrees only through OpenClaw's managed facility, from a captured `develop` OID, bound to the
+Gateway service's context, outside `_agent/` and the protected root; refresh the root after each
+release and clean up after merge without force. Read
+[`managed-worktrees.md`](../procedures/openclaw/managed-worktrees.md) at pickup; it carries the
+commands and the pickup audit.
 
 ## Evidence store
 
-Use the selected store's `evidence/` and `analysis/` per A2 and A6; date-name artifacts and label
-material findings. The Gateway executable-check scratch root takes no scratch clone; where one
-goes on this host, and whether specialists share it, is **unmeasured** — measure and record.
-
-## Dormant: the native sandbox breaker
-
-The former host's one-strike Bubblewrap breaker and its Gateway routing table apply only when a
-native shell returns this exact prelaunch signature before the target produces any output. This
-host has none; the procedure is kept, not loaded:
-[`../procedures/openclaw/native-sandbox-breaker.md`](../procedures/openclaw/native-sandbox-breaker.md).
-
-```text
-bwrap: No permissions to create a new namespace, likely because the kernel does not allow non-privileged user namespaces. On e.g. debian this can be enabled with 'sysctl kernel.unprivileged_userns_clone=1'.
-```
+Use the store's `evidence/` and `analysis/` per A2 and A6; date-name artifacts and label material
+findings. Where a scratch clone goes on this host is **unmeasured**: measure and record it.
 
 ## History
 
