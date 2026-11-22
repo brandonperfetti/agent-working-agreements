@@ -42,8 +42,8 @@ reviews; urgent material issues go through promptly. Marketing may publish withi
 strategy, channels and boundaries; website code follows the Git ritual. Authorized work proceeds
 without per-wave approval; B2 governs spending and scope.
 
-- **Delegation:** give one accountable owner, by canonical role ID, the outcome, mode, fence, model
-  and effort, through the session's supported mechanism.
+- **Delegation:** one accountable owner, by canonical role ID, gets a short brief: the outcome and
+  why, the real limits, a size or time budget, when to stop and bring options, mode, model, effort.
 - **Continuity (A4):** keep the conversation Brandon is using, with its checkpoint on disk; open a
   new topic or recover one per [continuity](../procedures/openclaw/session-rotation.md).
 - **Models and routes:** choose a task-fit model and effort for each conversation and worker,
