@@ -42,8 +42,8 @@ delivery's decisions for work with no initiative, B1 or B2, by mode).
   stops gate and watcher silently, T3 messages and idle do not. One that can pass 2 hours or the
   session runs as `<d>/gate.sh` in a new `<d>`, detached (`perl -MPOSIX -e 'setsid;exec @ARGV' bash
   -c 'bash -e <d>/gate.sh; echo $? > <d>/x; mv <d>/x <d>/exit' & echo $! > <d>/pgid`); wait for
-  `<d>/exit` or the group's end. Before `<d>/exit`, stop only that group: `kill -TERM -$(cat
-  <d>/pgid)`, not `pkill -f`.
+  `<d>/exit` or the group's end. Stop only that group, only while `kill -0 -<pgid>` finds it (reuse
+  stays possible): `kill -TERM -<pgid>`, not `pkill -f`.
 - **CodeRabbit CLI, for B2's preflight:** `coderabbit-preflight` checks the CLI on every run; a
   recorded install is a record, not a guarantee.
 - **Kody tool names (A7):** the same Kody connector is named differently per client. A permission
