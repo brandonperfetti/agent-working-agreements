@@ -10,6 +10,15 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-22 — The OpenClaw adapter states principles (#311).** *Models and routes* drops the
+  retired wrapper's contract for a task-fit choice through normal sessions and subagents, Anthropic
+  included, inside approved account and tool boundaries. The dormant VPS sandbox breaker is deleted;
+  `managed-worktrees.md` keeps its boundaries and points at `runbook.sh` for the checks;
+  `session-rotation.md` and the client file shrink to their principles. 9,640 words become about
+  2,200. Why: the wrapper was retired 2026-11-22 and a D9 audit found proof and hold rules drove
+  over-engineering. Brandon decided, 2026-11-22.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/311).
+
 - **2026-11-19 — Long gates survive the Bash time limit, and lanes stop only their own
   processes.** `clients/claude-code.md` starts every gate with `timeout: 7200000`, detaches one
   that can pass 2 hours, and says T3 messages and idle stop no pending gate; A4 keeps a lane to
