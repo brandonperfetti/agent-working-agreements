@@ -15,7 +15,7 @@ being retrofitted onto the other.
   included, inside approved account and tool boundaries. The dormant VPS sandbox breaker is deleted;
   `managed-worktrees.md` keeps its boundaries and points at `runbook.sh` for the checks;
   `session-rotation.md` and the client file shrink to their principles. 9,640 words become about
-  2,100. Why: the wrapper was retired 2026-11-22 and a D9 audit found proof and hold rules drove
+  2,200. Why: the wrapper was retired 2026-11-22 and a D9 audit found proof and hold rules drove
   over-engineering. Brandon decided, 2026-11-22.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/311).
 

@@ -17,8 +17,9 @@ a rule here that contradicts one there is the rule that is wrong. Two harms shap
 that moves the protected root moves the instructions every agent reads, and a forced removal loses
 work. Each step's checks are commands in
 [`scripts/openclaw/runbook.sh`](../../scripts/openclaw/runbook.sh), whose stop and retention
-branches CI tests (#191). Run them, or the same checks by hand; each prints its audit lines and
-stops or retains on any failed check.
+branches CI tests (#191). Each prints its audit lines and stops or retains on any failed check.
+Cleanup runs only through `runbook.sh cleanup`, whose exact matching of one record to one branch is
+what keeps it from removing the wrong worktree; the other steps may be run by hand.
 
 ## Instruction-source isolation and freshness
 
@@ -73,7 +74,9 @@ Remove a delivery worktree and its branch once its PR has merged into `develop`,
   `git worktree remove <path>` without `--force`. Then `git branch -d <branch>`. A refusal or
   retention is reported, never overridden.
 
-`runbook.sh cleanup` runs all of this and requires the bound context and `--quiesced-by <owner>`.
+`runbook.sh cleanup` runs all of this; it takes every path, the bound context and
+`--quiesced-by <owner>` explicitly, with no defaults. Run it while a Gateway owns the local state:
+an offline `openclaw worktrees list` can retire missing checkouts.
 
 **OpenClaw's own background cleanup does not apply these checks.** Cap eviction
 (`worktreeMaxCount`) and idle cleanup can remove a managed checkout even when it is dirty, and a

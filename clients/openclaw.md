@@ -37,9 +37,10 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
 
 The roster and route mechanics live in `~/.openclaw/workspace/docs/team-operating-model.md`.
 Brandon may instruct any staff member directly; staff bring Camina and affected colleagues up to
-date without asking again. Marketing may publish within approved strategy, channels and boundaries;
-website code follows the Git ritual. Authorized work proceeds without per-wave approval; B2 governs
-spending and scope.
+date without asking again. Camina consolidates daily updates and weekly outcome and priority
+reviews; urgent material issues go through promptly. Marketing may publish within approved
+strategy, channels and boundaries; website code follows the Git ritual. Authorized work proceeds
+without per-wave approval; B2 governs spending and scope.
 
 - **Delegation:** give one accountable owner, by canonical role ID, the outcome, mode, fence, model
   and effort, through the session's supported mechanism.
@@ -47,8 +48,7 @@ spending and scope.
   new topic or recover one per [continuity](../procedures/openclaw/session-rotation.md).
 - **Models and routes:** choose a task-fit model and effort for each conversation and worker,
   through normal sessions and subagents, Anthropic models included; use Claude Code when it helps.
-  Respect owner pins and the approved subscription, account and tool boundaries; B2 governs
-  spending.
+  Respect owner pins and the approved subscription, account and tool boundaries.
 - **Restoration owners (B2 stop-list item 5)** (#194): **Ashford** for OpenClaw control-plane
   capability (dispatch, tool exposure, routes, configuration, the instruction-source pointer);
   **Bull** for host and runtime; the **delivery owner** for repository and worktree capability,
