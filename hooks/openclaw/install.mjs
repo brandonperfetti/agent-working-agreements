@@ -7,6 +7,8 @@
 //   node hooks/openclaw/install.mjs --print-patch   the `openclaw config patch` JSON that loads it
 //
 // --target DIR replaces ~/.openclaw/hooks/awa-guard (tests); --no-live skips the OpenClaw read.
+// --openclaw-bin PATH, else OPENCLAW_BIN, else ~/.openclaw/bin/openclaw, is the CLI that reads
+// OpenClaw: name the running Gateway's when it is not the default.
 // The installer never edits OpenClaw's config: the patch is applied by the control-plane owner.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -79,7 +81,7 @@ export function patchFor(allow, paths, target = INSTALL_DIR) {
 
 /** One live config list, read through OpenClaw itself (its config file is JSON5, with includes):
  * an unset list is empty, and anything but a list or nothing is an error. */
-export function readList(path, get = configGet) {
+export function readList(path, get) {
   const value = get(path);
   if (value === null || value === undefined) return [];
   if (Array.isArray(value) && value.every((v) => typeof v === "string")) return value;
@@ -96,17 +98,40 @@ export function isUnset(stdout) {
   }
 }
 
-function openclaw(args) {
-  return execFileSync(join(homedir(), ".openclaw", "bin", "openclaw"), args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
+export const DEFAULT_BIN = join(homedir(), ".openclaw", "bin", "openclaw");
+
+/** The OpenClaw CLI to run: the --openclaw-bin flag, then OPENCLAW_BIN, then the default. */
+export function resolveBin(argv, env = process.env) {
+  const at = argv.indexOf("--openclaw-bin");
+  if (at >= 0) {
+    const value = argv[at + 1];
+    if (!value || value.startsWith("--")) throw new Error("--openclaw-bin needs a path");
+    return value;
+  }
+  return env.OPENCLAW_BIN || DEFAULT_BIN;
 }
 
-function configGet(path) {
+/** The CLI path and, if it answers, its --version, for an error that names what ran. */
+export function describeBin(bin) {
+  try {
+    const version = execFileSync(bin, ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 10000 }).trim().split("\n")[0];
+    return `CLI ${bin}, version ${version || "unreported"}`;
+  } catch {
+    return `CLI ${bin}, version unreadable`;
+  }
+}
+
+function openclaw(bin, args) {
+  return execFileSync(bin, args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 60000 });
+}
+
+function configGet(bin, path) {
   let out;
   try {
-    out = openclaw(["config", "get", path, "--json"]);
+    out = openclaw(bin, ["config", "get", path, "--json"]);
   } catch (error) {
     if (isUnset(error.stdout)) return undefined;
-    throw new Error(`openclaw config get ${path} failed: ${(error.stdout || error.message).trim()}`);
+    throw new Error(`openclaw config get ${path} failed (${describeBin(bin)}): ${(error.stdout || error.message).trim()}`);
   }
   return out.trim() === "" ? undefined : JSON.parse(out);
 }
@@ -115,9 +140,17 @@ function main(argv) {
   const flag = (name) => argv.includes(name);
   const at = argv.indexOf("--target");
   const target = at >= 0 ? resolve(argv[at + 1]) : INSTALL_DIR;
+  let bin;
+  try {
+    bin = resolveBin(argv);
+  } catch (error) {
+    console.error(error.message);
+    return 2;
+  }
+  const get = (path) => configGet(bin, path);
   if (flag("--print-patch")) {
     try {
-      console.log(JSON.stringify(patchFor(readList("plugins.allow"), readList("plugins.load.paths"), target), null, 2));
+      console.log(JSON.stringify(patchFor(readList("plugins.allow", get), readList("plugins.load.paths", get), target), null, 2));
     } catch (error) {
       console.error(`no patch printed: ${error.message}`);
       return 1;
@@ -128,10 +161,10 @@ function main(argv) {
     const problems = checkFiles(target);
     if (!flag("--no-live")) {
       try {
-        const out = openclaw(["plugins", "inspect", PLUGIN_ID, "--runtime", "--json"]);
+        const out = openclaw(bin, ["plugins", "inspect", PLUGIN_ID, "--runtime", "--json"]);
         problems.push(...checkInspection(JSON.parse(out), target));
       } catch (error) {
-        problems.push(`OpenClaw's plugin inspection could not be read: ${error.message}`);
+        problems.push(`OpenClaw's plugin inspection could not be read (${describeBin(bin)}): ${error.message}`);
       }
     }
     for (const problem of problems) console.error(problem);

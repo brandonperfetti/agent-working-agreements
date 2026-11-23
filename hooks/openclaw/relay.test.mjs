@@ -1,5 +1,6 @@
 // Tests for the OpenClaw relay: node --test hooks/openclaw/relay.test.mjs
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -10,7 +11,7 @@ const LOG_FILE = join(mkdtempSync(join(tmpdir(), "awa-guard-log-")), "log.jsonl"
 process.env.AWA_GUARD_GIT_LOG = LOG_FILE;
 writeFileSync(LOG_FILE, "", { mode: 0o600 });
 const { commandOf, decide, runGuard, sessionInput, toolOf, verdict, PLUGIN_ID, SHELL_TOOLS } = await import("./relay.mjs");
-const { checkFiles, checkInspection, install, isUnset, patchFor, readList, SOURCES } = await import("./install.mjs");
+const { checkFiles, checkInspection, install, isUnset, patchFor, readList, resolveBin, DEFAULT_BIN, SOURCES } = await import("./install.mjs");
 const { default: plugin, record } = await import("./awa-guard-git.mjs");
 const PASS = (route) => ({ block: false, reasonCode: "allowed", route });
 
@@ -390,6 +391,73 @@ test("readList reads a live list through OpenClaw, and refuses anything else", (
   assert.equal(isUnset(unset), true);
   assert.equal(isUnset(JSON.stringify({ ok: false, error: { message: "Unknown config path: plugins.x" } })), false);
   assert.equal(isUnset("not json"), false);
+});
+
+test("resolveBin takes --openclaw-bin, then OPENCLAW_BIN, then the default", () => {
+  assert.equal(resolveBin(["--check", "--openclaw-bin", "/flag/openclaw"], { OPENCLAW_BIN: "/env/openclaw" }), "/flag/openclaw");
+  assert.equal(resolveBin(["--check"], { OPENCLAW_BIN: "/env/openclaw" }), "/env/openclaw");
+  assert.equal(resolveBin(["--check"], { OPENCLAW_BIN: "" }), DEFAULT_BIN);
+  assert.equal(resolveBin(["--check"], {}), DEFAULT_BIN);
+  assert.throws(() => resolveBin(["--check", "--openclaw-bin"], {}), /needs a path/);
+  assert.throws(() => resolveBin(["--openclaw-bin", "--check"], {}), /needs a path/);
+});
+
+// A stub OpenClaw CLI that records each argv it is run with and answers like 2026.11.3 would.
+const INSTALL = join(dirname(fileURLToPath(import.meta.url)), "install.mjs");
+function stubCli(dir, name, { fail = false } = {}) {
+  const bin = join(dir, name);
+  const calls = join(dir, `${name}.calls`);
+  const plugin = { id: PLUGIN_ID, enabled: true, status: "loaded", source: join(dir, "awa-guard", "awa-guard-git.mjs") };
+  const inspection = JSON.stringify({ plugin, typedHooks: [{ name: "before_tool_call" }] });
+  writeFileSync(bin, [
+    "#!/bin/sh",
+    `printf '%s\\n' "$*" >> '${calls}'`,
+    `[ "$1" = --version ] && { echo 'OpenClaw 2026.11.3-stub'; exit 0; }`,
+    fail ? "exit 1" : `[ "$1" = plugins ] && { echo '${inspection}'; exit 0; }`,
+    `[ "$1" = config ] && { echo '[]'; exit 0; }`,
+    "exit 1",
+    "",
+  ].join("\n"));
+  chmodSync(bin, 0o755);
+  return { bin, calls: () => (existsSync(calls) ? readFileSync(calls, "utf8").trim().split("\n") : []) };
+}
+// HOME is an empty directory, so the default ~/.openclaw/bin/openclaw does not exist here.
+function runInstaller(args, env = {}) {
+  const home = mkdtempSync(join(tmpdir(), "awa-guard-home-"));
+  const { OPENCLAW_BIN: _, ...base } = process.env;
+  return spawnSync(process.execPath, [INSTALL, ...args], { encoding: "utf8", env: { ...base, HOME: home, ...env } });
+}
+
+test("--check and --print-patch run the CLI the operator names, not the default", () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "awa-guard-bin-")));
+  const target = join(dir, "awa-guard");
+  install(target);
+  const flagged = stubCli(dir, "flag-openclaw");
+  const envd = stubCli(dir, "env-openclaw");
+  const check = runInstaller(["--check", "--target", target, "--openclaw-bin", flagged.bin], { OPENCLAW_BIN: envd.bin });
+  assert.equal(check.status, 0, check.stderr);
+  assert.deepEqual(flagged.calls(), [`plugins inspect ${PLUGIN_ID} --runtime --json`]);
+  assert.deepEqual(envd.calls(), [], "the flag wins over OPENCLAW_BIN");
+  const patch = runInstaller(["--print-patch", "--target", target], { OPENCLAW_BIN: envd.bin });
+  assert.equal(patch.status, 0, patch.stderr);
+  assert.deepEqual(envd.calls(), ["config get plugins.allow --json", "config get plugins.load.paths --json"]);
+  assert.deepEqual(JSON.parse(patch.stdout).plugins.load.paths, [join(target, "awa-guard-git.mjs")]);
+  const usage = runInstaller(["--check", "--target", target, "--openclaw-bin"]);
+  assert.equal(usage.status, 2);
+  assert.match(usage.stderr, /--openclaw-bin needs a path/);
+});
+
+test("a failed inspection names the CLI that ran and its version", () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "awa-guard-bin-")));
+  const target = join(dir, "awa-guard");
+  install(target);
+  const broken = stubCli(dir, "openclaw", { fail: true });
+  const check = runInstaller(["--check", "--target", target, "--openclaw-bin", broken.bin]);
+  assert.equal(check.status, 1);
+  assert.ok(check.stderr.includes(`(CLI ${broken.bin}, version OpenClaw 2026.11.3-stub)`), check.stderr);
+  const missing = runInstaller(["--check", "--target", target]);
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /\(CLI \S+\/\.openclaw\/bin\/openclaw, version unreadable\)/);
 });
 
 // Read the actual appendFile output, with an offset so each case owns its observed rows.
