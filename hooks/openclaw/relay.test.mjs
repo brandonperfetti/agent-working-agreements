@@ -406,7 +406,7 @@ test("resolveBin takes --openclaw-bin, then OPENCLAW_BIN, then the default", () 
 
 // A stub OpenClaw CLI that records each argv it is run with and answers like 2026.11.3 would.
 const INSTALL = join(dirname(fileURLToPath(import.meta.url)), "install.mjs");
-function stubCli(dir, name, { fail = false } = {}) {
+function stubCli(dir, name, { fail = false, config = "[]" } = {}) {
   const bin = join(dir, name);
   const calls = join(dir, `${name}.calls`);
   const plugin = { id: PLUGIN_ID, enabled: true, status: "loaded", source: join(dir, "awa-guard", "awa-guard-git.mjs") };
@@ -416,7 +416,7 @@ function stubCli(dir, name, { fail = false } = {}) {
     `printf '%s\\n' "$*" >> '${calls}'`,
     `[ "$1" = --version ] && { echo 'OpenClaw 2026.11.3-stub'; exit 0; }`,
     fail ? "exit 1" : `[ "$1" = plugins ] && { echo '${inspection}'; exit 0; }`,
-    `[ "$1" = config ] && { echo '[]'; exit 0; }`,
+    `[ "$1" = config ] && { echo '${config}'; exit 0; }`,
     "exit 1",
     "",
   ].join("\n"));
@@ -458,6 +458,10 @@ test("a failed inspection names the CLI that ran and its version", () => {
   const check = runInstaller(["--check", "--target", target, "--openclaw-bin", broken.bin]);
   assert.equal(check.status, 1);
   assert.ok(check.stderr.includes(`(CLI ${broken.bin}, version OpenClaw 2026.11.3-stub)`), check.stderr);
+  const garbled = stubCli(dir, "garbled-openclaw", { config: "not json" });
+  const patch = runInstaller(["--print-patch", "--target", target, "--openclaw-bin", garbled.bin]);
+  assert.equal(patch.status, 1);
+  assert.ok(patch.stderr.includes(`returned no JSON (CLI ${garbled.bin}, version OpenClaw 2026.11.3-stub)`), patch.stderr);
   const missing = runInstaller(["--check", "--target", target]);
   assert.equal(missing.status, 1);
   assert.match(missing.stderr, /\(CLI \S+\/\.openclaw\/bin\/openclaw, version unreadable\)/);

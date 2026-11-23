@@ -137,7 +137,12 @@ function configGet(bin, path) {
     if (isUnset(error.stdout)) return undefined;
     throw new Error(`openclaw config get ${path} failed (${describeBin(bin)}): ${(error.stdout || error.message).trim()}`);
   }
-  return out.trim() === "" ? undefined : JSON.parse(out);
+  if (out.trim() === "") return undefined;
+  try {
+    return JSON.parse(out);
+  } catch (error) {
+    throw new Error(`openclaw config get ${path} returned no JSON (${describeBin(bin)}): ${error.message}`);
+  }
 }
 
 function main(argv) {
