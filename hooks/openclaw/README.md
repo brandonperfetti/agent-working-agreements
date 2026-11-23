@@ -55,6 +55,9 @@ node hooks/openclaw/install.mjs --print-patch   # the config patch that loads it
 node hooks/openclaw/install.mjs --check         # bytes match, and OpenClaw lists it enabled
 ```
 
+`--check` and `--print-patch` run `~/.openclaw/bin/openclaw`; where that CLI is not the running
+Gateway's, name the Gateway's with `--openclaw-bin PATH` or `OPENCLAW_BIN` (the flag wins).
+
 The files go to `~/.openclaw/hooks/awa-guard/`. The installer never edits OpenClaw's config.
 The OpenClaw control-plane owner applies the patch (`plugins.allow`, `plugins.load.paths`,
 `plugins.entries`) with `openclaw config patch`. Plugin config reloads without a Gateway restart.
