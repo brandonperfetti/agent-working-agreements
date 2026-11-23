@@ -400,6 +400,8 @@ test("resolveBin takes --openclaw-bin, then OPENCLAW_BIN, then the default", () 
   assert.equal(resolveBin(["--check"], {}), DEFAULT_BIN);
   assert.throws(() => resolveBin(["--check", "--openclaw-bin"], {}), /needs a path/);
   assert.throws(() => resolveBin(["--openclaw-bin", "--check"], {}), /needs a path/);
+  assert.equal(resolveBin(["--check", "--openclaw-bin=/joined/openclaw"], { OPENCLAW_BIN: "/env/openclaw" }), "/joined/openclaw");
+  assert.throws(() => resolveBin(["--openclaw-bin="], {}), /needs a path/);
 });
 
 // A stub OpenClaw CLI that records each argv it is run with and answers like 2026.11.3 would.
@@ -433,14 +435,15 @@ test("--check and --print-patch run the CLI the operator names, not the default"
   const target = join(dir, "awa-guard");
   install(target);
   const flagged = stubCli(dir, "flag-openclaw");
-  const envd = stubCli(dir, "env-openclaw");
-  const check = runInstaller(["--check", "--target", target, "--openclaw-bin", flagged.bin], { OPENCLAW_BIN: envd.bin });
+  const envCli = stubCli(dir, "env-openclaw");
+  const check = runInstaller(["--check", "--target", target, "--openclaw-bin", flagged.bin], { OPENCLAW_BIN: envCli.bin });
   assert.equal(check.status, 0, check.stderr);
   assert.deepEqual(flagged.calls(), [`plugins inspect ${PLUGIN_ID} --runtime --json`]);
-  assert.deepEqual(envd.calls(), [], "the flag wins over OPENCLAW_BIN");
-  const patch = runInstaller(["--print-patch", "--target", target], { OPENCLAW_BIN: envd.bin });
+  assert.deepEqual(envCli.calls(), [], "the flag wins over OPENCLAW_BIN");
+  assert.ok(check.stdout.includes(`inspected with ${flagged.bin}`), check.stdout);
+  const patch = runInstaller(["--print-patch", "--target", target], { OPENCLAW_BIN: envCli.bin });
   assert.equal(patch.status, 0, patch.stderr);
-  assert.deepEqual(envd.calls(), ["config get plugins.allow --json", "config get plugins.load.paths --json"]);
+  assert.deepEqual(envCli.calls(), ["config get plugins.allow --json", "config get plugins.load.paths --json"]);
   assert.deepEqual(JSON.parse(patch.stdout).plugins.load.paths, [join(target, "awa-guard-git.mjs")]);
   const usage = runInstaller(["--check", "--target", target, "--openclaw-bin"]);
   assert.equal(usage.status, 2);

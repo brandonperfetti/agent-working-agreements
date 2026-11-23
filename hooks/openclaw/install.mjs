@@ -10,7 +10,7 @@
 // --openclaw-bin PATH, else OPENCLAW_BIN, else ~/.openclaw/bin/openclaw, is the CLI that reads
 // OpenClaw: name the running Gateway's when it is not the default.
 // The installer never edits OpenClaw's config: the patch is applied by the control-plane owner.
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -102,6 +102,12 @@ export const DEFAULT_BIN = join(homedir(), ".openclaw", "bin", "openclaw");
 
 /** The OpenClaw CLI to run: the --openclaw-bin flag, then OPENCLAW_BIN, then the default. */
 export function resolveBin(argv, env = process.env) {
+  const joined = argv.find((arg) => arg.startsWith("--openclaw-bin="));
+  if (joined !== undefined) {
+    const value = joined.slice("--openclaw-bin=".length);
+    if (!value) throw new Error("--openclaw-bin needs a path");
+    return value;
+  }
   const at = argv.indexOf("--openclaw-bin");
   if (at >= 0) {
     const value = argv[at + 1];
@@ -113,12 +119,10 @@ export function resolveBin(argv, env = process.env) {
 
 /** The CLI path and, if it answers, its --version, for an error that names what ran. */
 export function describeBin(bin) {
-  try {
-    const version = execFileSync(bin, ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 10000 }).trim().split("\n")[0];
-    return `CLI ${bin}, version ${version || "unreported"}`;
-  } catch {
-    return `CLI ${bin}, version unreadable`;
-  }
+  const run = spawnSync(bin, ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 10000 });
+  if (run.error || run.status !== 0) return `CLI ${bin}, version unreadable`;
+  const version = (run.stdout.trim() || run.stderr.trim()).split("\n")[0];
+  return `CLI ${bin}, version ${version || "unreported"}`;
 }
 
 function openclaw(bin, args) {
@@ -168,7 +172,7 @@ function main(argv) {
       }
     }
     for (const problem of problems) console.error(problem);
-    if (problems.length === 0) console.log(`${PLUGIN_ID}: installed at ${target} and matches this checkout`);
+    if (problems.length === 0) console.log(`${PLUGIN_ID}: installed at ${target} and matches this checkout (${flag("--no-live") ? "not inspected live" : `inspected with ${bin}`})`);
     return problems.length === 0 ? 0 : 1;
   }
   for (const [name, digest] of Object.entries(install(target))) console.log(`${digest}  ${join(target, name)}`);
