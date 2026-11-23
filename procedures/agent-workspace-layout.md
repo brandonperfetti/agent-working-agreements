@@ -105,10 +105,24 @@ filing. A new issue follows the repository's friction form (`.github/ISSUE_TEMPL
 title `Friction: …`) and is filed with both labels on the command (`gh issue create` with `--label
 friction --label agent-filed`), or through the `file-friction` skill. The record stays the raw
 capture and links each issue it spawned; an item below the bar stays in the record and is not swept.
-The sweep skips an issue labelled `needs-brandon`. A recurring item names the cheapest check that
-stops it, first that fits of a type or lint rule, a test, a script, then docs; the check proves it
-catches the original failure, says how to remove it, and changes this agreement only through its
-amendment rules (#167).
+The sweep skips an issue labelled `needs-brandon`.
+For a recurring item, use `recurring-error-analysis`'s evidence threshold, mechanism/counterevidence
+analysis, prevention selection and validation; keep this record and its existing owner. Determine
+what is objective and mechanically detectable. Prefer the smallest effective existing enforcement
+point: architecture/ownership, tool boundaries or repository structure; then types/lint, tests and
+validation scripts. Use an existing reusable skill for repeatable guidance; skills and prose do not
+themselves enforce a judgment. Keep human judgment and review for choices no mechanism can decide.
+
+Before adopting a new control, safely demonstrate rejection of the original failure and acceptance
+of legitimate boundary/default use. Adopt only when its interruption, runtime, maintenance and
+false-positive costs are proportionate to the supported harm. Name its owning repository and owner,
+rollback path, and evidence for revision or retirement: reproduced legitimate-use denial, a
+workflow dead end, disproportionate measured cost, changed contracts or a verified replacement. The
+owner repairs, rolls back or retires within existing authority and review, preserving failure
+coverage or explicitly recording the remaining risk; an empty log or a quiet period alone proves
+neither success nor redundancy. Governing agreements, SOUL files, authority and approval policy
+change only through their normal owner-approved amendment and review route, never automatic
+self-modification (#167).
 
 **Clones.** No clone, worktree, package install, `node_modules` or build output is written under
 `_agent/` (a `node_modules` in a captured `*.app` bundle is the app). That scratch, and any brief's

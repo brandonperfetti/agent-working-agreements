@@ -818,9 +818,11 @@ EXTRA_GIT_COMMANDS = frozenset(
 # The next step for each refusal made below. A refusal that is Brandon's to lift (a release
 # branch, a force-push) is not here: it takes the released guard's own closing sentence.
 EXTRA_ADVICE = (
+    ("after a # on its line", "If the & is in a comment, drop the comment; otherwise run it as its own call, or join the commands with && in place of &."),
     ("in the background (&)", "Run it as its own call, or join the commands with && in place of &."),
     ("both a dry-run flag and --no-dry-run", "Run it with one of the two: the dry run, or the push itself."),
     ("without its destination", "Name the destination: git push <remote> <src>:<dst>."),
+    ("a push of --tags that names no remote", "Name the remote on the command: git push <remote> --tags."),
     ("the author scan does not read", "Name the remote and the branch on the command: git push <remote> <branch>."),
     ("after another command", "Run the push as its own call. Before it, a call may hold only NAME=value, cd to an existing directory (no .., ~, $ or symlink), git add, git commit and git status."),
     ("moves git's configuration", "Run the command again without setting that variable."),
@@ -870,8 +872,10 @@ def extra_background(command):
     """True when the call holds a `&` that is not half of `&&`, outside quotes: the command
     before it runs in the background, apart from the rest of the call (#298). One pass over the
     text, tracking only `'…'`, `"…"` and a backslash; a `&` inside quotes is data. What the `&`
-    backgrounds is not worked out."""
-    text, quote, index = HEREDOC.sub(drop_heredoc, command), "", 0
+    backgrounds is not worked out. "comment" when each such `&` follows an unquoted `#` on its
+    line: it is still read as the operator, since whether the `#` begins a comment is not worked
+    out either, but the refusal can say so (#306). False when there is none."""
+    text, quote, index, hashed, found = HEREDOC.sub(drop_heredoc, command), "", 0, False, False
     while index < len(text):
         char = text[index]
         if char == "\\" and quote != "'":
@@ -880,10 +884,14 @@ def extra_background(command):
             quote = "" if char == quote else quote
         elif char in "'\"":
             quote = char
+        elif char in "#\n":
+            hashed = char == "#"
         elif char == "&" and text[index - 1 : index] != "&" and text[index + 1 : index + 2] != "&":
-            return True
+            if not hashed:
+                return True
+            found = "comment"
         index += 1
-    return False
+    return found
 
 
 def extra_plain_cd(directory, words, env):
@@ -963,6 +971,8 @@ def extra_push(args, directory, selectors, env, state):
         # An option given as the value of `-o` (`-o -n`, `-o --dry-run`) is not a flag of the
         # push, and `real` above drops it as one. Whose value it is is not worked out (#298).
         return "a push with both a dry-run flag and --no-dry-run, which the guard does not put in order"
+    if state.get("background") == "comment":
+        return "a push in a call with a & after a # on its line, read as running a command in the background"
     if state.get("background"):
         return "a push in a call that runs a command in the background (&), apart from the push"
     if state["unread"]:
@@ -1000,7 +1010,8 @@ def extra_push(args, directory, selectors, env, state):
                 pushed = git_lines(directory, list(selectors) + ["rev-parse", "--abbrev-ref", "@{push}"], reads)
                 scanned = pushed[0].strip().partition("/")[0] if pushed and "/" in pushed[0] else "origin"
                 if scanned != remote:
-                    return "a push that names no remote and goes to {}, a remote the author scan does not read".format(remote)
+                    # The next step keeps the push's own form: a tags-only push names --tags (#306).
+                    return "a push {}that names no remote and goes to {}, a remote the author scan does not read".format("of --tags " if tags_only else "", remote)
     bare = [r.lstrip("+") for r in refspecs if ":" not in r and r.lstrip("+") not in ("HEAD", "@") and not r.lstrip("+").startswith("-")]
     if len(bare) > EXTRA_BARE_SOURCES:
         return "a push naming more than {} branches".format(EXTRA_BARE_SOURCES)
@@ -1010,11 +1021,12 @@ def extra_push(args, directory, selectors, env, state):
         if full and full[0].startswith("refs/heads/") and full[0][len("refs/heads/"):] in RELEASE_BRANCHES:
             return "a push to a release branch ({})".format(full[0][len("refs/heads/"):])
     if bare:
-        # Under upstream, git sends a named branch to branch.<name>.merge, not to its own name.
-        # Which branch a source names, and where its merge points, are not worked out (#298).
+        # Under upstream, git sends a named branch to its branch.<name>.merge where one is set, not
+        # to its own name. Which branch a source names, and whether its merge is set and where it
+        # points, are not worked out (#298, #306).
         default = git_lines(directory, list(selectors) + ["config", "--get", "push.default"], reads)
         if default and default[0].strip().lower() in ("upstream", "tracking"):
-            return "a push of a branch without its destination under push.default=upstream, where git takes it from branch.<name>.merge"
+            return "a push of a branch without its destination under push.default=upstream, where git may take it from branch.<name>.merge"
     if not refspecs and not tags_only:
         # A bare push sends the current branch to its own name under simple and current, and to
         # branch.<name>.merge under upstream. The released reader takes the name of the tracking
@@ -1103,6 +1115,8 @@ def extra_git(tokens, directory, env, state, depth=0):
         reason = check_commit(real, MERGE_VALUE_OPTS, MERGE_SHORTS) if sub == "merge" else check_commit(real)
         if reason:
             return reason
+    if state.get("background") == "comment":
+        return "a {} in a call with a & after a # on its line, read as running a command in the background".format(sub)
     if state.get("background"):
         return "a {} in a call that runs a command in the background (&), apart from it".format(sub)
     if state.get("redirected"):
@@ -1133,8 +1147,11 @@ def extra_command(command, directory, inherited=None, nested=False, state=None):
         # The released reader falls back to plain words here; the rules below cannot tell what
         # comes before what, so a call that names git or gh is refused.
         return "a git or gh call with unbalanced quotes, which the guard cannot split into commands" if EXTRA_GIT_WORD.search(command) else None
-    if extra_background(joined):
-        state["background"] = True  # for the whole call, nested shells included: what runs when is not worked out
+    background = extra_background(joined)
+    if background and state.get("background") is not True:
+        # From here to the end of the call, nested shells included: what runs when is not worked
+        # out. A nested body's "comment" never replaces a True already found (#306).
+        state["background"] = background
     for tokens in parts:
         if any("`" in token for token in tokens):
             state["unread"] = True  # a backtick substitution runs a command the rules below do not read

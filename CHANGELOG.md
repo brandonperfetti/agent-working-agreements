@@ -10,6 +10,39 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-22 — An OpenClaw brief names an outcome and a budget (#313).** The *Delegation* line
+  asks for the outcome and why, the real limits, a size or time budget and when to stop and bring
+  options, in place of a bare field list; the file does not grow. Why: the D9 audit found a proof
+  standard with no budget drove the spiral, and a short plain brief finished in one turn. Brandon
+  decided, 2026-11-22.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/313).
+
+- **2026-11-22 — The OpenClaw adapter states principles (#311).** *Models and routes* drops the
+  retired wrapper's contract for a task-fit choice through normal sessions and subagents, Anthropic
+  included, inside approved account and tool boundaries. The dormant VPS sandbox breaker is deleted;
+  `managed-worktrees.md` keeps its boundaries and points at `runbook.sh` for the checks;
+  `session-rotation.md` and the client file shrink to their principles. 9,640 words become about
+  2,200. Why: the wrapper was retired 2026-11-22 and a D9 audit found proof and hold rules drove
+  over-engineering. Brandon decided, 2026-11-22.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/311).
+
+- **2026-11-19 — A recurring friction item gets the whole prevention loop (#167, #166).** The
+  one-line cheapest-check ladder becomes a passage: `recurring-error-analysis`'s threshold and
+  analysis, enforcement points from boundaries and structure down to scripts, judgment kept for
+  review, and a new control proven, costed, owned, with rollback and retirement evidence.
+  Agreements and authority still change only by amendment. #166's three risk dimensions go to
+  the `review-and-recommend` skill in claude-skills. Why: the shipped slice left #167's criteria
+  open. Brandon decided, 2026-11-17 and 2026-11-19.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/167).
+
+- **2026-11-19 — Four of the guard's #298 refusals say what is true (#306).** No verdict
+  changes. A `&` after a `#` is still refused, and the refusal now says to drop the comment. A
+  tags-only push to an unscanned branch remote is told `git push <remote> --tags`. Under
+  `upstream`, git *may* take a branch's destination from `branch.<name>.merge`. The README says
+  a `&` in a later `bash -c` body refuses only what comes after it. Why: CodeRabbit found these
+  on release #305. Brandon chose the lane, 2026-11-19.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/306).
+
 - **2026-11-18 — The guard's README names a refusal that is not a broken setup (#302).** "A
   segment begins with an option" refuses ordinary read-only calls: a quoted or escaped word made
   only of `;`, `&`, `|`, `(` or `)` reads as a separator, and an option straight after it is
