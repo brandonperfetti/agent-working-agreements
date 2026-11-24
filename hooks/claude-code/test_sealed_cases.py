@@ -32,8 +32,14 @@ STUBS = {
     # What Python prints when it cannot open the script it is given: exit 2, which is no refusal.
     "cantopen": ("import sys\nsys.stdin.read()\nsys.stderr.write(\"python3: can't open file 'g.py': [Errno 13] "
                  "Permission denied\\n\")\nsys.exit(2)\n"),
-    # Bytes that are not UTF-8: on stdout with exit 0, and on stderr with exit 2.
+    # Bytes that are not UTF-8: on stdout, inside an allow's or a deny's JSON, on stderr beside an
+    # allow, all with exit 0; and on stderr with exit 2.
     "badbytes": "import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'\\xff\\xfe')\n",
+    "badallow": ("import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'{\"hookSpecificOutput\": "
+                 "{\"permissionDecision\": \"allow\", \"permissionDecisionReason\": \"\\xff\"}}')\n"),
+    "baddeny": ("import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'{\"hookSpecificOutput\": "
+                "{\"permissionDecision\": \"deny\"}, \"diagnostic\": \"\\xff\"}')\n"),
+    "badstderr": "import sys\nsys.stdin.read()\nsys.stderr.buffer.write(b'\\xff')\n",
     "badbytes2": "import sys\nsys.stdin.read()\nsys.stderr.buffer.write(b'\\xff\\xfe')\nsys.exit(2)\n",
     # Refuses exactly the calls whose command holds the word `deny-me`; reads the cwd it was given.
     "words": ("import json, os, sys\np = json.load(sys.stdin)\nassert os.path.isdir(os.path.join(p['cwd'], '.git'))\n"
@@ -104,8 +110,10 @@ class RunnerTest(unittest.TestCase):
         f = Folder(self)
         f.case("a-allowed", "git status", "allowed")
         f.case("b-refused", "git push", "refused")
-        self.assertEqual(run(f.cases, f.stub("badbytes")), (1, [
-            "FAIL a-allowed expected=allowed got=error", "FAIL b-refused expected=refused got=error"]))
+        for kind in ("badbytes", "badallow", "baddeny", "badstderr"):
+            with self.subTest(kind=kind):
+                self.assertEqual(run(f.cases, f.stub(kind)), (1, [
+                    "FAIL a-allowed expected=allowed got=error", "FAIL b-refused expected=refused got=error"]))
         # Exit 2 blocks the call whatever its stderr holds.
         self.assertEqual(run(f.cases, f.stub("badbytes2")), (1, [
             "FAIL a-allowed expected=allowed got=refused", "PASS b-refused"]))

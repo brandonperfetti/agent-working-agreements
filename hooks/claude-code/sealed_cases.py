@@ -106,21 +106,23 @@ def ruling(guard, command, directory, env):
     payload = json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Bash",
                           "tool_input": {"command": command}, "cwd": directory})
     try:
-        # Bytes that are not UTF-8 become U+FFFD: on stdout that is no decision (got=error), never
-        # a crash of the run, and an exit 2 stays a refusal whatever its stderr holds.
-        result = subprocess.run([sys.executable, "-I", guard], input=payload, capture_output=True,
-                                encoding="utf-8", errors="replace", cwd=directory, env=env,
-                                timeout=GUARD_TIMEOUT)
+        result = subprocess.run([sys.executable, "-I", guard], input=payload.encode("utf-8"),
+                                capture_output=True, cwd=directory, env=env, timeout=GUARD_TIMEOUT)
     except (OSError, subprocess.SubprocessError):
         return "error"
     if result.returncode == 2:
-        # Claude Code blocks a call whose hook exits 2; Python also exits 2 when it cannot open the
-        # script, and that is no ruling.
-        return "error" if "can't open file" in result.stderr else "refused"
-    if result.returncode or result.stdout.strip() == "":
+        # Claude Code blocks a call whose hook exits 2, whatever its stderr holds; Python also exits
+        # 2 when it cannot open the script, and that is no ruling.
+        return "error" if b"can't open file" in result.stderr else "refused"
+    try:
+        # Output that is not UTF-8, anywhere in either stream, is no ruling: got=error, never a PASS.
+        stdout, _ = result.stdout.decode("utf-8"), result.stderr.decode("utf-8")
+    except UnicodeDecodeError:
+        return "error"
+    if result.returncode or stdout.strip() == "":
         return "error" if result.returncode else "allowed"
     try:
-        decision = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"]
+        decision = json.loads(stdout)["hookSpecificOutput"]["permissionDecision"]
     except (ValueError, KeyError, TypeError):
         return "error"
     return {"deny": "refused", "allow": "allowed"}.get(decision, "error") if isinstance(decision, str) else "error"
