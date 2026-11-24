@@ -224,7 +224,8 @@ def commit_as(path, email):
     git(path, "-c", "user.email=" + email, "commit", "-q", "--allow-empty", "-m", "test")
 
 
-RELEASED_SHA256 = "5e57b35f2f967081d4719dbed2f16db1c2217c48a4f434508e22c5243180ee8d"  # guard_git.py at v2026.11.17.2
+# guard_git.py at v2026.11.17.2 with one line changed: BANNED's footer phrase as words (#280).
+RELEASED_SHA256 = "ff1d54c6424d3b14c082acaef4d47030b7734bc5cdb09f69b302a2df2d201c13"
 MARKER = "# ==== additional refusals (#236): everything above this line is the guard as released ====\n"
 RELEASED_TAIL = 'if __name__ == "__main__":\n    main()\n'
 
@@ -249,8 +250,8 @@ class InvariantTest(unittest.TestCase):
             cls.source = handle.read()
 
     def test_the_released_text_is_unchanged(self):
-        """Everything above the marker, with the two lines that closed the released file, is that
-        file byte for byte. An edit to the released logic fails here."""
+        """Everything above the marker, with the two lines that closed the released file, is the
+        pinned text: that file byte for byte but for #280's one line. An edit to it fails here."""
         self.assertEqual(self.source.count(MARKER), 1)
         released, _, added = self.source.partition(MARKER)
         self.assertEqual(hashlib.sha256((released + RELEASED_TAIL).encode("utf-8")).hexdigest(), RELEASED_SHA256)
@@ -309,6 +310,22 @@ class InvariantTest(unittest.TestCase):
         git(repo, "config", "alias.p", "push")
         self.assertEqual(said("git p --force origin feature"), said("git push --force origin feature"))
         self.assertEqual(said("git --attr-source HEAD push origin master"), said("git push origin master"))
+        # One released refusal is worded below the marker with its next step (#302); the verdict stays the released one.
+        for command in (r"find . \( -name a -o -name b \) -print", "git log -S '(' --oneline"):
+            with self.subTest(command=command):
+                self.assertIsNotNone(guard_git.released_check(command, repo))
+                reason = said(command)
+                self.assertIn("a segment begins with an option. Rewrite it so no option follows", reason)
+                self.assertIn('"A refusal that is not a broken setup"', reason)
+                self.assertNotIn("hand it back", reason)
+        for command in ("git log --oneline -S '('", "git grep -n '[(]' -- src", "find . -name a -print -o -name b -print"):
+            with self.subTest(command=command):  # the forms the advice and the README name pass
+                self.assertIsNone(guard_git.check_command(command, repo))
+        # A reason that only quotes those words (a malformed Agent: line) keeps its own advice.
+        git(repo, "commit", "-q", "--allow-empty", "-m", "fix: x\n\nAgent: a segment begins with an option")
+        quoted = said("git push origin feature")
+        self.assertIn("RULE ZERO: at most one Agent:", quoted)
+        self.assertNotIn("Rewrite it so", quoted)
 
 
 class GuardTest(unittest.TestCase):
@@ -1242,6 +1259,10 @@ class AuthorTest(unittest.TestCase):
         self.assertIn("an Agent: line reads exactly", guard_git.check_command("git push origin feature", self.mine) or "")
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: x\n\n" + declared + "\nGenerated with Claude Code")
         self.assertIn("attribution rule", guard_git.check_command("git push origin feature", self.mine) or "")
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: x\n\nFiles were regenerated with new defaults.\n\n" + declared)
+        self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))  # a longer word is prose (#280)
+        git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: x\n\n_Generated with_ Claude Code\n\n" + declared)
+        self.assertIn("attribution rule", guard_git.check_command("git push origin feature", self.mine) or "")  # emphasis is not a word
         git(self.mine, "commit", "-q", "--allow-empty", "--amend", "-m", "fix: x\n\n" + declared)
         self.assertIsNone(guard_git.check_command("git push origin feature", self.mine))
         git(self.mine, "config", "i18n.logOutputEncoding", "ISO-8859-1")  # the scan asks for UTF-8 whatever the config says
