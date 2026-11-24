@@ -28,23 +28,32 @@ STUBS = {
     "exit2": "import sys\nsys.stdin.read()\nsys.exit(2)\n",
     "crash": "import sys\nsys.stdin.read()\nraise SystemExit(1)\n",
     "garbage": "import sys\nsys.stdin.read()\nprint('not a decision')\n",
-    "listdecision": "import sys\nsys.stdin.read()\nprint('{\"hookSpecificOutput\": {\"permissionDecision\": []}}')\n",
+    "listdecision": ("import sys\nsys.stdin.read()\nprint('{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", "
+                     "\"permissionDecision\": []}}')\n"),
+    # A decision whose hookSpecificOutput lacks hookEventName, names another event, or is no object.
+    "noevent": ("import json, sys\nsys.stdin.read()\nprint(json.dumps({'hookSpecificOutput': "
+                "{'permissionDecision': 'deny'}}))\n"),
+    "otherevent": ("import json, sys\nsys.stdin.read()\nprint(json.dumps({'hookSpecificOutput': "
+                   "{'hookEventName': 'PostToolUse', 'permissionDecision': 'deny'}}))\n"),
+    "allownoevent": ("import json, sys\nsys.stdin.read()\nprint(json.dumps({'hookSpecificOutput': "
+                     "{'permissionDecision': 'allow'}}))\n"),
+    "notobject": "import sys\nsys.stdin.read()\nprint('{\"hookSpecificOutput\": [\"deny\"]}')\n",
     # What Python prints when it cannot open the script it is given: exit 2, which is no refusal.
     "cantopen": ("import sys\nsys.stdin.read()\nsys.stderr.write(\"python3: can't open file 'g.py': [Errno 13] "
                  "Permission denied\\n\")\nsys.exit(2)\n"),
     # Bytes that are not UTF-8: on stdout, inside an allow's or a deny's JSON, on stderr beside an
     # allow, all with exit 0; and on stderr with exit 2.
     "badbytes": "import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'\\xff\\xfe')\n",
-    "badallow": ("import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'{\"hookSpecificOutput\": "
-                 "{\"permissionDecision\": \"allow\", \"permissionDecisionReason\": \"\\xff\"}}')\n"),
-    "baddeny": ("import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'{\"hookSpecificOutput\": "
-                "{\"permissionDecision\": \"deny\"}, \"diagnostic\": \"\\xff\"}')\n"),
+    "badallow": ("import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'{\"hookSpecificOutput\": {\"hookEventName\": "
+                 "\"PreToolUse\", \"permissionDecision\": \"allow\", \"permissionDecisionReason\": \"\\xff\"}}')\n"),
+    "baddeny": ("import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'{\"hookSpecificOutput\": {\"hookEventName\": "
+                "\"PreToolUse\", \"permissionDecision\": \"deny\"}, \"diagnostic\": \"\\xff\"}')\n"),
     "badstderr": "import sys\nsys.stdin.read()\nsys.stderr.buffer.write(b'\\xff')\n",
     "badbytes2": "import sys\nsys.stdin.read()\nsys.stderr.buffer.write(b'\\xff\\xfe')\nsys.exit(2)\n",
     # Refuses exactly the calls whose command holds the word `deny-me`; reads the cwd it was given.
     "words": ("import json, os, sys\np = json.load(sys.stdin)\nassert os.path.isdir(os.path.join(p['cwd'], '.git'))\n"
               "if 'deny-me' in p['tool_input']['command']:\n    print(json.dumps({'hookSpecificOutput': "
-              "{'permissionDecision': 'deny'}}))\n"),
+              "{'hookEventName': 'PreToolUse', 'permissionDecision': 'deny'}}))\n"),
 }
 
 
@@ -105,6 +114,16 @@ class RunnerTest(unittest.TestCase):
         for kind in ("crash", "garbage", "listdecision", "cantopen"):
             with self.subTest(kind=kind):
                 self.assertEqual(run(f.cases, f.stub(kind)), (1, ["FAIL refused-one expected=refused got=error"]))
+
+    def test_a_decision_for_no_named_pretooluse_event_is_an_error(self):
+        # The hooks reference requires hookSpecificOutput.hookEventName set to the event's name.
+        f = Folder(self)
+        f.case("a-allowed", "git status", "allowed")
+        f.case("b-refused", "git push", "refused")
+        for kind in ("noevent", "otherevent", "allownoevent", "notobject"):
+            with self.subTest(kind=kind):
+                self.assertEqual(run(f.cases, f.stub(kind)), (1, [
+                    "FAIL a-allowed expected=allowed got=error", "FAIL b-refused expected=refused got=error"]))
 
     def test_output_that_is_not_utf8_is_judged_case_by_case(self):
         f = Folder(self)

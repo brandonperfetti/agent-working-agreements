@@ -122,7 +122,12 @@ def ruling(guard, command, directory, env):
     if result.returncode or stdout.strip() == "":
         return "error" if result.returncode else "allowed"
     try:
-        decision = json.loads(stdout)["hookSpecificOutput"]["permissionDecision"]
+        output = json.loads(stdout)["hookSpecificOutput"]
+        # The hooks reference requires hookEventName set to the event's name, and does not say what
+        # Claude Code does without it, so a decision for no named PreToolUse event is no ruling.
+        if not isinstance(output, dict) or output.get("hookEventName") != "PreToolUse":
+            return "error"
+        decision = output["permissionDecision"]
     except (ValueError, KeyError, TypeError):
         return "error"
     return {"deny": "refused", "allow": "allowed"}.get(decision, "error") if isinstance(decision, str) else "error"
