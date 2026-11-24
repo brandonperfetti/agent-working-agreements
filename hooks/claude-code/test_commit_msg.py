@@ -59,9 +59,6 @@ DECLARATION_CASES = (
     ("fix: x\n\nGenerated with: aider", "no Co-Authored-By"),
     ("fix: x\n\nThis commit was generated with\na tool", "no Co-Authored-By"),  # the phrase ends its line
     ("fix: x\n\n_Generated with Claude Code_", "no Co-Authored-By"),  # an underscore beside it is emphasis, not a word (#280)
-    ("fix: x\n\n_Generated with_ Claude Code", "no Co-Authored-By"),
-    ("fix: x\n\n__Generated with__ Claude Code", "no Co-Authored-By"),
-    ("fix: x\n\n> - _Generated with_ Claude Code", "no Co-Authored-By"),
     ("fix: x\n\nPosted by an agent on Brandon Perfetti's behalf.", "no Co-Authored-By"),
     ("fix: x\n\nhttps://claude.ai/code/session_01AbC", "no Co-Authored-By"),
     ("fix: x\n\nSee https://chatgpt.com/share/abc for the chat", "no Co-Authored-By"),
@@ -79,6 +76,15 @@ LONGER_WORD_CASES = (
     "docs: note\n\nThe migration was generated without a token.",
     "fix: x\n\nIDs are generated within the worker, not by the client.",
     "fix: x\n\nGENERATED WITHOUT a seed",
+)
+
+
+# An underscore after the phrase alone: the hook passes it, as since #299; the push-time guard refuses
+# it, as its release did (#280). The verdict each copy had before this change.
+PHRASE_EMPHASIS_CASES = (
+    "fix: x\n\n_Generated with_ Claude Code",
+    "fix: x\n\n__Generated with__ Claude Code",
+    "fix: x\n\n> - _Generated with_ Claude Code",
 )
 
 
@@ -100,8 +106,19 @@ class AttributionCheckTest(unittest.TestCase):
         hook = load_commit_msg()
         for name in ("BANNED", "DECLARATION", "AGENT_LINE"):  # CLIENT, MODEL and EFFORT build AGENT_LINE
             with self.subTest(pattern=name):
-                self.assertEqual(getattr(hook, name).pattern, getattr(guard_git, name).pattern)
+                expected = getattr(guard_git, name).pattern
+                if name == "BANNED":  # the one difference: the hook ends the phrase at a word boundary, as since #299 (#280)
+                    self.assertEqual(expected.count(r"generated with(?![^\W_])"), 1)
+                    expected = expected.replace(r"generated with(?![^\W_])", r"generated with\b")
+                self.assertEqual(getattr(hook, name).pattern, expected)
                 self.assertEqual(getattr(hook, name).flags, getattr(guard_git, name).flags)
+
+    def test_phrase_emphasis_keeps_each_copys_verdict(self):
+        hook = load_commit_msg().attribution_problem
+        for message in PHRASE_EMPHASIS_CASES:
+            with self.subTest(message=message):
+                self.assertIsNone(hook(message))
+                self.assertIsNotNone(guard_git.attribution_problem(message))
 
     def test_the_footer_phrase_inside_a_longer_word_is_prose(self):
         copies = {"commit-msg": load_commit_msg().attribution_problem, "guard_git": guard_git.attribution_problem}
