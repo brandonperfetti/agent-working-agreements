@@ -33,10 +33,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import types
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import test_push_differential as fixtures  # noqa: E402  the bare-repository fixture, reused
 
 DEFAULT_CASES = os.path.join("~", ".config", "awa-sealed-cases")
 DEFAULT_GUARD = os.path.join(HERE, "guard_git.py")
@@ -47,6 +47,7 @@ GUARD_TIMEOUT = 30
 TRIGGER = os.path.join(os.path.dirname(HERE), "git", "sealed-cases-trigger")
 TRIGGER_HOOKS = ("post-commit", "post-merge")
 OWNED = "installed-by: agent-working-agreements/hooks/claude-code/sealed_cases.py"
+AUTHOR_EMAIL = "brandon@brandonperfetti.com"  # the fixture's commit identity, as guard_git.py names it
 
 
 class NotRun(Exception):
@@ -122,7 +123,30 @@ def ruling(guard, command, directory, env):
     return {"deny": "refused", "allow": "allowed"}.get(decision, "error") if isinstance(decision, str) else "error"
 
 
-def build_template(base):
+def load_fixtures():
+    """test_push_differential, whose bare-repository fixture the cases run on. It imports this
+    folder's guard_git.py, but only for the author email: a guard that cannot be imported is the
+    one under judgement, not the fixture's, so a stand-in carries the email and each case then asks
+    that guard, which answers got=error."""
+    try:
+        import test_push_differential as fixtures
+        return fixtures
+    except Exception:  # a guard_git.py that does not import; anything else fails again below
+        sys.modules.pop("test_push_differential", None)
+    stand_in = types.ModuleType("guard_git")
+    stand_in.AUTHOR_EMAIL = AUTHOR_EMAIL
+    sys.modules["guard_git"] = stand_in
+    try:
+        import test_push_differential as fixtures
+        return fixtures
+    except Exception as error:
+        raise NotRun("the fixture could not be loaded: {}: {}".format(type(error).__name__, error))
+    finally:
+        if sys.modules.get("guard_git") is stand_in:
+            del sys.modules["guard_git"]
+
+
+def build_template(base, fixtures):
     """The differential test's fixture, with a gh that answers nothing."""
     template = os.path.join(base, "template")
     os.makedirs(template)
@@ -138,7 +162,7 @@ def build_template(base):
     return template
 
 
-def judge(case, guard, template, base, index):
+def judge(case, guard, template, base, index, fixtures):
     """The ruling the guard gives the case, on a fresh copy of the fixture."""
     root = os.path.join(base, "case-{}".format(index))
     shutil.copytree(template, root, symlinks=True)
@@ -171,10 +195,11 @@ def run_cases(folder, guard, out=sys.stdout):
             raise NotRun("the guard at {} cannot be read: {}".format(guard, error.strerror or error))
         with tempfile.TemporaryDirectory() as tmp:
             base = os.path.realpath(tmp)
-            template = build_template(base)
+            fixtures = load_fixtures()
+            template = build_template(base, fixtures)
             failed = False
             for index, case in enumerate(cases):
-                got = judge(case, guard, template, base, index)
+                got = judge(case, guard, template, base, index, fixtures)
                 if got == case["expected"]:
                     print("PASS {}".format(case["id"]), file=out, flush=True)
                 else:
@@ -188,8 +213,10 @@ def run_cases(folder, guard, out=sys.stdout):
 
 def hooks_dir(start=HERE):
     """This repository's own hooks folder, the one chain-repo-hook hands git's calls to."""
+    # GIT_DIR, GIT_COMMON_DIR and the rest would name another repository whatever the cwd.
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     common = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
-                            cwd=start, capture_output=True, text=True)
+                            cwd=start, capture_output=True, text=True, env=env)
     if common.returncode:
         raise NotRun("not inside a git repository: {}".format(start))
     return os.path.join(common.stdout.strip(), "hooks")

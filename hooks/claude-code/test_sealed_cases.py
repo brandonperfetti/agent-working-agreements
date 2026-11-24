@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import sealed_cases  # noqa: E402
@@ -112,6 +113,30 @@ class RunnerTest(unittest.TestCase):
         f.case("plain-status", "git status --short", "allowed")
         f.case("release-push", "git push origin HEAD:main", "refused")
         self.assertEqual(run(f.cases, sealed_cases.DEFAULT_GUARD), (0, ["PASS plain-status", "PASS release-push"]))
+
+
+class BrokenCheckoutGuardTest(unittest.TestCase):
+    """The checkout's guard_git.py does not import: the fixture still loads, the broken guard is
+    judged (got=error, never a PASS), and another guard can still be judged beside it."""
+
+    def test_a_guard_that_does_not_import(self):
+        f = Folder(self)
+        folder = os.path.join(f.root, "copy")
+        os.makedirs(folder)
+        for name in ("sealed_cases.py", "test_push_differential.py"):
+            shutil.copy(os.path.join(sealed_cases.HERE, name), folder)
+        broken = os.path.join(folder, "guard_git.py")
+        with open(broken, "w") as handle:
+            handle.write("def broken(:\n")
+        f.case("refused-one", "git push origin HEAD:master", "refused")
+        f.case("allowed-one", "git status --short", "allowed")
+        runner = [sys.executable, "-I", os.path.join(folder, "sealed_cases.py"), "--cases", f.cases]
+        judged = subprocess.run(runner, capture_output=True, text=True, timeout=300)
+        self.assertEqual((judged.returncode, judged.stdout.splitlines(), judged.stderr), (1, [
+            "FAIL allowed-one expected=allowed got=error", "FAIL refused-one expected=refused got=error"], ""))
+        other = subprocess.run(runner + ["--guard", f.stub("deny")], capture_output=True, text=True, timeout=300)
+        self.assertEqual((other.returncode, other.stdout.splitlines()), (1, [
+            "FAIL allowed-one expected=allowed got=refused", "PASS refused-one"]))
 
 
 class NotRunTest(unittest.TestCase):
@@ -241,6 +266,19 @@ class TriggerTest(unittest.TestCase):
         git(self.repo, "checkout", "-q", "develop", env=self.env)
         merged = git(self.repo, "merge", "-q", "feature", env=self.env)
         self.assertNotIn("RUNNER RAN", merged.stdout + merged.stderr)
+
+
+class HooksDirTest(unittest.TestCase):
+    def test_an_exported_git_dir_names_no_other_repository(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = os.path.realpath(tmp.name)
+        for name in ("this", "other"):
+            git(root, "init", "-q", name)
+        with mock.patch.dict(os.environ, {"GIT_DIR": os.path.join(root, "other", ".git"),
+                                          "GIT_COMMON_DIR": os.path.join(root, "other", ".git")}):
+            found = sealed_cases.hooks_dir(os.path.join(root, "this"))
+        self.assertEqual(found, os.path.join(root, "this", ".git", "hooks"))
 
 
 class InstallTest(unittest.TestCase):

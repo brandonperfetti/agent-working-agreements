@@ -113,7 +113,8 @@ merge in any worktree that changes a file under `hooks/` prints the runner's lin
 `--dry-run` as for `install.py`). Git ignores those hooks' exit status, so the lines are the
 report. Limits: the seal is a permission deny in `~/.claude/settings.json` on Read, Edit and
 Write of the folder; Claude Code 2.1.328 also refused a Bash command naming it, a read of the
-command's words, not a wall against a shell; it seals no Codex or OpenClaw session. The runner and
+command's words, not a wall against a shell; it seals no Codex or OpenClaw session, a known limit
+until a lane there changes the guard (Brandon, 2026-11-24, #310). The runner and
 trigger are in the tree they judge; a rebase or cherry-pick runs neither hook; CI cannot see the
 folder and does not run it.
 
