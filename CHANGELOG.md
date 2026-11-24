@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-24 — Sealed guard cases, replayed on every `hooks/` change (#310).** Twelve cases
+  live in `~/.config/awa-sealed-cases/`, outside every checkout, with Claude Code's file tools
+  denied there; `hooks/claude-code/sealed_cases.py` replays them against `guard_git.py`, and a
+  local `post-commit`/`post-merge` trigger runs it. No rule text or CI step changes. Why: the
+  guard's only judges sat in the tree its changes edit. Brandon decided, 2026-11-24.
+  [Decision](https://github.com/brandonperfetti/agent-working-agreements/issues/310#issuecomment-7141448958).
+
 - **2026-11-24 — The guard matches "generated with" as words, and one refusal names its fix
   (#280, #302).** Both RULE ZERO copies of the footer pattern take a boundary on each side, so
   "files were regenerated with new defaults" passes the commit-msg hook and the push-time scan. The

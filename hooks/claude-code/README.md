@@ -84,6 +84,41 @@ gh)`, variables), shell functions, `PATH`, `--exec-path`, and `gh`
 aliases and extensions are not resolved, so this guards literal commands, not an adversarial shell;
 and on a base with a merge queue `gh` may enqueue rather than merge.
 
+## Sealed cases
+
+The tests above live in the tree a guard change edits, so the change can also edit what judges
+it. A small set of **sealed cases** lives outside every checkout, in `~/.config/awa-sealed-cases/`,
+where Claude Code's file tools are denied (#310). Each is one `<id>.json`: a setup, one Bash call
+and the ruling the guard must give it, `refused` or `allowed`. Brandon, or a person he names,
+adds, edits or removes a case, usually from a release-review finding; an agent may propose one
+in a comment and never writes one. The first twelve are the nine shapes of #298 and #306, a
+force-push, a push to `master`, and the delegated merge into `develop` while a `route-suspended`
+issue is open, which the guard allows: it checks the route's form, and the suspension read is
+the delivery owner's.
+
+`sealed_cases.py` replays them against a `guard_git.py` (`--guard`, this folder's by default) on
+the bare-repository fixture `test_push_differential.py` builds, with a `gh` that answers nothing.
+It asks the guard as Claude Code does and runs no case's call. It prints `PASS <id>` or
+`FAIL <id> expected=<x> got=<y>` per case and exits 1 on any failure; when the folder, a case or
+the guard cannot be read it prints `SEALED CASES NOT RUN: <reason>` and exits 2. Its own logic is
+tested by `test_sealed_cases.py`, on made-up cases. Install the trigger once per Mac:
+
+```bash
+/usr/bin/python3 ~/dev/sansfaux/agent-working-agreements/hooks/claude-code/sealed_cases.py --install-trigger
+```
+
+It copies [`../git/sealed-cases-trigger`](../git/README.md) into this repository's own hooks
+folder as `post-commit` and `post-merge`, which the global `chain-repo-hook` runs, so a commit or
+merge in any worktree that changes a file under `hooks/` prints the runner's lines (`--check`,
+`--dry-run` as for `install.py`). Git ignores those hooks' exit status, so the lines are the
+report. Limits: the seal is a permission deny in `~/.claude/settings.json` on Read, Edit and
+Write of the folder; Claude Code 2.1.328 also refused a Bash command naming it, a read of the
+command's words, not a wall against a shell; it seals no Codex or OpenClaw session, a known limit
+until a lane there changes the guard (Brandon, 2026-11-24, #310). The runner and
+trigger are in the tree they judge; a cherry-pick, a revert or a default rebase runs `post-commit`
+for each commit it writes, but `git rebase --apply` runs neither hook; CI cannot see the folder
+and does not run it.
+
 ## Push rules and limits
 
 The guard reads the repository before the call runs, then decides where a push would go. Where it
