@@ -10,6 +10,12 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-24 — Standing post-merge release authority (#318).** A repository can grant a
+  designated agent a bounded publication route after Brandon merges. AWA's runbook adds GitHub
+  Release notes and readback to its tag and back-merge checks so readers can find the rules in
+  force and what changed. Brandon decided, 2026-11-24.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/318).
+
 - **2026-11-22 — An OpenClaw brief names an outcome and a budget (#313).** The *Delegation* line
   asks for the outcome and why, the real limits, a size or time budget and when to stop and bring
   options, in place of a bare field list; the file does not grow. Why: the D9 audit found a proof
