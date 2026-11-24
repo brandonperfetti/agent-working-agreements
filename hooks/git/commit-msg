@@ -20,11 +20,10 @@ import sys
 AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 # The attribution check; hooks/claude-code/guard_git.py carries the same patterns and function,
 # and test_commit_msg.py holds the two copies to one table. A comment, quote or list prefix is still
-# a line's start. One difference: here the footer phrase ends at a word boundary, so "generated
-# without" is prose (#280); the guard's copy is in its released text and changes with its pin.
+# a line's start.
 BANNED = re.compile(
     r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:"  # a contributor or session trailer
-    r"|generated with\b"  # a promotional footer, anywhere
+    r"|(?<![^\W_])generated with\b"  # a promotional footer, as words; _ before it is emphasis (#280)
     r"|^[#>*+\- \t]*posted by an agent\b"  # the agent label the declaration replaced
     r"|claude\.ai/(chat|share|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/",  # a session or chat link
     re.IGNORECASE | re.MULTILINE,

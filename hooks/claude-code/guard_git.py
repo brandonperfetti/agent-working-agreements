@@ -34,7 +34,7 @@ AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 # a line's start.
 BANNED = re.compile(
     r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:"  # a contributor or session trailer
-    r"|generated with"  # a promotional footer, anywhere
+    r"|(?<![^\W_])generated with\b"  # a promotional footer, as words; _ before it is emphasis (#280)
     r"|^[#>*+\- \t]*posted by an agent\b"  # the agent label the declaration replaced
     r"|claude\.ai/(chat|share|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/",  # a session or chat link
     re.IGNORECASE | re.MULTILINE,
@@ -766,7 +766,8 @@ def main():
 # ==== additional refusals (#236): everything above this line is the guard as released ====
 #
 # The text above is guard_git.py as released at v2026.11.17.2, byte for byte but for its last two
-# lines (`if __name__ == "__main__": main()`), which now close this file. Nothing below edits it
+# lines (`if __name__ == "__main__": main()`), which now close this file, and for one line changed
+# on purpose with its pin: BANNED's footer phrase is matched as words (#280). Nothing below edits it
 # or rebinds a name it uses, except `check_command` and `main`, which are wrapped:
 #
 #     refuse = released_check(call) or extra_refusal(call)
