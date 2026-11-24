@@ -91,7 +91,8 @@ would have to interpret the shell to know, it refuses and names the next step; i
 by interpreting (#236).
 
 **The guard is the released guard plus refusals.** `guard_git.py` keeps the text released at
-`v2026.11.17.2` unchanged, down to a marker line. Everything below the marker can only refuse:
+`v2026.11.17.2` unchanged, down to a marker line, but for one line its pin moved with: the footer
+pattern, matched as words (#280). Everything below the marker can only refuse:
 a call passes when the released check admits it as written, admits it again as git will read it
 (an alias expanded, an option the released reader did not know dropped), and no rule below
 refuses. So the guard never admits a call the released guard refuses, whatever the added code
