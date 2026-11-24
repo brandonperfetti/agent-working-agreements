@@ -68,11 +68,18 @@ Historical Release publication requires an explicit grant for the backfill. Audi
 tag and prepare notes from that revision's first-parent changelog delta and annotation. Record
 eligibility and disposition before publishing. Use the existing immutable tags.
 
-Brandon decides rollback. In `~/dev/sansfaux/agent-working-agreements`, check out the selected tag
-and run the installers present at that revision. A hook whose installer is absent stays as it was.
+Brandon decides rollback. In `~/dev/sansfaux/agent-working-agreements`, require a clean
+`git status --porcelain` before checkout. If it shows changes or fails, stop and preserve the
+working tree. Resolve `refs/tags/<tag>^{commit}`, then check out the selected tag.
 
 ```bash
 git checkout <tag>
+```
+
+Stop if checkout fails. Before running any installer, confirm `HEAD` equals the recorded tag
+commit and the tree is still clean. Run only the installers present at that revision.
+
+```bash
 /usr/bin/python3 hooks/claude-code/install.py
 /usr/bin/python3 hooks/codex/install.py
 node hooks/openclaw/install.mjs
