@@ -115,8 +115,9 @@ report. Limits: the seal is a permission deny in `~/.claude/settings.json` on Re
 Write of the folder; Claude Code 2.1.328 also refused a Bash command naming it, a read of the
 command's words, not a wall against a shell; it seals no Codex or OpenClaw session, a known limit
 until a lane there changes the guard (Brandon, 2026-11-24, #310). The runner and
-trigger are in the tree they judge; a rebase or cherry-pick runs neither hook; CI cannot see the
-folder and does not run it.
+trigger are in the tree they judge; a cherry-pick, a revert or a default rebase runs `post-commit`
+for each commit it writes, but `git rebase --apply` runs neither hook; CI cannot see the folder
+and does not run it.
 
 ## Push rules and limits
 

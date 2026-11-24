@@ -116,27 +116,37 @@ class RunnerTest(unittest.TestCase):
 
 
 class BrokenCheckoutGuardTest(unittest.TestCase):
-    """The checkout's guard_git.py does not import: the fixture still loads, the broken guard is
-    judged (got=error, never a PASS), and another guard can still be judged beside it."""
+    """The checkout's guard_git.py does not import, or exits as it imports: the runner never runs
+    it in its own process, so the fixture still loads, that guard answers each case for itself
+    (an exit 0 with nothing said is Claude Code's allow, so a case expecting a refusal fails), and
+    another guard can still be judged beside it."""
 
-    def test_a_guard_that_does_not_import(self):
+    def judge_beside(self, source):
         f = Folder(self)
         folder = os.path.join(f.root, "copy")
         os.makedirs(folder)
         for name in ("sealed_cases.py", "test_push_differential.py"):
             shutil.copy(os.path.join(sealed_cases.HERE, name), folder)
-        broken = os.path.join(folder, "guard_git.py")
-        with open(broken, "w") as handle:
-            handle.write("def broken(:\n")
+        with open(os.path.join(folder, "guard_git.py"), "w") as handle:
+            handle.write(source)
         f.case("refused-one", "git push origin HEAD:master", "refused")
         f.case("allowed-one", "git status --short", "allowed")
         runner = [sys.executable, "-I", os.path.join(folder, "sealed_cases.py"), "--cases", f.cases]
         judged = subprocess.run(runner, capture_output=True, text=True, timeout=300)
-        self.assertEqual((judged.returncode, judged.stdout.splitlines(), judged.stderr), (1, [
-            "FAIL allowed-one expected=allowed got=error", "FAIL refused-one expected=refused got=error"], ""))
         other = subprocess.run(runner + ["--guard", f.stub("deny")], capture_output=True, text=True, timeout=300)
         self.assertEqual((other.returncode, other.stdout.splitlines()), (1, [
             "FAIL allowed-one expected=allowed got=refused", "PASS refused-one"]))
+        return judged.returncode, judged.stdout.splitlines(), judged.stderr
+
+    def test_a_guard_that_does_not_import(self):
+        self.assertEqual(self.judge_beside("def broken(:\n"), (1, [
+            "FAIL allowed-one expected=allowed got=error", "FAIL refused-one expected=refused got=error"], ""))
+
+    def test_a_guard_that_exits_as_it_imports(self):
+        self.assertEqual(self.judge_beside("raise SystemExit(0)\n"), (1, [
+            "PASS allowed-one", "FAIL refused-one expected=refused got=allowed"], ""))
+        self.assertEqual(self.judge_beside("raise SystemExit(1)\n"), (1, [
+            "FAIL allowed-one expected=allowed got=error", "FAIL refused-one expected=refused got=error"], ""))
 
 
 class NotRunTest(unittest.TestCase):

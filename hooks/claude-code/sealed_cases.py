@@ -125,25 +125,26 @@ def ruling(guard, command, directory, env):
 
 def load_fixtures():
     """test_push_differential, whose bare-repository fixture the cases run on. It imports this
-    folder's guard_git.py, but only for the author email: a guard that cannot be imported is the
-    one under judgement, not the fixture's, so a stand-in carries the email and each case then asks
-    that guard, which answers got=error."""
-    try:
-        import test_push_differential as fixtures
-        return fixtures
-    except Exception:  # a guard_git.py that does not import; anything else fails again below
-        sys.modules.pop("test_push_differential", None)
+    folder's guard_git.py only for the author email, so it imports a stand-in that carries the
+    email: the guard under judgement runs only in the timed process each case asks, never in the
+    runner, and one that does not import, or exits as it does, answers each case for itself."""
+    if "test_push_differential" in sys.modules:
+        return sys.modules["test_push_differential"]
+    held = sys.modules.get("guard_git")
     stand_in = types.ModuleType("guard_git")
     stand_in.AUTHOR_EMAIL = AUTHOR_EMAIL
     sys.modules["guard_git"] = stand_in
     try:
         import test_push_differential as fixtures
         return fixtures
-    except Exception as error:
+    except (Exception, SystemExit) as error:
+        sys.modules.pop("test_push_differential", None)
         raise NotRun("the fixture could not be loaded: {}: {}".format(type(error).__name__, error))
     finally:
-        if sys.modules.get("guard_git") is stand_in:
-            del sys.modules["guard_git"]
+        if held is None:
+            sys.modules.pop("guard_git", None)
+        else:
+            sys.modules["guard_git"] = held
 
 
 def build_template(base, fixtures):
