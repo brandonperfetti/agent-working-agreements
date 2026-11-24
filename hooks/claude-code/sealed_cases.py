@@ -106,8 +106,11 @@ def ruling(guard, command, directory, env):
     payload = json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Bash",
                           "tool_input": {"command": command}, "cwd": directory})
     try:
+        # Bytes that are not UTF-8 become U+FFFD: on stdout that is no decision (got=error), never
+        # a crash of the run, and an exit 2 stays a refusal whatever its stderr holds.
         result = subprocess.run([sys.executable, "-I", guard], input=payload, capture_output=True,
-                                text=True, cwd=directory, env=env, timeout=GUARD_TIMEOUT)
+                                encoding="utf-8", errors="replace", cwd=directory, env=env,
+                                timeout=GUARD_TIMEOUT)
     except (OSError, subprocess.SubprocessError):
         return "error"
     if result.returncode == 2:
@@ -175,7 +178,7 @@ def judge(case, guard, template, base, index, fixtures):
         if setup:
             try:
                 fixtures.run(setup.replace("{root}", root), work, env)
-            except (RuntimeError, subprocess.SubprocessError):
+            except (RuntimeError, UnicodeError, subprocess.SubprocessError):  # UnicodeError: output not UTF-8
                 return "setup-error"
         return ruling(guard, case["command"].replace("{root}", root), work, env)
     finally:

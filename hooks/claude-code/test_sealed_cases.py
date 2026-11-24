@@ -32,6 +32,9 @@ STUBS = {
     # What Python prints when it cannot open the script it is given: exit 2, which is no refusal.
     "cantopen": ("import sys\nsys.stdin.read()\nsys.stderr.write(\"python3: can't open file 'g.py': [Errno 13] "
                  "Permission denied\\n\")\nsys.exit(2)\n"),
+    # Bytes that are not UTF-8: on stdout with exit 0, and on stderr with exit 2.
+    "badbytes": "import sys\nsys.stdin.read()\nsys.stdout.buffer.write(b'\\xff\\xfe')\n",
+    "badbytes2": "import sys\nsys.stdin.read()\nsys.stderr.buffer.write(b'\\xff\\xfe')\nsys.exit(2)\n",
     # Refuses exactly the calls whose command holds the word `deny-me`; reads the cwd it was given.
     "words": ("import json, os, sys\np = json.load(sys.stdin)\nassert os.path.isdir(os.path.join(p['cwd'], '.git'))\n"
               "if 'deny-me' in p['tool_input']['command']:\n    print(json.dumps({'hookSpecificOutput': "
@@ -97,10 +100,22 @@ class RunnerTest(unittest.TestCase):
             with self.subTest(kind=kind):
                 self.assertEqual(run(f.cases, f.stub(kind)), (1, ["FAIL refused-one expected=refused got=error"]))
 
+    def test_output_that_is_not_utf8_is_judged_case_by_case(self):
+        f = Folder(self)
+        f.case("a-allowed", "git status", "allowed")
+        f.case("b-refused", "git push", "refused")
+        self.assertEqual(run(f.cases, f.stub("badbytes")), (1, [
+            "FAIL a-allowed expected=allowed got=error", "FAIL b-refused expected=refused got=error"]))
+        # Exit 2 blocks the call whatever its stderr holds.
+        self.assertEqual(run(f.cases, f.stub("badbytes2")), (1, [
+            "FAIL a-allowed expected=allowed got=refused", "PASS b-refused"]))
+
     def test_a_setup_that_fails_fails_its_case(self):
         f = Folder(self)
         f.case("bad-setup", "git status", "allowed", setup="false")
-        self.assertEqual(run(f.cases, f.stub("allow")), (1, ["FAIL bad-setup expected=allowed got=setup-error"]))
+        f.case("bytes-setup", "git status", "allowed", setup="printf '\\377'")
+        self.assertEqual(run(f.cases, f.stub("allow")), (1, [
+            "FAIL bad-setup expected=allowed got=setup-error", "FAIL bytes-setup expected=allowed got=setup-error"]))
 
     def test_root_is_the_fixture_and_gh_answers_nothing(self):
         f = Folder(self)
