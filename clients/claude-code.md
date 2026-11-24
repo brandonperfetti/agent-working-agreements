@@ -38,12 +38,12 @@ delivery's decisions for work with no initiative, B1 or B2, by mode).
 - **Agent-tool dispatches in one message run concurrently**; the ceiling is unmeasured.
 - **Model and effort (A4):** per [orchestration seats](../procedures/orchestration-seats.md), and
   in T3 [its adapter](../procedures/t3-adapter.md); old role-to-selector maps restrict no task choice.
-- **Long gates (Bash):** `run_in_background: true` and `timeout: 7200000`; the 30-minute default
-  stops gate and watcher silently, T3 messages and idle do not. One that can pass 2 hours or the
-  session runs as `<d>/gate.sh` in a new `<d>`, detached (`perl -MPOSIX -e 'setsid;exec @ARGV' bash
-  -c 'bash -e <d>/gate.sh; echo $? > <d>/x; mv <d>/x <d>/exit' & echo $! > <d>/pgid`); wait for
-  `<d>/exit` or the group's end. Stop only that group, only while `kill -0 -<pgid>` finds it (reuse
-  stays possible): `kill -TERM -<pgid>`, not `pkill -f`.
+- **Long gates (Bash):** use `run_in_background: true`, `timeout: 7200000`. T3 messages and idle
+  leave pending gates running. For a gate that may pass 2 hours or outlive the session, use a new
+  `<d>`: `perl -MPOSIX -e 'setsid;exec @ARGV' bash -c 'bash -eo pipefail <d>/gate.sh; echo $? >
+  <d>/x; mv <d>/x <d>/exit' & echo $! > <d>/pgid`. Wait for `<d>/exit` or the group's end.
+  Capture the leader's start time and PGID at launch. Use `kill -TERM -<pgid>` only if a fresh
+  `ps` read confirms that leader, start time and PGID. If identity is unclear, send no signal.
 - **CodeRabbit CLI, for B2's preflight:** `coderabbit-preflight` checks the CLI on every run; a
   recorded install is a record, not a guarantee.
 - **Kody tool names (A7):** the same Kody connector is named differently per client. A permission
