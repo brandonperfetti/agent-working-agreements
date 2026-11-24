@@ -1,0 +1,27 @@
+#!/bin/sh
+# installed-by: agent-working-agreements/hooks/claude-code/sealed_cases.py (the installer updates files carrying this line)
+# This repository's post-commit and post-merge hook (#310): when the commit or merge changed a file
+# under hooks/, replay the sealed guard cases against this checkout's guard_git.py and print the
+# runner's lines. The global chain-repo-hook hands git's call here. Git ignores these hooks' exit
+# status, so the report is the output: a line per case, or SEALED CASES NOT RUN, never silence.
+name="$(basename "$0")"
+top="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+if [ "$name" = post-merge ]; then
+  [ "$1" = 1 ] && exit 0  # a squash merge commits nothing; the commit that follows runs post-commit
+  changed="$(git diff --name-only ORIG_HEAD HEAD -- ':(top)hooks' 2>/dev/null)" || {
+    echo "SEALED CASES NOT RUN: post-merge could not read what the merge changed"
+    exit 2
+  }
+elif git rev-parse -q --verify HEAD^1 >/dev/null; then
+  changed="$(git diff --name-only HEAD^1 HEAD -- ':(top)hooks')"
+else
+  changed="$(git diff-tree --root --no-commit-id --name-only -r HEAD -- ':(top)hooks')"
+fi
+[ -n "$changed" ] || exit 0
+echo "sealed guard cases ($name: the change touches hooks/):"
+runner="$top/hooks/claude-code/sealed_cases.py"
+if [ ! -f "$runner" ]; then
+  echo "SEALED CASES NOT RUN: no runner at $runner"
+  exit 2
+fi
+exec /usr/bin/python3 -I "$runner" --guard "$top/hooks/claude-code/guard_git.py"
