@@ -27,6 +27,10 @@ STUBS = {
     "exit2": "import sys\nsys.stdin.read()\nsys.exit(2)\n",
     "crash": "import sys\nsys.stdin.read()\nraise SystemExit(1)\n",
     "garbage": "import sys\nsys.stdin.read()\nprint('not a decision')\n",
+    "listdecision": "import sys\nsys.stdin.read()\nprint('{\"hookSpecificOutput\": {\"permissionDecision\": []}}')\n",
+    # What Python prints when it cannot open the script it is given: exit 2, which is no refusal.
+    "cantopen": ("import sys\nsys.stdin.read()\nsys.stderr.write(\"python3: can't open file 'g.py': [Errno 13] "
+                 "Permission denied\\n\")\nsys.exit(2)\n"),
     # Refuses exactly the calls whose command holds the word `deny-me`; reads the cwd it was given.
     "words": ("import json, os, sys\np = json.load(sys.stdin)\nassert os.path.isdir(os.path.join(p['cwd'], '.git'))\n"
               "if 'deny-me' in p['tool_input']['command']:\n    print(json.dumps({'hookSpecificOutput': "
@@ -88,7 +92,7 @@ class RunnerTest(unittest.TestCase):
     def test_a_crash_or_stray_output_is_an_error_no_case_expects(self):
         f = Folder(self)
         f.case("refused-one", "git push", "refused")
-        for kind in ("crash", "garbage"):
+        for kind in ("crash", "garbage", "listdecision", "cantopen"):
             with self.subTest(kind=kind):
                 self.assertEqual(run(f.cases, f.stub(kind)), (1, ["FAIL refused-one expected=refused got=error"]))
 
@@ -153,6 +157,15 @@ class NotRunTest(unittest.TestCase):
         f = Folder(self)
         f.case("one", "git status", "allowed", name="two.json")
         self.assertNotRun(f.cases, f.stub("allow"), "the file name is not its id")
+
+    @unittest.skipIf(os.geteuid() == 0, "root reads any file")
+    def test_a_guard_that_cannot_be_read(self):
+        f = Folder(self)
+        f.case("one", "git status", "refused")
+        guard = f.stub("allow")
+        os.chmod(guard, 0)
+        self.addCleanup(os.chmod, guard, 0o600)
+        self.assertNotRun(f.cases, guard, "cannot be read")
 
     def test_no_guard(self):
         f = Folder(self)
@@ -253,6 +266,13 @@ class InstallTest(unittest.TestCase):
             handle.write("# drift\n")
         self.assertEqual(self.install("check")[0], 1)
         self.assertEqual(self.install()[0], 0)
+        self.assertEqual(self.install("check")[0], 0)
+        os.chmod(os.path.join(self.hooks, "post-commit"), 0o644)  # chain-repo-hook runs only an executable hook
+        status, output = self.install("check")
+        self.assertEqual(status, 1)
+        self.assertIn("post-commit: not executable", output)
+        self.assertEqual(self.install()[0], 0)
+        self.assertTrue(os.access(os.path.join(self.hooks, "post-commit"), os.X_OK))
         self.assertEqual(self.install("check")[0], 0)
 
     def test_a_hook_it_did_not_write_is_left_alone(self):

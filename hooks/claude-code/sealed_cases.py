@@ -110,14 +110,16 @@ def ruling(guard, command, directory, env):
     except (OSError, subprocess.SubprocessError):
         return "error"
     if result.returncode == 2:
-        return "refused"  # Claude Code blocks a call whose hook exits 2
+        # Claude Code blocks a call whose hook exits 2; Python also exits 2 when it cannot open the
+        # script, and that is no ruling.
+        return "error" if "can't open file" in result.stderr else "refused"
     if result.returncode or result.stdout.strip() == "":
         return "error" if result.returncode else "allowed"
     try:
         decision = json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"]
     except (ValueError, KeyError, TypeError):
         return "error"
-    return {"deny": "refused", "allow": "allowed"}.get(decision, "error")
+    return {"deny": "refused", "allow": "allowed"}.get(decision, "error") if isinstance(decision, str) else "error"
 
 
 def build_template(base):
@@ -162,6 +164,11 @@ def run_cases(folder, guard, out=sys.stdout):
         cases = load_cases(folder)
         if not os.path.isfile(guard):
             raise NotRun("no guard at {}".format(guard))
+        try:
+            with open(guard, "rb"):
+                pass
+        except OSError as error:
+            raise NotRun("the guard at {} cannot be read: {}".format(guard, error.strerror or error))
         with tempfile.TemporaryDirectory() as tmp:
             base = os.path.realpath(tmp)
             template = build_template(base)
@@ -204,11 +211,15 @@ def install_trigger(target, mode="install", out=sys.stdout):
                 print("{}: not written by this installer; left as it is".format(dest), file=out)
                 status = 1
                 continue
-            if os.path.isfile(dest) and not os.path.islink(dest) and filecmp.cmp(TRIGGER, dest, shallow=False):
+            same = os.path.isfile(dest) and not os.path.islink(dest) and filecmp.cmp(TRIGGER, dest, shallow=False)
+            if same and os.access(dest, os.X_OK):
                 print("{}: up to date".format(dest), file=out)
                 continue
+        else:
+            same = False
         if mode == "check":
-            print("{}: {}".format(dest, "differs from the source" if os.path.lexists(dest) else "not installed"), file=out)
+            state = "not executable" if same else "differs from the source" if os.path.lexists(dest) else "not installed"
+            print("{}: {}".format(dest, state), file=out)
             status = 1
         elif mode == "dry-run":
             print("{}: would install".format(dest), file=out)
