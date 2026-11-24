@@ -111,9 +111,11 @@ It copies [`../git/sealed-cases-trigger`](../git/README.md) into this repository
 folder as `post-commit` and `post-merge`, which the global `chain-repo-hook` runs, so a commit or
 merge in any worktree that changes a file under `hooks/` prints the runner's lines (`--check`,
 `--dry-run` as for `install.py`). Git ignores those hooks' exit status, so the lines are the
-report. Limits: the seal is the file tools' deny, not the shell's, so a session that `cat`s the
-folder reads it; the runner and trigger are in the tree they judge; a rebase or cherry-pick runs
-neither hook; CI cannot see the folder and does not run it.
+report. Limits: the seal is a permission deny in `~/.claude/settings.json` on Read, Edit and
+Write of the folder; Claude Code 2.1.328 also refused a Bash command naming it, a read of the
+command's words, not a wall against a shell; it seals no Codex or OpenClaw session. The runner and
+trigger are in the tree they judge; a rebase or cherry-pick runs neither hook; CI cannot see the
+folder and does not run it.
 
 ## Push rules and limits
 
