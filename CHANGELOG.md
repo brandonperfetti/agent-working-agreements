@@ -12,7 +12,8 @@ being retrofitted onto the other.
 
 - **2026-11-24 — Standing post-merge release authority (#318).** A repository can grant a
   designated agent a bounded publication route after Brandon merges. AWA's runbook adds GitHub
-  Release notes and readback to its tag and back-merge checks. Brandon decided, 2026-11-24.
+  Release notes and readback to its tag and back-merge checks so readers can find the rules in
+  force and what changed. Brandon decided, 2026-11-24.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/318).
 
 - **2026-11-22 — An OpenClaw brief names an outcome and a budget (#313).** The *Delegation* line
