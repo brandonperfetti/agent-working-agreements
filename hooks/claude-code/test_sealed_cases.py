@@ -186,8 +186,11 @@ class TriggerTest(unittest.TestCase):
         root = os.path.realpath(tmp.name)
         self.repo = os.path.join(root, "repo")
         os.makedirs(os.path.join(root, "home"))
-        self.env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
-        self.env.update(HOME=os.path.join(root, "home"), GIT_CONFIG_NOSYSTEM="1")
+        # The host's git configuration stays out, XDG's included: a core.hooksPath there would run
+        # the host's hooks in place of the scratch repository's.
+        self.env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_") and k not in ("XDG_CONFIG_HOME", "CDPATH")}
+        self.env.update(HOME=os.path.join(root, "home"), XDG_CONFIG_HOME=os.path.join(root, "home", ".config"),
+                        GIT_CONFIG_NOSYSTEM="1")
         git(root, "init", "-q", "-b", "develop", "repo", env=self.env)
         for key, value in (("user.email", "a@example.com"), ("user.name", "A"), ("commit.gpgsign", "false")):
             git(self.repo, "config", key, value, env=self.env)
