@@ -83,8 +83,8 @@ disagree, the rule is wrong.
    repo has a version to bump at all.
 6. **Only Brandon merges into `master` or `main`, the release PR by hand in the host's UI.** He
    also merges any `develop` merge no active route covers. The delivery owner merges reviewed lanes.
-7. **Brandon tags on `master`**, where the repo publishes releases; the tag fires the release
-   workflow. In `agent-working-agreements` the orchestrator tags each release ([`AGENTS.md`](../AGENTS.md#release-tags)).
+7. **Brandon owns post-merge publication by default.** A repository may record an owner-approved
+   standing grant for a designated agent under [post-merge releases](../procedures/post-merge-release.md).
 8. **The back-merge carries `master` home to `develop`** — a direct push by the workflow, why
    item 4's integration profile keeps accepting pushes.
 
@@ -102,9 +102,8 @@ disagree, the rule is wrong.
 | You work or delegate through T3 | [`t3-adapter.md`](../procedures/t3-adapter.md) |
 | You write any artifact, or need a scratch clone | [`agent-workspace-layout.md`](../procedures/agent-workspace-layout.md) |
 | You touch an issue, a PR, or the GitHub API | [`github-paths.md`](../procedures/github-paths.md) |
-| You pick up a delivery (first commit on a checkout, each repository) | [`pickup-guard.md`](../procedures/pickup-guard.md) |
-| The delivery is attended | [`attended-delivery.md`](../procedures/attended-delivery.md) |
-| The delivery is autonomous | [`autonomous-delivery.md`](../procedures/autonomous-delivery.md) |
+| You pick up a delivery or deliver in attended or autonomous mode | [`pickup-guard.md`](../procedures/pickup-guard.md), [`attended-delivery.md`](../procedures/attended-delivery.md) or [`autonomous-delivery.md`](../procedures/autonomous-delivery.md), as applicable |
+| You grant or exercise post-merge release authority | [`post-merge-release.md`](../procedures/post-merge-release.md) |
 
 ## Client adapters (read only yours)
 

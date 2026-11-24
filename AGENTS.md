@@ -41,50 +41,10 @@ The agreement stays small on purpose; these rules are what keep it small.
 
 ## Release tags
 
-Rules here take effect at release, so every release carries a tag. The tag names what has been
-in force since, and it is the version a rollback returns to.
-
-- **After Brandon merges a release PR into `master`, the orchestrator tags that merge commit and
-  pushes the tag**, without asking again (Brandon, 2026-11-17). This is ritual step 7 for this
-  repository only. In every other repository Brandon tags, and an agent tags only on his explicit
-  words for that one tag. Publish a tag once; republishing, moving or deleting one is Brandon's.
-  After a push whose outcome is unclear, read the remote's tag
-  (`git ls-remote origin refs/tags/<tag>`): the id of the tag you made (`git rev-parse <tag>`)
-  confirms the publication, and a missing or different tag goes to Brandon before any retry.
-- **Name:** `vYYYY.MM.DD`, Brandon's local date (America/Los_Angeles) at the time of the merge. A
-  later release on the same day adds `.1`, then `.2`.
-- **Annotated, under RULE ZERO.** The message says in plain words what the release puts in force
-  and closes with one `Agent:` line. The tagger email is Brandon's. Fetch, then name the merge
-  commit: `git tag -a <tag> <merge commit>`. The guard reads the commits a push sends, not the tag
-  itself, so read the tag back (`git cat-file -p <tag>`) for its object, tagger and message before
-  pushing it.
-- **Create the tag in one call and push it in the next,** alone:
-  `git push --no-follow-tags origin refs/tags/<tag>:refs/tags/<tag>`. The full refspec and
-  `--no-follow-tags` send that one tag whatever `push.followTags` says. Before it,
-  `git remote get-url --push --all origin` prints one URL, the one `git remote get-url origin`
-  prints: this repository's. The guard reads a push before the command runs; a tag made in the
-  same call does not exist yet, so that push is refused.
-- **The back-merge is the workflow's** (ritual step 8). On the push to `master`,
-  [`backmerge.yml`](.github/workflows/backmerge.yml) merges `master` into `develop` and pushes
-  it, or tries to open a PR when the merge conflicts or the push is refused; the run fails where
-  the repository's settings keep Actions from opening one. After the tag, the orchestrator reads
-  that run. A PR it opened, or a failed run, is Brandon's; an agent makes no back-merge.
-- **That is the whole release:** no GitHub Release page, no version file, no package.
-
-**Rollback** is Brandon's decision. In `~/dev/sansfaux/agent-working-agreements`, check the tag
-out and re-run the installers that version carries; each one's `--check` then says whether the
-installed guard matches it. A tag older than an installer leaves that hook as it was: skip its
-line. Start a new session afterwards, and for OpenClaw reload the plugin and run its canary, which
-is what shows the rolled-back relay is live
-([`hooks/openclaw`](hooks/openclaw/README.md)). That checkout is OpenClaw's protected root, so it
-is off `master` until Brandon ends the rollback.
-
-```bash
-git checkout <tag>
-/usr/bin/python3 hooks/claude-code/install.py
-/usr/bin/python3 hooks/codex/install.py
-node hooks/openclaw/install.mjs
-```
+The orchestrator has standing authority for this repository's post-merge release delivery.
+After Brandon merges the release PR into `master`, follow the [release runbook](RELEASING.md)
+under [ritual steps 7–8](profiles/sansfaux.md#the-git-ritual). Tags mark when the rules take
+effect and which version to restore. The runbook covers rollback and historical publication.
 
 ## CI gate
 

@@ -60,7 +60,7 @@ owner decision.
 - **Initiative continuity lives in files** (kickoffs, addenda, lane reports, rotation packets), as
   does any other handoff continuity needs; bounded delegation reports in its return, with no
   handoff scaffolding. A record carries existing authority, never invents gates or narrows the
-  objective. Lanes keep to named files and their own worktree.
+  objective. Lanes keep to named files, their own worktree and the process groups they started.
 - **Model and effort are chosen per task**; reports separate requested from attested.
 - **Authorship:** every agent commit carries the bound author identity, checked before push,
   merge and presentation; attribution and any agent declaration follow the binding.

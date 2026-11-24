@@ -25,6 +25,7 @@ names read without a profile, and its studio-only rules open **Selected studio p
 | [`agent-workspace-layout.md`](agent-workspace-layout.md) | A6 | writing any artifact; a scratch clone |
 | [`github-paths.md`](github-paths.md) | A7 | touching an issue, a PR or the GitHub API |
 | [`pickup-guard.md`](pickup-guard.md) | B0 | picking up a delivery |
+| [`post-merge-release.md`](post-merge-release.md) | Ritual steps 7–8 | granting or exercising post-merge release authority |
 | [`attended-delivery.md`](attended-delivery.md) | B1 | an attended delivery |
 | [`autonomous-delivery.md`](autonomous-delivery.md) | B2 | an autonomous delivery |
 | [`openclaw/managed-worktrees.md`](openclaw/managed-worktrees.md) | `clients/openclaw.md` | pickup of an OpenClaw delivery: create, refresh, clean up |
