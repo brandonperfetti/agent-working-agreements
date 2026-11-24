@@ -819,6 +819,8 @@ EXTRA_GIT_COMMANDS = frozenset(
 # The next step for each refusal made below. A refusal that is Brandon's to lift (a release
 # branch, a force-push) is not here: it takes the released guard's own closing sentence.
 EXTRA_ADVICE = (
+    # A released refusal, worded here with its next step (#302); its verdict is the released guard's.
+    ("a segment begins with an option", "Rewrite it so no option follows a quoted or escaped ;, &, |, ( or ): put that word last (git log --oneline -S '('), write [(] in a regular expression, or drop find's \\( \\) group and any -exec \\; before another test; \"A refusal that is not a broken setup\" in the agreements' hooks/claude-code/README.md gives each form and what it changes."),
     ("after a # on its line", "If the & is in a comment, drop the comment; otherwise run it as its own call, or join the commands with && in place of &."),
     ("in the background (&)", "Run it as its own call, or join the commands with && in place of &."),
     ("both a dry-run flag and --no-dry-run", "Run it with one of the two: the dry run, or the push itself."),

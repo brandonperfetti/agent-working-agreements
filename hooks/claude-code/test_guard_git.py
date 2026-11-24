@@ -310,6 +310,17 @@ class InvariantTest(unittest.TestCase):
         git(repo, "config", "alias.p", "push")
         self.assertEqual(said("git p --force origin feature"), said("git push --force origin feature"))
         self.assertEqual(said("git --attr-source HEAD push origin master"), said("git push origin master"))
+        # One released refusal is worded below the marker with its next step (#302); the verdict stays the released one.
+        for command in (r"find . \( -name a -o -name b \) -print", "git log -S '(' --oneline"):
+            with self.subTest(command=command):
+                self.assertIsNotNone(guard_git.released_check(command, repo))
+                reason = said(command)
+                self.assertIn("a segment begins with an option. Rewrite it so no option follows", reason)
+                self.assertIn('"A refusal that is not a broken setup"', reason)
+                self.assertNotIn("hand it back", reason)
+        for command in ("git log --oneline -S '('", "git grep -n '[(]' -- src", "find . -name a -print -o -name b -print"):
+            with self.subTest(command=command):  # the forms the advice and the README name pass
+                self.assertIsNone(guard_git.check_command(command, repo))
 
 
 class GuardTest(unittest.TestCase):

@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-24 — The guard matches "generated with" as words, and one refusal names its fix
+  (#280, #302).** Both RULE ZERO copies of the footer pattern take a boundary on each side, so
+  "files were regenerated with new defaults" passes the commit-msg hook and the push-time scan. The
+  guard's copy is above the marker, so its pin moves on purpose. "A segment begins with an option"
+  now names the rewrites the README documents; its verdict is unchanged. Why: false refusals, fixed
+  in one release and reinstall. Brandon approved, 2026-11-24.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/280).
+
 - **2026-11-24 — Standing post-merge release authority (#318).** A repository can grant a
   designated agent a bounded publication route after Brandon merges. AWA's runbook adds GitHub
   Release notes and readback to its tag and back-merge checks so readers can find the rules in
