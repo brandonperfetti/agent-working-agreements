@@ -19,8 +19,9 @@ Name the designated role, repository and release branch, eligible owner-merged P
 review and check requirements, allowed operations, publication identity and downstream outcomes.
 Grant only the operations the repository uses. Use existing authorized credentials and the
 repository's approved route. Once the grant is in force, the designated role may perform each
-covered release without per-tag or per-Release approval. Where a grant is absent or an operation
-lies outside its scope, Brandon acts or explicitly approves the operation for the named release.
+covered release without per-tag or per-Release approval on a B0-qualified autonomous delivery.
+Follow B1's batch approval and owner-push rules in attended mode. Where a grant is absent or an
+operation lies outside its scope, Brandon acts or explicitly approves it for the named release.
 Each repository grants its own authority.
 
 ## Execute the runbook

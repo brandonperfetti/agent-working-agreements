@@ -3,12 +3,15 @@
 Use the [standing grant](AGENTS.md#release-tags) and [shared procedure](procedures/post-merge-release.md).
 The orchestrator may fast-forward local `master`, publish one annotated tag for the qualified
 owner merge, create or verify its GitHub Release and verify the back-merge. This grant covers
-routine releases under these instructions. Brandon merges `develop → master` in GitHub.
+routine releases under these instructions and the shared procedure's mode rules. Brandon merges
+`develop → master` in GitHub.
 
-1. Read the merged PR and its acceptance record. Confirm Brandon merged it from this repository's
-   `develop` into `master`, the accepted PR head matches the reviewed head, and GitHub's required
-   `check` passed for the PR. Record the PR, check and exact merge commit. Fetch origin. If the
-   merge differs from the remote tip, stop. Fast-forward local `master` with
+1. Read the merged PR and its [release acceptance](procedures/review-findings.md#acceptance-and-staleness).
+   Confirm Brandon merged this repository's `develop` into `master`. Match the accepted head to
+   the merged PR head and the merge commit's second parent. Verify the required `check` succeeded
+   on that PR head or its GitHub test merge, with the run bound to this PR and head. Stop on
+   missing, failed or stale evidence. Record the PR, accepted head, check and exact merge OID.
+   Fetch origin. If the merge differs from the remote tip, stop. Fast-forward local `master` with
    `git merge --ff-only origin/master` from a clean checkout on `master`. Coordinate with the
    checkout's owner if it is in use. Stop if the fast-forward fails. Confirm
    both `HEAD` and `origin/master` equal the recorded commit. Summarize what goes into force from
@@ -36,7 +39,8 @@ routine releases under these instructions. Brandon merges `develop → master` i
    the receipt. A confirmed match lets the run continue without another push. Missing or divergent
    state after a push, or an unreadable result, goes to Brandon before any retry.
 5. Query the repository's Releases, including drafts, for the exact tag. Confirm absence from a
-   successful read before creating. Use the prepared notes and the existing tag.
+   successful read before creating. Immediately before creating, recheck the tag object and
+   peeled commit against the receipt. Use the prepared notes and the existing tag.
 
    ```bash
    gh release create <tag> --repo brandonperfetti/agent-working-agreements \
@@ -49,9 +53,11 @@ routine releases under these instructions. Brandon merges `develop → master` i
    completes this step. If creation returns an unclear result, read the Release and tag before
    another write. A draft, mismatch or unreadable result goes to Brandon.
 6. Check the [back-merge workflow](.github/workflows/backmerge.yml) run for the exact merge SHA,
-   triggered by the push to `master`. Confirm the commit is now an ancestor of remote `develop`
-   and check for a fallback PR. A pending run leaves verification open. A failed run or fallback
-   PR goes to Brandon with the run link and the ancestry result. Brandon handles any repair.
+   triggered by the push to `master`. Close only with a successful run, the commit confirmed as
+   an ancestor of freshly fetched `origin/develop`, and no open repository `master → develop`
+   fallback PR. A pending run leaves verification open. Bring any other unresolved state to
+   Brandon with the run link if available and the ancestry and fallback PR results. Preserve
+   the tag and Release. Brandon handles any repair.
 
 ## Historical Releases and rollback
 
