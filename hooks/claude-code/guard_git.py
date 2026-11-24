@@ -34,7 +34,7 @@ AUTHOR_EMAIL = "brandon@brandonperfetti.com"
 # a line's start.
 BANNED = re.compile(
     r"^[#>*+\- \t]*(co-authored-by|[a-z-]*-session)[ \t]*:"  # a contributor or session trailer
-    r"|(?<![^\W_])generated with\b"  # a promotional footer, as words; _ before it is emphasis (#280)
+    r"|(?<![^\W_])generated with(?![^\W_])"  # a promotional footer, as words; _ beside it is emphasis (#280)
     r"|^[#>*+\- \t]*posted by an agent\b"  # the agent label the declaration replaced
     r"|claude\.ai/(chat|share|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/",  # a session or chat link
     re.IGNORECASE | re.MULTILINE,
@@ -818,9 +818,12 @@ EXTRA_GIT_COMMANDS = frozenset(
 )
 # The next step for each refusal made below. A refusal that is Brandon's to lift (a release
 # branch, a force-push) is not here: it takes the released guard's own closing sentence.
+# Released refusals worded here with their next step, matched to the whole reason: a reason that
+# quotes a commit's text (a malformed Agent: line) never takes them (#302). The verdict is the released one.
+EXTRA_EXACT_ADVICE = {
+    "a command the guard cannot read: a segment begins with an option": "Rewrite it so no option follows a quoted or escaped ;, &, |, ( or ): put that word last (git log --oneline -S '('), write [(] in a regular expression, or drop find's \\( \\) group and any -exec \\; before another test; \"A refusal that is not a broken setup\" in the agreements' hooks/claude-code/README.md gives each form and what it changes.",
+}
 EXTRA_ADVICE = (
-    # A released refusal, worded here with its next step (#302); its verdict is the released guard's.
-    ("a segment begins with an option", "Rewrite it so no option follows a quoted or escaped ;, &, |, ( or ): put that word last (git log --oneline -S '('), write [(] in a regular expression, or drop find's \\( \\) group and any -exec \\; before another test; \"A refusal that is not a broken setup\" in the agreements' hooks/claude-code/README.md gives each form and what it changes."),
     ("after a # on its line", "If the & is in a comment, drop the comment; otherwise run it as its own call, or join the commands with && in place of &."),
     ("in the background (&)", "Run it as its own call, or join the commands with && in place of &."),
     ("both a dry-run flag and --no-dry-run", "Run it with one of the two: the dry run, or the push itself."),
@@ -1221,8 +1224,8 @@ def main():
     reason = check_command(payload.get("tool_input", {}).get("command", ""), payload.get("cwd") or os.getcwd())
     if not reason:
         return
-    for mark, advice in EXTRA_ADVICE:
-        if mark in reason:
+    for mark, advice in [(reason, EXTRA_EXACT_ADVICE.get(reason))] + list(EXTRA_ADVICE):
+        if advice and mark in reason:
             print(json.dumps({"hookSpecificOutput": {
                 "hookEventName": "PreToolUse",
                 "permissionDecision": "deny",

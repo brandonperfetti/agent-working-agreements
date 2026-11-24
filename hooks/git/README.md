@@ -11,8 +11,8 @@ needed. Each stops honest mistakes, not a determined bypass.
 
 "generated with" is matched as words: "generated without a token" and "files were regenerated with
 new defaults" are prose and pass, here and in the push-time guard's scan
-(`hooks/claude-code/guard_git.py`), which carries the same pattern (#280). An underscore before it
-is emphasis, so `_Generated with …_` is refused.
+(`hooks/claude-code/guard_git.py`), which carries the same pattern (#280). An underscore beside it
+is emphasis, so `_Generated with Claude Code_` and `_Generated with_ Claude Code` are refused.
 
 ## Install or update
 

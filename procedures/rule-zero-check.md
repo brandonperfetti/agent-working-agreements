@@ -53,7 +53,7 @@ issue body, comment or thread reply, on Brandon's repositories and others' alike
 read the messages of the commits the delivery adds for the banned lines:
 
 ```sh
-git log --format='%B' <base>..HEAD | grep -inE '^[#>*+[:blank:]-]*(co-authored-by|[a-z-]*-session)[[:blank:]]*:|generated with|^[#>*+[:blank:]-]*posted by an agent([^[:alnum:]_]|$)|claude\.ai/(chat|share|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/'
+git log --format='%B' <base>..HEAD | grep -inE '^[#>*+[:blank:]-]*(co-authored-by|[a-z-]*-session)[[:blank:]]*:|(^|[^[:alnum:]])generated with([^[:alnum:]]|$)|^[#>*+[:blank:]-]*posted by an agent([^[:alnum:]_]|$)|claude\.ai/(chat|share|code/session)|chatgpt\.com/(c|share)/|chat\.openai\.com/(c|share)/'
 ```
 
 and list each commit's declaration lines, in any case, with a list or quote prefix, emphasis or a

@@ -58,7 +58,10 @@ DECLARATION_CASES = (
     ("fix: x\n\n\U0001f916 Generated with [Claude Code](https://claude.com/claude-code)", "no Co-Authored-By"),
     ("fix: x\n\nGenerated with: aider", "no Co-Authored-By"),
     ("fix: x\n\nThis commit was generated with\na tool", "no Co-Authored-By"),  # the phrase ends its line
-    ("fix: x\n\n_Generated with Claude Code_", "no Co-Authored-By"),  # an underscore before it is emphasis, not a word (#280)
+    ("fix: x\n\n_Generated with Claude Code_", "no Co-Authored-By"),  # an underscore beside it is emphasis, not a word (#280)
+    ("fix: x\n\n_Generated with_ Claude Code", "no Co-Authored-By"),
+    ("fix: x\n\n__Generated with__ Claude Code", "no Co-Authored-By"),
+    ("fix: x\n\n> - _Generated with_ Claude Code", "no Co-Authored-By"),
     ("fix: x\n\nPosted by an agent on Brandon Perfetti's behalf.", "no Co-Authored-By"),
     ("fix: x\n\nhttps://claude.ai/code/session_01AbC", "no Co-Authored-By"),
     ("fix: x\n\nSee https://chatgpt.com/share/abc for the chat", "no Co-Authored-By"),
