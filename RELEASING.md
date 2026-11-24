@@ -6,9 +6,12 @@ owner merge, create or verify its GitHub Release and verify the back-merge. This
 routine releases under these instructions and the shared procedure's mode rules. Brandon merges
 `develop → master` in GitHub.
 
+For the release adopting this runbook, the previous AWA grant covers creating and pushing the
+adoption tag. The Release-page step becomes available once that tagged revision is in force.
+
 1. Read the merged PR and its [release acceptance](procedures/review-findings.md#acceptance-and-staleness).
-   Confirm Brandon merged this repository's `develop` into `master`. Match the accepted head to
-   the merged PR head and the merge commit's second parent. Verify the required `check` succeeded
+   Confirm Brandon made a merge commit from this repository's `develop` into `master`. Match the
+   accepted head to the merged PR head and the merge commit's second parent. Verify `check` succeeded
    on that PR head or its GitHub test merge, with the run bound to this PR and head. Stop on
    missing, failed or stale evidence. Record the PR, accepted head, check and exact merge OID.
    Fetch origin. If the merge differs from the remote tip, stop. Fast-forward local `master` with
