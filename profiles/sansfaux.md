@@ -97,7 +97,7 @@ disagree, the rule is wrong.
 | You label a claim from irreproducible bytes, trust a probe, or quote a file | [`evidence-capture.md`](../procedures/evidence-capture.md) |
 | You dispatch a lane, hold more than one seat, or run an initiative | [`orchestration-seats.md`](../procedures/orchestration-seats.md) |
 | You are about to push, merge, present, or apply an mbox series | [`rule-zero-check.md`](../procedures/rule-zero-check.md) |
-| A delivery is ready for review, a bot or reviewer finding needs an outcome, or a PR is about to merge | [`review-findings.md`](../procedures/review-findings.md) |
+| A delivery is ready for review, a bot or reviewer finding needs an outcome, checks are chosen before a push or shared step, or a PR is about to merge | [`review-findings.md`](../procedures/review-findings.md) |
 | You create, adopt, move or retire a worktree, or close out a delivery | [`worktree-lifecycle.md`](../procedures/worktree-lifecycle.md) |
 | You work or delegate through T3 | [`t3-adapter.md`](../procedures/t3-adapter.md) |
 | You write any artifact, or need a scratch clone | [`agent-workspace-layout.md`](../procedures/agent-workspace-layout.md) |
