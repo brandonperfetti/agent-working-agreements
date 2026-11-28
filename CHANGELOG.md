@@ -18,6 +18,13 @@ being retrofitted onto the other.
   reviewed pushes on a loaded shared Mac. Brandon approved, 2026-11-28.
   [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/327).
 
+- **2026-11-28 — Naming an owner is not a finish (#329).** B2's stop-list lead-in and item 5, the
+  OpenClaw adapter's two restoration-owner lines and the domain glossary now say to ask the
+  restoration owner for the capability and keep working; the turn closes on a result. No net
+  lines. Why: OpenClaw staff were ending turns by naming a restoration owner and stopping.
+  Brandon decided, 2026-11-28.
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/329).
+
 - **2026-11-24 — Sealed guard cases, replayed on every `hooks/` change (#310).** Twelve cases
   live in `~/.config/awa-sealed-cases/`, outside every checkout, with Claude Code's file tools
   denied there; `hooks/claude-code/sealed_cases.py` replays them against `guard_git.py`, and a
