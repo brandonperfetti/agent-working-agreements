@@ -47,12 +47,14 @@ TSV, CSV, YAML or a hash file.
   directory at the store, or in a folder directly in it, protects only itself.
 - anything a receipt that names an open PR cites, or anything inside what it cites: by a path, by
   a path relative to the receipt or a folder above it (URL-encoded or not), or by the name of a
-  heavy file. A receipt names a PR by its URL, `owner/repo#n` or `repo#n`, or by a short form
-  (`pr-n`, `prn`, `PR #n`, `pull/n`) right after the repository's name; in its file name, a short
-  form alone counts too. Receipts are read whole, compressed ones too. One that cannot be read, or
-  a citing one over 64 MiB, keeps everything in its folder. A citation of the store or of a layout
-  folder (`evidence/`, `initiatives/<x>/`, `initiatives/<x>/reviews/`, ...) protects nothing below
-  it, and an unreadable receipt in one keeps only what sits directly beside it.
+  heavy file. A receipt names a PR by its URL (or `owner/repo/pull/n`), `owner/repo#n` or
+  `repo#n`, or by a short form (`PR #n`, `pr-n`, `prn`, `pull/n`) right after the repository's
+  name, as in `repo PR #n` or `` `repo`: pr-n ``; in its file name, a short form alone counts too
+  (`pr-n`, `pr_n`, `pull-n`). Receipts are read whole, compressed ones too. One that cannot be
+  read, or a citing one over 64 MiB, keeps everything in its folder. A citation of the store or of
+  a layout folder (`evidence/`, `initiatives/<x>/`, `initiatives/<x>/reviews/`, ...) protects
+  nothing below it, and a receipt in one that cannot be read, or is over 64 MiB, keeps only what
+  sits directly beside it.
 - `_trash/`, `evidence/store-retention/`, `.worktrees/`, any folder holding `.git`, and symlinks,
   which are never followed.
 
@@ -95,8 +97,9 @@ MARKER = ".store-retention.json"
 LOCK = ".store-retention.lock"
 REPORTS = os.path.join("evidence", "store-retention")
 SKIP_DIRS = {"_trash", ".worktrees", ".git"}
-# The store's layout folders (procedures/agent-workspace-layout.md). A receipt that names one of
-# these, or an initiative's folder, names a home for many things, not the things in it.
+# The store's layout folders: those procedures/agent-workspace-layout.md names, and the ones the
+# store holds besides (authorizations, tickets, tools, worktrees). A receipt that names one, or an
+# initiative's folder, names a home for many things, not the things in it.
 LAYOUT = {"analysis", "authorizations", "evidence", "experiments", "friction", "handoffs",
           "initiatives", "learnings", "mboxes", "notes", "plans", "pull-requests", "quarantine",
           "rationale", "reviews", "tickets", "tools", "worktrees"}
@@ -351,41 +354,59 @@ def open_prs():
     return sorted(prs)
 
 
+SHORT_PR = r"(?:pr[-_ ]?#?|pull[-_/])"  # PR #12, pr-12, pr12, pull/12, pull-12
+NAME_GAP = r"[-_ \t`*:()\[\]]{1,4}"  # between a repository's name and a short form
+
+
+def any_of(numbers):
+    """One regex group for these PR numbers, longest first."""
+    return "(?:{})".format("|".join(sorted(numbers, key=lambda n: (-len(n), n))))
+
+
 def pr_pattern(prs):
-    """A Pattern matching a reference to any of the PRs, or None for none. In text: its URL,
-    owner/repo#n, repo#n, or a short form (`PR #n`, `pr-n`, `pull/n`) right after the repository's
-    name. In a receipt's file name, a short form alone also counts. Each is one case-insensitive
-    regex with a repository's numbers in one group."""
+    """PrRefs for these PRs, or None for none. In text a reference is the PR's URL or
+    owner/repo/pull/n, owner/repo#n, repo#n, or a short form right after the repository's name
+    (`repo PR #12`, `` `repo`: pr-12 ``). In a receipt's file name, a short form alone also counts.
+    Both are case-insensitive, with each repository's numbers in one group."""
     if not prs:
         return None
-    numbers = {}
+    by_repo = {}
     for repo, number in prs:
-        numbers.setdefault(repo, set()).add(str(number))
-    short = r"(?:pr[-_ ]?#?|pull[-_/])"
-    text, any_number = [], set()
-    for repo, found in sorted(numbers.items()):
+        by_repo.setdefault(repo, set()).add(str(number))
+    forms = []
+    for repo, numbers in sorted(by_repo.items()):
+        repo = repo.lower()
         name = re.escape(repo.split("/")[-1])
-        group = "(?:{})".format("|".join(sorted(found, key=lambda n: (-len(n), n))))
-        any_number |= found
-        text.append(r"(?:github\.com/{repo}/pull/|{repo}#|(?<![\w.-]){name}#"
-                    r"|(?<![\w.-]){name}[-_ ]+{short}){group}".format(
-                        repo=re.escape(repo), name=name, short=short, group=group))
-    group = "(?:{})".format("|".join(sorted(any_number, key=lambda n: (-len(n), n))))
-    text = "(?:{})(?!\\d)".format("|".join(text))
-    name = "(?:{}|(?<![a-z0-9]){}{}(?!\\d))".format(text, short, group)
-    names = [repo.split("/")[-1].lower() for repo in numbers]
-    return Pattern(re.compile(text, re.I), re.compile(name, re.I), names)
+        forms.append(r"(?:{repo}/pull/|{repo}#|(?<![\w.-]){name}#|(?<![\w.-]){name}{gap}{short})"
+                     r"{numbers}".format(repo=re.escape(repo), name=name, gap=NAME_GAP,
+                                         short=SHORT_PR, numbers=any_of(numbers)))
+    in_text = "(?:{})(?!\\d)".format("|".join(forms))
+    every_number = set().union(*by_repo.values())
+    in_name = "(?:{}|(?<![a-z0-9]){}{}(?!\\d))".format(in_text, SHORT_PR, any_of(every_number))
+    names = sorted({repo.split("/")[-1].lower() for repo in by_repo})
+    return PrRefs(re.compile(in_text), re.compile(in_name, re.I), names)
 
 
-class Pattern:
-    """The two regexes, with a cheap test first: every text form holds a repository's name."""
+OWNER_MAX = 40  # a GitHub owner's name is at most 39 characters
+AFTER_NAME = 24  # room after a repository's name for a gap, a short form and a PR number
 
-    def __init__(self, text, name, names):
-        self.text, self.name, self.names = text, name, names
+
+class PrRefs:
+    """The two PR-reference regexes. Every text form holds a repository's name, so the text regex
+    (written in lower case) runs only around each place the lowered text holds one."""
+
+    def __init__(self, in_text, in_name, names):
+        self.text, self.name, self.names = in_text, in_name, names
 
     def in_text(self, chunk):
         low = chunk.lower()
-        return any(name in low for name in self.names) and bool(self.text.search(chunk))
+        for name in self.names:
+            at = low.find(name)
+            while at >= 0:
+                if self.text.search(low, max(0, at - OWNER_MAX - 1), at + len(name) + AFTER_NAME):
+                    return True
+                at = low.find(name, at + 1)
+        return False
 
     def in_name(self, name):
         return bool(self.name.search(name))
@@ -510,15 +531,18 @@ class Citations:
             return True
         if os.path.dirname(path) in self.siblings:
             return True
+        tree, folders, folder = not os.path.isfile(path), [], path
+        while inside(folder, self.store):  # path and the folders above it that are not broad
+            if not self.broad(folder):
+                folders.append((folder, os.path.basename(folder),
+                                os.path.dirname(folder) == self.store))
+            folder = os.path.dirname(folder)
         for here, text in self.texts:  # a name with a space escapes the token pattern above
             if any(name in text for name in names):
                 return True
-            folder, tree = path, not os.path.isfile(path)
-            while inside(folder, self.store):
-                if self.broad(folder):
-                    folder = os.path.dirname(folder)
-                    continue
-                top = os.path.dirname(folder) == self.store
+            for folder, name, top in folders:
+                if name not in text:
+                    continue  # every way of citing a folder ends with its name
                 rels = {os.path.relpath(folder, base) for base in self.above(here)
                         if inside(folder, base)}
                 rels.add(os.path.relpath(folder, here))
@@ -530,7 +554,6 @@ class Citations:
                             return True
                     elif names_whole(text, rel) or (tree and folder == path and rel + "/" in text):
                         return True
-                folder = os.path.dirname(folder)
         return False
 
 
