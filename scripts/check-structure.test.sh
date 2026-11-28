@@ -193,4 +193,13 @@ expect_fail "same-file anchor that names no heading" "#gone, which names no head
 good; printf '\n```text\n## Fenced\n```\n\nSee [it](#fenced).\n' >>"$repo/procedures/one.md"
 expect_fail "a heading inside a code fence is no anchor" "#fenced, which names no heading"
 
+good; printf 'See [the section](../procedures/one.md#gone "a title").\n' >>"$repo/profiles/studio.md"
+expect_fail "a titled anchored link is checked too" "one.md#gone, which names no heading"
+
+good; printf '\n```text\nSee [an example](#not-a-heading).\n```\n' >>"$repo/procedures/one.md"
+expect_pass "a link inside a code fence is no pointer"
+
+good; printf 'See [it](gone.md#gone).\n' >>"$repo/procedures/one.md"
+expect_fail "an anchored link to a missing procedure file" "gone.md#gone, whose file does not exist"
+
 echo "ok: check-structure passes the good fixture and rejects each failure class"

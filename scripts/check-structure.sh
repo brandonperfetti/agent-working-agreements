@@ -161,10 +161,11 @@ for f in "${normative[@]}"; do
     [ -z "$link" ] && continue
     target="${link%%#*}"; anchor="${link#*#}"
     if [ -z "$target" ]; then t="$f"; else t="$(dirname "$f")/$target"; fi
-    [ -f "$t" ] || continue   # a missing file is the file-link checks' to report
+    [ -f "$t" ] || { echo "FAIL: ${f#"$ROOT"/} links $link, whose file does not exist" >&2; fail=1; continue; }
     names_heading "$t" "$anchor" ||
       { echo "FAIL: ${f#"$ROOT"/} links $link, which names no heading there" >&2; fail=1; }
-  done < <(grep -oE '\]\([A-Za-z0-9._/-]*#[A-Za-z0-9_-]+\)' "$f" | sed -E 's/^\]\(//; s/\)$//')
+  done < <(awk '/^[[:space:]]*(```|~~~)/ { fence = !fence; next } !fence' "$f" |
+    grep -oE '\]\([A-Za-z0-9._/-]*#[A-Za-z0-9_-]+( "[^"]*")?\)' | sed -E 's/^\]\(//; s/( "[^"]*")?\)$//')
 done
 
 if [ "$fail" -eq 0 ]; then
