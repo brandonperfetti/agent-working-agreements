@@ -72,11 +72,9 @@ updated at wave close. Date-prefix files
 `YYYY-MM-DD-`. Never a loose file at `_agent/` root or `sansfaux/` root; never a new top-level
 folder (if nothing fits: `experiments/`, and say so). `./organize.sh` (dry-run by default) tidies
 loose files and sweeps git locks; `--empty-trash --apply --yes` is **Brandon's command, not an agent's**.
-**Retention** ([`store-retention`](../scripts/store-retention/README.md), `organize.sh --prune-store`,
-monthly by launchd): a heavy file (media, captures, build output, installs, bundles, archives,
-databases, logs) unchanged for 30 days moves to `_trash/<run>/` with a manifest under
-`evidence/store-retention/`, logs 7–30 days old are gzipped, and its batch is deleted after 30 days
-in trash; receipts, recent, open and open-PR-cited files never move (Brandon, 2026-11-28, #328).
+**Retention:** heavy files unchanged for 30 days go to `_trash/<run>/` with a manifest, and that
+batch is deleted 30 days later; receipts never move (Brandon, 2026-11-28, #328). The kinds, guards
+and install steps are [`store-retention`](../scripts/store-retention/README.md)'s.
 
 **Friction.** Record friction when it happened, not to prove that none did. A delivery with no
 initiative writes its record to `_agent/friction/YYYY-MM-DD-<repo>-<id>.md`, where `<repo>` is the

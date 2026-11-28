@@ -88,7 +88,7 @@ class Retention(Fixture):
         self.put("evidence/old/notes.txt", 40)
         self.put("evidence/old/tarballs.sha256", 40)
         self.put("evidence/old/pkg.tar.gz", 40, b"tar bytes")
-        self.put("evidence/old/served/page.html", 40)
+        self.put("evidence/old/served/page.rsc", 40)
         self.put("evidence/old/agent.sqlite.bak-1", 40)
         self.put("evidence/young/shot.png", 1)
         self.put("evidence/open/run.png", 40)
@@ -159,7 +159,7 @@ class Retention(Fixture):
         (run,) = self.reports()
         rows = self.manifest(run)
         moved = {"evidence/old/shot.png": "media", "evidence/old/pkg.tar.gz": "archive",
-                 "evidence/old/served/page.html": "served capture",
+                 "evidence/old/served/page.rsc": "served capture",
                  "evidence/old/agent.sqlite.bak-1": "database",
                  "analysis/pr/screens/c.png": "media", "analysis/closed/shot.png": "media",
                  "experiments/app/node_modules": "install",
@@ -270,11 +270,100 @@ class Guards(Fixture):
 
     def test_kinds(self):
         for name in ("a.md", "a.json", "a.txt", "a.sha256", "SHA256SUMS", "latest-mac.yml",
-                     "a.jsonl", "a.js", "a.pdf"):
-            self.assertIsNone(sr.file_kind(name), name)
+                     "a.jsonl", "a.js", "a.pdf", "a.html"):
+            self.assertIsNone(sr.file_kind(name, 10), name)
         for name, kind in (("a.PNG", "media"), ("a.mp4", "media"), ("a.rsc", "served capture"),
                            ("a.dmg", "archive"), ("a.db", "database"), ("a.log.gz", "log")):
-            self.assertEqual(sr.file_kind(name), kind, name)
+            self.assertEqual(sr.file_kind(name, 10), kind, name)
+        self.assertEqual(sr.file_kind("a.html", sr.HTML_MIN), "served capture")
+
+    def test_lookalike_trees_are_walked_not_taken(self):
+        # Review of e82e1ed: a folder matched by name was taken whole with its receipts or .git.
+        self.put("projects/site.app/.git/HEAD", 40)
+        self.put("projects/site.app/shot.png", 40)
+        self.put("projects/dist/.git/HEAD", 40)
+        self.put("analysis/why-node_modules-bloat/findings.md", 40)
+        self.put("analysis/why-node_modules-bloat/data.json", 40)
+        self.put("analysis/why-node_modules-bloat/chart.png", 40)
+        self.put("evidence/sansfaux.app/review.md", 40)
+        self.put("evidence/sansfaux.app/hashes.sha256", 40)
+        self.put("evidence/run1/out/result.json", 40)
+        self.put("evidence/app/node_modules/pkg/.git/HEAD", 40)
+        self.put("evidence/app/node_modules/pkg/index.js", 40)
+        self.put("rationale/proto.html", 40, b"<html>" * 10)
+        self.put("evidence/big.html", 40, b"x" * sr.HTML_MIN)
+        for rel in ("projects", "analysis", "evidence", "rationale"):
+            self.age(rel, 40)
+        self.assertEqual(self.run_job(prs=()), 0, self.lines)
+        for rel in ("projects/site.app/.git/HEAD", "projects/site.app/shot.png",
+                    "projects/dist/.git/HEAD", "analysis/why-node_modules-bloat/findings.md",
+                    "analysis/why-node_modules-bloat/data.json", "evidence/sansfaux.app/review.md",
+                    "evidence/sansfaux.app/hashes.sha256", "evidence/run1/out/result.json",
+                    "evidence/app/node_modules/pkg/.git/HEAD", "rationale/proto.html"):
+            self.assertTrue(os.path.exists(self.p(rel)), rel)
+        rows = self.manifest(self.reports()[0])
+        self.assertEqual(set(rows), {"analysis/why-node_modules-bloat/chart.png", "evidence/big.html"})
+
+    def test_cited_name_with_a_space_is_kept(self):
+        self.put("evidence/r-pr-7.md", 40, b"See shots/final shot.png and Screen Shot 1.png.")
+        self.put("evidence/shots/final shot.png", 40)
+        self.put("evidence/Screen Shot 1.png", 40)
+        self.put("evidence/shots/other.png", 40)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("evidence/shots/final shot.png")))
+        self.assertTrue(os.path.exists(self.p("evidence/Screen Shot 1.png")))
+        self.assertFalse(os.path.exists(self.p("evidence/shots/other.png")))
+
+    def test_symlinked_trash_is_refused(self):
+        outside = os.path.join(self.root, "outside")
+        os.makedirs(os.path.join(outside, "old"))
+        with open(os.path.join(outside, "old", sr.MARKER), "w") as handle:
+            handle.write('{"moved_at": 0}')
+        os.symlink(outside, self.p("_trash"))
+        self.put("shots/a.png", 40)
+        self.assertEqual(self.run_job(), 3)
+        self.assertTrue(os.path.exists(self.p("shots/a.png")))
+        self.assertTrue(os.path.exists(os.path.join(outside, "old", sr.MARKER)))
+        self.assertEqual(os.listdir(outside), ["old"])
+
+    def test_symlinked_report_folder_is_refused(self):
+        outside = os.path.join(self.root, "outside")
+        os.makedirs(outside)
+        os.symlink(outside, self.p("evidence"))
+        self.put("shots/a.png", 40)
+        self.assertEqual(self.run_job(), 3)
+        self.assertTrue(os.path.exists(self.p("shots/a.png")))
+        self.assertEqual(os.listdir(outside), [])
+
+    def test_lsof_failing_at_the_recheck_is_reported(self):
+        self.put("shots/a.png", 40)
+        calls = []
+
+        def flaky():
+            calls.append(1)
+            if len(calls) > 1:
+                raise sr.Refused("lsof could not run")
+            return set(), set()
+
+        status = sr.run(self.store, True, now=NOW, in_use=flaky, prs=lambda: [],
+                        out=self.lines.append)
+        self.assertEqual(status, 3)
+        self.assertTrue(os.path.exists(self.p("shots/a.png")))
+        with open(os.path.join(self.p(sr.REPORTS), self.reports()[0], "report.md")) as handle:
+            self.assertIn("Refused", handle.read())
+
+    def test_pr_search_at_its_limit_is_refused(self):
+        calls = []
+
+        def fake(args):
+            calls.append(args)
+            return {"login": "me"} if args[0] == "api" else [
+                {"number": n, "repository": {"nameWithOwner": "o/r"}} for n in range(sr.PR_LIMIT)]
+
+        real, sr.gh_json = sr.gh_json, fake
+        self.addCleanup(setattr, sr, "gh_json", real)
+        with self.assertRaises(sr.Refused):
+            sr.open_prs()
 
 
 class LaunchAgent(unittest.TestCase):

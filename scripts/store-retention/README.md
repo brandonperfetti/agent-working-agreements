@@ -23,13 +23,15 @@ Each `--apply` run also writes `report.md` in the same folder. A dry run prints 
 nothing. Heavy means one of these kinds:
 
 - media;
-- served-response captures (`.html`, `.body`, `.rsc`, `.har`);
+- served-response captures: `.body`, `.rsc` and `.har`, plus `.html` of 256 KiB or more;
 - archives;
 - database copies;
 - logs;
 - build-output, install and app-bundle trees.
 
-Every other file is a receipt and is never moved: markdown, JSON, text and hash files among them.
+A tree is moved whole only when it holds no `.git`. A tree matched by any rule other than an exact
+name like `node_modules` or `.next` must also hold no receipt at its top level. Any other file
+stays. A receipt is never heavy: markdown, JSON, text, TSV, CSV, YAML and hash files.
 
 These are never touched:
 
@@ -39,8 +41,12 @@ These are never touched:
 - `.worktrees/`, folders that hold `.git`, symlinks, and anything outside the store.
 
 Anything in `_trash/` that this script didn't put there is left for
-`organize.sh --empty-trash`. If `lsof` or `gh` can't run, `--apply` moves nothing and its report
-says why.
+`organize.sh --empty-trash`. `--apply` moves nothing, and says why in its report (on its output,
+for a symlink), when:
+
+- `lsof` or `gh` can't run;
+- a PR search reaches its 1000-result limit;
+- `_trash` or the report folder is a symlink.
 
 To restore a file within its 30 days, move it from `_trash/<run>/<path>` back to `<path>`. The
 manifest lists every path.
