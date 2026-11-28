@@ -94,8 +94,9 @@ for work with no initiative under the `_agent/` root's one-off `reviews/`.
   setting, or did not run covers nothing it would have checked, even when its check reports
   success. A conditional control counts only on a run where it executed.
 - **Before merge, every required check succeeds on the exact current candidate**, read by the two
-  rules above. Branch protection, delegated-merge conditions (*Base merges*) and release authority
-  are unchanged.
+  rules above. A required check that skipped or reported neutral counts only where *Base merges*
+  allows it (its workflow's own conditions explain it) and the fallback below covers what it
+  skipped. Branch protection, delegated-merge conditions and release authority are unchanged.
 - **The fallback is the full documented gate run locally on the exact candidate, plus any heavier
   proof the change needs.** It applies wherever hosted coverage or enforcement is not equivalent —
   no hosted job runs the gate or one of its substantive steps, nothing at the boundary requires it,
@@ -176,7 +177,7 @@ under A4's no-reviewer exception. File count and Markdown-only status are no evi
 
 **Before the merge.** The expected checks are named by context and source from the repository's gate
 and its PR-triggered workflows; on `H` each is present, completed, the latest run, and a success —
-skipped or neutral only where that workflow's own conditions explain it, and a skipped substantive
+skipped or neutral only where that workflow's own conditions explain it, and such a substantive
 step then takes the fallback ([above](#focused-local-hosted-before-merge)). An absent check fails; a
 repository with no expected PR check records its disposition (the full gate on the merge result,
 seen by the reviewer; where its docs name no gate, the checks the reviewer names, run on that

@@ -165,7 +165,7 @@ for f in "${normative[@]}"; do
     names_heading "$t" "$anchor" ||
       { echo "FAIL: ${f#"$ROOT"/} links $link, which names no heading there" >&2; fail=1; }
   done < <(awk '/^[[:space:]]*(```|~~~)/ { fence = !fence; next } !fence' "$f" |
-    grep -oE '\]\([A-Za-z0-9._/-]*#[A-Za-z0-9_-]+( "[^"]*")?\)' | sed -E 's/^\]\(//; s/( "[^"]*")?\)$//')
+    grep -oE '\]\([A-Za-z0-9._/-]*#[A-Za-z0-9_-]+( ("[^"]*"|'\''[^'\'']*'\''|\([^)]*\)))?\)' | sed -E 's/^\]\(//; s/( ("[^"]*"|'\''[^'\'']*'\''|\([^)]*\)))?\)$//')
 done
 
 if [ "$fail" -eq 0 ]; then

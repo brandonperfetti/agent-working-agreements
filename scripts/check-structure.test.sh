@@ -199,6 +199,15 @@ expect_fail "a heading inside an indented fence is no anchor" "#indented, which 
 good; printf 'See [the section](../procedures/one.md#gone "a title").\n' >>"$repo/profiles/studio.md"
 expect_fail "a titled anchored link is checked too" "one.md#gone, which names no heading"
 
+good; printf "See [the section](../procedures/one.md#gone 'a title').\\n" >>"$repo/profiles/studio.md"
+expect_fail "a single-quoted titled anchored link is checked too" "one.md#gone, which names no heading"
+
+good; printf 'See [the section](../procedures/one.md#gone (a title)).\n' >>"$repo/profiles/studio.md"
+expect_fail "a parenthesized titled anchored link is checked too" "one.md#gone, which names no heading"
+
+good; printf '\n## Titled\n\nSee [it](#titled \x27a title\x27) and [again](#titled (a title)).\n' >>"$repo/procedures/one.md"
+expect_pass "titled anchored links that name a heading"
+
 good; printf '\n```text\nSee [an example](#not-a-heading).\n```\n' >>"$repo/procedures/one.md"
 expect_pass "a link inside a code fence is no pointer"
 
