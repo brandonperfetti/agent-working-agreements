@@ -15,7 +15,8 @@ A dry run (the default) prints the plan and writes nothing. `--apply` acts:
    `.gz` keeps the log's mtime.
 3. **Purge.** A trash batch this script made (it holds `.store-retention.json`) is deleted once it
    has sat in trash for 30 days, counted from the move, provided it holds only what its manifest
-   lists and nothing in it changed in the last 72 hours. The manifest under `evidence/` stays.
+   lists, nothing in it changed in the last 72 hours, and no open PR's receipt cites one of its
+   paths. The manifest under `evidence/` stays.
    Anything else in `_trash/` is left for Brandon's `organize.sh --empty-trash`.
 
 **Heavy** means one of these kinds, decided by name; every other file stays:
@@ -45,7 +46,9 @@ TSV, CSV, YAML or a hash file.
 - anything open, or under a running process's working directory, as `lsof` shows. A working
   directory at the store, or in a folder directly in it, protects only itself.
 - anything a receipt that names an open PR cites, or anything inside what it cites: by a path, by
-  a path relative to the receipt (URL-encoded or not), or by the name of a heavy file;
+  a path relative to the receipt (URL-encoded or not), or by the name of a heavy file. Receipts
+  are read whole, compressed ones too. One that cannot be read, or a citing one over 64 MiB,
+  keeps everything in its folder.
 - `_trash/`, `evidence/store-retention/`, `.worktrees/`, any folder holding `.git`, and symlinks,
   which are never followed.
 
@@ -59,15 +62,19 @@ purge is recorded before it deletes. Exit status: 0 done, 1 an action failed or 
 2 usage, 3 refused.
 """
 import argparse
+import bz2
+import codecs
 import datetime
 import fcntl
 import gzip
 import hashlib
 import json
+import lzma
 import os
 import re
 import shutil
 import subprocess
+import tempfile
 import sys
 import time
 import urllib.parse
@@ -77,7 +84,7 @@ TRASH_DAYS = 30
 COMPRESS_DAYS = 7
 RECENT_HOURS = 72
 HTML_MIN = 256 * 1024
-RECEIPT_SCAN_MAX = 4 * 1024 * 1024  # receipts larger than this are read only this far for citations
+RECEIPT_KEEP_MAX = 64 * 1024 * 1024  # a citing receipt larger than this protects its whole folder
 PR_LIMIT = 1000  # gh search's ceiling: a full page means PRs may be missing
 MARKER = ".store-retention.json"
 LOCK = ".store-retention.lock"
@@ -346,33 +353,72 @@ def pr_pattern(prs):
 
 
 # A path with a slash, or a bare file name with an extension (read against the receipt's folder).
-PATHLIKE = re.compile(r"[~\w.@+-]*(?:/[\w.@+-]+)+/?|[\w@+-][\w.@+-]*\.[A-Za-z0-9]{2,10}")
+# Path characters in a run; one character class, so the scan is linear in the text. A token with a
+# slash is a path; one without is a bare file name only if it has an extension.
+PATH_RUN = re.compile(r"[~\w.@+/-]+")
+BARE_NAME = re.compile(r"[\w@+-][\w.@+-]*\.[A-Za-z0-9]{2,10}")
+TOKEN_MAX = 4096
+
+
+def path_tokens(text):
+    for token in PATH_RUN.findall(text):
+        if len(token) <= TOKEN_MAX and ("/" in token or BARE_NAME.fullmatch(token)):
+            yield token
+
+
+OPENERS = {"gz": gzip.open, "bz2": bz2.open, "xz": lzma.open}
+
+
+def read_receipt(path, pattern):
+    """(text, whole) when the receipt names an open PR, by its name or anywhere in it, compressed
+    or not; (None, True) when it does not. Past RECEIPT_KEEP_MAX the text is cut, and whole is
+    False."""
+    hit = bool(pattern.search(os.path.basename(path)))
+    decoder = codecs.getincrementaldecoder("utf-8")("replace")
+    kept, size, tail = [], 0, ""
+    with OPENERS.get(ext(path), open)(path, "rb") as handle:
+        for block in iter(lambda: handle.read(1 << 22), b""):
+            chunk = decoder.decode(block)
+            hit = hit or bool(pattern.search(tail + chunk))
+            tail = chunk[-1024:]
+            if size < RECEIPT_KEEP_MAX:
+                kept.append(chunk)
+            size += len(chunk)
+    if not hit:
+        return None, True
+    return "".join(kept), size <= RECEIPT_KEEP_MAX
 
 
 class Citations:
     """What the receipts that name an open PR cite."""
 
     def __init__(self, store, prs, receipts):
-        self.store, self.texts, self.paths = store, [], set()
+        self.store, self.texts, self.paths, self.unread = store, [], set(), []
+        self.held = set()
         pattern = pr_pattern(prs)
         if pattern is None:
             return
         for receipt in receipts:
             try:
-                with open(receipt, "r", encoding="utf-8", errors="replace") as handle:
-                    text = handle.read(RECEIPT_SCAN_MAX)
-            except OSError:
+                text, whole = read_receipt(receipt, pattern)
+            except (OSError, EOFError, lzma.LZMAError) as error:
+                # what it cites is unknown, so everything beside it is kept
+                self.paths.add(os.path.dirname(receipt))
+                self.unread.append("{}: {}".format(os.path.relpath(receipt, store), error))
                 continue
-            if pattern.search(text) or pattern.search(os.path.basename(receipt)):
-                decoded = urllib.parse.unquote(text)
-                self.texts.append((os.path.dirname(receipt), text + "\n" + decoded))
-                self.paths.update(self.resolve(receipt, text + "\n" + decoded))
+            if text is None:
+                continue
+            if not whole:
+                self.paths.add(os.path.dirname(receipt))
+            decoded = urllib.parse.unquote(text)
+            self.texts.append((os.path.dirname(receipt), text + "\n" + decoded))
+            self.paths.update(self.resolve(receipt, text + "\n" + decoded))
         self.held = with_ancestors(self.paths, store)
 
     def resolve(self, receipt, text):
         """Existing store paths the text names (a cited folder protects what is under it)."""
         here, store = os.path.dirname(receipt), self.store
-        for token in PATHLIKE.findall(text):
+        for token in path_tokens(text):
             token = token.rstrip("/.")
             if token.startswith("~"):
                 bases = [os.path.expanduser(token)]
@@ -433,8 +479,8 @@ def names_whole(text, rel):
 # ---- the plan
 
 class Candidate:
-    def __init__(self, path, kind, size, mtime, ctime, names=None):
-        self.path, self.kind, self.size = path, kind, size
+    def __init__(self, path, kind, size, mtime, ctime, names=None, strict=False):
+        self.path, self.kind, self.size, self.strict = path, kind, size, strict
         self.mtime, self.ctime, self.is_file = mtime, ctime, names is None
         self.names = {os.path.basename(path)} if names is None else names
 
@@ -477,7 +523,7 @@ def walk_store(store, errors):
                     continue
                 if tree.whole(match[1]):
                     candidates.append(Candidate(entry.path, match[0], tree.size, tree.mtime,
-                                                tree.ctime, tree.heavy_names))
+                                                tree.ctime, tree.heavy_names, match[1]))
                 else:
                     stack.append(entry.path)
             elif entry.is_file():
@@ -490,12 +536,12 @@ def walk_store(store, errors):
                 if kind:
                     candidates.append(Candidate(entry.path, kind, st.st_size, st.st_mtime,
                                                 st.st_ctime))
-                elif is_receipt(entry.name) and ext(entry.name) not in COMPRESSED:
-                    receipts.append(entry.path)  # read for citations; a compressed one is not
+                elif is_receipt(entry.name):
+                    receipts.append(entry.path)
     return candidates, receipts
 
 
-def trash_batches(store, now, in_use, errors):
+def trash_batches(store, now, in_use, errors, cited):
     """Batches this script made that have sat in trash past the window: [(path, moved_at)]."""
     trash = os.path.join(store, "_trash")
     due = []
@@ -514,7 +560,7 @@ def trash_batches(store, now, in_use, errors):
         except (OSError, ValueError, KeyError, TypeError):
             continue  # not ours: Brandon's to empty
         if now - moved_at > TRASH_DAYS * DAY and not in_use(batch):
-            problem = batch_problem(store, batch, marker, now)
+            problem = batch_problem(store, batch, marker, now, cited)
             if problem:
                 errors.append("purge left {}: {}".format(os.path.relpath(batch, store), problem))
             else:
@@ -522,7 +568,7 @@ def trash_batches(store, now, in_use, errors):
     return due
 
 
-def batch_problem(store, batch, marker, now):
+def batch_problem(store, batch, marker, now, cited):
     """Why a batch may not be purged, or None: it must hold only what its manifest lists, and
     nothing in it may have changed in the last 72 hours."""
     try:
@@ -534,6 +580,9 @@ def batch_problem(store, batch, marker, now):
         return "its manifest or contents cannot be read ({})".format(error)
     if max(tree.mtime, tree.ctime) > now - RECENT_HOURS * 3600:
         return "something in it changed in the last {} hours".format(RECENT_HOURS)
+    for rel in sorted(listed):  # cited at its old path by a receipt written since the move
+        if cited(os.path.join(store, rel), {os.path.basename(rel)}):
+            return "an open PR's receipt cites {}".format(rel)
     for top, dirs, files in os.walk(batch):
         for name in files:
             rel = os.path.relpath(os.path.join(top, name), batch)
@@ -573,7 +622,9 @@ def build_plan(store, now, in_use, prs):
             plan.trash.append(item)
         elif item.kind == "log" and item.is_file and item.path.lower().endswith(".log"):
             plan.compress.append(item)
-    plan.purge = trash_batches(store, now, in_use, plan.errors)
+    plan.purge = trash_batches(store, now, in_use, plan.errors, cited)
+    plan.cited = cited
+    plan.errors += ["receipt not read, its folder kept: " + item for item in cited.unread]
     return plan
 
 
@@ -599,32 +650,33 @@ def changed_since(path, now):
 
 
 def compress_log(path, record):
-    """Gzip path in place. record(bytes, sha256, gz bytes) runs once the round trip matches and
-    before the log is removed; a log that changed meanwhile is left as it was."""
+    """Gzip path in place, through a temporary file of this attempt's own. record(bytes, sha256,
+    gz bytes) runs once the round trip matches and before the log is removed; a log that changed
+    meanwhile is left as it was."""
     before = os.lstat(path)
-    gz, tmp = path + ".gz", path + ".gz.tmp"
+    gz = path + ".gz"
     if os.path.lexists(gz):
         raise OSError("{} already exists".format(gz))
-    if os.path.lexists(tmp):
-        os.remove(tmp)  # this script's own leftover from a run that stopped part way
-    with open(path, "rb") as source:
-        want = sha256_stream(source)
-        source.seek(0)
-        with gzip.open(tmp, "wb") as target:
-            shutil.copyfileobj(source, target, 1 << 20)
-    with gzip.open(tmp, "rb") as check:
-        got = sha256_stream(check)
-    after = os.lstat(path)
-    if got != want or (after.st_size, after.st_mtime) != (before.st_size, before.st_mtime):
-        os.remove(tmp)
-        raise OSError("the log changed or the gzip round trip did not match; left as it was")
-    os.utime(tmp, (before.st_atime, before.st_mtime))
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path),
+                               prefix="." + os.path.basename(path) + ".", suffix=".gz.tmp")
+    os.close(fd)
     try:
+        with open(path, "rb") as source:
+            want = sha256_stream(source)
+            source.seek(0)
+            with gzip.open(tmp, "wb") as target:
+                shutil.copyfileobj(source, target, 1 << 20)
+        with gzip.open(tmp, "rb") as check:
+            got = sha256_stream(check)
+        after = os.lstat(path)
+        if got != want or (after.st_size, after.st_mtime) != (before.st_size, before.st_mtime):
+            raise OSError("the log changed or the gzip round trip did not match; left as it was")
+        os.utime(tmp, (before.st_atime, before.st_mtime))
         record(before.st_size, want, os.lstat(tmp).st_size)
-    except OSError:
-        os.remove(tmp)
-        raise
-    os.rename(tmp, gz)
+        os.rename(tmp, gz)
+    finally:
+        if os.path.lexists(tmp):
+            os.remove(tmp)
     os.remove(path)
 
 
@@ -665,8 +717,15 @@ def trash_one(store, now, item, in_use, batch, manifest_path, manifest):
     if changed_since(item.path, now):
         raise OSError("changed since the plan was made")
     rel = os.path.relpath(item.path, store)
-    size = os.lstat(item.path).st_size if item.is_file else item.size
-    digest = sha256_file(item.path) if item.is_file else sha256_tree(item.path)
+    if item.is_file:
+        size, digest = os.lstat(item.path).st_size, sha256_file(item.path)
+    else:
+        tree = Tree(item.path)  # walked again: the tree may have changed since the plan
+        if not tree.whole(item.strict):
+            raise OSError("it now holds .git or a receipt")
+        if max(tree.mtime, tree.ctime) > now - RECENT_HOURS * 3600:
+            raise OSError("something in it changed since the plan was made")
+        size, digest = tree.size, sha256_tree(item.path)
     if not os.path.isdir(batch):
         os.mkdir(batch)
         with open(os.path.join(batch, MARKER), "w") as marker:
@@ -746,7 +805,7 @@ def apply_plan(store, now, plan, refresh, name, report_dir, out):
                                                           os.path.realpath(trash)):
                         raise OSError("not a folder in the store's _trash")
                     with open(os.path.join(path, MARKER)) as handle:
-                        problem = batch_problem(store, path, json.load(handle), now)
+                        problem = batch_problem(store, path, json.load(handle), now, plan.cited)
                     if problem:
                         raise OSError(problem)
                     size = Tree(path).size

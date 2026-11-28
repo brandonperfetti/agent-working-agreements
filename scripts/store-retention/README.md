@@ -17,7 +17,7 @@ The script's docstring is the full contract. This page covers what it does and h
 | --- | --- | --- |
 | Trash | heavy files and trees whose newest mtime is over 30 days old, to `_trash/<run>/` with their paths kept | `evidence/store-retention/<run>/manifest.tsv`: path, kind, bytes, SHA-256, mtime, reason |
 | Compress | `.log` files 7 to 30 days old, gzipped in place, keeping their mtime | `compressed.tsv`: the log's bytes and SHA-256, recorded before the log is removed |
-| Purge | trash batches this script made, 30 days after the move, if they hold only what their manifest lists | `purged.tsv`, written before the delete. The batch's manifest stays. |
+| Purge | trash batches this script made, 30 days after the move, if they hold only what their manifest lists and no open PR cites a path in them | `purged.tsv`, written before the delete. The batch's manifest stays. |
 
 Each `--apply` run also writes `report.md` in the same folder. A dry run prints the plan and writes
 nothing. Heavy means one of these kinds:
@@ -47,7 +47,8 @@ These are never touched:
 - anything changed in the last 72 hours;
 - anything open, or under a running process's working directory;
 - anything a receipt naming an open PR cites, by path or by file name, and everything inside a
-  folder it cites;
+  folder it cites. Receipts are read whole, compressed ones too. A receipt that can't be read, or
+  a citing one over 64 MiB, keeps everything in its folder.
 - `.worktrees/`, folders that hold `.git`, symlinks, and anything outside the store.
 
 Anything in `_trash/` that this script didn't put there is left for

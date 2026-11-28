@@ -396,6 +396,60 @@ class Guards(Fixture):
         self.assertEqual(self.run_job(), 0, self.lines)
         self.assertTrue(os.path.exists(self.p("h/shot2.png")))
 
+    def test_receipt_reading_coderabbit_preflight(self):
+        # CodeRabbit preflight of 65e9e3e: compressed, long and unreadable receipts.
+        os.makedirs(self.p("a"))
+        with gzip.open(self.p("a/r.md.gz"), "wb") as handle:
+            handle.write(b"o/r#7 cites a/zipped.png")
+        os.utime(self.p("a/r.md.gz"), (NOW - 40 * DAY,) * 2)
+        self.put("a/zipped.png", 40)
+        self.put("b/long.md", 40, b"x" * (5 * 1024 * 1024) + b" o/r#7 cites b/late.png")
+        self.put("b/late.png", 40)
+        self.put("c/locked.md", 40, b"o/r#7 cites c/shot.png")
+        self.put("c/shot.png", 40)
+        self.put("d/free.png", 40)
+        locked = os.geteuid() != 0
+        if locked:
+            os.chmod(self.p("c/locked.md"), 0)
+            self.addCleanup(os.chmod, self.p("c/locked.md"), 0o644)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        for rel in ("a/zipped.png", "b/late.png", "c/shot.png"):
+            self.assertTrue(os.path.exists(self.p(rel)), rel)
+        self.assertFalse(os.path.exists(self.p("d/free.png")))
+        if locked:
+            with open(os.path.join(self.p(sr.REPORTS), self.reports()[0], "report.md")) as handle:
+                self.assertIn("receipt not read, its folder kept: c/locked.md", handle.read())
+
+    def test_batch_cited_after_the_move_is_kept(self):
+        self.put("shots/a.png", 40)
+        self.run_job(prs=())
+        (first,) = self.reports()
+        self.put("notes/r.md", 40, b"o/r#7 needs shots/a.png")
+        self.run_job(now=NOW + 31 * DAY)
+        self.assertTrue(os.path.isdir(self.p(os.path.join("_trash", first))))
+
+    def test_tree_changed_since_the_plan_is_left(self):
+        self.put("x/dist/bundle.png", 40)
+        self.age("x/dist", 40)
+        plan = sr.build_plan(self.store, NOW, sr.InUse(self.store, (set(), set())), [])
+        (item,) = plan.trash
+        self.put("x/dist/NOTES.md", 40)  # a receipt written after the plan
+        os.makedirs(self.p(sr.REPORTS + "/r"))
+        failures = sr.apply_plan(self.store, NOW, plan,
+                                 lambda: sr.InUse(self.store, (set(), set())), "r",
+                                 self.p(sr.REPORTS + "/r"), self.lines.append)
+        self.assertTrue(os.path.exists(self.p("x/dist/NOTES.md")))
+        self.assertIn("now holds .git or a receipt", failures[0])
+
+    def test_someone_elses_gz_tmp_is_untouched(self):
+        self.put("logs/mid.log", 15, b"line\n")
+        self.put("logs/mid.log.gz.tmp", 15, b"not ours")
+        self.assertEqual(self.run_job(prs=()), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("logs/mid.log.gz")))
+        with open(self.p("logs/mid.log.gz.tmp"), "rb") as handle:
+            self.assertEqual(handle.read(), b"not ours")
+        self.assertEqual(sorted(os.listdir(self.p("logs"))), ["mid.log.gz", "mid.log.gz.tmp"])
+
     def test_failed_move_back_stops_the_run(self):
         self.put("p/a.zip", 40)
         self.put("p/b.zip", 40)
