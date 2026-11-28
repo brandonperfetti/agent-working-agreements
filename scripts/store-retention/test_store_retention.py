@@ -343,6 +343,55 @@ class Guards(Fixture):
         self.assertEqual(set(self.manifest(self.reports()[0])),
                          {"evidence/deep/a/b/other.png", "evidence/deep/a/sibling.png"})
 
+    def test_citation_forms_round_three(self):
+        # Round-3 review of 27cadf3: folder citations with a space in these forms were missed.
+        self.put("proj/reviews/r-pr-7.md", 40, b"Tree: `_agent/proj/My Run/node_modules/pkg/i.js`."
+                 b" Screens are in _agent/proj/My Shots. Also `../Old Shots/` and"
+                 b" `_agent/Client Shots/`. Wait... and so on.")
+        self.put("proj/My Run/node_modules/pkg/i.js", 40)
+        self.age("proj/My Run/node_modules", 40)
+        self.put("proj/My Shots/a.png", 40)
+        self.put("proj/Old Shots/a.png", 40)
+        self.put("Client Shots/a.png", 40)
+        self.put("proj/elsewhere/z.png", 40)  # `...` must not cite the receipt's parent
+        self.assertEqual(self.run_job(), 0, self.lines)
+        for rel in ("proj/My Run/node_modules", "proj/My Shots/a.png", "proj/Old Shots/a.png",
+                    "Client Shots/a.png"):
+            self.assertTrue(os.path.exists(self.p(rel)), rel)
+        self.assertEqual(set(self.manifest(self.reports()[0])), {"proj/elsewhere/z.png"})
+
+    def test_bundle_shaped_folder_with_receipts_is_walked(self):
+        self.put("proj/teardown/Info.plist", 40)
+        self.put("proj/teardown/MacOS/bin", 40)
+        self.put("proj/teardown/Resources/findings.md", 40)
+        self.put("proj/teardown/Library/notes.json", 40)
+        self.age("proj", 40)
+        self.assertEqual(self.run_job(prs=()), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("proj/teardown/Resources/findings.md")))
+        self.assertTrue(os.path.exists(self.p("proj/teardown/Library/notes.json")))
+
+    def test_compressed_receipts_stay(self):
+        self.put("evidence/events.jsonl.gz", 40)
+        self.put("evidence/report.csv.gz", 40)
+        self.put("evidence/x.json.server.log.gz", 40)
+        self.assertEqual(self.run_job(prs=()), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("evidence/events.jsonl.gz")))
+        self.assertTrue(os.path.exists(self.p("evidence/report.csv.gz")))
+        self.assertEqual(set(self.manifest(self.reports()[0])), {"evidence/x.json.server.log.gz"})
+
+    def test_purge_leaves_a_batch_holding_unlisted_files(self):
+        self.put("shots/a.png", 40)
+        self.run_job(prs=())
+        (first,) = self.reports()
+        stray = self.p(os.path.join("_trash", first, "notes.md"))
+        with open(stray, "w") as handle:
+            handle.write("added after the move")
+        os.utime(stray, (NOW, NOW))
+        self.run_job(now=NOW + 31 * DAY, prs=())
+        self.assertTrue(os.path.exists(stray))
+        with open(os.path.join(self.p(sr.REPORTS), self.reports()[-1], "report.md")) as handle:
+            self.assertIn("purge left _trash/" + first, handle.read())
+
     def test_failed_manifest_write_moves_back_and_stops(self):
         self.put("shots/a.png", 40)
         self.put("shots/b.png", 40)

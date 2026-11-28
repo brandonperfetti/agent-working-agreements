@@ -14,7 +14,8 @@ A dry run (the default) prints the plan and writes nothing. `--apply` acts:
    log's SHA-256, its size and SHA-256 go to `compressed.tsv`, and only then is the log removed. The
    `.gz` keeps the log's mtime.
 3. **Purge.** A trash batch this script made (it holds `.store-retention.json`) is deleted once it
-   has sat in trash for 30 days, counted from the move. The manifest under `evidence/` stays.
+   has sat in trash for 30 days, counted from the move, provided it holds only what its manifest
+   lists and nothing in it changed in the last 72 hours. The manifest under `evidence/` stays.
    Anything else in `_trash/` is left for Brandon's `organize.sh --empty-trash`.
 
 **Heavy** means one of these kinds, decided by name; every other file stays:
@@ -86,6 +87,7 @@ SERVED = {"body", "rsc", "har", "mhtml", "webarchive"}
 SERVED_IF_LARGE = {"html", "htm"}
 ARCHIVE = {"zip", "tar", "tgz", "gz", "bz2", "xz", "7z", "rar", "dmg", "pkg", "jar",
            "apk", "aab", "ipa", "asar"}
+COMPRESSED = {"gz", "bz2", "xz"}
 RECEIPT_EXT = {"md", "json", "jsonl", "ndjson", "txt", "tsv", "csv", "yml", "yaml"}
 DATABASE = re.compile(r"\.(sqlite3?|db)(-wal|-shm)?(\.bak[^/]*)?$", re.I)
 LOG = re.compile(r"\.log(\.gz)?$", re.I)
@@ -122,6 +124,8 @@ def file_kind(name, size):
         return None
     if LOG.search(name):
         return "log"
+    if ext(name) in COMPRESSED and is_receipt(name.rsplit(".", 1)[0]):
+        return None  # a compressed receipt is still a receipt
     if DATABASE.search(name):
         return "database"
     e = ext(name)
@@ -160,7 +164,7 @@ def tree_match(path, name):
     if name in TREE_EXACT:
         return TREE_EXACT[name], False
     if is_bundle(path, name):
-        return "app bundle", False
+        return "app bundle", not name.endswith(".app")  # loose contents: no receipt anywhere
     for suffix, kind in TREE_SUFFIX.items():
         if name.endswith(suffix):
             return kind, True
@@ -392,16 +396,22 @@ class Citations:
         for here, text in self.texts:  # a name with a space escapes the token pattern above
             if any(name in text for name in names):
                 return True
-            folder = path
-            while inside(os.path.dirname(folder), self.store):
-                for base in (self.store, here):
-                    if inside(folder, base) and names_whole(text, os.path.relpath(folder, base)):
+            folder, tree = path, not os.path.isfile(path)
+            while inside(folder, self.store):
+                top = os.path.dirname(folder) == self.store
+                for rel in {os.path.relpath(folder, self.store), os.path.relpath(folder, here)}:
+                    if not rel.replace("/", "").strip("."):
+                        continue  # `.` or `..` alone would match every ellipsis
+                    if top and not rel.startswith(".."):
+                        if names_whole(text, rel + "/"):  # a top-level folder, cited as one
+                            return True
+                    elif names_whole(text, rel) or (tree and folder == path and rel + "/" in text):
                         return True
                 folder = os.path.dirname(folder)
         return False
 
 
-ENDS = set(" \t\n`'\")]>,;:|*")
+ENDS = set(" \t\r\n`'\")]>,;:|*.?!")
 
 
 def names_whole(text, rel):
@@ -481,7 +491,7 @@ def walk_store(store, errors):
     return candidates, receipts
 
 
-def trash_batches(store, now, in_use):
+def trash_batches(store, now, in_use, errors):
     """Batches this script made that have sat in trash past the window: [(path, moved_at)]."""
     trash = os.path.join(store, "_trash")
     due = []
@@ -495,12 +505,49 @@ def trash_batches(store, now, in_use):
             continue
         try:
             with open(os.path.join(batch, MARKER)) as handle:
-                moved_at = float(json.load(handle)["moved_at"])
+                marker = json.load(handle)
+            moved_at = float(marker["moved_at"])
         except (OSError, ValueError, KeyError, TypeError):
             continue  # not ours: Brandon's to empty
         if now - moved_at > TRASH_DAYS * DAY and not in_use(batch):
-            due.append((batch, moved_at))
+            problem = batch_problem(store, batch, marker, now)
+            if problem:
+                errors.append("purge left {}: {}".format(os.path.relpath(batch, store), problem))
+            else:
+                due.append((batch, moved_at))
     return due
+
+
+def batch_problem(store, batch, marker, now):
+    """Why a batch may not be purged, or None: it must hold only what its manifest lists, and
+    nothing in it may have changed in the last 72 hours."""
+    try:
+        manifest = real_file(store, marker["manifest"])
+        with open(manifest) as handle:
+            listed = {line.split("\t", 1)[0] for line in list(handle)[1:]}
+        tree = Tree(batch)
+    except (OSError, KeyError, TypeError, Refused) as error:
+        return "its manifest or contents cannot be read ({})".format(error)
+    if max(tree.mtime, tree.ctime) > now - RECENT_HOURS * 3600:
+        return "something in it changed in the last {} hours".format(RECENT_HOURS)
+    for top, dirs, files in os.walk(batch):
+        for name in files:
+            rel = os.path.relpath(os.path.join(top, name), batch)
+            if rel == MARKER:
+                continue
+            parts = rel.split(os.sep)
+            if not any(os.sep.join(parts[:n]) in listed for n in range(1, len(parts) + 1)):
+                return "it holds {}, which its manifest does not list".format(rel)
+    return None
+
+
+def real_file(store, rel):
+    """store/rel when it is a regular file inside the store, not reached through a symlink."""
+    folder = real_dir(store, os.path.dirname(rel)) if os.path.dirname(rel) else store
+    path = os.path.join(folder, os.path.basename(rel))
+    if os.path.islink(path) or not os.path.isfile(path):
+        raise Refused("{} is not a file in the store".format(rel))
+    return path
 
 
 def build_plan(store, now, in_use, prs):
@@ -522,7 +569,7 @@ def build_plan(store, now, in_use, prs):
             plan.trash.append(item)
         elif item.kind == "log" and item.is_file and item.path.lower().endswith(".log"):
             plan.compress.append(item)
-    plan.purge = trash_batches(store, now, in_use)
+    plan.purge = trash_batches(store, now, in_use, plan.errors)
     return plan
 
 
@@ -686,12 +733,16 @@ def apply_plan(store, now, plan, refresh, name, report_dir, out):
                     if os.path.islink(path) or not inside(os.path.realpath(path),
                                                           os.path.realpath(trash)):
                         raise OSError("not a folder in the store's _trash")
+                    with open(os.path.join(path, MARKER)) as handle:
+                        problem = batch_problem(store, path, json.load(handle), now)
+                    if problem:
+                        raise OSError(problem)
                     size = Tree(path).size
                     table.row(rel, iso(moved_at), size)  # the record comes first
                     shutil.rmtree(path)
                 except RecordError:
                     raise
-                except OSError as error:
+                except (OSError, ValueError) as error:
                     failures.append("purge {}: {}".format(rel, error))
                     continue
                 done["purge"] += 1
@@ -721,7 +772,7 @@ def write_report(report_dir, name, now, plan, done, failures):
         " in the last {} hours.".format(
             plan.kept["in use"], plan.kept["cited"], plan.kept["recent"], RECENT_HOURS),
     ]
-    for title, items in (("Failed", failures), ("Not read", plan.errors)):
+    for title, items in (("Failed", failures), ("Left alone", plan.errors)):
         if items:
             lines += ["", "## " + title, ""] + ["- {}".format(item) for item in items]
     with open(os.path.join(report_dir, "report.md"), "w") as report:
@@ -737,7 +788,7 @@ def print_plan(store, plan, out):
     for path, moved_at in plan.purge:
         out("would purge    {}  (moved {})".format(os.path.relpath(path, store), iso(moved_at)))
     for error in plan.errors:
-        out("not read       {}".format(error))
+        out("left           {}".format(error))
     out("-- dry run: {} to trash ({} bytes), {} logs to compress, {} batches to purge; kept: {} in"
         " use, {} cited, {} recent. Nothing changed.".format(
             len(plan.trash), sum(item.size for item in plan.trash), len(plan.compress),

@@ -17,7 +17,7 @@ The script's docstring is the full contract. This page covers what it does and h
 | --- | --- | --- |
 | Trash | heavy files and trees whose newest mtime is over 30 days old, to `_trash/<run>/` with their paths kept | `evidence/store-retention/<run>/manifest.tsv`: path, kind, bytes, SHA-256, mtime, reason |
 | Compress | `.log` files 7 to 30 days old, gzipped in place, keeping their mtime | `compressed.tsv`: the log's bytes and SHA-256, recorded before the log is removed |
-| Purge | trash batches this script made, 30 days after the move | `purged.tsv`. The batch's manifest stays. |
+| Purge | trash batches this script made, 30 days after the move, if they hold only what their manifest lists | `purged.tsv`, written before the delete. The batch's manifest stays. |
 
 Each `--apply` run also writes `report.md` in the same folder. A dry run prints the plan and writes
 nothing. Heavy means one of these kinds:
@@ -34,7 +34,8 @@ A tree is moved whole only when it holds no `.git`. Two kinds of tree are moved 
 package metadata inside: an exact name like `node_modules` or `.next`, and a real macOS app bundle.
 Any other matched tree must hold no receipt anywhere, or it is walked like any folder. That covers
 an `.app` that isn't a bundle, and `dist`, `build` and `out`. Any other file stays. A receipt is
-never heavy: markdown, JSON (with `.jsonl`), text, TSV, CSV, YAML and hash files.
+never heavy, compressed or not: markdown, JSON (with `.jsonl`), text, TSV, CSV, YAML and hash
+files.
 
 These are never touched:
 
