@@ -389,6 +389,13 @@ class Guards(Fixture):
         self.assertTrue(os.path.exists(self.p("run/out/events.jsonl.gz")))
         self.assertEqual(set(self.manifest(self.reports()[0])), {"run/out/shot.png", "old.zip"})
 
+    def test_hash_file_receipt_cites(self):
+        # Review of e16af5d: hash files had dropped out of the receipts read for citations.
+        self.put("h/r-pr-7.sha256", 40, b"o/r#7\nabc  shot2.png\n")
+        self.put("h/shot2.png", 40)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("h/shot2.png")))
+
     def test_failed_move_back_stops_the_run(self):
         self.put("p/a.zip", 40)
         self.put("p/b.zip", 40)

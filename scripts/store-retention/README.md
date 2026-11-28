@@ -37,7 +37,7 @@ Any other matched tree must hold no receipt anywhere, or it is walked like any f
 - app contents copied without their `.app`;
 - an `.app` that isn't a bundle;
 - `.framework`, `.xcarchive` and `.logarchive`;
-- `dist`, `build` and `out`.
+- `dist`, `build`, `out`, `dist-storybook` and `storybook-static`.
 
 Any other file stays. A receipt is never heavy, compressed or not. Receipts are markdown, JSON
 (with `.jsonl` and `.ndjson`), text, TSV, CSV, YAML and hash files.

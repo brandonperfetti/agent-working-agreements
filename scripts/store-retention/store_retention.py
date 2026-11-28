@@ -490,8 +490,8 @@ def walk_store(store, errors):
                 if kind:
                     candidates.append(Candidate(entry.path, kind, st.st_size, st.st_mtime,
                                                 st.st_ctime))
-                elif ext(entry.name) in RECEIPT_EXT:  # a compressed receipt is not read
-                    receipts.append(entry.path)
+                elif is_receipt(entry.name) and ext(entry.name) not in COMPRESSED:
+                    receipts.append(entry.path)  # read for citations; a compressed one is not
     return candidates, receipts
 
 
