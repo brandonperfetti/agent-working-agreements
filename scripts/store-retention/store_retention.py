@@ -78,6 +78,7 @@ import tempfile
 import sys
 import time
 import urllib.parse
+import zlib
 
 DAY = 86400
 TRASH_DAYS = 30
@@ -401,7 +402,7 @@ class Citations:
         for receipt in receipts:
             try:
                 text, whole = read_receipt(receipt, pattern)
-            except (OSError, EOFError, lzma.LZMAError) as error:
+            except (OSError, EOFError, ValueError, lzma.LZMAError, zlib.error) as error:
                 # what it cites is unknown, so everything beside it is kept
                 self.paths.add(os.path.dirname(receipt))
                 self.unread.append("{}: {}".format(os.path.relpath(receipt, store), error))
@@ -439,7 +440,7 @@ class Citations:
     def __call__(self, path, names):
         """True when a citing receipt names path, a folder above it below the store's top level,
         or (names) a heavy file inside it."""
-        if not self.texts:
+        if not self.texts and not self.paths:
             return False
         if path in self.held or under_any(path, self.paths):
             return True
@@ -569,8 +570,9 @@ def trash_batches(store, now, in_use, errors, cited):
 
 
 def batch_problem(store, batch, marker, now, cited):
-    """Why a batch may not be purged, or None: it must hold only what its manifest lists, and
-    nothing in it may have changed in the last 72 hours."""
+    """Why a batch may not be purged, or None: it must hold only what its manifest lists, nothing
+    in it may have changed in the last 72 hours, and no open PR's receipt may cite one of its
+    paths where it stood."""
     try:
         manifest = real_file(store, marker["manifest"])
         with open(manifest) as handle:
@@ -671,6 +673,7 @@ def compress_log(path, record):
         after = os.lstat(path)
         if got != want or (after.st_size, after.st_mtime) != (before.st_size, before.st_mtime):
             raise OSError("the log changed or the gzip round trip did not match; left as it was")
+        os.chmod(tmp, before.st_mode & 0o777)
         os.utime(tmp, (before.st_atime, before.st_mtime))
         record(before.st_size, want, os.lstat(tmp).st_size)
         os.rename(tmp, gz)

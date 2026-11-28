@@ -420,6 +420,35 @@ class Guards(Fixture):
             with open(os.path.join(self.p(sr.REPORTS), self.reports()[0], "report.md")) as handle:
                 self.assertIn("receipt not read, its folder kept: c/locked.md", handle.read())
 
+    def test_lone_unreadable_receipt_keeps_its_folder(self):
+        # Review of c86fd18: with no readable citing receipt, the unreadable one protected nothing.
+        if os.geteuid() == 0:
+            self.skipTest("root reads any file")
+        self.put("c/locked.md", 40, b"o/r#7 cites c/shot.png")
+        self.put("c/shot.png", 40)
+        self.put("d/free.png", 40)
+        os.chmod(self.p("c/locked.md"), 0)
+        self.addCleanup(os.chmod, self.p("c/locked.md"), 0o644)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("c/shot.png")))
+        self.assertFalse(os.path.exists(self.p("d/free.png")))
+
+    def test_corrupt_compressed_receipt_keeps_its_folder(self):
+        os.makedirs(self.p("e"))
+        with open(self.p("e/r.md.gz"), "wb") as handle:
+            handle.write(gzip.compress(b"o/r#7 cites e/shot.png")[:12] + b"\xff" * 40)
+        os.utime(self.p("e/r.md.gz"), (NOW - 40 * DAY,) * 2)
+        self.put("e/shot.png", 40)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("e/shot.png")))
+
+    def test_compressed_log_keeps_its_mode(self):
+        path = self.put("logs/mid.log", 15, b"line\n")
+        os.chmod(path, 0o644)
+        self.age("logs/mid.log", 15)
+        self.assertEqual(self.run_job(prs=()), 0, self.lines)
+        self.assertEqual(os.lstat(self.p("logs/mid.log.gz")).st_mode & 0o777, 0o644)
+
     def test_batch_cited_after_the_move_is_kept(self):
         self.put("shots/a.png", 40)
         self.run_job(prs=())
