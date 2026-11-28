@@ -48,7 +48,7 @@ effect and which version to restore. The runbook covers rollback and historical 
 
 ## CI gate
 
-Green is these nine commands, run in this order from the repository root, each
+Green is these ten commands, run in this order from the repository root, each
 exiting 0:
 
 ```bash
@@ -60,6 +60,7 @@ exiting 0:
 /usr/bin/python3 -m unittest discover -s hooks/codex
 node --test hooks/openclaw/relay.test.mjs
 ./scripts/openclaw/runbook.test.sh
+/usr/bin/python3 -m unittest discover -s scripts/store-retention
 npx --yes markdownlint-cli2
 ```
 
@@ -75,7 +76,8 @@ commands to that guard, and its installer; `node --test` tests the OpenClaw rela
 `hooks/openclaw/`, which hands OpenClaw tool calls to that guard. `runbook.test.sh` drives
 `scripts/openclaw/runbook.sh` through the stop and retention branches of
 `procedures/openclaw/managed-worktrees.md`, on disposable repositories and a stub
-`openclaw`; it never reaches a live checkout or Gateway.
+`openclaw`; it never reaches a live checkout or Gateway. The last `unittest` run drives
+`scripts/store-retention/store_retention.py` on fixture `_agent/` trees; it never reads the real store.
 `check-index.sh` proves the composition: every client a row of a profile's
 *Client adapters* table, every root and client opener naming core and profile (a
 client's also its own file), the core naming no profile, the anchors present.

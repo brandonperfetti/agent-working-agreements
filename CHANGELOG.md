@@ -10,6 +10,14 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-28 — 30-day retention for the `_agent/` store (#328).** `scripts/store-retention/`
+  moves heavy files (media, captures, builds, installs, bundles, archives, databases, logs) older
+  than 30 days to `_trash/<run>/` with a manifest, gzips logs 7–30 days old, and deletes its own
+  batches 30 days on; receipts, recent, open and open-PR-cited files stay. A monthly LaunchAgent
+  runs it, and the workspace layout says so. Why: old captures were never reopened after merge.
+  Brandon decided, 2026-11-28.
+  [Decision](https://github.com/brandonperfetti/agent-working-agreements/issues/325#issuecomment-7239951719).
+
 - **2026-11-24 — Sealed guard cases, replayed on every `hooks/` change (#310).** Twelve cases
   live in `~/.config/awa-sealed-cases/`, outside every checkout, with Claude Code's file tools
   denied there; `hooks/claude-code/sealed_cases.py` replays them against `guard_git.py`, and a

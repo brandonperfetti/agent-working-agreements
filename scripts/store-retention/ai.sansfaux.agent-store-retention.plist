@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Monthly 30-day retention of the _agent/ store (#328). A template: the install step in
+     README.md replaces each HOME placeholder with your home directory, since launchd expands no
+     variables in these paths. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>ai.sansfaux.agent-store-retention</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>-I</string>
+    <string>@HOME@/dev/sansfaux/agent-working-agreements/scripts/store-retention/store_retention.py</string>
+    <string>--store</string>
+    <string>@HOME@/dev/sansfaux/_agent</string>
+    <string>--apply</string>
+  </array>
+  <key>WorkingDirectory</key><string>@HOME@</string>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string></dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Day</key><integer>1</integer>
+    <key>Hour</key><integer>4</integer>
+    <key>Minute</key><integer>45</integer>
+  </dict>
+  <key>Nice</key><integer>10</integer>
+  <key>LowPriorityIO</key><true/>
+  <key>StandardOutPath</key><string>@HOME@/Library/Logs/sansfaux-agent-store-retention.log</string>
+  <key>StandardErrorPath</key><string>@HOME@/Library/Logs/sansfaux-agent-store-retention.log</string>
+</dict>
+</plist>
