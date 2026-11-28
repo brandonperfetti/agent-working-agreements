@@ -118,8 +118,8 @@ Review moves to the pull request. Branches descend from the integration branch; 
 release branch, force-push, or push feature work to the integration branch. The delivery owner
 integrates reviewed work, re-runs the gate and pushes; base PRs merge as A4 says.
 
-**Stop-list** — pause only the affected action, name its decision or restoration owner, otherwise
-act, decide, record:
+**Stop-list** — pause only the affected action and name who decides or restores it; naming an
+owner is not a finish, so keep working. Otherwise act, decide, record:
 
 1. Unresolved conflict in owner instructions or objectives; current explicit direction settles
    older plans. Reconcile the record and affected staff.
@@ -129,7 +129,7 @@ act, decide, record:
 3. Purchases or financial commitments without explicit approval or an approved covering budget;
    read-only research and approved allowances proceed, increases and top-ups need approval.
 4. A gate still red after bounded recovery spends its declared budget.
-5. A required operation with no safe route: name the capability and its restoration owner (the
-   adapter's, else the owner); independent work continues (#194).
+5. A required operation with no safe route: ask its restoration owner (the adapter's, else the
+   owner) for the capability now and keep the independent work going (#194).
 
 No initiative, master document or handoff is extra authority.

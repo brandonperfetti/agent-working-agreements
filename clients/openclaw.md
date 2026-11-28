@@ -20,7 +20,7 @@ the agreements, `profiles/sansfaux.md` and `clients/openclaw.md`".
   with the missing instruction source recorded (B0); do not downgrade to B1.
 - **Default mode: autonomous.** B0's guard is scored per checkout and delivery path. An unavailable
   capability limits that operation, not the delivery or the team: continue on supported routes and
-  stop only where no safe route remains, naming the capability and its restoration owner (B2 item
+  stop only where no safe route remains, asking its restoration owner for the capability (B2 item
   5). Brandon is never the command runner; he merges what no active route covers.
   [learnings: 2026-10-18 openclaw-autonomy-and-recovery §1, §3]
 - **Resolve the active workspace and target checkout from live inventory**; specialists do not all
@@ -52,7 +52,7 @@ without per-wave approval; B2 governs spending and scope.
 - **Restoration owners (B2 stop-list item 5)** (#194): **Ashford** for OpenClaw control-plane
   capability (dispatch, tool exposure, routes, configuration, the instruction-source pointer);
   **Bull** for host and runtime; the **delivery owner** for repository and worktree capability,
-  the protected root's refresh included. Camina routes the stop and keeps continuity.
+  the protected root's refresh included. Camina gets it restored; the turn closes on a result.
 
 ## Delivery topology
 

@@ -37,7 +37,7 @@ finding; `/domain-modeling` writes it when it resolves the first term, and not b
 | lane | A4, B1 and B2: one dispatched sub-agent's work on named files — autonomous (B2), running git only in its own worktree; attended (B1), either an mbox lane running git only in its own isolated clone, or an uncommitted lane editing its named files in the shared checkout and delivering them uncommitted, running no git in the shared checkout; a delivery owner dispatched as a sub-agent is not a lane and keeps its A4 duties for the shared checkout's git state |
 | RULE ZERO | A4: an agent's commits on Brandon's behalf carry his author identity, anyone else's carry their own, and a PR carrying his identity from another account is not merged until re-authored; new work declares its agent once, `Agent: <client> · <model id> · <effort>`, as a commit trailer or the closing line of a PR, issue, comment or reply, on any repository (absorbing #245's label), and no other attribution line or footer is allowed (2026-11-14, replacing #226); bound in `profiles/sansfaux.md`, *Studio authority* |
 | evidence labels | A2: `[measured]`, `[source]`, `[inference]` on material findings and uncertainty; ordinary progress stays plain |
-| stop-list | B2: boundaries that pause the affected action and name its decision or restoration owner |
+| stop-list | B2: boundaries that pause only the affected action and name who decides or restores it; naming an owner is not a finish |
 
 When a term is resolved further than its section says, it goes in `GLOSSARY.md`, which then
 becomes the first place to look.

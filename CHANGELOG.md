@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-28 — Naming an owner is not a finish.** B2's stop-list lead-in and item 5, the
+  OpenClaw adapter's two restoration-owner lines and the domain glossary now say to ask the
+  restoration owner for the capability and keep working; the turn closes on a result. No net
+  lines. Why: OpenClaw staff were ending turns by naming a restoration owner and stopping.
+  Brandon decided, 2026-11-28.
+  [Receipt](https://github.com/brandonperfetti/agent-working-agreements/blob/develop/CHANGELOG.md).
+
 - **2026-11-24 — Sealed guard cases, replayed on every `hooks/` change (#310).** Twelve cases
   live in `~/.config/awa-sealed-cases/`, outside every checkout, with Claude Code's file tools
   denied there; `hooks/claude-code/sealed_cases.py` replays them against `guard_git.py`, and a
