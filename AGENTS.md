@@ -68,8 +68,8 @@ under their line ceilings, keeps studio-specific text out of the core, requires
 every file under `procedures/` but `README.md` to carry its four fields and be
 a row of `procedures/README.md`'s table and a profile's *Triggers* table (or, for
 `procedures/<client>/`, linked from that client's appendix), rejects a 40- or
-64-hex pin in normative text (`history/` is exempt from the pin rule), and fails an
-anchored link in normative text that names no heading of its target.
+64-hex pin in normative text (`history/` is exempt from the pin rule), and rejects
+inline relative links in normative text whose heading anchors do not resolve.
 The first `unittest` run tests the Claude Code hooks under `hooks/claude-code/` and their
 installer; the second tests the Codex hook under `hooks/codex/`, which hands Codex shell
 commands to that guard, and its installer; `node --test` tests the OpenClaw relay under
