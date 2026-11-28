@@ -46,7 +46,9 @@ TSV, CSV, YAML or a hash file.
 - anything open, or under a running process's working directory, as `lsof` shows. A working
   directory at the store, or in a folder directly in it, protects only itself.
 - anything a receipt that names an open PR cites, or anything inside what it cites: by a path, by
-  a path relative to the receipt (URL-encoded or not), or by the name of a heavy file. Receipts
+  a path relative to the receipt or a folder above it (URL-encoded or not), or by the name of a
+  heavy file. A receipt names a PR by its URL, `owner/repo#n` or `repo#n`, or by a short form
+  (`pr-n`, `prn`, `PR #n`, `pull/n`) of any open PR's number, in its text or its file name. Receipts
   are read whole, compressed ones too. One that cannot be read, or a citing one over 64 MiB,
   keeps everything in its folder.
 - `_trash/`, `evidence/store-retention/`, `.worktrees/`, any folder holding `.git`, and symlinks,
@@ -343,13 +345,16 @@ def open_prs():
 
 
 def pr_pattern(prs):
-    """One regex matching a reference to any of the PRs: its URL, owner/repo#n or <repo>-pr-<n>."""
+    """One regex matching a reference to any of the PRs: its URL, owner/repo#n, repo#n, or a short
+    form (`pr-12`, `pr12`, `PR #12`, `pull/12`) of any open PR's number. A short form names no
+    repository, so it can match another repository's PR of the same number: that keeps more."""
     alts = []
     for repo, number in prs:
         name = repo.split("/")[-1]
         alts.append(r"github\.com/{}/pull/{}".format(re.escape(repo), number))
         alts.append(r"{}#{}".format(re.escape(repo), number))
-        alts.append(r"{}-pr-{}".format(re.escape(name), number))
+        alts.append(r"\b{}#{}".format(re.escape(name), number))
+        alts.append(r"(?i:\bpr[- ]?#?{}|\bpull/{})".format(number, number))
     return re.compile("(?:{})(?!\\d)".format("|".join(alts))) if alts else None
 
 
@@ -427,15 +432,22 @@ class Citations:
                 bases = [token]
             elif "/" not in token:
                 bases = [os.path.join(here, token)]
-            else:
-                bases = [os.path.join(here, token), os.path.join(store, token),
-                         os.path.join(os.path.dirname(store), token)]
+            else:  # against the receipt's folder and each folder above it, then the agent root
+                bases = [os.path.join(folder, token) for folder in self.above(here)]
+                bases.append(os.path.join(os.path.dirname(store), token))
                 if "_agent/" in token:
                     bases.append(os.path.join(store, token.rsplit("_agent/", 1)[1]))
             for base in bases:
                 path = os.path.normpath(base)
                 if inside(path, store) and os.path.lexists(path):
                     yield path
+
+    def above(self, here):
+        """here and each folder above it, up to and including the store."""
+        folders = [here]
+        while inside(folders[-1], self.store):
+            folders.append(os.path.dirname(folders[-1]))
+        return folders
 
     def __call__(self, path, names):
         """True when a citing receipt names path, a folder above it below the store's top level,
@@ -450,7 +462,10 @@ class Citations:
             folder, tree = path, not os.path.isfile(path)
             while inside(folder, self.store):
                 top = os.path.dirname(folder) == self.store
-                for rel in {os.path.relpath(folder, self.store), os.path.relpath(folder, here)}:
+                rels = {os.path.relpath(folder, base) for base in self.above(here)
+                        if inside(folder, base)}
+                rels.add(os.path.relpath(folder, here))
+                for rel in rels:
                     if not rel.replace("/", "").strip("."):
                         continue  # `.` or `..` alone would match every ellipsis
                     if top and not rel.startswith(".."):

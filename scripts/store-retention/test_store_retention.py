@@ -449,6 +449,26 @@ class Guards(Fixture):
         self.assertEqual(self.run_job(prs=()), 0, self.lines)
         self.assertEqual(os.lstat(self.p("logs/mid.log.gz")).st_mode & 0o777, 0o644)
 
+    def test_short_pr_forms_and_ancestor_relative_folders(self):
+        # Whole-branch review of fe1674f.
+        self.put("pull-requests/2026-10-26-r-pr7.md", 40, b"Review notes: see shots/b.png")
+        self.put("pull-requests/shots/b.png", 40)
+        self.put("reviews/x.md", 40, b"Review of r PR #7: see `late/c.png`")
+        self.put("reviews/late/c.png", 40)
+        self.put("initiatives/x/reviews/review.md", 40,
+                 b"https://github.com/o/r/pull/7 - captures are in `screenshots/` and `my shots/`.")
+        self.put("initiatives/x/screenshots/a.png", 40)
+        self.put("initiatives/x/my shots/a.png", 40)
+        self.put("initiatives/x/other/a.png", 40)
+        self.put("reviews/old.md", 40, b"pr-70 and PR #71 are closed: see gone.png")
+        self.put("reviews/gone.png", 40)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        for rel in ("pull-requests/shots/b.png", "reviews/late/c.png",
+                    "initiatives/x/screenshots/a.png", "initiatives/x/my shots/a.png"):
+            self.assertTrue(os.path.exists(self.p(rel)), rel)
+        self.assertEqual(set(self.manifest(self.reports()[0])),
+                         {"initiatives/x/other/a.png", "reviews/gone.png"})
+
     def test_batch_cited_after_the_move_is_kept(self):
         self.put("shots/a.png", 40)
         self.run_job(prs=())

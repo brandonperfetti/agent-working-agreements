@@ -47,8 +47,9 @@ These are never touched:
 - anything changed in the last 72 hours;
 - anything open, or under a running process's working directory;
 - anything a receipt naming an open PR cites, by path or by file name, and everything inside a
-  folder it cites. Receipts are read whole, compressed ones too. A receipt that can't be read, or
-  a citing one over 64 MiB, keeps everything in its folder.
+  folder it cites. A receipt names a PR by its URL, `owner/repo#n`, `repo#n`, or a short form
+  such as `pr-12` or `PR #12`. Receipts are read whole, compressed ones too. A receipt that
+  can't be read, or a citing one over 64 MiB, keeps everything in its folder.
 - `.worktrees/`, folders that hold `.git`, symlinks, and anything outside the store.
 
 Anything in `_trash/` that this script didn't put there is left for
