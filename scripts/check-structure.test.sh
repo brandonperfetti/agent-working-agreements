@@ -178,4 +178,19 @@ expect_fail "64-hex pin in a client file" "hex pin"
 
 good; CORE_MAX=2 expect_fail "ceiling honours CORE_MAX" "ceiling"
 
+good; printf '\n## Hosted green, before merge\n\nSee [the section](../procedures/one.md#hosted-green-before-merge).\n' \
+  >>"$repo/profiles/studio.md"
+printf '\n## Hosted green, before merge\n\nText. See [below](#hosted-green-before-merge) and [the run](acme/run.md#run).\n' \
+  >>"$repo/procedures/one.md"
+expect_pass "anchored links that name a heading"
+
+good; printf 'See [the section](../procedures/one.md#hosted-green).\n' >>"$repo/profiles/studio.md"
+expect_fail "anchored link to a heading that does not exist" "one.md#hosted-green, which names no heading"
+
+good; printf 'See [above](#gone).\n' >>"$repo/procedures/one.md"
+expect_fail "same-file anchor that names no heading" "#gone, which names no heading"
+
+good; printf '\n```text\n## Fenced\n```\n\nSee [it](#fenced).\n' >>"$repo/procedures/one.md"
+expect_fail "a heading inside a code fence is no anchor" "#fenced, which names no heading"
+
 echo "ok: check-structure passes the good fixture and rejects each failure class"
