@@ -48,9 +48,11 @@ TSV, CSV, YAML or a hash file.
 - anything a receipt that names an open PR cites, or anything inside what it cites: by a path, by
   a path relative to the receipt or a folder above it (URL-encoded or not), or by the name of a
   heavy file. A receipt names a PR by its URL, `owner/repo#n` or `repo#n`, or by a short form
-  (`pr-n`, `prn`, `PR #n`, `pull/n`) of any open PR's number, in its text or its file name. Receipts
-  are read whole, compressed ones too. One that cannot be read, or a citing one over 64 MiB,
-  keeps everything in its folder.
+  (`pr-n`, `prn`, `PR #n`, `pull/n`) right after the repository's name; in its file name, a short
+  form alone counts too. Receipts are read whole, compressed ones too. One that cannot be read, or
+  a citing one over 64 MiB, keeps everything in its folder. A citation of the store or of a layout
+  folder (`evidence/`, `initiatives/<x>/`, `initiatives/<x>/reviews/`, ...) protects nothing below
+  it, and an unreadable receipt in one keeps only what sits directly beside it.
 - `_trash/`, `evidence/store-retention/`, `.worktrees/`, any folder holding `.git`, and symlinks,
   which are never followed.
 
@@ -93,6 +95,11 @@ MARKER = ".store-retention.json"
 LOCK = ".store-retention.lock"
 REPORTS = os.path.join("evidence", "store-retention")
 SKIP_DIRS = {"_trash", ".worktrees", ".git"}
+# The store's layout folders (procedures/agent-workspace-layout.md). A receipt that names one of
+# these, or an initiative's folder, names a home for many things, not the things in it.
+LAYOUT = {"analysis", "authorizations", "evidence", "experiments", "friction", "handoffs",
+          "initiatives", "learnings", "mboxes", "notes", "plans", "pull-requests", "quarantine",
+          "rationale", "reviews", "tickets", "tools", "worktrees"}
 
 MEDIA = {"png", "jpg", "jpeg", "gif", "webp", "heic", "tif", "tiff", "bmp",
          "mp4", "mov", "webm", "mkv", "avi", "m4v", "wav", "mp3", "m4a"}
@@ -345,17 +352,43 @@ def open_prs():
 
 
 def pr_pattern(prs):
-    """One regex matching a reference to any of the PRs: its URL, owner/repo#n, repo#n, or a short
-    form (`pr-12`, `pr12`, `PR #12`, `pull/12`) of any open PR's number. A short form names no
-    repository, so it can match another repository's PR of the same number: that keeps more."""
-    alts = []
+    """A Pattern matching a reference to any of the PRs, or None for none. In text: its URL,
+    owner/repo#n, repo#n, or a short form (`PR #n`, `pr-n`, `pull/n`) right after the repository's
+    name. In a receipt's file name, a short form alone also counts. Each is one case-insensitive
+    regex with a repository's numbers in one group."""
+    if not prs:
+        return None
+    numbers = {}
     for repo, number in prs:
-        name = repo.split("/")[-1]
-        alts.append(r"github\.com/{}/pull/{}".format(re.escape(repo), number))
-        alts.append(r"{}#{}".format(re.escape(repo), number))
-        alts.append(r"\b{}#{}".format(re.escape(name), number))
-        alts.append(r"(?i:\bpr[- ]?#?{}|\bpull/{})".format(number, number))
-    return re.compile("(?:{})(?!\\d)".format("|".join(alts))) if alts else None
+        numbers.setdefault(repo, set()).add(str(number))
+    short = r"(?:pr[-_ ]?#?|pull[-_/])"
+    text, any_number = [], set()
+    for repo, found in sorted(numbers.items()):
+        name = re.escape(repo.split("/")[-1])
+        group = "(?:{})".format("|".join(sorted(found, key=lambda n: (-len(n), n))))
+        any_number |= found
+        text.append(r"(?:github\.com/{repo}/pull/|{repo}#|(?<![\w.-]){name}#"
+                    r"|(?<![\w.-]){name}[-_ ]+{short}){group}".format(
+                        repo=re.escape(repo), name=name, short=short, group=group))
+    group = "(?:{})".format("|".join(sorted(any_number, key=lambda n: (-len(n), n))))
+    text = "(?:{})(?!\\d)".format("|".join(text))
+    name = "(?:{}|(?<![a-z0-9]){}{}(?!\\d))".format(text, short, group)
+    names = [repo.split("/")[-1].lower() for repo in numbers]
+    return Pattern(re.compile(text, re.I), re.compile(name, re.I), names)
+
+
+class Pattern:
+    """The two regexes, with a cheap test first: every text form holds a repository's name."""
+
+    def __init__(self, text, name, names):
+        self.text, self.name, self.names = text, name, names
+
+    def in_text(self, chunk):
+        low = chunk.lower()
+        return any(name in low for name in self.names) and bool(self.text.search(chunk))
+
+    def in_name(self, name):
+        return bool(self.name.search(name))
 
 
 # A path with a slash, or a bare file name with an extension (read against the receipt's folder).
@@ -379,13 +412,13 @@ def read_receipt(path, pattern):
     """(text, whole) when the receipt names an open PR, by its name or anywhere in it, compressed
     or not; (None, True) when it does not. Past RECEIPT_KEEP_MAX the text is cut, and whole is
     False."""
-    hit = bool(pattern.search(os.path.basename(path)))
+    hit = pattern.in_name(os.path.basename(path))
     decoder = codecs.getincrementaldecoder("utf-8")("replace")
     kept, size, tail = [], 0, ""
     with OPENERS.get(ext(path), open)(path, "rb") as handle:
         for block in iter(lambda: handle.read(1 << 22), b""):
             chunk = decoder.decode(block)
-            hit = hit or bool(pattern.search(tail + chunk))
+            hit = hit or pattern.in_text(tail + chunk)
             tail = chunk[-1024:]
             if size < RECEIPT_KEEP_MAX:
                 kept.append(chunk)
@@ -400,7 +433,7 @@ class Citations:
 
     def __init__(self, store, prs, receipts):
         self.store, self.texts, self.paths, self.unread = store, [], set(), []
-        self.held = set()
+        self.held, self.siblings = set(), set()
         pattern = pr_pattern(prs)
         if pattern is None:
             return
@@ -409,17 +442,35 @@ class Citations:
                 text, whole = read_receipt(receipt, pattern)
             except (OSError, EOFError, ValueError, lzma.LZMAError, zlib.error) as error:
                 # what it cites is unknown, so everything beside it is kept
-                self.paths.add(os.path.dirname(receipt))
+                self.keep_folder(os.path.dirname(receipt))
                 self.unread.append("{}: {}".format(os.path.relpath(receipt, store), error))
                 continue
             if text is None:
                 continue
             if not whole:
-                self.paths.add(os.path.dirname(receipt))
+                self.keep_folder(os.path.dirname(receipt))
             decoded = urllib.parse.unquote(text)
             self.texts.append((os.path.dirname(receipt), text + "\n" + decoded))
             self.paths.update(self.resolve(receipt, text + "\n" + decoded))
         self.held = with_ancestors(self.paths, store)
+
+    def broad(self, folder):
+        """True for the store, a layout folder in it, an initiative's folder, or a layout folder
+        in an initiative: citing one of these protects nothing below it."""
+        if folder == self.store:
+            return True
+        if not inside(folder, self.store):
+            return False
+        parts = os.path.relpath(folder, self.store).split(os.sep)
+        if len(parts) == 1:
+            return parts[0] in LAYOUT
+        if parts[0] != "initiatives" or len(parts) > 3:
+            return False
+        return len(parts) == 2 or parts[2] in LAYOUT
+
+    def keep_folder(self, folder):
+        """Keep what is in folder; for a broad folder, only what sits directly in it."""
+        (self.siblings if self.broad(folder) else self.paths).add(folder)
 
     def resolve(self, receipt, text):
         """Existing store paths the text names (a cited folder protects what is under it)."""
@@ -439,7 +490,8 @@ class Citations:
                     bases.append(os.path.join(store, token.rsplit("_agent/", 1)[1]))
             for base in bases:
                 path = os.path.normpath(base)
-                if inside(path, store) and os.path.lexists(path):
+                if (inside(path, store) and os.path.lexists(path)
+                        and not (os.path.isdir(path) and self.broad(path))):
                     yield path
 
     def above(self, here):
@@ -452,15 +504,20 @@ class Citations:
     def __call__(self, path, names):
         """True when a citing receipt names path, a folder above it below the store's top level,
         or (names) a heavy file inside it."""
-        if not self.texts and not self.paths:
+        if not self.texts and not self.paths and not self.siblings:
             return False
         if path in self.held or under_any(path, self.paths):
+            return True
+        if os.path.dirname(path) in self.siblings:
             return True
         for here, text in self.texts:  # a name with a space escapes the token pattern above
             if any(name in text for name in names):
                 return True
             folder, tree = path, not os.path.isfile(path)
             while inside(folder, self.store):
+                if self.broad(folder):
+                    folder = os.path.dirname(folder)
+                    continue
                 top = os.path.dirname(folder) == self.store
                 rels = {os.path.relpath(folder, base) for base in self.above(here)
                         if inside(folder, base)}

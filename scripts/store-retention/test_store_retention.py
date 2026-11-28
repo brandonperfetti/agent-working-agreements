@@ -469,6 +469,41 @@ class Guards(Fixture):
         self.assertEqual(set(self.manifest(self.reports()[0])),
                          {"initiatives/x/other/a.png", "reviews/gone.png"})
 
+    def test_short_forms_need_the_repository_name(self):
+        # Whole-branch review of 9dace62: a bare `PR #7` named any repository's PR 7.
+        self.put("evidence/notes.md", 40, b"other/repo PR #7 merged; see `_agent/initiatives/`,"
+                 b" `_agent/evidence/` and shot.png. PR #7 again, pr-7 too.")
+        self.put("evidence/shot.png", 40)
+        self.put("initiatives/x/evidence/a.png", 40)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        self.assertEqual(set(self.manifest(self.reports()[0])),
+                         {"evidence/shot.png", "initiatives/x/evidence/a.png"})
+
+    def test_layout_folder_citations_protect_nothing_below(self):
+        self.put("initiatives/x/reviews/r-pr-7.md", 40, b"Captures: `_agent/initiatives/x/evidence/`,"
+                 b" `evidence/`, `initiatives/x/`, `reviews/` and `_agent/evidence/run-9/`.")
+        self.put("initiatives/x/evidence/a.png", 40)
+        self.put("initiatives/x/reviews/d.png", 40)
+        self.put("evidence/b.png", 40)
+        self.put("evidence/run-9/c.png", 40)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("evidence/run-9/c.png")))
+        self.assertEqual(set(self.manifest(self.reports()[0])),
+                         {"initiatives/x/evidence/a.png", "initiatives/x/reviews/d.png",
+                          "evidence/b.png"})
+
+    def test_unreadable_receipt_in_a_layout_folder_keeps_only_its_siblings(self):
+        if os.geteuid() == 0:
+            self.skipTest("root reads any file")
+        self.put("evidence/locked.md", 40, b"o/r#7")
+        self.put("evidence/a.png", 40)
+        self.put("evidence/run/b.png", 40)
+        os.chmod(self.p("evidence/locked.md"), 0)
+        self.addCleanup(os.chmod, self.p("evidence/locked.md"), 0o644)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("evidence/a.png")))
+        self.assertEqual(set(self.manifest(self.reports()[0])), {"evidence/run/b.png"})
+
     def test_batch_cited_after_the_move_is_kept(self):
         self.put("shots/a.png", 40)
         self.run_job(prs=())
