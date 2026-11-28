@@ -193,6 +193,9 @@ expect_fail "same-file anchor that names no heading" "#gone, which names no head
 good; printf '\n```text\n## Fenced\n```\n\nSee [it](#fenced).\n' >>"$repo/procedures/one.md"
 expect_fail "a heading inside a code fence is no anchor" "#fenced, which names no heading"
 
+good; printf '\n   ~~~text\n## Indented\n   ~~~\n\nSee [it](#indented).\n' >>"$repo/procedures/one.md"
+expect_fail "a heading inside an indented fence is no anchor" "#indented, which names no heading"
+
 good; printf 'See [the section](../procedures/one.md#gone "a title").\n' >>"$repo/profiles/studio.md"
 expect_fail "a titled anchored link is checked too" "one.md#gone, which names no heading"
 

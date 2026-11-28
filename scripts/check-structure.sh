@@ -150,7 +150,7 @@ fi
 names_heading() {
   awk -v a="$2" '
     function slug(h) { h = tolower(h); gsub(/[^a-z0-9 _-]/, "", h); gsub(/ /, "-", h); return h }
-    /^(```|~~~)/ { fence = !fence; next }
+    /^[[:space:]]*(```|~~~)/ { fence = !fence; next }
     fence { next }
     /^#+ / { h = $0; sub(/^#+ +/, "", h); sub(/ +#+ *$/, "", h); if (slug(h) == a) { found = 1; exit } }
     END { exit !found }
