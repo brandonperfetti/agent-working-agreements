@@ -379,6 +379,41 @@ class Guards(Fixture):
         self.assertTrue(os.path.exists(self.p("evidence/report.csv.gz")))
         self.assertEqual(set(self.manifest(self.reports()[0])), {"evidence/x.json.server.log.gz"})
 
+    def test_compressed_receipt_in_a_tree_holds_it(self):
+        # Round-4 review of 927ffb8.
+        self.put("run/out/events.jsonl.gz", 40)
+        self.put("run/out/shot.png", 40)
+        self.put("old.zip", 40)  # a heavy file at the store's top level
+        self.age("run", 40)
+        self.assertEqual(self.run_job(prs=()), 0, self.lines)
+        self.assertTrue(os.path.exists(self.p("run/out/events.jsonl.gz")))
+        self.assertEqual(set(self.manifest(self.reports()[0])), {"run/out/shot.png", "old.zip"})
+
+    def test_failed_move_back_stops_the_run(self):
+        self.put("p/a.zip", 40)
+        self.put("p/b.zip", 40)
+        real_row, real_rename = sr.Table.row, os.rename
+        moves = []
+
+        def failing_row(table, *cells):
+            if cells[0] != "path" and table.handle.name.endswith("manifest.tsv"):
+                raise sr.RecordError(28, "No space left on device")
+            return real_row(table, *cells)
+
+        def rename(src, dst):
+            moves.append(src)
+            if len(moves) > 1:
+                raise OSError(28, "No space left on device")
+            return real_rename(src, dst)
+
+        sr.Table.row, sr.os.rename = failing_row, rename
+        self.addCleanup(setattr, sr.Table, "row", real_row)
+        self.addCleanup(setattr, sr.os, "rename", real_rename)
+        self.assertEqual(self.run_job(prs=()), 1)
+        self.assertTrue(os.path.exists(self.p("p/b.zip")))  # never reached
+        with open(os.path.join(self.p(sr.REPORTS), self.reports()[0], "report.md")) as handle:
+            self.assertIn("moving p/a.zip back failed", handle.read())
+
     def test_purge_leaves_a_batch_holding_unlisted_files(self):
         self.put("shots/a.png", 40)
         self.run_job(prs=())

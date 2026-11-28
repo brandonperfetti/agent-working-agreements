@@ -28,12 +28,15 @@ A dry run (the default) prints the plan and writes nothing. `--apply` acts:
 A tree is taken whole only when it holds no `.git` anywhere. Some trees are taken even though
 they hold package metadata:
 - trees matched by an exact name (`node_modules`, `.next`, `Pods`, ...);
-- a macOS app bundle: a `*.app` whose top level is only `Contents/` with an `Info.plist`, or app
-  contents copied without their `.app` folder, whose top level is only bundle entries and holds
-  `Resources/app.asar` or `MacOS/`.
+- a macOS app bundle: a `*.app` whose top level is only `Contents/` with an `Info.plist` and
+  bundle entries.
 
-Any other matched tree must hold no receipt anywhere: an `*.app` that is not a bundle, a
-`*.framework`, `*.xcarchive` or `*.logarchive`, and `dist`, `build` and `out`. A tree that fails
+Any other matched tree must hold no receipt anywhere:
+- app contents copied without their `.app` folder (bundle entries only, with `Resources/app.asar`
+  or `MacOS/`);
+- an `*.app` that is not a bundle;
+- a `*.framework`, `*.xcarchive` or `*.logarchive`;
+- `dist`, `build`, `out`, `dist-storybook` and `storybook-static`. A tree that fails
 is walked like any folder. A **receipt** is markdown, JSON (with `.jsonl` and `.ndjson`), text,
 TSV, CSV, YAML or a hash file.
 
@@ -115,6 +118,9 @@ def ext(name):
 
 
 def is_receipt(name):
+    """Markdown, JSON, text, TSV, CSV, YAML or a hash file, compressed or not."""
+    if ext(name) in COMPRESSED:
+        name = name.rsplit(".", 1)[0]
     return ext(name) in RECEIPT_EXT or bool(HASH_FILE.search(name))
 
 
@@ -124,8 +130,6 @@ def file_kind(name, size):
         return None
     if LOG.search(name):
         return "log"
-    if ext(name) in COMPRESSED and is_receipt(name.rsplit(".", 1)[0]):
-        return None  # a compressed receipt is still a receipt
     if DATABASE.search(name):
         return "database"
     e = ext(name)
@@ -486,7 +490,7 @@ def walk_store(store, errors):
                 if kind:
                     candidates.append(Candidate(entry.path, kind, st.st_size, st.st_mtime,
                                                 st.st_ctime))
-                elif is_receipt(entry.name):
+                elif ext(entry.name) in RECEIPT_EXT:  # a compressed receipt is not read
                     receipts.append(entry.path)
     return candidates, receipts
 
@@ -632,7 +636,10 @@ class Table:
     """A TSV in the report folder; each row is on disk before row() returns."""
 
     def __init__(self, folder, name, header):
-        self.handle = open(os.path.join(folder, name), "w")
+        try:
+            self.handle = open(os.path.join(folder, name), "w")
+        except OSError as error:
+            raise RecordError(error.errno, "could not open {}: {}".format(name, error.strerror))
         self.row(*header)
 
     def row(self, *cells):
@@ -666,7 +673,8 @@ def trash_one(store, now, item, in_use, batch, manifest_path, manifest):
             json.dump({"moved_at": now, "manifest": os.path.relpath(manifest_path, store)}, marker)
     target = os.path.join(batch, rel)
     os.makedirs(os.path.dirname(target), exist_ok=True)
-    if not inside(os.path.realpath(os.path.dirname(target)), os.path.realpath(batch)):
+    folder, real_batch = os.path.realpath(os.path.dirname(target)), os.path.realpath(batch)
+    if folder != real_batch and not inside(folder, real_batch):
         raise OSError("its trash folder leaves the batch")
     if os.path.lexists(target):
         raise OSError("already in the batch")
@@ -674,8 +682,12 @@ def trash_one(store, now, item, in_use, batch, manifest_path, manifest):
     try:
         manifest.row(rel, item.kind, size, digest, iso(item.mtime),
                      "{}, {} days old".format(item.kind, int((now - item.mtime) / DAY)))
-    except RecordError:
-        os.rename(target, item.path)
+    except RecordError as error:
+        try:
+            os.rename(target, item.path)
+        except OSError as back:
+            raise RecordError(error.errno, "{}; and moving {} back failed: {}".format(
+                error, rel, back))
         raise
     return size
 

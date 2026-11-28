@@ -32,10 +32,15 @@ nothing. Heavy means one of these kinds:
 
 A tree is moved whole only when it holds no `.git`. Two kinds of tree are moved whole even with
 package metadata inside: an exact name like `node_modules` or `.next`, and a real macOS app bundle.
-Any other matched tree must hold no receipt anywhere, or it is walked like any folder. That covers
-an `.app` that isn't a bundle, and `dist`, `build` and `out`. Any other file stays. A receipt is
-never heavy, compressed or not: markdown, JSON (with `.jsonl`), text, TSV, CSV, YAML and hash
-files.
+Any other matched tree must hold no receipt anywhere, or it is walked like any folder. That covers:
+
+- app contents copied without their `.app`;
+- an `.app` that isn't a bundle;
+- `.framework`, `.xcarchive` and `.logarchive`;
+- `dist`, `build` and `out`.
+
+Any other file stays. A receipt is never heavy, compressed or not. Receipts are markdown, JSON
+(with `.jsonl` and `.ndjson`), text, TSV, CSV, YAML and hash files.
 
 These are never touched:
 
