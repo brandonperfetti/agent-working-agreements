@@ -89,17 +89,15 @@ two-axis sequence applies; the delivery owner never claims independent review of
     the next action expands scope or crosses a destructive, security, credential, or merge
     boundary, or a re-check makes no evidenced progress. If recovery ends unresolved, save the
     resolution diff and gate output, then `git merge --abort` back to the pre-merge tip. Only
-    passing focused checks of both sides on the resolved merged tree permit the merge commit. The
-    resolution's scoped two-axis review remains required. A branch left mid-merge holds unreviewed
-    work where the next reader may not know a merge is in progress, and on the delivery branch it
-    blocks every other lane's merge; the pre-merge tip was reviewed, and the record keeps what the attempt
+    passing focused checks of both sides on the resolved merged tree permit the merge commit; the resolution's
+    scoped two-axis review remains required. A branch left mid-merge holds unreviewed work where
+    the next reader may not know a merge is in progress, and on the delivery branch it blocks every
+    other lane's merge; the pre-merge tip was reviewed, and the record keeps what the attempt
     learned. [learnings: 2026-10-18 openclaw-autonomy-and-recovery §2]
   - **A red that a side's own gate record already shows is that side's, not the merge's:**
     reported with that record, not fixed inside the merge — a lane may hand back with a gate step
     red by design, named in its report, and a fix to it inside the merge would be an unreviewed
-    change to that side's work. If it blocks a required check, save the evidence, abort the merge
-    and ask that side's owner to correct it separately. The delivery owner's merged-tree checks
-    before the push are unchanged.
+    change to that side's work. The delivery owner's merged-tree checks before the push are unchanged.
 - **The preflight runs once before each push that carries new work** — a lane landing, a release
   cut — and never before a push that only answers review findings, which the PR's own review
   covers; there is no re-run. It follows the internal review and its fixes, but for A4's no-reviewer

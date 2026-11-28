@@ -17,8 +17,7 @@
 #    rather than from a profile's Triggers table.
 # 6. The core stays portable: no owner identity, studio staff, accounts, paths, client names,
 #    base-branch names or studio profile name. Those belong to a profile or a client adapter.
-# 7. An inline relative link in normative text (`file.md#anchor`, or `#anchor` within the file)
-#    names a heading of its target: a renamed heading would otherwise break the pointer silently.
+# 7. Validate heading anchors in the destinations extracted by the inline-link pattern below.
 #
 set -euo pipefail
 
