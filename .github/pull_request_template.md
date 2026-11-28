@@ -3,7 +3,7 @@
 <!--
 Fill what applies. A routine change needs only a few lines: Intent with its Door and
 Cleanup, Changes and Verification. Delete an optional section rather than writing
-"N/A". Link full gate and review receipts instead of pasting them.
+"N/A". Link local check, hosted check and review receipts instead of pasting them.
 -->
 
 ## Intent

@@ -74,8 +74,9 @@ owner decision.
 
 ## A5. "Green" means the full CI gate — plus the ticket's own repro
 
-Green is every gate command the project's agent docs name, in order, with CI's env exports, plus
-the ticket's repro on the built tree. **Never disable hooks to commit.**
+Green is every gate command the project's agent docs name, in order, with CI's env exports, plus the
+ticket's repro on the built tree. Hosted checks prove the exact tree before merge or an earlier
+shared step, else run it locally; before a push, focused checks. **Keep hooks enabled.**
 
 ## A6. Where things go
 
@@ -98,13 +99,12 @@ Every git rule names the step of the profile's Git ritual it serves.
 ## B0. Choosing the mode
 
 The environment picks; the adapter names the default; the owner's word wins. At pickup, per checkout
-and delivery path, a failed item downgrades only that delivery to attended (item 4 is recorded
-instead): 1. native Git on a real checkout, hooks firing: the `pre-push` hook proven by dry run from
-the checkout you will push from, or its absence recorded; 2. a local check proportionate to the
-change, reported, the full gate (A5) before presentation; 3. feature work on its own branch, never a
-base branch; 4. base branches protected per the binding; 5. no owner override. A **route-scoped**
-adapter the profile names continues on supported routes instead and stops only an operation with no
-safe route (B2 item 5). See [`pickup-guard.md`](procedures/pickup-guard.md).
+and delivery path, a failed item downgrades only that delivery to attended (item 4 is recorded): 1.
+native Git on a real checkout, hooks firing: the `pre-push` hook proven by dry run from the checkout
+you will push from, or its absence recorded; 2. A5's focused checks, reported; 3. feature work on
+its own branch, never a base branch; 4. base branches protected per the binding; 5. no owner
+override. A **route-scoped** adapter the profile names continues on supported routes, stopping only
+an operation with no safe route (B2 item 5); see [the guard](procedures/pickup-guard.md).
 
 ## B1. Attended mode
 
@@ -116,7 +116,7 @@ in the shared checkout.
 
 Review moves to the pull request. Branches descend from the integration branch; never push the
 release branch, force-push, or push feature work to the integration branch. The delivery owner
-integrates reviewed work, re-runs the gate and pushes; base PRs merge as A4 says.
+integrates reviewed work, re-runs focused checks (A5) and pushes; base PRs merge as A4 says.
 
 **Stop-list** — pause only the affected action and name who decides or restores it; naming an
 owner is not a finish, so keep working. Otherwise act, decide, record:

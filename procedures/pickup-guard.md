@@ -49,9 +49,10 @@ runs none of it; it still keeps protected roots and owners' trees untouched.
    covers them — unless `core.hooksPath` is relative (husky's `.husky/_`, a tracked `.githooks/`):
    that resolves inside each worktree, and the probe is per worktree.
    [measured 2026-09-17 and 2026-09-18, git 2.46.0, scratch repos]
-2. A local check proportionate to the change can be run by the agent — *actually run it at
-   pickup* and report what ran; the full CI gate (A5) runs before presentation. The local shell is
-   not the CI runner, and the project's agent docs name the exports. **This probe is always
+2. Focused local checks (A5) can be run by the agent — *actually run them at pickup* and report
+   what ran. What they cover, hosted green before merge and the full local fallback are
+   [`review-findings.md`](review-findings.md#focused-local-hosted-before-merge)'s. The local shell
+   is not the CI runner, and the project's agent docs name the exports. **This probe is always
    permitted**, in either mode: it decides the mode, so B1's "Brandon runs the suites" governs
    routine runs afterward, not this one.
 3. Feature work lands on an initiative branch no other initiative is using — its wave branch or a

@@ -67,8 +67,9 @@ npx --yes markdownlint-cli2
 under their line ceilings, keeps studio-specific text out of the core, requires
 every file under `procedures/` but `README.md` to carry its four fields and be
 a row of `procedures/README.md`'s table and a profile's *Triggers* table (or, for
-`procedures/<client>/`, linked from that client's appendix), and rejects a 40- or
-64-hex pin in normative text; `history/` is exempt from the pin rule.
+`procedures/<client>/`, linked from that client's appendix), rejects a 40- or
+64-hex pin in normative text (`history/` is exempt from the pin rule), and fails an
+anchored link in normative text that names no heading of its target.
 The first `unittest` run tests the Claude Code hooks under `hooks/claude-code/` and their
 installer; the second tests the Codex hook under `hooks/codex/`, which hands Codex shell
 commands to that guard, and its installer; `node --test` tests the OpenClaw relay under
@@ -86,3 +87,14 @@ No environment export is needed. They are the steps of the job `check` in
 (`.markdownlint-cli2.jsonc`), symlinks included. CI runs it through
 `DavidAnson/markdownlint-cli2-action`, which carries its own copy, so a local
 `npx` may resolve to a different version from CI's.
+
+Before a push, run the commands your change affects, plus the issue's repro: an
+edit to the core, a profile, a client file or a procedure runs `check-index.sh`,
+`check-structure.sh` and `markdownlint-cli2`; a script's edit runs it and its
+`.test.sh`; a hook's edit runs that hook's tests. `check` runs all nine on every
+pull request, against GitHub's merge of head and base, and on each push to
+`develop` and `master`; nothing here deploys or migrates before it. Before merge,
+`check` succeeds on the exact PR head, in a run whose tested base is still the
+base and whose every step ran (`procedures/review-findings.md`, *Focused local,
+hosted before merge*). Where that does not hold, as on a push no pull request
+carries, run all nine locally first.
