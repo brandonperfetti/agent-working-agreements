@@ -113,8 +113,11 @@ class Retention(Fixture):
         self.put("experiments/notes/dist/bundle.js", 40)
         self.put("experiments/notes/dist/shot.png", 40)
         self.put("evidence/app/Old.app/Contents/MacOS/Old", 40)
+        self.put("evidence/app/Old.app/Contents/Info.plist", 40)
+        self.put("evidence/app/Old.app/Contents/Resources/package.json", 40)
         self.age("evidence/app/Old.app", 40)
         self.put("evidence/rollback/Contents/Resources/app.asar", 40)
+        self.put("evidence/rollback/Contents/Info.plist", 40)
         self.age("evidence/rollback/Contents", 40)
         self.put("evidence/clone/.git/HEAD", 40)
         self.put("evidence/clone/shot.png", 40)
@@ -304,6 +307,60 @@ class Guards(Fixture):
         rows = self.manifest(self.reports()[0])
         self.assertEqual(set(rows), {"analysis/why-node_modules-bloat/chart.png", "evidence/big.html"})
 
+    def test_receipts_deep_in_lookalike_trees_stay(self):
+        # Re-review of c10dcf6: a tree matched by name was taken with receipts below its top.
+        self.put("notes/why-node_modules-bloat/analysis/report.md", 40)
+        self.put("proto/demo.app/notes/decision.md", 40)
+        self.put("proto/demo.app/shot.png", 40)
+        self.put("evidence/run-42/out/results/summary.json", 40)
+        self.put("evidence/run-43/dist/events.jsonl", 40)
+        self.put("evidence/Fake.app/Contents/Info.plist", 40)
+        self.put("evidence/Fake.app/notes.md", 40)
+        for rel in ("notes", "proto", "evidence"):
+            self.age(rel, 40)
+        self.assertEqual(self.run_job(prs=()), 0, self.lines)
+        for rel in ("notes/why-node_modules-bloat/analysis/report.md",
+                    "proto/demo.app/notes/decision.md", "evidence/run-42/out/results/summary.json",
+                    "evidence/run-43/dist/events.jsonl", "evidence/Fake.app/notes.md"):
+            self.assertTrue(os.path.exists(self.p(rel)), rel)
+        self.assertEqual(set(self.manifest(self.reports()[0])), {"proto/demo.app/shot.png"})
+
+    def test_citation_forms(self):
+        self.put("evidence/r-pr-7.md", 40, b"Folder `evidence/my run/`, link [s](shot%20one.png),"
+                 b" and login-fail.png from the build; also see evidence/deep/a/b/kept.png.")
+        self.put("evidence/my run/shot.png", 40)
+        self.put("evidence/shot one.png", 40)
+        self.put("evidence/run-44/build/login-fail.png", 40)
+        self.age("evidence/run-44/build", 40)
+        self.put("evidence/deep/a/b/kept.png", 40)
+        self.put("evidence/deep/a/b/other.png", 40)
+        self.put("evidence/deep/a/sibling.png", 40)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        for rel in ("evidence/my run/shot.png", "evidence/shot one.png",
+                    "evidence/run-44/build/login-fail.png", "evidence/deep/a/b/kept.png"):
+            self.assertTrue(os.path.exists(self.p(rel)), rel)
+        # a cited deep path protects itself, not the folders above it
+        self.assertEqual(set(self.manifest(self.reports()[0])),
+                         {"evidence/deep/a/b/other.png", "evidence/deep/a/sibling.png"})
+
+    def test_failed_manifest_write_moves_back_and_stops(self):
+        self.put("shots/a.png", 40)
+        self.put("shots/b.png", 40)
+        real = sr.Table.row
+
+        def failing(table, *cells):
+            if cells[0] != "path" and table.handle.name.endswith("manifest.tsv"):
+                raise sr.RecordError(28, "No space left on device")
+            return real(table, *cells)
+
+        sr.Table.row = failing
+        self.addCleanup(setattr, sr.Table, "row", real)
+        self.assertEqual(self.run_job(prs=()), 1)
+        self.assertTrue(os.path.exists(self.p("shots/a.png")))
+        self.assertTrue(os.path.exists(self.p("shots/b.png")))
+        with open(os.path.join(self.p(sr.REPORTS), self.reports()[0], "report.md")) as handle:
+            self.assertIn("stopped, nothing more changed", handle.read())
+
     def test_cited_name_with_a_space_is_kept(self):
         self.put("evidence/r-pr-7.md", 40, b"See shots/final shot.png and Screen Shot 1.png.")
         self.put("evidence/shots/final shot.png", 40)
@@ -347,10 +404,10 @@ class Guards(Fixture):
 
         status = sr.run(self.store, True, now=NOW, in_use=flaky, prs=lambda: [],
                         out=self.lines.append)
-        self.assertEqual(status, 3)
+        self.assertEqual(status, 1)
         self.assertTrue(os.path.exists(self.p("shots/a.png")))
         with open(os.path.join(self.p(sr.REPORTS), self.reports()[0], "report.md")) as handle:
-            self.assertIn("Refused", handle.read())
+            self.assertIn("stopped, nothing more changed: lsof could not run", handle.read())
 
     def test_pr_search_at_its_limit_is_refused(self):
         calls = []

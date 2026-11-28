@@ -24,19 +24,24 @@ A dry run (the default) prints the plan and writes nothing. `--apply` acts:
 - archives, database copies and logs;
 - trees of build output, installs and app bundles, taken whole.
 
-A tree is taken whole only when it holds no `.git` anywhere. A tree matched by an exact name
-(`node_modules`, `.next`, `Pods`, ...) may hold package metadata. Any other matched tree must hold no
-receipt at its top level: a `*node_modules*` copy, a `*.app`, `*.framework`, `*.xcarchive` or
-`*.logarchive`, an unpacked app (`Resources/app.asar`), or `dist`, `build` and `out`. `dist`,
-`build` and `out` must also hold no markdown or hash file anywhere. A tree that fails is walked
-like any folder. A **receipt** is markdown, JSON, text, TSV, CSV, YAML or a hash file.
+A tree is taken whole only when it holds no `.git` anywhere. Some trees are taken even though
+they hold package metadata:
+- trees matched by an exact name (`node_modules`, `.next`, `Pods`, ...);
+- a macOS app bundle: a `*.app` whose top level is only `Contents/` with an `Info.plist`, or app
+  contents copied without their `.app` folder, whose top level is only bundle entries and holds
+  `Resources/app.asar` or `MacOS/`.
+
+Any other matched tree must hold no receipt anywhere: an `*.app` that is not a bundle, a
+`*.framework`, `*.xcarchive` or `*.logarchive`, and `dist`, `build` and `out`. A tree that fails
+is walked like any folder. A **receipt** is markdown, JSON (with `.jsonl` and `.ndjson`), text,
+TSV, CSV, YAML or a hash file.
 
 **Never touched**, whatever the kind:
 - anything changed in the last 72 hours (mtime or ctime);
 - anything open, or under a running process's working directory, as `lsof` shows. A working
   directory at the store, or in a folder directly in it, protects only itself.
-- anything a receipt that names an open PR cites: by a path, by a path relative to the receipt,
-  or, for a file, by its name;
+- anything a receipt that names an open PR cites, or anything inside what it cites: by a path, by
+  a path relative to the receipt (URL-encoded or not), or by the name of a heavy file;
 - `_trash/`, `evidence/store-retention/`, `.worktrees/`, any folder holding `.git`, and symlinks,
   which are never followed.
 
@@ -45,7 +50,9 @@ like any folder. A **receipt** is markdown, JSON, text, TSV, CSV, YAML or a hash
 - the open-PR lookup (`gh`) fails or reaches its 1000-result limit;
 - `_trash`, `evidence` or the report folder is a symlink.
 
-Exit status: 0 done, 1 an action failed, 2 usage, 3 refused.
+A record that cannot be written stops the run: a move whose manifest row fails is moved back, and a
+purge is recorded before it deletes. Exit status: 0 done, 1 an action failed or the run stopped,
+2 usage, 3 refused.
 """
 import argparse
 import datetime
@@ -59,6 +66,7 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.parse
 
 DAY = 86400
 TRASH_DAYS = 30
@@ -78,7 +86,7 @@ SERVED = {"body", "rsc", "har", "mhtml", "webarchive"}
 SERVED_IF_LARGE = {"html", "htm"}
 ARCHIVE = {"zip", "tar", "tgz", "gz", "bz2", "xz", "7z", "rar", "dmg", "pkg", "jar",
            "apk", "aab", "ipa", "asar"}
-RECEIPT_EXT = {"md", "json", "txt", "tsv", "csv", "yml", "yaml"}
+RECEIPT_EXT = {"md", "json", "jsonl", "ndjson", "txt", "tsv", "csv", "yml", "yaml"}
 DATABASE = re.compile(r"\.(sqlite3?|db)(-wal|-shm)?(\.bak[^/]*)?$", re.I)
 LOG = re.compile(r"\.log(\.gz)?$", re.I)
 HASH_FILE = re.compile(r"(\.(sha1|sha256|sha512|md5)$|^(sha256|sha512|md5)sums?$)", re.I)
@@ -89,6 +97,10 @@ TREE_EXACT = {"node_modules": "install", ".pnpm-store": "install", ".venv": "ins
               ".parcel-cache": "build output"}
 TREE_SUFFIX = {".app": "app bundle", ".xcarchive": "app bundle", ".framework": "app bundle",
                ".logarchive": "log"}
+BUNDLE_TOP = {"Contents", ".DS_Store"}
+CONTENTS_TOP = {"Info.plist", "PkgInfo", "MacOS", "Resources", "Frameworks", "Helpers", "PlugIns",
+                "Library", "SharedSupport", "XPCServices", "_CodeSignature", "CodeResources",
+                "embedded.provisionprofile", ".DS_Store"}
 TREE_BUILD = {"dist", "build", "out", "dist-storybook", "storybook-static"}
 
 
@@ -122,20 +134,38 @@ def file_kind(name, size):
     return None
 
 
+def listing(path):
+    try:
+        return set(os.listdir(path))
+    except OSError:
+        return None
+
+
+def is_bundle(path, name):
+    """A macOS app bundle, or an app's contents copied without their `.app` folder."""
+    if name.endswith(".app"):
+        top = listing(path)
+        return bool(top) and top <= BUNDLE_TOP and os.path.isfile(
+            os.path.join(path, "Contents", "Info.plist")) and is_bundle(
+            os.path.join(path, "Contents"), "Contents")
+    top = listing(path)
+    return bool(top) and top <= CONTENTS_TOP and "Info.plist" in top and (
+        os.path.isfile(os.path.join(path, "Resources", "app.asar"))
+        or os.path.isdir(os.path.join(path, "MacOS")))
+
+
 def tree_match(path, name):
-    """(kind, strict) for a folder that may be taken whole, or None to walk into it. A strict match
-    holds no receipt at its top level; a build match (`dist`, ...) holds none anywhere either."""
+    """(kind, strict) for a folder that may be taken whole, or None to walk into it. A strict
+    match is taken only when it holds no receipt anywhere."""
     if name in TREE_EXACT:
-        return TREE_EXACT[name], None
+        return TREE_EXACT[name], False
+    if is_bundle(path, name):
+        return "app bundle", False
     for suffix, kind in TREE_SUFFIX.items():
         if name.endswith(suffix):
-            return kind, "top"
-    if "node_modules" in name:
-        return "install", "top"
-    if os.path.isfile(os.path.join(path, "Resources", "app.asar")):
-        return "app bundle", "top"  # an app's contents copied without their .app folder
+            return kind, True
     if name in TREE_BUILD:
-        return "build output", "anywhere"
+        return "build output", True
     return None
 
 
@@ -145,28 +175,22 @@ class Tree:
     def __init__(self, path):
         info = os.lstat(path)
         self.size, self.mtime, self.ctime = 0, info.st_mtime, info.st_ctime
-        self.git = self.top_receipt = self.deep_receipt = False
+        self.git = self.receipt = False
+        self.heavy_names = set()  # names a receipt may cite a file inside the tree by
         for top, dirs, files in os.walk(path, onerror=raise_error):
             for name in dirs + files:
                 st = os.lstat(os.path.join(top, name))
                 self.mtime, self.ctime = max(self.mtime, st.st_mtime), max(self.ctime, st.st_ctime)
                 if name == ".git":
                     self.git = True
-            for name in files:
-                self.size += os.lstat(os.path.join(top, name)).st_size
-                if is_receipt(name):
-                    self.top_receipt = self.top_receipt or top == path
-                    if name.lower().endswith(".md") or HASH_FILE.search(name):
-                        self.deep_receipt = True
+                if name in files:
+                    self.size += st.st_size
+                    self.receipt = self.receipt or is_receipt(name)
+                    if file_kind(name, st.st_size):
+                        self.heavy_names.add(name)
 
     def whole(self, strict):
-        if self.git:
-            return False
-        if strict == "top":
-            return not self.top_receipt
-        if strict == "anywhere":
-            return not self.top_receipt and not self.deep_receipt
-        return True
+        return not self.git and not (strict and self.receipt)
 
 
 def raise_error(error):
@@ -282,7 +306,10 @@ def gh_json(args):
     if result.returncode != 0:
         raise Refused("gh {} failed: {}".format(" ".join(args[:2]),
                                                 result.stderr.decode(errors="replace").strip()))
-    return json.loads(result.stdout or b"null")
+    try:
+        return json.loads(result.stdout or b"null")
+    except ValueError as error:
+        raise Refused("gh {} gave no JSON: {}".format(" ".join(args[:2]), error))
 
 
 def open_prs():
@@ -329,8 +356,9 @@ class Citations:
             except OSError:
                 continue
             if pattern.search(text) or pattern.search(os.path.basename(receipt)):
-                self.texts.append((os.path.dirname(receipt), text))
-                self.paths.update(self.resolve(receipt, text))
+                decoded = urllib.parse.unquote(text)
+                self.texts.append((os.path.dirname(receipt), text + "\n" + decoded))
+                self.paths.update(self.resolve(receipt, text + "\n" + decoded))
         self.held = with_ancestors(self.paths, store)
 
     def resolve(self, receipt, text):
@@ -354,26 +382,47 @@ class Citations:
                 if inside(path, store) and os.path.lexists(path):
                     yield path
 
-    def __call__(self, path, is_file):
+    def __call__(self, path, names):
+        """True when a citing receipt names path, a folder above it below the store's top level,
+        or (names) a heavy file inside it."""
         if not self.texts:
             return False
         if path in self.held or under_any(path, self.paths):
             return True
-        rel = os.path.relpath(path, self.store)
         for here, text in self.texts:  # a name with a space escapes the token pattern above
-            if rel in text or os.path.relpath(path, here) in text:
+            if any(name in text for name in names):
                 return True
-            if is_file and os.path.basename(path) in text:
-                return True
+            folder = path
+            while inside(os.path.dirname(folder), self.store):
+                for base in (self.store, here):
+                    if inside(folder, base) and names_whole(text, os.path.relpath(folder, base)):
+                        return True
+                folder = os.path.dirname(folder)
         return False
+
+
+ENDS = set(" \t\n`'\")]>,;:|*")
+
+
+def names_whole(text, rel):
+    """True when text holds rel as a whole path: followed by an end, or by `/` and an end, so that
+    a cited `a/b/c.png` does not cite the folders `a` or `a/b` above it."""
+    at = text.find(rel)
+    while at >= 0:
+        rest = text[at + len(rel):at + len(rel) + 2]
+        if not rest or rest[0] in ENDS or (rest[0] == "/" and (len(rest) < 2 or rest[1] in ENDS)):
+            return True
+        at = text.find(rel, at + 1)
+    return False
 
 
 # ---- the plan
 
 class Candidate:
-    def __init__(self, path, kind, size, mtime, ctime, is_file):
+    def __init__(self, path, kind, size, mtime, ctime, names=None):
         self.path, self.kind, self.size = path, kind, size
-        self.mtime, self.ctime, self.is_file = mtime, ctime, is_file
+        self.mtime, self.ctime, self.is_file = mtime, ctime, names is None
+        self.names = {os.path.basename(path)} if names is None else names
 
 
 class Plan:
@@ -414,15 +463,19 @@ def walk_store(store, errors):
                     continue
                 if tree.whole(match[1]):
                     candidates.append(Candidate(entry.path, match[0], tree.size, tree.mtime,
-                                                tree.ctime, False))
+                                                tree.ctime, tree.heavy_names))
                 else:
                     stack.append(entry.path)
             elif entry.is_file():
-                st = entry.stat(follow_symlinks=False)
+                try:
+                    st = entry.stat(follow_symlinks=False)
+                except OSError as error:
+                    errors.append("unreadable, left: {}".format(error))
+                    continue
                 kind = file_kind(entry.name, st.st_size)
                 if kind:
                     candidates.append(Candidate(entry.path, kind, st.st_size, st.st_mtime,
-                                                st.st_ctime, True))
+                                                st.st_ctime))
                 elif is_receipt(entry.name):
                     receipts.append(entry.path)
     return candidates, receipts
@@ -463,7 +516,7 @@ def build_plan(store, now, in_use, prs):
             plan.kept["recent"] += 1
         elif in_use(item.path):
             plan.kept["in use"] += 1
-        elif cited(item.path, item.is_file):
+        elif cited(item.path, item.names):
             plan.kept["cited"] += 1
         elif age > TRASH_DAYS:
             plan.trash.append(item)
@@ -515,98 +568,141 @@ def compress_log(path, record):
         os.remove(tmp)
         raise OSError("the log changed or the gzip round trip did not match; left as it was")
     os.utime(tmp, (before.st_atime, before.st_mtime))
-    record(before.st_size, want, os.lstat(tmp).st_size)
+    try:
+        record(before.st_size, want, os.lstat(tmp).st_size)
+    except OSError:
+        os.remove(tmp)
+        raise
     os.rename(tmp, gz)
     os.remove(path)
 
 
+class RecordError(OSError):
+    """A record could not be written, so nothing more may change."""
+
+
 class Table:
-    """A TSV in the report folder; each row is flushed to disk as it is written."""
+    """A TSV in the report folder; each row is on disk before row() returns."""
 
     def __init__(self, folder, name, header):
         self.handle = open(os.path.join(folder, name), "w")
         self.row(*header)
 
     def row(self, *cells):
-        self.handle.write("\t".join(str(cell) for cell in cells) + "\n")
-        self.handle.flush()
-        os.fsync(self.handle.fileno())
+        try:
+            self.handle.write("\t".join(str(cell) for cell in cells) + "\n")
+            self.handle.flush()
+            os.fsync(self.handle.fileno())
+        except OSError as error:
+            raise RecordError(error.errno, "could not write {}: {}".format(
+                os.path.basename(self.handle.name), error.strerror))
 
-    def close(self):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
         self.handle.close()
 
 
-def apply_plan(store, now, plan, in_use, name, report_dir, out):
-    """Carry out plan; return the failures. in_use is a fresh InUse, taken just before."""
+def trash_one(store, now, item, in_use, batch, manifest_path, manifest):
+    """Move one item into the batch, then record it; a failed record moves it back."""
+    if in_use(item.path):
+        raise OSError("opened since the plan was made")
+    if changed_since(item.path, now):
+        raise OSError("changed since the plan was made")
+    rel = os.path.relpath(item.path, store)
+    size = os.lstat(item.path).st_size if item.is_file else item.size
+    digest = sha256_file(item.path) if item.is_file else sha256_tree(item.path)
+    if not os.path.isdir(batch):
+        os.mkdir(batch)
+        with open(os.path.join(batch, MARKER), "w") as marker:
+            json.dump({"moved_at": now, "manifest": os.path.relpath(manifest_path, store)}, marker)
+    target = os.path.join(batch, rel)
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    if not inside(os.path.realpath(os.path.dirname(target)), os.path.realpath(batch)):
+        raise OSError("its trash folder leaves the batch")
+    if os.path.lexists(target):
+        raise OSError("already in the batch")
+    os.rename(item.path, target)
+    try:
+        manifest.row(rel, item.kind, size, digest, iso(item.mtime),
+                     "{}, {} days old".format(item.kind, int((now - item.mtime) / DAY)))
+    except RecordError:
+        os.rename(target, item.path)
+        raise
+    return size
+
+
+def apply_plan(store, now, plan, refresh, name, report_dir, out):
+    """Carry out plan; return the failures. refresh() gives a fresh InUse before each step. A
+    record that cannot be written stops the run, so nothing changes without its record."""
     trash = os.path.join(store, "_trash")
     batch = os.path.join(trash, name)
     failures, done = [], {"trash": 0, "compress": 0, "purge": 0}
+    try:
+        in_use = refresh()
+        path = os.path.join(report_dir, "manifest.tsv")
+        with Table(report_dir, "manifest.tsv",
+                   ["path", "kind", "bytes", "sha256", "mtime", "reason"]) as manifest:
+            for item in plan.trash:
+                rel = os.path.relpath(item.path, store)
+                try:
+                    size = trash_one(store, now, item, in_use, batch, path, manifest)
+                except RecordError:
+                    raise
+                except OSError as error:
+                    failures.append("trash {}: {}".format(rel, error))
+                    continue
+                done["trash"] += 1
+                out("trashed  {:<14} {:>12}  {}".format(item.kind, size, rel))
 
-    manifest = Table(report_dir, "manifest.tsv",
-                     ["path", "kind", "bytes", "sha256", "mtime", "reason"])
-    for item in plan.trash:
-        rel = os.path.relpath(item.path, store)
-        try:
-            if in_use(item.path):
-                raise OSError("opened since the plan was made")
-            if changed_since(item.path, now):
-                raise OSError("changed since the plan was made")
-            size = os.lstat(item.path).st_size if item.is_file else item.size
-            digest = sha256_file(item.path) if item.is_file else sha256_tree(item.path)
-            if not os.path.isdir(batch):
-                os.mkdir(batch)
-                with open(os.path.join(batch, MARKER), "w") as marker:
-                    json.dump({"moved_at": now, "manifest": os.path.relpath(
-                        os.path.join(report_dir, "manifest.tsv"), store)}, marker)
-            target = os.path.join(batch, rel)
-            os.makedirs(os.path.dirname(target), exist_ok=True)
-            if not inside(os.path.realpath(os.path.dirname(target)), os.path.realpath(batch)):
-                raise OSError("its trash folder leaves the batch")
-            if os.path.lexists(target):
-                raise OSError("already in the batch")
-            os.rename(item.path, target)
-        except OSError as error:
-            failures.append("trash {}: {}".format(rel, error))
-            continue
-        manifest.row(rel, item.kind, size, digest, iso(item.mtime),
-                     "{}, {} days old".format(item.kind, int((now - item.mtime) / DAY)))
-        done["trash"] += 1
-        out("trashed  {:<14} {:>12}  {}".format(item.kind, size, rel))
-    manifest.close()
+        in_use = refresh()
+        with Table(report_dir, "compressed.tsv",
+                   ["path", "bytes", "sha256", "mtime", "gz_bytes"]) as table:
+            for item in plan.compress:
+                rel = os.path.relpath(item.path, store)
+                try:
+                    if in_use(item.path):
+                        raise OSError("opened since the plan was made")
+                    if changed_since(item.path, now):
+                        raise OSError("changed since the plan was made")
+                    compress_log(item.path, lambda size, digest, gz_size: table.row(
+                        rel, size, digest, iso(item.mtime), gz_size))
+                except RecordError:
+                    raise
+                except OSError as error:
+                    failures.append("compress {}: {}".format(rel, error))
+                    continue
+                done["compress"] += 1
+                out("compressed  {}".format(rel))
 
-    table = Table(report_dir, "compressed.tsv", ["path", "bytes", "sha256", "mtime", "gz_bytes"])
-    for item in plan.compress:
-        rel = os.path.relpath(item.path, store)
-        try:
-            if in_use(item.path):
-                raise OSError("opened since the plan was made")
-            compress_log(item.path, lambda size, digest, gz_size: table.row(
-                rel, size, digest, iso(item.mtime), gz_size))
-        except OSError as error:
-            failures.append("compress {}: {}".format(rel, error))
-            continue
-        done["compress"] += 1
-        out("compressed  {}".format(rel))
-    table.close()
-
-    table = Table(report_dir, "purged.tsv", ["batch", "moved_at", "bytes"])
-    for path, moved_at in plan.purge:
-        rel = os.path.relpath(path, store)
-        try:
-            if in_use(path):
-                raise OSError("opened since the plan was made")
-            if os.path.islink(path) or not inside(os.path.realpath(path), os.path.realpath(trash)):
-                raise OSError("not a folder in the store's _trash")
-            size = Tree(path).size
-            shutil.rmtree(path)
-        except OSError as error:
-            failures.append("purge {}: {}".format(rel, error))
-            continue
-        table.row(rel, iso(moved_at), size)
-        done["purge"] += 1
-        out("purged   {:>12}  {}".format(size, rel))
-    table.close()
-    write_report(report_dir, name, now, plan, done, failures)
+        in_use = refresh()
+        with Table(report_dir, "purged.tsv", ["batch", "moved_at", "bytes"]) as table:
+            for path, moved_at in plan.purge:
+                rel = os.path.relpath(path, store)
+                try:
+                    if in_use(path):
+                        raise OSError("opened since the plan was made")
+                    if os.path.islink(path) or not inside(os.path.realpath(path),
+                                                          os.path.realpath(trash)):
+                        raise OSError("not a folder in the store's _trash")
+                    size = Tree(path).size
+                    table.row(rel, iso(moved_at), size)  # the record comes first
+                    shutil.rmtree(path)
+                except RecordError:
+                    raise
+                except OSError as error:
+                    failures.append("purge {}: {}".format(rel, error))
+                    continue
+                done["purge"] += 1
+                out("purged   {:>12}  {}".format(size, rel))
+    except (RecordError, Refused) as error:
+        failures.append("stopped, nothing more changed: {}".format(error))
+    try:
+        write_report(report_dir, name, now, plan, done, failures)
+    except OSError as error:
+        out("could not write report.md: {}".format(error))
+        failures.append(str(error))
     return failures
 
 
@@ -688,14 +784,14 @@ def run(store, apply, now=None, in_use=None, prs=None, out=print):
         os.makedirs(report_dir)
         try:
             plan = build_plan(store, now, InUse(store, in_use()), prs())
-            fresh = InUse(store, in_use())  # just before acting
         except Refused as error:
             with open(os.path.join(report_dir, "report.md"), "w") as report:
                 report.write("# Store retention run {}\n\nRefused at {}: {}. Nothing was moved,"
                              " compressed or deleted.\n".format(name, iso(now), error))
             out("refused: {}".format(error))
             return 3
-        failures = apply_plan(store, now, plan, fresh, name, report_dir, out)
+        failures = apply_plan(store, now, plan, lambda: InUse(store, in_use()), name,
+                              report_dir, out)
         out("report: {}".format(os.path.relpath(report_dir, store)))
         return 1 if failures else 0
 

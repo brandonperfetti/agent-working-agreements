@@ -23,21 +23,25 @@ Each `--apply` run also writes `report.md` in the same folder. A dry run prints 
 nothing. Heavy means one of these kinds:
 
 - media;
-- served-response captures: `.body`, `.rsc` and `.har`, plus `.html` of 256 KiB or more;
+- served-response captures: `.body`, `.rsc`, `.har`, `.mhtml` and `.webarchive`, plus `.html` or
+  `.htm` of 256 KiB or more;
 - archives;
 - database copies;
 - logs;
 - build-output, install and app-bundle trees.
 
-A tree is moved whole only when it holds no `.git`. A tree matched by any rule other than an exact
-name like `node_modules` or `.next` must also hold no receipt at its top level. Any other file
-stays. A receipt is never heavy: markdown, JSON, text, TSV, CSV, YAML and hash files.
+A tree is moved whole only when it holds no `.git`. Two kinds of tree are moved whole even with
+package metadata inside: an exact name like `node_modules` or `.next`, and a real macOS app bundle.
+Any other matched tree must hold no receipt anywhere, or it is walked like any folder. That covers
+an `.app` that isn't a bundle, and `dist`, `build` and `out`. Any other file stays. A receipt is
+never heavy: markdown, JSON (with `.jsonl`), text, TSV, CSV, YAML and hash files.
 
 These are never touched:
 
 - anything changed in the last 72 hours;
 - anything open, or under a running process's working directory;
-- anything a receipt naming an open PR cites;
+- anything a receipt naming an open PR cites, by path or by file name, and everything inside a
+  folder it cites;
 - `.worktrees/`, folders that hold `.git`, symlinks, and anything outside the store.
 
 Anything in `_trash/` that this script didn't put there is left for
