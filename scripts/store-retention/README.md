@@ -54,15 +54,17 @@ These are never touched:
   Citing the store, a layout folder such as `evidence/`, an initiative's folder or one of its
   layout folders such as `initiatives/<x>/reviews/` protects nothing below it. A receipt in one of
   those that can't be read, or is over 64 MiB, keeps only what sits directly beside it.
-- `.worktrees/`, folders that hold `.git`, symlinks, and anything outside the store.
+- `_trash/`, `evidence/store-retention/`, `.worktrees/`, folders that hold `.git`, symlinks, and
+  anything outside the store.
 
 Anything in `_trash/` that this script didn't put there is left for
 `organize.sh --empty-trash`. `--apply` moves nothing, and says why in its report (on its output,
-for a symlink), when:
+for a symlink or the lock), when:
 
 - `lsof` or `gh` can't run;
 - a PR search reaches its 1000-result limit;
-- `_trash` or the report folder is a symlink.
+- `_trash`, `evidence` or the report folder is a symlink;
+- another run holds `_trash/.store-retention.lock`.
 
 To restore a file within its 30 days, move it from `_trash/<run>/<path>` back to `<path>`. The
 manifest lists every path.

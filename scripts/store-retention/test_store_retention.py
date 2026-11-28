@@ -488,6 +488,15 @@ class Guards(Fixture):
         self.assertEqual(self.run_job(), 0, self.lines)
         self.assertEqual(set(self.manifest(self.reports()[0])), {"e/e-shot.png"})
 
+    def test_wide_gap_between_repository_name_and_short_form(self):
+        # Focused-safety review of f2ab78b: column-aligned forms had stopped citing.
+        for folder, ref in (("a", b"r      PR #7"), ("b", b"r - - - PR #7"), ("c", b"r______pr-7"),
+                            ("d", b"r" + b" " * 17 + b"PR #7")):
+            self.put(folder + "/notes.md", 40, ref + b" see " + folder.encode() + b"-shot.png")
+            self.put(folder + "/" + folder + "-shot.png", 40)
+        self.assertEqual(self.run_job(), 0, self.lines)
+        self.assertEqual(set(self.manifest(self.reports()[0])), {"d/d-shot.png"})
+
     def test_layout_folder_citations_protect_nothing_below(self):
         self.put("initiatives/x/reviews/r-pr-7.md", 40, b"Captures: `_agent/initiatives/x/evidence/`,"
                  b" `evidence/`, `initiatives/x/`, `reviews/` and `_agent/evidence/run-9/`.")

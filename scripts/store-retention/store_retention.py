@@ -37,8 +37,9 @@ Any other matched tree must hold no receipt anywhere:
   or `MacOS/`);
 - an `*.app` that is not a bundle;
 - a `*.framework`, `*.xcarchive` or `*.logarchive`;
-- `dist`, `build`, `out`, `dist-storybook` and `storybook-static`. A tree that fails
-is walked like any folder. A **receipt** is markdown, JSON (with `.jsonl` and `.ndjson`), text,
+- `dist`, `build`, `out`, `dist-storybook` and `storybook-static`.
+
+A tree that fails is walked like any folder. A **receipt** is markdown, JSON (with `.jsonl` and `.ndjson`), text,
 TSV, CSV, YAML or a hash file.
 
 **Never touched**, whatever the kind:
@@ -49,19 +50,20 @@ TSV, CSV, YAML or a hash file.
   a path relative to the receipt or a folder above it (URL-encoded or not), or by the name of a
   heavy file. A receipt names a PR by its URL (or `owner/repo/pull/n`), `owner/repo#n` or
   `repo#n`, or by a short form (`PR #n`, `pr-n`, `prn`, `pull/n`) right after the repository's
-  name, as in `repo PR #n` or `` `repo`: pr-n ``; in its file name, a short form alone counts too
-  (`pr-n`, `pr_n`, `pull-n`). Receipts are read whole, compressed ones too. One that cannot be
-  read, or a citing one over 64 MiB, keeps everything in its folder. A citation of the store or of
-  a layout folder (`evidence/`, `initiatives/<x>/`, `initiatives/<x>/reviews/`, ...) protects
-  nothing below it, and a receipt in one that cannot be read, or is over 64 MiB, keeps only what
-  sits directly beside it.
+  name, up to 16 spaces or marks apart, as in `repo PR #n` or `` `repo`: pr-n ``; in its file
+  name, a short form alone counts too (`pr-n`, `pr_n`, `pull-n`). Receipts are read whole,
+  compressed ones too. One that cannot be read, or a citing one over 64 MiB, keeps everything in
+  its folder. A citation of the store or of a layout folder (`evidence/`, `initiatives/<x>/`,
+  `initiatives/<x>/reviews/`, ...) protects nothing below it, and a receipt in one that cannot be
+  read, or is over 64 MiB, keeps only what sits directly beside it.
 - `_trash/`, `evidence/store-retention/`, `.worktrees/`, any folder holding `.git`, and symlinks,
   which are never followed.
 
 `--apply` refuses to run when:
 - `lsof` fails;
 - the open-PR lookup (`gh`) fails or reaches its 1000-result limit;
-- `_trash`, `evidence` or the report folder is a symlink.
+- `_trash`, `evidence` or the report folder is a symlink;
+- another run holds `_trash/.store-retention.lock`.
 
 A record that cannot be written stops the run: a move whose manifest row fails is moved back, and a
 purge is recorded before it deletes. Exit status: 0 done, 1 an action failed or the run stopped,
@@ -355,7 +357,7 @@ def open_prs():
 
 
 SHORT_PR = r"(?:pr[-_ ]?#?|pull[-_/])"  # PR #12, pr-12, pr12, pull/12, pull-12
-NAME_GAP = r"[-_ \t`*:()\[\]]{1,4}"  # between a repository's name and a short form
+NAME_GAP = r"[-_ \t`*:()\[\]]{1,16}"  # between a repository's name and a short form
 
 
 def any_of(numbers):
@@ -388,7 +390,7 @@ def pr_pattern(prs):
 
 
 OWNER_MAX = 40  # a GitHub owner's name is at most 39 characters
-AFTER_NAME = 24  # room after a repository's name for a gap, a short form and a PR number
+AFTER_NAME = 48  # room after a repository's name for a gap, a short form and a PR number
 
 
 class PrRefs:
