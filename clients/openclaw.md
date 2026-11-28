@@ -51,8 +51,8 @@ without per-wave approval; B2 governs spending and scope.
   Respect owner pins and the approved subscription, account and tool boundaries.
 - **Restoration owners (B2 stop-list item 5)** (#194): **Ashford** for OpenClaw control-plane
   capability (dispatch, tool exposure, routes, configuration, the instruction-source pointer);
-  **Bull** for host and runtime; the **delivery owner** for repository and worktree capability,
-  the protected root's refresh included. Camina gets it restored; the turn closes on a result.
+  **Bull** for host and runtime; the **delivery owner** for repository and worktree capability
+  and the protected root's refresh. Camina gets it restored, keeps continuity, ends on a result.
 
 ## Delivery topology
 
