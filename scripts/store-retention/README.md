@@ -84,6 +84,16 @@ Then add a header line, so that `--help` lists the mode:
 #   ./organize.sh --prune-store [--apply]   # RETENTION: heavy files >30 days to _agent/_trash/<run>/, deleted 30 days later (#328)
 ```
 
+The header's opening still says nothing in `organize.sh` deletes, which this mode changes. Replace
+its "Lives at the sansfaux/ root" paragraph with:
+
+```bash
+# Lives at the sansfaux/ root. Every mode is dry-run by default; pass --apply
+# to perform. Tidy and lock modes only move, so "obsolete" means "moved to a
+# _trash/". --prune-store runs store retention, which also deletes its own
+# trash batches 30 days after their move (#328). See AGENT-WORKING-AGREEMENTS.md §6/§8.
+```
+
 ## LaunchAgent
 
 `ai.sansfaux.agent-store-retention.plist` runs `--apply` at 04:45 on the 1st of each month. It is a
