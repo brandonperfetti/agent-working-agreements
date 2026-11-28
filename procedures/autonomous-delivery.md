@@ -29,7 +29,7 @@ item 4 (B0) are recorded in the PR body, which such work always has (Brandon, 20
 
 A4's no-reviewer exception applies to this procedure's pre-integration and pre-push review steps
 only for routine, reversible work when supported routes cannot seat an independent reviewer.
-Integrate and push with the full gate, disclose the missing reviewer route in the PR, and complete
+Integrate and push with focused checks (A5), disclose the missing reviewer route in the PR, and complete
 the bot round plus Brandon's review before base merge; such work is never eligible for a delegated
 merge. When a reviewer is available, the normal
 two-axis sequence applies; the delivery owner never claims independent review of its own work.
@@ -65,13 +65,13 @@ two-axis sequence applies; the delivery owner never claims independent review of
   one (A4), otherwise in its return to a bounded delegation.
 - **The delivery owner merges a lane into the delivery branch** (for work with no initiative, into that
   work's own branch) **after two-axis review or A4's no-reviewer exception**, records the basis in
-  `reviews/`, **re-runs the full CI gate on the merged branch, runs `coderabbit-preflight` when the
-  push carries new work (below) and the CodeRabbit CLI is available to that client, then
-  pushes.**
+  `reviews/`, **re-runs focused checks of both sides on the merged branch, runs
+  `coderabbit-preflight` when the push carries new work (below) and the CodeRabbit CLI is
+  available to that client, then pushes.**
   Push after every lane merge — the remote is the backup and CI runs per merge so flakes surface early.
 - **A lane merge that conflicts goes back to the lane.** The lane merges the delivery
   branch into its own branch in its own worktree — a merge commit, never a rebase, which would
-  rewrite commits it has already reported — resolves there and re-runs the gate; the resolution
+  rewrite commits it has already reported — resolves there and re-runs focused checks; the resolution
   gets a scoped review, as an addendum's fix does; the delivery owner's merge is clean against
   the tip the lane merged, and a delivery branch that has moved since is the same rule again — a
   merge that
@@ -88,8 +88,8 @@ two-axis sequence applies; the delivery owner never claims independent review of
     evidenced progress. Stop and reassess when the budget is exhausted, the premise is disproved,
     the next action expands scope or crosses a destructive, security, credential, or merge
     boundary, or a re-check makes no evidenced progress. If recovery ends unresolved, save the
-    resolution diff and gate output, then `git merge --abort` back to the pre-merge tip. Only a
-    successful full CI gate on the resolved merged tree permits the merge commit; the resolution's
+    resolution diff and gate output, then `git merge --abort` back to the pre-merge tip. Only
+    passing focused checks of both sides on the resolved merged tree permit the merge commit; the resolution's
     scoped two-axis review remains required. A branch left mid-merge holds unreviewed work where
     the next reader may not know a merge is in progress, and on the delivery branch it blocks every
     other lane's merge; the pre-merge tip was reviewed, and the record keeps what the attempt
@@ -97,7 +97,7 @@ two-axis sequence applies; the delivery owner never claims independent review of
   - **A red that a side's own gate record already shows is that side's, not the merge's:**
     reported with that record, not fixed inside the merge — a lane may hand back with a gate step
     red by design, named in its report, and a fix to it inside the merge would be an unreviewed
-    change to that side's work. The delivery owner's merged-tree gate before the push is unchanged.
+    change to that side's work. The delivery owner's merged-tree checks before the push are unchanged.
 - **The preflight runs once before each push that carries new work** — a lane landing, a release
   cut — and never before a push that only answers review findings, which the PR's own review
   covers; there is no re-run. It follows the internal review and its fixes, but for A4's no-reviewer
@@ -114,8 +114,10 @@ two-axis sequence applies; the delivery owner never claims independent review of
 - **Run independent lanes in parallel within available capacity.** Record advertised limits
   separately from measured concurrency. File ownership, shared mutations, application access and
   resource limits determine what can overlap; contention serializes the affected work only.
-- **Agents run the full CI gate themselves** — every lane before handing back; the delivery owner
-  on every merged tree before every push. CI on the PR is the arbiter for flakes.
+- **Agents run focused checks themselves** (A5) — every lane before handing back; the delivery
+  owner on every merged tree before every push. Hosted CI on the exact candidate is the gate before
+  merge and the arbiter for flakes; where it is not equivalent, the full gate runs locally first
+  ([`review-findings.md`](review-findings.md#focused-local-hosted-before-merge)).
 - **Issues:** agents file the findings that are real work (A4) freely via `writing-tickets`,
   labelled **`agent-filed`**, so Brandon can sweep them. Closing or relabelling existing issues is
   orchestrator-only and cited. Board intake is a repository's own `add-to-project` workflow,

@@ -17,6 +17,9 @@
 #    rather than from a profile's Triggers table.
 # 6. The core stays portable: no owner identity, studio staff, accounts, paths, client names,
 #    base-branch names or studio profile name. Those belong to a profile or a client adapter.
+# 7. An anchored link in normative text (`file.md#anchor`, or `#anchor` within the file) names a
+#    heading of its target: a pointer that moves a rule's detail to a procedure section is the
+#    only route to it, and a renamed heading would break it silently.
 #
 set -euo pipefail
 
@@ -142,8 +145,31 @@ if grep -nE '\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b' "${normative[@]}"; then
   fail=1
 fi
 
+# GitHub's heading slug, for the ASCII headings these files use: lower case, punctuation dropped,
+# spaces to hyphens.
+names_heading() {
+  awk -v a="$2" '
+    function slug(h) { h = tolower(h); gsub(/[^a-z0-9 _-]/, "", h); gsub(/ /, "-", h); return h }
+    /^[[:space:]]*(```|~~~)/ { fence = !fence; next }
+    fence { next }
+    /^#+ / { h = $0; sub(/^#+ +/, "", h); sub(/ +#+ *$/, "", h); if (slug(h) == a) { found = 1; exit } }
+    END { exit !found }
+  ' "$1"
+}
+for f in "${normative[@]}"; do
+  while IFS= read -r link; do
+    [ -z "$link" ] && continue
+    target="${link%%#*}"; anchor="${link#*#}"
+    if [ -z "$target" ]; then t="$f"; else t="$(dirname "$f")/$target"; fi
+    [ -f "$t" ] || { echo "FAIL: ${f#"$ROOT"/} links $link, whose file does not exist" >&2; fail=1; continue; }
+    names_heading "$t" "$anchor" ||
+      { echo "FAIL: ${f#"$ROOT"/} links $link, which names no heading there" >&2; fail=1; }
+  done < <(awk '/^[[:space:]]*(```|~~~)/ { fence = !fence; next } !fence' "$f" |
+    grep -oE '\]\([A-Za-z0-9._/-]*#[A-Za-z0-9_-]+( ("[^"]*"|'\''[^'\'']*'\''|\([^)]*\)))?\)' | sed -E 's/^\]\(//; s/( ("[^"]*"|'\''[^'\'']*'\''|\([^)]*\)))?\)$//')
+done
+
 if [ "$fail" -eq 0 ]; then
   n=0; for f in "$PROC"/*.md "$PROC"/*/*.md; do [ -e "$f" ] && [ "$(basename "$f")" != README.md ] && n=$((n + 1)); done
-  echo "ok: core $lines lines, core plus each profile under $CORE_MAX; clients under $CLIENT_MAX; $n procedures indexed; core portable; no pins"
+  echo "ok: core $lines lines, core plus each profile under $CORE_MAX; clients under $CLIENT_MAX; $n procedures indexed; core portable; no pins; anchors resolve"
 fi
 exit "$fail"

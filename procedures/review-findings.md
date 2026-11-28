@@ -12,13 +12,15 @@ repository uses — and a passage opening **Selected studio profile only** binds
 
 **Trigger:** A delivery, fix, lane merge, conflict resolution or release is ready for review; a
 review-bot finding (with the studio profile, CodeRabbit's CLI or PR bot) has been posted; a
-reviewer's note needs an outcome; a PR is about to merge.
+reviewer's note needs an outcome; checks are chosen before a push or a shared step; a PR is about
+to merge.
 
 **Owner:** The independent reviewer for the verdict and merge eligibility; the delivery owner for
 working the findings; the orchestrator for routing fixes to lanes.
 
 **Implements:** A4 — independent review and its escalation, acceptance and staleness, the harm
-threshold and its three outcomes, base merges.
+threshold and its three outcomes, base merges; A5 — focused local checks, hosted green and its
+local fallback.
 
 **Stop:** A verified harmful finding holds the merge until fixed; spending outside an approved
 allowance holds the paid review, never the push (B2); a delegated merge with a condition unmet
@@ -74,6 +76,38 @@ for work with no initiative under the `_agent/` root's one-off `reviews/`.
   acceptance's head, base and spec, the delta since (zero, stated, when none) and the conclusions it
   affects. A matching patch-id alone never establishes acceptance; a second PR alone never
   invalidates it. Required CI and behaviour proof still run.
+
+## Focused local, hosted before merge
+
+- **Before each push, run focused local checks and report what ran:** the behaviour the change
+  affects, its dependent callers and the ticket's repro where one applies. A change to shared
+  config, dependencies, migrations or the test harness widens the run in proportion. Ticket-specific,
+  hardware, provider and integration evidence that CI cannot supply is still gathered and kept.
+  The repository's hooks run as installed and stay enabled.
+- **Hosted green proves one tree.** It counts for the tree a run's substantive steps actually ran
+  on, with that run's event, source and the base and head the tree was built from: a pull-request
+  run may test a synthetic merge of head and base while its check attaches to the head, and a push
+  run on the same head is another run with its own result. It never carries to another source head
+  and lapses when the base moves after the run, as a non-strict required check allows. Read each
+  required check's run, event and tested commit, never the head's status alone.
+- **A skip is not a pass.** A check or step that skipped, was gated on an absent key, secret or
+  setting, or did not run covers nothing it would have checked, even when its check reports
+  success. A conditional control counts only on a run where it executed.
+- **Before merge, every required check succeeds on the exact current candidate**, read by the two
+  rules above. A required check that skipped or reported neutral counts only where *Base merges*
+  allows it (its workflow's own conditions explain it) and the fallback below covers what it
+  skipped. Branch protection, delegated-merge conditions and release authority are unchanged.
+- **The fallback is the full documented gate run locally on the exact candidate, plus any heavier
+  proof the change needs.** It applies wherever hosted coverage or enforcement is not equivalent —
+  no hosted job runs the gate or one of its substantive steps, nothing at the boundary requires it,
+  or the tree hosted green proves is not the candidate — and at the **earliest shared boundary**,
+  which can precede the merge: a deploy, a migration, or a staging or preview environment another
+  party consumes, started by a push or pull request before the required checks finish or with none
+  required. Where that step starts from a push, the fallback runs before the push. It is the default
+  for any route whose hosted coverage is unverified, and the record names it where it applied.
+- **A repository slims its pre-push hook only by its own reviewed change,** after verifying that its
+  supported delivery path triggers the full hosted jobs and its merge or deployment boundary enforces
+  them; until then its hook and local gate stand.
 
 ## Bot stages
 
@@ -143,7 +177,8 @@ under A4's no-reviewer exception. File count and Markdown-only status are no evi
 
 **Before the merge.** The expected checks are named by context and source from the repository's gate
 and its PR-triggered workflows; on `H` each is present, completed, the latest run, and a success —
-skipped or neutral only where that workflow's own conditions explain it. An absent check fails; a
+skipped or neutral only where that workflow's own conditions explain it, and such a substantive
+step then takes the fallback ([above](#focused-local-hosted-before-merge)). An absent check fails; a
 repository with no expected PR check records its disposition (the full gate on the merge result,
 seen by the reviewer; where its docs name no gate, the checks the reviewer names, run on that
 merge result). Any other check on `H`, an app's scan included, holds a delegated merge while it

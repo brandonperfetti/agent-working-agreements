@@ -50,11 +50,12 @@ place (Brandon, 2026-10-20).
   greps, linters, read-only scripts are yours to run. Lanes may run browser-mode test tiers where
   the sandbox allows. [learnings: 2026-09-04 wave-5 §5]
 - **Apply-block shape for mboxes:** one `&&`-chained line — `M=<mboxes dir>`, `git am "$M/<file>.mbox"`
-  per mbox, then the CI gate; no `cd`, no guard functions, never a push. `git am` *is* the commit
-  step for this shape: it runs the applypatch hooks, not `pre-commit`/`commit-msg` [source: git-am
-  docs], so husky's lint-staged never fires — the gate after apply is mandatory, and approval comes
-  before the apply, not after. `git am` also preserves each patch's author as the commit author, so
-  A4's author check runs on the series' `From:` lines before approval, not on the branch after.
+  per mbox, then the focused checks (A5); no `cd`, no guard functions, never a push. `git am` *is*
+  the commit step for this shape: it runs the applypatch hooks, not `pre-commit`/`commit-msg`
+  [source: git-am docs], so husky's lint-staged never fires — the checks after apply are mandatory,
+  and approval comes before the apply, not after. `git am` also preserves each patch's author as
+  the commit author, so A4's author check runs on the series' `From:` lines before approval, not on
+  the branch after.
   **A rider on a series already applied is a delta commit, never an
   amend** — an amended mbox cannot `git am` onto the sha it rewrites; read the branch state before
   dispatching the rider and say which shape it is. [learnings: 2026-09-12 wave-8 §21]

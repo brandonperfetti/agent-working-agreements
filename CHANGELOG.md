@@ -10,6 +10,13 @@ simply in order. A bare `(n)` after a source — "CodeRabbit on claude-skills #6
 of amendments in that batch**, not an ordinal; the two notations predate each other and neither is
 being retrofitted onto the other.
 
+- **2026-11-28 — Naming an owner is not a finish (#329).** B2's stop-list lead-in and item 5, the
+  OpenClaw adapter's two restoration-owner lines and the domain glossary now say to ask the
+  restoration owner for the capability and keep working; the turn closes on a result. No net
+  lines. Why: OpenClaw staff were ending turns by naming a restoration owner and stopping.
+  Brandon decided, 2026-11-28.
+  [PR](https://github.com/brandonperfetti/agent-working-agreements/pull/329).
+
 - **2026-11-28 — 30-day retention for the `_agent/` store (#328).** `scripts/store-retention/`
   moves heavy files (media, captures, builds, installs, bundles, archives, databases, logs) older
   than 30 days to `_trash/<run>/` with a manifest, gzips logs 7–30 days old, and deletes its own
@@ -17,6 +24,14 @@ being retrofitted onto the other.
   runs it, and the workspace layout says so. Why: old captures were never reopened after merge.
   Brandon decided, 2026-11-28.
   [Decision](https://github.com/brandonperfetti/agent-working-agreements/issues/325#issuecomment-7239951719).
+
+- **2026-11-28 — Focused checks before a push, hosted green before merge (#327).** A5 and B0
+  item 2 run focused local checks before a push; `review-findings.md` makes the required hosted
+  checks the gate before merge, bound to the tree, run and base they tested, with skipped steps
+  uncovered, and runs the full local gate wherever hosted coverage is missing or a shared step
+  comes first. Hooks, protection and merge authority are unchanged. Why: full local reruns held
+  reviewed pushes on a loaded shared Mac. Brandon approved, 2026-11-28.
+  [Issue](https://github.com/brandonperfetti/agent-working-agreements/issues/327).
 
 - **2026-11-24 — Sealed guard cases, replayed on every `hooks/` change (#310).** Twelve cases
   live in `~/.config/awa-sealed-cases/`, outside every checkout, with Claude Code's file tools

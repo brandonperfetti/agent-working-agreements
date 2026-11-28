@@ -18,7 +18,7 @@ state, not repository content; a cloud checkout uses, and records, its workspace
 
 The native shell supports `rm`, worktrees, `git branch -d` and hook execution; none of the Cowork
 hazards (`cowork.md`) apply. **Still check at pickup:** item 1's hook probe (`git push --dry-run
-origin HEAD` from the checkout you will push from), item 2 (the proportionate pickup check — the
+origin HEAD` from the checkout you will push from), item 2 (focused local checks, A5 — the
 local shell's locale/env differs from the CI runner; the project docs name the exports), item 3
 before **every** feature commit, not only the first, item 4 (branch protection — query it, never
 assume it), item 5 (the override in the prompt, recorded in MPD §0 for initiative work, or with the

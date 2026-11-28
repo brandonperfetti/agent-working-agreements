@@ -33,8 +33,8 @@ objectives, or expansion of the authorized scope.
     (B1) it stages a batch and shows the staged diff, commits after Brandon's batch approval, and
     applies the reviewed mbox series that lanes delivered from their isolated clones with `git am`
     only after that approval, since `git am` is the commit; Brandon pushes. In autonomous mode (B2)
-    it integrates reviewed lane work and records each verdict in `reviews/`, runs the full CI gate
-    on the merged tree, owns conflict-resolution mechanics,
+    it integrates reviewed lane work and records each verdict in `reviews/`, runs focused checks
+    (A5) on the merged tree, owns conflict-resolution mechanics,
     pushes, runs the routine `coderabbit-preflight` and `coderabbit-response` mechanics, opens and
     updates the feature pull request and completes its review round, and may draft the
     `develop → master` release pull request.
@@ -44,7 +44,7 @@ objectives, or expansion of the authorized scope.
     the session is the only one there is — A4 permits routine reversible work to integrate and push
     before independent review. The PR discloses the missing route; its bot round plus Brandon's
     review occur before base merge. This exception changes timing, not reviewer independence or the
-    full gate, and never supplies the confirmation a delegated merge needs.
+    gate (A5), and never supplies the confirmation a delegated merge needs.
 
   A session holding both the orchestrator and delivery-owner seats holds both sets of duties;
   neither seat makes it the reviewer of its own work, and neither merges a base branch but by an
