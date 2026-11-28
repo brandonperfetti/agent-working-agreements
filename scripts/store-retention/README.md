@@ -91,7 +91,7 @@ its "Lives at the sansfaux/ root" paragraph with:
 # Lives at the sansfaux/ root. Every mode is dry-run by default; pass --apply
 # to perform. Tidy and lock modes only move, so "obsolete" means "moved to a
 # _trash/". --prune-store runs store retention, which also deletes its own
-# trash batches 30 days after their move (#328). See AGENT-WORKING-AGREEMENTS.md §6/§8.
+# trash batches 30 days after their move (#328). See AGENT-WORKING-AGREEMENTS.md A6 and A8.
 ```
 
 ## LaunchAgent
