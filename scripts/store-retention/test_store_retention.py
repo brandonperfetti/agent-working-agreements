@@ -491,6 +491,7 @@ class Guards(Fixture):
     def test_wide_gap_between_repository_name_and_short_form(self):
         # Focused-safety review of f2ab78b: column-aligned forms had stopped citing.
         for folder, ref in (("a", b"r      PR #7"), ("b", b"r - - - PR #7"), ("c", b"r______pr-7"),
+                            ("e", b"| r | PR #7 |"), ("f", b"r, PR #7"),
                             ("d", b"r" + b" " * 17 + b"PR #7")):
             self.put(folder + "/notes.md", 40, ref + b" see " + folder.encode() + b"-shot.png")
             self.put(folder + "/" + folder + "-shot.png", 40)

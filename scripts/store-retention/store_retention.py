@@ -357,7 +357,7 @@ def open_prs():
 
 
 SHORT_PR = r"(?:pr[-_ ]?#?|pull[-_/])"  # PR #12, pr-12, pr12, pull/12, pull-12
-NAME_GAP = r"[-_ \t`*:()\[\]]{1,16}"  # between a repository's name and a short form
+NAME_GAP = r"[-_ \t`*:,|()\[\]]{1,16}"  # between a repository's name and a short form
 
 
 def any_of(numbers):

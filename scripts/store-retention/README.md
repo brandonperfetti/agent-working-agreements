@@ -47,10 +47,11 @@ These are never touched:
 - anything changed in the last 72 hours;
 - anything open, or under a running process's working directory;
 - anything a receipt naming an open PR cites, by path or by file name, and everything inside a
-  folder it cites. A receipt names a PR by its URL, `owner/repo#n` or `repo#n`, or by a short form
-  such as `PR #12` or `pr-12` right after the repository's name (`` `repo`: PR #12 `` counts); in
-  the receipt's file name a short form alone counts. Receipts are read whole, compressed ones too.
-  A receipt that can't be read, or a citing one over 64 MiB, keeps everything in its folder.
+  folder it cites. A receipt names a PR by its URL, `owner/repo/pull/n`, `owner/repo#n` or
+  `repo#n`, or by a short form such as `PR #12` or `pr-12` up to 16 spaces or marks after the
+  repository's name (`` `repo`: PR #12 `` and `repo | PR #12` count); in the receipt's file name a
+  short form alone counts. Receipts are read whole, compressed ones too. A receipt that can't be
+  read, or a citing one over 64 MiB, keeps everything in its folder.
   Citing the store, a layout folder such as `evidence/`, an initiative's folder or one of its
   layout folders such as `initiatives/<x>/reviews/` protects nothing below it. A receipt in one of
   those that can't be read, or is over 64 MiB, keeps only what sits directly beside it.
